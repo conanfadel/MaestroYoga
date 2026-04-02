@@ -1183,6 +1183,7 @@
       const STORAGE_KEY = "maestro_admin_scroll_y";
       const ACCORDION_KEY = "maestro_admin_accordion_state";
       const ACTIVE_SECTION_KEY = "maestro_admin_active_section";
+      const prefersReducedMotion = !!(window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches);
       const forms = document.querySelectorAll("form[data-preserve-scroll='1']");
       const preserveLinks = document.querySelectorAll("a[data-preserve-scroll-link='1']");
       function closestAccordionId(el) {
@@ -1226,7 +1227,7 @@
         history.scrollRestoration = "manual";
         requestAnimationFrame(function () {
           window.scrollTo(0, targetY);
-          setTimeout(function () { window.scrollTo(0, targetY); }, 0);
+          requestAnimationFrame(function () { window.scrollTo(0, targetY); });
         });
         sessionStorage.removeItem(STORAGE_KEY);
       }
@@ -1302,6 +1303,8 @@
       }
 
       const accordions = Array.from(document.querySelectorAll(".accordion[id]"));
+      let currentOpenSection = accordions.find(function (d) { return d.classList.contains("open"); }) || null;
+      let focusTimer = null;
       try {
         const stored = sessionStorage.getItem(ACCORDION_KEY);
         if (stored) {
@@ -1311,6 +1314,7 @@
               el.classList.toggle("open", !!state[el.id]);
             }
           });
+          currentOpenSection = accordions.find(function (d) { return d.classList.contains("open"); }) || currentOpenSection;
         }
       } catch (_) {}
 
@@ -1321,9 +1325,18 @@
       }
 
       function openAccordion(section) {
+        if (!section) return;
+        const isAlreadyOnlyOpen = currentOpenSection === section && accordions.every(function (other) {
+          return other === section || !other.classList.contains("open");
+        });
+        if (isAlreadyOnlyOpen) {
+          sessionStorage.setItem(ACTIVE_SECTION_KEY, section.id);
+          return;
+        }
         accordions.forEach(function (other) {
           other.classList.toggle("open", other === section);
         });
+        currentOpenSection = section;
         persistAccordionState();
         if (section && section.id) {
           sessionStorage.setItem(ACTIVE_SECTION_KEY, section.id);
@@ -1331,9 +1344,12 @@
       }
       function highlightSection(section) {
         if (!section) return;
+        if (focusTimer) {
+          clearTimeout(focusTimer);
+        }
         accordions.forEach(function (other) { other.classList.remove("focused"); });
         section.classList.add("focused");
-        setTimeout(function () { section.classList.remove("focused"); }, 1400);
+        focusTimer = setTimeout(function () { section.classList.remove("focused"); }, 1400);
       }
 
       const hashTargetId = (window.location.hash || "").replace(/^#/, "");
@@ -1356,7 +1372,7 @@
 
       const tabs = Array.from(document.querySelectorAll(".section-tab[data-target]"));
       function refreshActiveTab() {
-        const openSection = accordions.find(function (d) { return d.classList.contains("open"); });
+        const openSection = currentOpenSection || accordions.find(function (d) { return d.classList.contains("open"); });
         tabs.forEach(function (tab) {
           const isActive = openSection && tab.dataset.target === openSection.id;
           tab.classList.toggle("active", !!isActive);
@@ -1378,7 +1394,7 @@
           if (!section) return;
           openAccordion(section);
           highlightSection(section);
-          section.scrollIntoView({ behavior: "smooth", block: "start" });
+          section.scrollIntoView({ behavior: prefersReducedMotion ? "auto" : "smooth", block: "start" });
           refreshActiveTab();
         });
       });
