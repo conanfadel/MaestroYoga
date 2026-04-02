@@ -64,6 +64,18 @@ ADMIN_SECURITY_AUDIT_PAGE_SIZE = 50
 ADMIN_PAYMENTS_PAGE_SIZE = 20
 ADMIN_IP_BLOCK_DEFAULT_MINUTES = 60
 ADMIN_IP_BLOCK_MAX_MINUTES = 10080
+ADMIN_QP_ROOM_SORT = "room_sort"
+ADMIN_QP_PUBLIC_USER_Q = "public_user_q"
+ADMIN_QP_PUBLIC_USER_STATUS = "public_user_status"
+ADMIN_QP_PUBLIC_USER_VERIFIED = "public_user_verified"
+ADMIN_QP_PUBLIC_USER_PAGE = "public_user_page"
+ADMIN_QP_SESSIONS_PAGE = "sessions_page"
+ADMIN_QP_PAYMENTS_PAGE = "payments_page"
+ADMIN_QP_AUDIT_EVENT_TYPE = "audit_event_type"
+ADMIN_QP_AUDIT_STATUS = "audit_status"
+ADMIN_QP_AUDIT_EMAIL = "audit_email"
+ADMIN_QP_AUDIT_IP = "audit_ip"
+ADMIN_QP_AUDIT_PAGE = "audit_page"
 
 ADMIN_FLASH_MESSAGES: dict[str, tuple[str, str]] = {
     "room_created": ("تمت إضافة الغرفة بنجاح.", "info"),
@@ -1483,18 +1495,18 @@ def admin_dashboard(
             admin_flash = {"text": text, "level": level}
 
     base_admin_params = {
-        "room_sort": room_sort,
-        "public_user_q": public_user_q,
-        "public_user_status": public_user_status,
-        "public_user_verified": public_user_verified,
-        "public_user_page": str(safe_public_user_page),
-        "sessions_page": str(safe_sessions_page),
-        "payments_page": str(safe_payments_page),
-        "audit_event_type": audit_event_type,
-        "audit_status": audit_status,
-        "audit_email": audit_email,
-        "audit_ip": audit_ip,
-        "audit_page": str(safe_audit_page),
+        ADMIN_QP_ROOM_SORT: room_sort,
+        ADMIN_QP_PUBLIC_USER_Q: public_user_q,
+        ADMIN_QP_PUBLIC_USER_STATUS: public_user_status,
+        ADMIN_QP_PUBLIC_USER_VERIFIED: public_user_verified,
+        ADMIN_QP_PUBLIC_USER_PAGE: str(safe_public_user_page),
+        ADMIN_QP_SESSIONS_PAGE: str(safe_sessions_page),
+        ADMIN_QP_PAYMENTS_PAGE: str(safe_payments_page),
+        ADMIN_QP_AUDIT_EVENT_TYPE: audit_event_type,
+        ADMIN_QP_AUDIT_STATUS: audit_status,
+        ADMIN_QP_AUDIT_EMAIL: audit_email,
+        ADMIN_QP_AUDIT_IP: audit_ip,
+        ADMIN_QP_AUDIT_PAGE: str(safe_audit_page),
     }
 
     def _admin_page_url(**overrides: str) -> str:
@@ -1503,14 +1515,22 @@ def admin_dashboard(
             params[k] = v
         return _url_with_params("/admin", **params)
 
-    public_users_page_prev_url = _admin_page_url(public_user_page=str(max(1, safe_public_user_page - 1)))
-    public_users_page_next_url = _admin_page_url(public_user_page=str(min(public_users_total_pages, safe_public_user_page + 1)))
-    security_page_prev_url = _admin_page_url(audit_page=str(max(1, safe_audit_page - 1)))
-    security_page_next_url = _admin_page_url(audit_page=str(min(security_events_total_pages, safe_audit_page + 1)))
-    sessions_page_prev_url = _admin_page_url(sessions_page=str(max(1, safe_sessions_page - 1)))
-    sessions_page_next_url = _admin_page_url(sessions_page=str(min(sessions_total_pages, safe_sessions_page + 1)))
-    payments_page_prev_url = _admin_page_url(payments_page=str(max(1, safe_payments_page - 1)))
-    payments_page_next_url = _admin_page_url(payments_page=str(min(payments_total_pages, safe_payments_page + 1)))
+    public_users_page_prev_url = _admin_page_url(**{ADMIN_QP_PUBLIC_USER_PAGE: str(max(1, safe_public_user_page - 1))})
+    public_users_page_next_url = _admin_page_url(
+        **{ADMIN_QP_PUBLIC_USER_PAGE: str(min(public_users_total_pages, safe_public_user_page + 1))}
+    )
+    security_page_prev_url = _admin_page_url(**{ADMIN_QP_AUDIT_PAGE: str(max(1, safe_audit_page - 1))})
+    security_page_next_url = _admin_page_url(
+        **{ADMIN_QP_AUDIT_PAGE: str(min(security_events_total_pages, safe_audit_page + 1))}
+    )
+    sessions_page_prev_url = _admin_page_url(**{ADMIN_QP_SESSIONS_PAGE: str(max(1, safe_sessions_page - 1))})
+    sessions_page_next_url = _admin_page_url(
+        **{ADMIN_QP_SESSIONS_PAGE: str(min(sessions_total_pages, safe_sessions_page + 1))}
+    )
+    payments_page_prev_url = _admin_page_url(**{ADMIN_QP_PAYMENTS_PAGE: str(max(1, safe_payments_page - 1))})
+    payments_page_next_url = _admin_page_url(
+        **{ADMIN_QP_PAYMENTS_PAGE: str(min(payments_total_pages, safe_payments_page + 1))}
+    )
 
     return templates.TemplateResponse(
         request,
