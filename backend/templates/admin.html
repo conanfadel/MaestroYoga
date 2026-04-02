@@ -1250,14 +1250,32 @@
 
       const faqSearchInput = document.getElementById("faq-search-input");
       const faqTbody = document.getElementById("faq-tbody");
+      const faqRows = faqTbody ? Array.from(faqTbody.querySelectorAll("tr.faq-draggable")) : [];
       if (faqSearchInput && faqTbody) {
-        faqSearchInput.addEventListener("input", function () {
-          const q = faqSearchInput.value.trim().toLowerCase();
-          const rows = Array.from(faqTbody.querySelectorAll("tr.faq-draggable"));
-          rows.forEach(function (row) {
-            const text = row.textContent ? row.textContent.toLowerCase() : "";
-            row.style.display = !q || text.includes(q) ? "" : "none";
+        faqRows.forEach(function (row) {
+          row.dataset.searchText = row.textContent ? row.textContent.toLowerCase() : "";
+        });
+        let faqFilterRaf = null;
+        let pendingFaqQuery = "";
+        const applyFaqFilter = function () {
+          faqFilterRaf = null;
+          const q = pendingFaqQuery;
+          faqRows.forEach(function (row) {
+            const text = row.dataset.searchText || "";
+            const shouldShow = !q || text.includes(q);
+            if (shouldShow && row.style.display === "none") {
+              row.style.display = "";
+            } else if (!shouldShow && row.style.display !== "none") {
+              row.style.display = "none";
+            }
           });
+        };
+        faqSearchInput.addEventListener("input", function () {
+          pendingFaqQuery = faqSearchInput.value.trim().toLowerCase();
+          if (faqFilterRaf !== null) {
+            cancelAnimationFrame(faqFilterRaf);
+          }
+          faqFilterRaf = requestAnimationFrame(applyFaqFilter);
         });
       }
 
@@ -1265,7 +1283,7 @@
       const faqOrderedIds = document.getElementById("faq-ordered-ids");
       if (faqTbody && faqReorderForm && faqOrderedIds) {
         const getVisibleRows = function () {
-          return Array.from(faqTbody.querySelectorAll("tr.faq-draggable"))
+          return faqRows
             .filter(function (r) { return r.style.display !== "none"; });
         };
         const refreshOrderedIds = function () {
@@ -1274,27 +1292,34 @@
         };
 
         let draggedRow = null;
-        faqTbody.querySelectorAll("tr.faq-draggable").forEach(function (row) {
+        faqRows.forEach(function (row) {
           row.setAttribute("draggable", "true");
-          row.addEventListener("dragstart", function () {
-            draggedRow = row;
-            row.classList.add("dragging");
-          });
-          row.addEventListener("dragend", function () {
-            row.classList.remove("dragging");
-            refreshOrderedIds();
-          });
-          row.addEventListener("dragover", function (e) {
-            e.preventDefault();
-            if (!draggedRow || draggedRow === row) return;
-            const rect = row.getBoundingClientRect();
-            const placeAfter = (e.clientY - rect.top) > (rect.height / 2);
-            if (placeAfter) {
-              row.parentNode.insertBefore(draggedRow, row.nextSibling);
-            } else {
-              row.parentNode.insertBefore(draggedRow, row);
-            }
-          });
+        });
+        faqTbody.addEventListener("dragstart", function (e) {
+          const row = e.target && e.target.closest ? e.target.closest("tr.faq-draggable") : null;
+          if (!row) return;
+          draggedRow = row;
+          row.classList.add("dragging");
+        });
+        faqTbody.addEventListener("dragend", function (e) {
+          const row = e.target && e.target.closest ? e.target.closest("tr.faq-draggable") : null;
+          if (!row) return;
+          row.classList.remove("dragging");
+          draggedRow = null;
+          refreshOrderedIds();
+        });
+        faqTbody.addEventListener("dragover", function (e) {
+          if (!draggedRow) return;
+          const row = e.target && e.target.closest ? e.target.closest("tr.faq-draggable") : null;
+          if (!row || draggedRow === row) return;
+          e.preventDefault();
+          const rect = row.getBoundingClientRect();
+          const placeAfter = (e.clientY - rect.top) > (rect.height / 2);
+          if (placeAfter) {
+            row.parentNode.insertBefore(draggedRow, row.nextSibling);
+          } else {
+            row.parentNode.insertBefore(draggedRow, row);
+          }
         });
         refreshOrderedIds();
         faqReorderForm.addEventListener("submit", function () {
