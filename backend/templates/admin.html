@@ -140,6 +140,12 @@
       background: #ffffffcc;
       margin: 10px 0;
       overflow: hidden;
+      scroll-margin-top: 14px;
+    }
+    .accordion.focused {
+      border-color: #10b981;
+      box-shadow: 0 0 0 3px rgba(16, 185, 129, .18);
+      transition: box-shadow .25s ease, border-color .25s ease;
     }
     .accordion-body { padding: 12px; display: none; }
     .accordion.open .accordion-body { display: block; }
@@ -1323,6 +1329,12 @@
           sessionStorage.setItem(ACTIVE_SECTION_KEY, section.id);
         }
       }
+      function highlightSection(section) {
+        if (!section) return;
+        accordions.forEach(function (other) { other.classList.remove("focused"); });
+        section.classList.add("focused");
+        setTimeout(function () { section.classList.remove("focused"); }, 1400);
+      }
 
       const hashTargetId = (window.location.hash || "").replace(/^#/, "");
       const storedActiveSectionId = sessionStorage.getItem(ACTIVE_SECTION_KEY) || "";
@@ -1331,6 +1343,7 @@
         const preferredSection = document.getElementById(preferredSectionId);
         if (preferredSection && preferredSection.classList.contains("accordion")) {
           openAccordion(preferredSection);
+          requestAnimationFrame(function () { highlightSection(preferredSection); });
         }
       }
 
@@ -1347,6 +1360,11 @@
         tabs.forEach(function (tab) {
           const isActive = openSection && tab.dataset.target === openSection.id;
           tab.classList.toggle("active", !!isActive);
+          if (isActive) {
+            tab.setAttribute("aria-current", "page");
+          } else {
+            tab.removeAttribute("aria-current");
+          }
         });
         if (openSection && openSection.id) {
           sessionStorage.setItem(ACTIVE_SECTION_KEY, openSection.id);
@@ -1359,6 +1377,7 @@
           const section = document.getElementById(targetId);
           if (!section) return;
           openAccordion(section);
+          highlightSection(section);
           section.scrollIntoView({ behavior: "smooth", block: "start" });
           refreshActiveTab();
         });
