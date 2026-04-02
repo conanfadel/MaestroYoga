@@ -90,6 +90,31 @@ ADMIN_MSG_PUBLIC_USER_RESTORED = "public_user_restored"
 ADMIN_MSG_PUBLIC_USERS_NONE_SELECTED = "public_users_none_selected"
 ADMIN_MSG_PUBLIC_USERS_BULK_INVALID_ACTION = "public_users_bulk_invalid_action"
 ADMIN_MSG_PUBLIC_USERS_BULK_DONE = "public_users_bulk_done"
+ADMIN_MSG_ROOM_CREATED = "room_created"
+ADMIN_MSG_ROOM_UPDATED = "room_updated"
+ADMIN_MSG_ROOM_DELETED = "room_deleted"
+ADMIN_MSG_ROOM_HAS_BOOKINGS = "room_has_bookings"
+ADMIN_MSG_ROOM_CAPACITY_INVALID = "room_capacity_invalid"
+ADMIN_MSG_ROOMS_NONE_SELECTED = "rooms_none_selected"
+ADMIN_MSG_ROOMS_NOT_FOUND = "rooms_not_found"
+ADMIN_MSG_ROOMS_DELETED = "rooms_deleted"
+ADMIN_MSG_ROOMS_DELETED_PARTIAL_BOOKINGS = "rooms_deleted_partial_bookings"
+ADMIN_MSG_ROOMS_DELETE_HAS_BOOKINGS = "rooms_delete_has_bookings"
+ADMIN_MSG_ROOMS_DELETE_BLOCKED = "rooms_delete_blocked"
+ADMIN_MSG_PLAN_CREATED = "plan_created"
+ADMIN_MSG_PLAN_UPDATED = "plan_updated"
+ADMIN_MSG_PLAN_DELETED = "plan_deleted"
+ADMIN_MSG_PLAN_HAS_SUBSCRIPTIONS = "plan_has_subscriptions"
+ADMIN_MSG_PLAN_NAME_INVALID = "plan_name_invalid"
+ADMIN_MSG_PLAN_DETAILS_UPDATED = "plan_details_updated"
+ADMIN_MSG_PLAN_DETAILS_INVALID = "plan_details_invalid"
+ADMIN_MSG_FAQ_CREATED = "faq_created"
+ADMIN_MSG_FAQ_UPDATED = "faq_updated"
+ADMIN_MSG_FAQ_DELETED = "faq_deleted"
+ADMIN_MSG_FAQ_INVALID = "faq_invalid"
+ADMIN_MSG_FAQ_NOT_FOUND = "faq_not_found"
+ADMIN_MSG_FAQ_REORDERED = "faq_reordered"
+ADMIN_MSG_FAQ_REORDER_INVALID = "faq_reorder_invalid"
 
 ADMIN_FLASH_MESSAGES: dict[str, tuple[str, str]] = {
     "room_created": ("تمت إضافة الغرفة بنجاح.", "info"),
@@ -1953,7 +1978,7 @@ def admin_create_room(
     room = models.Room(center_id=cid, name=name, capacity=capacity)
     db.add(room)
     db.commit()
-    return _admin_redirect("room_created", scroll_y)
+    return _admin_redirect(ADMIN_MSG_ROOM_CREATED, scroll_y)
 
 
 @router.post("/admin/rooms/update")
@@ -1970,11 +1995,11 @@ def admin_update_room(
     if not room or room.center_id != cid:
         raise HTTPException(status_code=404, detail="Room not found")
     if capacity <= 0:
-        return _admin_redirect("room_capacity_invalid", scroll_y)
+        return _admin_redirect(ADMIN_MSG_ROOM_CAPACITY_INVALID, scroll_y)
     room.name = name.strip() or room.name
     room.capacity = capacity
     db.commit()
-    return _admin_redirect("room_updated", scroll_y)
+    return _admin_redirect(ADMIN_MSG_ROOM_UPDATED, scroll_y)
 
 
 @router.post("/admin/rooms/delete")
@@ -2002,13 +2027,13 @@ def admin_delete_room(
             .first()
         )
         if has_bookings:
-            return _admin_redirect("room_has_bookings", scroll_y)
+            return _admin_redirect(ADMIN_MSG_ROOM_HAS_BOOKINGS, scroll_y)
         for session in room_sessions:
             db.delete(session)
 
     db.delete(room)
     db.commit()
-    return _admin_redirect("room_deleted", scroll_y)
+    return _admin_redirect(ADMIN_MSG_ROOM_DELETED, scroll_y)
 
 
 @router.post("/admin/rooms/delete-bulk")
@@ -2021,7 +2046,7 @@ def admin_delete_rooms_bulk(
     cid = require_user_center_id(user)
     selected_ids = sorted(set(room_ids))
     if not selected_ids:
-        return _admin_redirect("rooms_none_selected", scroll_y)
+        return _admin_redirect(ADMIN_MSG_ROOMS_NONE_SELECTED, scroll_y)
 
     rooms = (
         db.query(models.Room)
@@ -2029,7 +2054,7 @@ def admin_delete_rooms_bulk(
         .all()
     )
     if not rooms:
-        return _admin_redirect("rooms_not_found", scroll_y)
+        return _admin_redirect(ADMIN_MSG_ROOMS_NOT_FOUND, scroll_y)
 
     room_ids = [r.id for r in rooms]
     all_sessions = (
@@ -2067,12 +2092,12 @@ def admin_delete_rooms_bulk(
     db.commit()
 
     if deleted > 0 and blocked_bookings > 0:
-        return _admin_redirect("rooms_deleted_partial_bookings", scroll_y)
+        return _admin_redirect(ADMIN_MSG_ROOMS_DELETED_PARTIAL_BOOKINGS, scroll_y)
     if deleted > 0:
-        return _admin_redirect("rooms_deleted", scroll_y)
+        return _admin_redirect(ADMIN_MSG_ROOMS_DELETED, scroll_y)
     if blocked_bookings > 0:
-        return _admin_redirect("rooms_delete_has_bookings", scroll_y)
-    return _admin_redirect("rooms_delete_blocked", scroll_y)
+        return _admin_redirect(ADMIN_MSG_ROOMS_DELETE_HAS_BOOKINGS, scroll_y)
+    return _admin_redirect(ADMIN_MSG_ROOMS_DELETE_BLOCKED, scroll_y)
 
 
 @router.post("/admin/sessions")
@@ -2169,7 +2194,7 @@ def admin_create_plan(
     )
     db.add(plan)
     db.commit()
-    return _admin_redirect("plan_created", scroll_y)
+    return _admin_redirect(ADMIN_MSG_PLAN_CREATED, scroll_y)
 
 
 @router.post("/admin/plans/update-name")
@@ -2186,10 +2211,10 @@ def admin_update_plan_name(
         raise HTTPException(status_code=404, detail="Plan not found")
     new_name = name.strip()
     if not new_name:
-        return _admin_redirect("plan_name_invalid", scroll_y)
+        return _admin_redirect(ADMIN_MSG_PLAN_NAME_INVALID, scroll_y)
     plan.name = new_name
     db.commit()
-    return _admin_redirect("plan_updated", scroll_y)
+    return _admin_redirect(ADMIN_MSG_PLAN_UPDATED, scroll_y)
 
 
 @router.post("/admin/plans/update-details")
@@ -2209,24 +2234,24 @@ def admin_update_plan_details(
 
     plan_type_clean = plan_type.strip().lower()
     if plan_type_clean not in ("weekly", "monthly", "yearly"):
-        return _admin_redirect("plan_details_invalid", scroll_y)
+        return _admin_redirect(ADMIN_MSG_PLAN_DETAILS_INVALID, scroll_y)
     if price < 0:
-        return _admin_redirect("plan_details_invalid", scroll_y)
+        return _admin_redirect(ADMIN_MSG_PLAN_DETAILS_INVALID, scroll_y)
 
     parsed_session_limit = None
     if session_limit.strip():
         try:
             parsed_session_limit = int(session_limit)
         except ValueError:
-            return _admin_redirect("plan_details_invalid", scroll_y)
+            return _admin_redirect(ADMIN_MSG_PLAN_DETAILS_INVALID, scroll_y)
         if parsed_session_limit <= 0:
-            return _admin_redirect("plan_details_invalid", scroll_y)
+            return _admin_redirect(ADMIN_MSG_PLAN_DETAILS_INVALID, scroll_y)
 
     plan.plan_type = plan_type_clean
     plan.price = float(price)
     plan.session_limit = parsed_session_limit
     db.commit()
-    return _admin_redirect("plan_details_updated", scroll_y)
+    return _admin_redirect(ADMIN_MSG_PLAN_DETAILS_UPDATED, scroll_y)
 
 
 @router.post("/admin/plans/delete")
@@ -2242,10 +2267,10 @@ def admin_delete_plan(
         raise HTTPException(status_code=404, detail="Plan not found")
     has_subscriptions = db.query(models.ClientSubscription).filter(models.ClientSubscription.plan_id == plan_id).first()
     if has_subscriptions:
-        return _admin_redirect("plan_has_subscriptions", scroll_y)
+        return _admin_redirect(ADMIN_MSG_PLAN_HAS_SUBSCRIPTIONS, scroll_y)
     db.delete(plan)
     db.commit()
-    return _admin_redirect("plan_deleted", scroll_y)
+    return _admin_redirect(ADMIN_MSG_PLAN_DELETED, scroll_y)
 
 
 @router.post("/admin/faqs")
@@ -2262,7 +2287,7 @@ def admin_create_faq(
     q = question.strip()
     a = answer.strip()
     if not q or not a:
-        return _admin_redirect("faq_invalid", scroll_y)
+        return _admin_redirect(ADMIN_MSG_FAQ_INVALID, scroll_y)
     row = models.FAQItem(
         center_id=cid,
         question=q,
@@ -2272,7 +2297,7 @@ def admin_create_faq(
     )
     db.add(row)
     db.commit()
-    return _admin_redirect("faq_created", scroll_y)
+    return _admin_redirect(ADMIN_MSG_FAQ_CREATED, scroll_y)
 
 
 @router.post("/admin/faqs/update")
@@ -2289,17 +2314,17 @@ def admin_update_faq(
     cid = require_user_center_id(user)
     row = db.get(models.FAQItem, faq_id)
     if not row or row.center_id != cid:
-        return _admin_redirect("faq_not_found", scroll_y)
+        return _admin_redirect(ADMIN_MSG_FAQ_NOT_FOUND, scroll_y)
     q = question.strip()
     a = answer.strip()
     if not q or not a:
-        return _admin_redirect("faq_invalid", scroll_y)
+        return _admin_redirect(ADMIN_MSG_FAQ_INVALID, scroll_y)
     row.question = q
     row.answer = a
     row.sort_order = max(0, int(sort_order))
     row.is_active = is_active in {"1", "true", "on", "yes"}
     db.commit()
-    return _admin_redirect("faq_updated", scroll_y)
+    return _admin_redirect(ADMIN_MSG_FAQ_UPDATED, scroll_y)
 
 
 @router.post("/admin/faqs/delete")
@@ -2312,10 +2337,10 @@ def admin_delete_faq(
     cid = require_user_center_id(user)
     row = db.get(models.FAQItem, faq_id)
     if not row or row.center_id != cid:
-        return _admin_redirect("faq_not_found", scroll_y)
+        return _admin_redirect(ADMIN_MSG_FAQ_NOT_FOUND, scroll_y)
     db.delete(row)
     db.commit()
-    return _admin_redirect("faq_deleted", scroll_y)
+    return _admin_redirect(ADMIN_MSG_FAQ_DELETED, scroll_y)
 
 
 @router.post("/admin/faqs/reorder")
@@ -2328,11 +2353,11 @@ def admin_reorder_faqs(
     cid = require_user_center_id(user)
     raw = [x.strip() for x in ordered_ids_csv.split(",") if x.strip()]
     if not raw:
-        return _admin_redirect("faq_reorder_invalid", scroll_y)
+        return _admin_redirect(ADMIN_MSG_FAQ_REORDER_INVALID, scroll_y)
     try:
         ids = [int(x) for x in raw]
     except ValueError:
-        return _admin_redirect("faq_reorder_invalid", scroll_y)
+        return _admin_redirect(ADMIN_MSG_FAQ_REORDER_INVALID, scroll_y)
     unique_ids = list(dict.fromkeys(ids))
     rows = (
         db.query(models.FAQItem)
@@ -2340,12 +2365,12 @@ def admin_reorder_faqs(
         .all()
     )
     if len(rows) != len(unique_ids):
-        return _admin_redirect("faq_reorder_invalid", scroll_y)
+        return _admin_redirect(ADMIN_MSG_FAQ_REORDER_INVALID, scroll_y)
     row_by_id = {r.id: r for r in rows}
     for idx, faq_id in enumerate(unique_ids, start=1):
         row_by_id[faq_id].sort_order = idx
     db.commit()
-    return _admin_redirect("faq_reordered", scroll_y)
+    return _admin_redirect(ADMIN_MSG_FAQ_REORDERED, scroll_y)
 
 
 @router.post("/public/subscribe")
