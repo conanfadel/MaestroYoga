@@ -174,6 +174,10 @@ def _admin_redirect(msg: str | None = None, scroll_y: str | None = None) -> Redi
     return RedirectResponse(url=url, status_code=303)
 
 
+def _admin_login_redirect() -> RedirectResponse:
+    return RedirectResponse(url="/admin/login", status_code=303)
+
+
 def _public_login_redirect(next_url: str = "/index?center_id=1", msg: str | None = None) -> RedirectResponse:
     safe_next = _sanitize_next_url(next_url)
     return RedirectResponse(url=_url_with_params("/public/login", next=safe_next, msg=msg), status_code=303)
@@ -1586,11 +1590,11 @@ def admin_block_ip(
 ):
     user = _admin_user_from_request(request, db)
     if not user:
-        return RedirectResponse(url="/admin/login", status_code=303)
+        return _admin_login_redirect()
 
     target_ip = ip.strip()
     if not target_ip:
-        return RedirectResponse(url="/admin?msg=ip_block_invalid", status_code=303)
+        return _admin_redirect("ip_block_invalid")
     if minutes <= 0:
         minutes = 60
     if minutes > 10080:
@@ -1629,13 +1633,13 @@ def admin_unblock_ip(
 ):
     user = _admin_user_from_request(request, db)
     if not user:
-        return RedirectResponse(url="/admin/login", status_code=303)
+        return _admin_login_redirect()
     target_ip = ip.strip()
     if not target_ip:
-        return RedirectResponse(url="/admin?msg=ip_block_invalid", status_code=303)
+        return _admin_redirect("ip_block_invalid")
     row = db.query(models.BlockedIP).filter(models.BlockedIP.ip == target_ip).first()
     if not row:
-        return RedirectResponse(url="/admin?msg=ip_unblock_not_found", status_code=303)
+        return _admin_redirect("ip_unblock_not_found")
     row.is_active = False
     db.commit()
     log_security_event(
@@ -1645,7 +1649,7 @@ def admin_unblock_ip(
         email=user.email,
         details={"target_ip": target_ip, "reason": "manual_unblock"},
     )
-    return RedirectResponse(url="/admin?msg=ip_unblocked", status_code=303)
+    return _admin_redirect("ip_unblocked")
 
 
 @router.post("/admin/public-users/toggle-active")
