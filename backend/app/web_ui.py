@@ -971,14 +971,23 @@ def admin_dashboard(
         .order_by(models.SubscriptionPlan.price.asc())
         .all()
     )
+
+    def _normalize_page(page_value: int, total_items: int, page_size: int) -> tuple[int, int, int]:
+        safe_page = max(1, int(page_value or 1))
+        total_pages = max(1, (total_items + page_size - 1) // page_size)
+        if safe_page > total_pages:
+            safe_page = total_pages
+        offset = (safe_page - 1) * page_size
+        return safe_page, total_pages, offset
+
     sessions_page_size = 50
-    safe_sessions_page = max(1, int(sessions_page or 1))
     sessions_base_query = db.query(models.YogaSession).filter(models.YogaSession.center_id == cid)
     sessions_total = sessions_base_query.order_by(None).count()
-    sessions_total_pages = max(1, (sessions_total + sessions_page_size - 1) // sessions_page_size)
-    if safe_sessions_page > sessions_total_pages:
-        safe_sessions_page = sessions_total_pages
-    sessions_offset = (safe_sessions_page - 1) * sessions_page_size
+    safe_sessions_page, sessions_total_pages, sessions_offset = _normalize_page(
+        sessions_page,
+        sessions_total,
+        sessions_page_size,
+    )
     sessions = (
         sessions_base_query.order_by(models.YogaSession.starts_at.desc())
         .offset(sessions_offset)
@@ -1018,12 +1027,12 @@ def admin_dashboard(
     elif verified_key == "unverified":
         public_users_query = public_users_query.filter(models.PublicUser.email_verified.is_(False))
     public_users_page_size = 50
-    safe_public_user_page = max(1, int(public_user_page or 1))
     public_users_total = public_users_query.order_by(None).count()
-    public_users_total_pages = max(1, (public_users_total + public_users_page_size - 1) // public_users_page_size)
-    if safe_public_user_page > public_users_total_pages:
-        safe_public_user_page = public_users_total_pages
-    public_users_offset = (safe_public_user_page - 1) * public_users_page_size
+    safe_public_user_page, public_users_total_pages, public_users_offset = _normalize_page(
+        public_user_page,
+        public_users_total,
+        public_users_page_size,
+    )
     public_users = (
         public_users_query.order_by(models.PublicUser.created_at.desc())
         .offset(public_users_offset)
@@ -1152,13 +1161,13 @@ def admin_dashboard(
         "public_users_new_7d": int(public_users_new_7d),
     }
     payments_page_size = 20
-    safe_payments_page = max(1, int(payments_page or 1))
     payments_base_query = db.query(models.Payment).filter(models.Payment.center_id == cid)
     payments_total = payments_base_query.order_by(None).count()
-    payments_total_pages = max(1, (payments_total + payments_page_size - 1) // payments_page_size)
-    if safe_payments_page > payments_total_pages:
-        safe_payments_page = payments_total_pages
-    payments_offset = (safe_payments_page - 1) * payments_page_size
+    safe_payments_page, payments_total_pages, payments_offset = _normalize_page(
+        payments_page,
+        payments_total,
+        payments_page_size,
+    )
     recent_payments = (
         payments_base_query.order_by(models.Payment.paid_at.desc())
         .offset(payments_offset)
@@ -1226,12 +1235,12 @@ def admin_dashboard(
         audit_query = audit_query.filter(models.SecurityAuditEvent.ip.ilike(f"%{audit_ip.strip()}%"))
 
     audit_page_size = 50
-    safe_audit_page = max(1, int(audit_page or 1))
     security_events_total = audit_query.order_by(None).count()
-    security_events_total_pages = max(1, (security_events_total + audit_page_size - 1) // audit_page_size)
-    if safe_audit_page > security_events_total_pages:
-        safe_audit_page = security_events_total_pages
-    security_events_offset = (safe_audit_page - 1) * audit_page_size
+    safe_audit_page, security_events_total_pages, security_events_offset = _normalize_page(
+        audit_page,
+        security_events_total,
+        audit_page_size,
+    )
     security_events = (
         audit_query.order_by(models.SecurityAuditEvent.created_at.desc())
         .offset(security_events_offset)
@@ -1341,21 +1350,23 @@ def admin_dashboard(
         audit_email=audit_email,
         audit_ip=audit_ip,
     )
+    base_admin_params = {
+        "room_sort": room_sort,
+        "public_user_q": public_user_q,
+        "public_user_status": public_user_status,
+        "public_user_verified": public_user_verified,
+        "public_user_page": str(safe_public_user_page),
+        "sessions_page": str(safe_sessions_page),
+        "payments_page": str(safe_payments_page),
+        "audit_event_type": audit_event_type,
+        "audit_status": audit_status,
+        "audit_email": audit_email,
+        "audit_ip": audit_ip,
+        "audit_page": str(safe_audit_page),
+    }
+
     def _admin_page_url(**overrides: str) -> str:
-        params = {
-            "room_sort": room_sort,
-            "public_user_q": public_user_q,
-            "public_user_status": public_user_status,
-            "public_user_verified": public_user_verified,
-            "public_user_page": str(safe_public_user_page),
-            "sessions_page": str(safe_sessions_page),
-            "payments_page": str(safe_payments_page),
-            "audit_event_type": audit_event_type,
-            "audit_status": audit_status,
-            "audit_email": audit_email,
-            "audit_ip": audit_ip,
-            "audit_page": str(safe_audit_page),
-        }
+        params = dict(base_admin_params)
         for k, v in overrides.items():
             params[k] = v
         return _url_with_params("/admin", **params)
