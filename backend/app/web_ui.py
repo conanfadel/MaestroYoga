@@ -56,6 +56,11 @@ def _public_base(request: Request) -> str:
     return str(request.base_url).rstrip("/")
 
 
+def _is_email_verification_required() -> bool:
+    value = os.getenv("PUBLIC_REQUIRE_EMAIL_VERIFICATION", "1").strip().lower()
+    return value not in {"0", "false", "no", "off"}
+
+
 def _current_public_user(request: Request, db: Session) -> models.PublicUser | None:
     token = request.cookies.get(PUBLIC_COOKIE_NAME)
     if not token:
@@ -351,7 +356,7 @@ def public_book(
     public_user = _current_public_user(request, db)
     if not public_user:
         return _public_login_redirect(next_url=f"/index?center_id={center_id}", msg="auth_required")
-    if not public_user.email_verified:
+    if _is_email_verification_required() and not public_user.email_verified:
         return RedirectResponse(
             url=_url_with_params("/public/verify-pending", next=f"/index?center_id={center_id}"),
             status_code=303,
@@ -551,7 +556,7 @@ def public_register(
         user.email = email_normalized
         user.phone = phone_normalized
         user.password_hash = hash_password(password)
-        user.email_verified = False
+        user.email_verified = not _is_email_verification_required()
         user.verification_sent_at = utcnow_naive()
         user.is_active = True
         user.is_deleted = False
@@ -563,7 +568,7 @@ def public_register(
             email=email_normalized,
             phone=phone_normalized,
             password_hash=hash_password(password),
-            email_verified=False,
+            email_verified=not _is_email_verification_required(),
             verification_sent_at=utcnow_naive(),
             is_active=True,
             is_deleted=False,
@@ -573,7 +578,9 @@ def public_register(
     db.commit()
     db.refresh(user)
 
-    queued, mail_info = _queue_verify_email_for_user(request, user)
+    queued, mail_info = (True, "verification_bypassed")
+    if _is_email_verification_required():
+        queued, mail_info = _queue_verify_email_for_user(request, user)
     if not queued:
         log_security_event(
             "public_register",
@@ -591,8 +598,11 @@ def public_register(
             details={"mail_status": "queued", "state": status_label},
         )
     token = create_public_access_token(user.id)
-    next_msg = "registered" if queued else "mail_failed"
-    response = RedirectResponse(url=f"/public/verify-pending?msg={next_msg}", status_code=303)
+    if _is_email_verification_required():
+        next_msg = "registered" if queued else "mail_failed"
+        response = RedirectResponse(url=f"/public/verify-pending?msg={next_msg}", status_code=303)
+    else:
+        response = RedirectResponse(url="/index?center_id=1&msg=registered_no_verify", status_code=303)
     response.set_cookie(
         key=PUBLIC_COOKIE_NAME,
         value=token,
@@ -643,7 +653,7 @@ def public_login(
         return _public_login_redirect(next_url=next, msg="inactive")
 
     token = create_public_access_token(user.id)
-    if not user.email_verified:
+    if _is_email_verification_required() and not user.email_verified:
         response = RedirectResponse(url=_url_with_params("/public/verify-pending", next=next), status_code=303)
     else:
         response = RedirectResponse(url=next, status_code=303)
@@ -678,6 +688,8 @@ def public_verify_pending(request: Request, next: str = "/index?center_id=1", db
     user = _current_public_user(request, db)
     if not user:
         return _public_login_redirect(next_url=next)
+    if not _is_email_verification_required():
+        return RedirectResponse(url=next, status_code=303)
     if user.email_verified:
         return RedirectResponse(url=next, status_code=303)
     show_dev_verify_link = _is_truthy_env(os.getenv("SHOW_DEV_VERIFY_LINK"))
@@ -2088,7 +2100,7 @@ def public_subscribe(
     public_user = _current_public_user(request, db)
     if not public_user:
         return _public_login_redirect(next_url=f"/index?center_id={center_id}", msg="auth_required")
-    if not public_user.email_verified:
+    if _is_email_verification_required() and not public_user.email_verified:
         return RedirectResponse(
             url=_url_with_params("/public/verify-pending", next=f"/index?center_id={center_id}"),
             status_code=303,
