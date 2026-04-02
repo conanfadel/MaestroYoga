@@ -93,11 +93,13 @@ ADMIN_MSG_PUBLIC_USERS_BULK_DONE = "public_users_bulk_done"
 ADMIN_MSG_ROOM_CREATED = "room_created"
 ADMIN_MSG_ROOM_UPDATED = "room_updated"
 ADMIN_MSG_ROOM_DELETED = "room_deleted"
+ADMIN_MSG_ROOM_HAS_SESSIONS = "room_has_sessions"
 ADMIN_MSG_ROOM_HAS_BOOKINGS = "room_has_bookings"
 ADMIN_MSG_ROOM_CAPACITY_INVALID = "room_capacity_invalid"
 ADMIN_MSG_ROOMS_NONE_SELECTED = "rooms_none_selected"
 ADMIN_MSG_ROOMS_NOT_FOUND = "rooms_not_found"
 ADMIN_MSG_ROOMS_DELETED = "rooms_deleted"
+ADMIN_MSG_ROOMS_DELETED_PARTIAL = "rooms_deleted_partial"
 ADMIN_MSG_ROOMS_DELETED_PARTIAL_BOOKINGS = "rooms_deleted_partial_bookings"
 ADMIN_MSG_ROOMS_DELETE_HAS_BOOKINGS = "rooms_delete_has_bookings"
 ADMIN_MSG_ROOMS_DELETE_BLOCKED = "rooms_delete_blocked"
@@ -108,6 +110,8 @@ ADMIN_MSG_PLAN_HAS_SUBSCRIPTIONS = "plan_has_subscriptions"
 ADMIN_MSG_PLAN_NAME_INVALID = "plan_name_invalid"
 ADMIN_MSG_PLAN_DETAILS_UPDATED = "plan_details_updated"
 ADMIN_MSG_PLAN_DETAILS_INVALID = "plan_details_invalid"
+ADMIN_MSG_SESSION_CREATED = "session_created"
+ADMIN_MSG_SESSION_DELETED = "session_deleted"
 ADMIN_MSG_FAQ_CREATED = "faq_created"
 ADMIN_MSG_FAQ_UPDATED = "faq_updated"
 ADMIN_MSG_FAQ_DELETED = "faq_deleted"
@@ -117,49 +121,49 @@ ADMIN_MSG_FAQ_REORDERED = "faq_reordered"
 ADMIN_MSG_FAQ_REORDER_INVALID = "faq_reorder_invalid"
 
 ADMIN_FLASH_MESSAGES: dict[str, tuple[str, str]] = {
-    "room_created": ("تمت إضافة الغرفة بنجاح.", "info"),
-    "room_updated": ("تم تحديث بيانات الغرفة بنجاح.", "info"),
-    "room_deleted": ("تم حذف الغرفة بنجاح.", "info"),
-    "room_has_sessions": ("لا يمكن حذف الغرفة لوجود جلسات مرتبطة بها. احذف الجلسات أو غيّر الغرفة أولًا.", "warn"),
-    "room_has_bookings": ("تعذر حذف الغرفة لأن جلساتها تحتوي حجوزات. انقل الحجوزات أو احذفها أولًا.", "warn"),
-    "rooms_none_selected": ("اختر غرفة واحدة على الأقل للحذف الجماعي.", "warn"),
-    "rooms_not_found": ("الغرف المحددة غير موجودة.", "warn"),
-    "rooms_deleted": ("تم حذف الغرف المحددة بنجاح.", "info"),
-    "rooms_deleted_partial": ("تم حذف بعض الغرف، وتعذر حذف غرف أخرى لوجود جلسات مرتبطة بها.", "warn"),
-    "rooms_deleted_partial_bookings": ("تم حذف بعض الغرف، وتعذر حذف غرف أخرى لأن جلساتها تحتوي حجوزات.", "warn"),
-    "rooms_delete_has_bookings": ("تعذر حذف الغرف المحددة لأن جلساتها تحتوي حجوزات.", "warn"),
-    "rooms_delete_blocked": ("تعذر حذف الغرف المحددة لوجود جلسات مرتبطة بها.", "warn"),
-    "room_capacity_invalid": ("سعة الغرفة يجب أن تكون أكبر من صفر.", "warn"),
-    "plan_created": ("تمت إضافة خطة الاشتراك.", "info"),
-    "plan_updated": ("تم تعديل اسم خطة الاشتراك.", "info"),
-    "plan_deleted": ("تم حذف خطة الاشتراك.", "info"),
-    "plan_has_subscriptions": ("لا يمكن حذف الخطة لوجود اشتراكات مرتبطة بها.", "warn"),
-    "plan_name_invalid": ("اسم الخطة لا يمكن أن يكون فارغًا.", "warn"),
-    "plan_details_updated": ("تم تحديث نوع الخطة والسعر وحد الجلسات بنجاح.", "info"),
-    "plan_details_invalid": ("بيانات الخطة غير صالحة. تحقق من النوع/السعر/حد الجلسات.", "warn"),
-    "session_created": ("تمت إضافة الجلسة بنجاح.", "info"),
-    "session_deleted": ("تم حذف الجلسة بنجاح.", "info"),
-    "ip_blocked": ("تم حظر الـ IP مؤقتًا.", "warn"),
-    "ip_unblocked": ("تم فك حظر الـ IP.", "info"),
-    "ip_unblock_not_found": ("تعذر العثور على الـ IP لفك الحظر.", "warn"),
-    "ip_block_invalid": ("قيمة IP غير صالحة.", "warn"),
-    "public_user_updated": ("تم تحديث حالة المستخدم بنجاح.", "info"),
-    "public_user_not_found": ("تعذر العثور على المستخدم المطلوب.", "warn"),
-    "public_user_deleted": ("تم حذف المستخدم بنجاح.", "info"),
-    "public_user_verification_resent": ("تم إرسال رابط التحقق للمستخدم بنجاح.", "info"),
-    "public_user_verification_mail_failed": ("تعذر إرسال رابط التحقق. تحقق من إعدادات SMTP.", "warn"),
-    "public_user_already_verified": ("هذا المستخدم موثق بالفعل.", "warn"),
-    "public_user_restored": ("تمت استعادة المستخدم بنجاح.", "info"),
-    "public_users_none_selected": ("اختر مستخدمًا واحدًا على الأقل لتنفيذ العملية الجماعية.", "warn"),
-    "public_users_bulk_invalid_action": ("الإجراء الجماعي غير صالح.", "warn"),
-    "public_users_bulk_done": ("تم تنفيذ العملية الجماعية على المستخدمين المحددين.", "info"),
-    "faq_created": ("تمت إضافة السؤال الشائع بنجاح.", "info"),
-    "faq_updated": ("تم تحديث السؤال الشائع بنجاح.", "info"),
-    "faq_deleted": ("تم حذف السؤال الشائع بنجاح.", "info"),
-    "faq_invalid": ("بيانات السؤال الشائع غير صالحة.", "warn"),
-    "faq_not_found": ("تعذر العثور على السؤال المطلوب.", "warn"),
-    "faq_reordered": ("تم حفظ ترتيب الأسئلة الشائعة بنجاح.", "info"),
-    "faq_reorder_invalid": ("تعذر حفظ ترتيب الأسئلة. تحقق من القائمة ثم أعد المحاولة.", "warn"),
+    ADMIN_MSG_ROOM_CREATED: ("تمت إضافة الغرفة بنجاح.", "info"),
+    ADMIN_MSG_ROOM_UPDATED: ("تم تحديث بيانات الغرفة بنجاح.", "info"),
+    ADMIN_MSG_ROOM_DELETED: ("تم حذف الغرفة بنجاح.", "info"),
+    ADMIN_MSG_ROOM_HAS_SESSIONS: ("لا يمكن حذف الغرفة لوجود جلسات مرتبطة بها. احذف الجلسات أو غيّر الغرفة أولًا.", "warn"),
+    ADMIN_MSG_ROOM_HAS_BOOKINGS: ("تعذر حذف الغرفة لأن جلساتها تحتوي حجوزات. انقل الحجوزات أو احذفها أولًا.", "warn"),
+    ADMIN_MSG_ROOMS_NONE_SELECTED: ("اختر غرفة واحدة على الأقل للحذف الجماعي.", "warn"),
+    ADMIN_MSG_ROOMS_NOT_FOUND: ("الغرف المحددة غير موجودة.", "warn"),
+    ADMIN_MSG_ROOMS_DELETED: ("تم حذف الغرف المحددة بنجاح.", "info"),
+    ADMIN_MSG_ROOMS_DELETED_PARTIAL: ("تم حذف بعض الغرف، وتعذر حذف غرف أخرى لوجود جلسات مرتبطة بها.", "warn"),
+    ADMIN_MSG_ROOMS_DELETED_PARTIAL_BOOKINGS: ("تم حذف بعض الغرف، وتعذر حذف غرف أخرى لأن جلساتها تحتوي حجوزات.", "warn"),
+    ADMIN_MSG_ROOMS_DELETE_HAS_BOOKINGS: ("تعذر حذف الغرف المحددة لأن جلساتها تحتوي حجوزات.", "warn"),
+    ADMIN_MSG_ROOMS_DELETE_BLOCKED: ("تعذر حذف الغرف المحددة لوجود جلسات مرتبطة بها.", "warn"),
+    ADMIN_MSG_ROOM_CAPACITY_INVALID: ("سعة الغرفة يجب أن تكون أكبر من صفر.", "warn"),
+    ADMIN_MSG_PLAN_CREATED: ("تمت إضافة خطة الاشتراك.", "info"),
+    ADMIN_MSG_PLAN_UPDATED: ("تم تعديل اسم خطة الاشتراك.", "info"),
+    ADMIN_MSG_PLAN_DELETED: ("تم حذف خطة الاشتراك.", "info"),
+    ADMIN_MSG_PLAN_HAS_SUBSCRIPTIONS: ("لا يمكن حذف الخطة لوجود اشتراكات مرتبطة بها.", "warn"),
+    ADMIN_MSG_PLAN_NAME_INVALID: ("اسم الخطة لا يمكن أن يكون فارغًا.", "warn"),
+    ADMIN_MSG_PLAN_DETAILS_UPDATED: ("تم تحديث نوع الخطة والسعر وحد الجلسات بنجاح.", "info"),
+    ADMIN_MSG_PLAN_DETAILS_INVALID: ("بيانات الخطة غير صالحة. تحقق من النوع/السعر/حد الجلسات.", "warn"),
+    ADMIN_MSG_SESSION_CREATED: ("تمت إضافة الجلسة بنجاح.", "info"),
+    ADMIN_MSG_SESSION_DELETED: ("تم حذف الجلسة بنجاح.", "info"),
+    ADMIN_MSG_IP_BLOCKED: ("تم حظر الـ IP مؤقتًا.", "warn"),
+    ADMIN_MSG_IP_UNBLOCKED: ("تم فك حظر الـ IP.", "info"),
+    ADMIN_MSG_IP_UNBLOCK_NOT_FOUND: ("تعذر العثور على الـ IP لفك الحظر.", "warn"),
+    ADMIN_MSG_IP_BLOCK_INVALID: ("قيمة IP غير صالحة.", "warn"),
+    ADMIN_MSG_PUBLIC_USER_UPDATED: ("تم تحديث حالة المستخدم بنجاح.", "info"),
+    ADMIN_MSG_PUBLIC_USER_NOT_FOUND: ("تعذر العثور على المستخدم المطلوب.", "warn"),
+    ADMIN_MSG_PUBLIC_USER_DELETED: ("تم حذف المستخدم بنجاح.", "info"),
+    ADMIN_MSG_PUBLIC_USER_VERIFICATION_RESENT: ("تم إرسال رابط التحقق للمستخدم بنجاح.", "info"),
+    ADMIN_MSG_PUBLIC_USER_VERIFICATION_MAIL_FAILED: ("تعذر إرسال رابط التحقق. تحقق من إعدادات SMTP.", "warn"),
+    ADMIN_MSG_PUBLIC_USER_ALREADY_VERIFIED: ("هذا المستخدم موثق بالفعل.", "warn"),
+    ADMIN_MSG_PUBLIC_USER_RESTORED: ("تمت استعادة المستخدم بنجاح.", "info"),
+    ADMIN_MSG_PUBLIC_USERS_NONE_SELECTED: ("اختر مستخدمًا واحدًا على الأقل لتنفيذ العملية الجماعية.", "warn"),
+    ADMIN_MSG_PUBLIC_USERS_BULK_INVALID_ACTION: ("الإجراء الجماعي غير صالح.", "warn"),
+    ADMIN_MSG_PUBLIC_USERS_BULK_DONE: ("تم تنفيذ العملية الجماعية على المستخدمين المحددين.", "info"),
+    ADMIN_MSG_FAQ_CREATED: ("تمت إضافة السؤال الشائع بنجاح.", "info"),
+    ADMIN_MSG_FAQ_UPDATED: ("تم تحديث السؤال الشائع بنجاح.", "info"),
+    ADMIN_MSG_FAQ_DELETED: ("تم حذف السؤال الشائع بنجاح.", "info"),
+    ADMIN_MSG_FAQ_INVALID: ("بيانات السؤال الشائع غير صالحة.", "warn"),
+    ADMIN_MSG_FAQ_NOT_FOUND: ("تعذر العثور على السؤال المطلوب.", "warn"),
+    ADMIN_MSG_FAQ_REORDERED: ("تم حفظ ترتيب الأسئلة الشائعة بنجاح.", "info"),
+    ADMIN_MSG_FAQ_REORDER_INVALID: ("تعذر حفظ ترتيب الأسئلة. تحقق من القائمة ثم أعد المحاولة.", "warn"),
 }
 
 
@@ -2135,7 +2139,7 @@ def admin_create_session(
     )
     db.add(yoga_session)
     db.commit()
-    return _admin_redirect("session_created", scroll_y)
+    return _admin_redirect(ADMIN_MSG_SESSION_CREATED, scroll_y)
 
 
 @router.post("/admin/sessions/delete")
@@ -2158,7 +2162,7 @@ def admin_delete_session(
     db.query(models.Booking).filter(models.Booking.session_id == session_id).delete()
     db.delete(yoga_session)
     db.commit()
-    return _admin_redirect("session_deleted", scroll_y)
+    return _admin_redirect(ADMIN_MSG_SESSION_DELETED, scroll_y)
 
 
 @router.post("/admin/plans")
