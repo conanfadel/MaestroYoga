@@ -58,12 +58,18 @@ router = APIRouter(tags=["web"])
 PUBLIC_COOKIE_NAME = "public_access_token"
 MAX_LOCKOUT_SECONDS = int(os.getenv("RATE_LIMIT_MAX_LOCKOUT_SECONDS", "900"))
 GA4_MEASUREMENT_ID = os.getenv("GA4_MEASUREMENT_ID", "").strip()
+
+# Admin dashboard pagination tuning.
 ADMIN_SESSIONS_PAGE_SIZE = 50
 ADMIN_PUBLIC_USERS_PAGE_SIZE = 50
 ADMIN_SECURITY_AUDIT_PAGE_SIZE = 50
 ADMIN_PAYMENTS_PAGE_SIZE = 20
+
+# Admin security policy defaults.
 ADMIN_IP_BLOCK_DEFAULT_MINUTES = 60
 ADMIN_IP_BLOCK_MAX_MINUTES = 10080
+
+# Admin query parameter keys.
 ADMIN_QP_ROOM_SORT = "room_sort"
 ADMIN_QP_PUBLIC_USER_Q = "public_user_q"
 ADMIN_QP_PUBLIC_USER_STATUS = "public_user_status"
@@ -76,6 +82,8 @@ ADMIN_QP_AUDIT_STATUS = "audit_status"
 ADMIN_QP_AUDIT_EMAIL = "audit_email"
 ADMIN_QP_AUDIT_IP = "audit_ip"
 ADMIN_QP_AUDIT_PAGE = "audit_page"
+
+# Admin redirect/flash message keys.
 ADMIN_MSG_IP_BLOCK_INVALID = "ip_block_invalid"
 ADMIN_MSG_IP_BLOCKED = "ip_blocked"
 ADMIN_MSG_IP_UNBLOCK_NOT_FOUND = "ip_unblock_not_found"
