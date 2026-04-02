@@ -59,6 +59,52 @@ PUBLIC_COOKIE_NAME = "public_access_token"
 MAX_LOCKOUT_SECONDS = int(os.getenv("RATE_LIMIT_MAX_LOCKOUT_SECONDS", "900"))
 GA4_MEASUREMENT_ID = os.getenv("GA4_MEASUREMENT_ID", "").strip()
 
+ADMIN_FLASH_MESSAGES: dict[str, tuple[str, str]] = {
+    "room_created": ("تمت إضافة الغرفة بنجاح.", "info"),
+    "room_updated": ("تم تحديث بيانات الغرفة بنجاح.", "info"),
+    "room_deleted": ("تم حذف الغرفة بنجاح.", "info"),
+    "room_has_sessions": ("لا يمكن حذف الغرفة لوجود جلسات مرتبطة بها. احذف الجلسات أو غيّر الغرفة أولًا.", "warn"),
+    "room_has_bookings": ("تعذر حذف الغرفة لأن جلساتها تحتوي حجوزات. انقل الحجوزات أو احذفها أولًا.", "warn"),
+    "rooms_none_selected": ("اختر غرفة واحدة على الأقل للحذف الجماعي.", "warn"),
+    "rooms_not_found": ("الغرف المحددة غير موجودة.", "warn"),
+    "rooms_deleted": ("تم حذف الغرف المحددة بنجاح.", "info"),
+    "rooms_deleted_partial": ("تم حذف بعض الغرف، وتعذر حذف غرف أخرى لوجود جلسات مرتبطة بها.", "warn"),
+    "rooms_deleted_partial_bookings": ("تم حذف بعض الغرف، وتعذر حذف غرف أخرى لأن جلساتها تحتوي حجوزات.", "warn"),
+    "rooms_delete_has_bookings": ("تعذر حذف الغرف المحددة لأن جلساتها تحتوي حجوزات.", "warn"),
+    "rooms_delete_blocked": ("تعذر حذف الغرف المحددة لوجود جلسات مرتبطة بها.", "warn"),
+    "room_capacity_invalid": ("سعة الغرفة يجب أن تكون أكبر من صفر.", "warn"),
+    "plan_created": ("تمت إضافة خطة الاشتراك.", "info"),
+    "plan_updated": ("تم تعديل اسم خطة الاشتراك.", "info"),
+    "plan_deleted": ("تم حذف خطة الاشتراك.", "info"),
+    "plan_has_subscriptions": ("لا يمكن حذف الخطة لوجود اشتراكات مرتبطة بها.", "warn"),
+    "plan_name_invalid": ("اسم الخطة لا يمكن أن يكون فارغًا.", "warn"),
+    "plan_details_updated": ("تم تحديث نوع الخطة والسعر وحد الجلسات بنجاح.", "info"),
+    "plan_details_invalid": ("بيانات الخطة غير صالحة. تحقق من النوع/السعر/حد الجلسات.", "warn"),
+    "session_created": ("تمت إضافة الجلسة بنجاح.", "info"),
+    "session_deleted": ("تم حذف الجلسة بنجاح.", "info"),
+    "ip_blocked": ("تم حظر الـ IP مؤقتًا.", "warn"),
+    "ip_unblocked": ("تم فك حظر الـ IP.", "info"),
+    "ip_unblock_not_found": ("تعذر العثور على الـ IP لفك الحظر.", "warn"),
+    "ip_block_invalid": ("قيمة IP غير صالحة.", "warn"),
+    "public_user_updated": ("تم تحديث حالة المستخدم بنجاح.", "info"),
+    "public_user_not_found": ("تعذر العثور على المستخدم المطلوب.", "warn"),
+    "public_user_deleted": ("تم حذف المستخدم بنجاح.", "info"),
+    "public_user_verification_resent": ("تم إرسال رابط التحقق للمستخدم بنجاح.", "info"),
+    "public_user_verification_mail_failed": ("تعذر إرسال رابط التحقق. تحقق من إعدادات SMTP.", "warn"),
+    "public_user_already_verified": ("هذا المستخدم موثق بالفعل.", "warn"),
+    "public_user_restored": ("تمت استعادة المستخدم بنجاح.", "info"),
+    "public_users_none_selected": ("اختر مستخدمًا واحدًا على الأقل لتنفيذ العملية الجماعية.", "warn"),
+    "public_users_bulk_invalid_action": ("الإجراء الجماعي غير صالح.", "warn"),
+    "public_users_bulk_done": ("تم تنفيذ العملية الجماعية على المستخدمين المحددين.", "info"),
+    "faq_created": ("تمت إضافة السؤال الشائع بنجاح.", "info"),
+    "faq_updated": ("تم تحديث السؤال الشائع بنجاح.", "info"),
+    "faq_deleted": ("تم حذف السؤال الشائع بنجاح.", "info"),
+    "faq_invalid": ("بيانات السؤال الشائع غير صالحة.", "warn"),
+    "faq_not_found": ("تعذر العثور على السؤال المطلوب.", "warn"),
+    "faq_reordered": ("تم حفظ ترتيب الأسئلة الشائعة بنجاح.", "info"),
+    "faq_reorder_invalid": ("تعذر حفظ ترتيب الأسئلة. تحقق من القائمة ثم أعد المحاولة.", "warn"),
+}
+
 
 def _current_public_user(request: Request, db: Session) -> models.PublicUser | None:
     token = request.cookies.get(PUBLIC_COOKIE_NAME)
@@ -1350,6 +1396,13 @@ def admin_dashboard(
         audit_email=audit_email,
         audit_ip=audit_ip,
     )
+    admin_flash = None
+    if msg:
+        flash_data = ADMIN_FLASH_MESSAGES.get(msg)
+        if flash_data:
+            text, level = flash_data
+            admin_flash = {"text": text, "level": level}
+
     base_admin_params = {
         "room_sort": room_sort,
         "public_user_q": public_user_q,
@@ -1387,6 +1440,7 @@ def admin_dashboard(
             "user": user,
             "center": center,
             "msg": msg,
+            "admin_flash": admin_flash,
             "dashboard": dashboard,
             "rooms": rooms,
             "plans": plan_rows,
