@@ -708,6 +708,8 @@
       <form method="get" action="/admin" class="filters" style="margin-bottom:10px;">
         <input type="hidden" name="public_user_page" value="1" />
         <input type="hidden" name="audit_page" value="{{ security_pagination.page }}" />
+        <input type="hidden" name="sessions_page" value="{{ sessions_pagination.page }}" />
+        <input type="hidden" name="payments_page" value="{{ payments_pagination.page }}" />
         <input name="public_user_q" placeholder="بحث بالاسم/البريد/الجوال" value="{{ public_user_filters.q }}" />
         <select name="public_user_status">
           <option value="active" {{ 'selected' if public_user_filters.status == 'active' else '' }}>نشطون</option>
@@ -871,6 +873,15 @@
           </tbody>
         </table>
       </div>
+      <div class="small" style="margin-top:8px;display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
+        <span>الصفحة {{ sessions_pagination.page }} من {{ sessions_pagination.total_pages }} (إجمالي: {{ sessions_pagination.total }})</span>
+        {% if sessions_pagination.has_prev %}
+          <a class="soft-link" href="{{ sessions_pagination.prev_url }}">السابق</a>
+        {% endif %}
+        {% if sessions_pagination.has_next %}
+          <a class="soft-link" href="{{ sessions_pagination.next_url }}">التالي</a>
+        {% endif %}
+      </div>
     </div>
 
     <div class="card" style="margin-top:14px;">
@@ -902,6 +913,15 @@
             {% endfor %}
           </tbody>
         </table>
+      </div>
+      <div class="small" style="margin-top:8px;display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
+        <span>الصفحة {{ payments_pagination.page }} من {{ payments_pagination.total_pages }} (إجمالي: {{ payments_pagination.total }})</span>
+        {% if payments_pagination.has_prev %}
+          <a class="soft-link" href="{{ payments_pagination.prev_url }}">السابق</a>
+        {% endif %}
+        {% if payments_pagination.has_next %}
+          <a class="soft-link" href="{{ payments_pagination.next_url }}">التالي</a>
+        {% endif %}
       </div>
     </div>
       </div>
@@ -1026,6 +1046,8 @@
       <form method="get" action="/admin" class="filters">
         <input type="hidden" name="public_user_page" value="{{ public_user_pagination.page }}" />
         <input type="hidden" name="audit_page" value="1" />
+        <input type="hidden" name="sessions_page" value="{{ sessions_pagination.page }}" />
+        <input type="hidden" name="payments_page" value="{{ payments_pagination.page }}" />
         <input name="audit_event_type" placeholder="نوع الحدث" value="{{ security_filters.event_type }}" />
         <input name="audit_status" placeholder="الحالة" value="{{ security_filters.status }}" />
         <input name="audit_email" placeholder="البريد" value="{{ security_filters.email }}" />

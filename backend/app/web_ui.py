@@ -916,6 +916,8 @@ def admin_dashboard(
     public_user_status: str = "active",
     public_user_verified: str = "all",
     public_user_page: int = 1,
+    sessions_page: int = 1,
+    payments_page: int = 1,
     audit_event_type: str = "",
     audit_status: str = "",
     audit_email: str = "",
@@ -969,10 +971,18 @@ def admin_dashboard(
         .order_by(models.SubscriptionPlan.price.asc())
         .all()
     )
+    sessions_page_size = 50
+    safe_sessions_page = max(1, int(sessions_page or 1))
+    sessions_base_query = db.query(models.YogaSession).filter(models.YogaSession.center_id == cid)
+    sessions_total = sessions_base_query.order_by(None).count()
+    sessions_total_pages = max(1, (sessions_total + sessions_page_size - 1) // sessions_page_size)
+    if safe_sessions_page > sessions_total_pages:
+        safe_sessions_page = sessions_total_pages
+    sessions_offset = (safe_sessions_page - 1) * sessions_page_size
     sessions = (
-        db.query(models.YogaSession)
-        .filter(models.YogaSession.center_id == cid)
-        .order_by(models.YogaSession.starts_at.desc())
+        sessions_base_query.order_by(models.YogaSession.starts_at.desc())
+        .offset(sessions_offset)
+        .limit(sessions_page_size)
         .all()
     )
     faqs = (
@@ -1122,7 +1132,7 @@ def admin_dashboard(
     )
     dashboard = {
         "rooms_count": len(rooms),
-        "sessions_count": len(sessions),
+        "sessions_count": sessions_total,
         "bookings_count": db.query(models.Booking).filter(models.Booking.center_id == cid).count(),
         "clients_count": db.query(models.Client).filter(models.Client.center_id == cid).count(),
         "active_plans_count": sum(1 for p in plans if p.is_active),
@@ -1141,11 +1151,18 @@ def admin_dashboard(
         "public_users_deleted_count": int(public_users_deleted_count),
         "public_users_new_7d": int(public_users_new_7d),
     }
+    payments_page_size = 20
+    safe_payments_page = max(1, int(payments_page or 1))
+    payments_base_query = db.query(models.Payment).filter(models.Payment.center_id == cid)
+    payments_total = payments_base_query.order_by(None).count()
+    payments_total_pages = max(1, (payments_total + payments_page_size - 1) // payments_page_size)
+    if safe_payments_page > payments_total_pages:
+        safe_payments_page = payments_total_pages
+    payments_offset = (safe_payments_page - 1) * payments_page_size
     recent_payments = (
-        db.query(models.Payment)
-        .filter(models.Payment.center_id == cid)
-        .order_by(models.Payment.paid_at.desc())
-        .limit(8)
+        payments_base_query.order_by(models.Payment.paid_at.desc())
+        .offset(payments_offset)
+        .limit(payments_page_size)
         .all()
     )
     client_ids = [p.client_id for p in recent_payments]
@@ -1324,58 +1341,33 @@ def admin_dashboard(
         audit_email=audit_email,
         audit_ip=audit_ip,
     )
-    public_users_page_prev_url = _url_with_params(
-        "/admin",
-        room_sort=room_sort,
-        public_user_q=public_user_q,
-        public_user_status=public_user_status,
-        public_user_verified=public_user_verified,
-        public_user_page=str(max(1, safe_public_user_page - 1)),
-        audit_event_type=audit_event_type,
-        audit_status=audit_status,
-        audit_email=audit_email,
-        audit_ip=audit_ip,
-        audit_page=str(safe_audit_page),
-    )
-    public_users_page_next_url = _url_with_params(
-        "/admin",
-        room_sort=room_sort,
-        public_user_q=public_user_q,
-        public_user_status=public_user_status,
-        public_user_verified=public_user_verified,
-        public_user_page=str(min(public_users_total_pages, safe_public_user_page + 1)),
-        audit_event_type=audit_event_type,
-        audit_status=audit_status,
-        audit_email=audit_email,
-        audit_ip=audit_ip,
-        audit_page=str(safe_audit_page),
-    )
-    security_page_prev_url = _url_with_params(
-        "/admin",
-        room_sort=room_sort,
-        public_user_q=public_user_q,
-        public_user_status=public_user_status,
-        public_user_verified=public_user_verified,
-        public_user_page=str(safe_public_user_page),
-        audit_event_type=audit_event_type,
-        audit_status=audit_status,
-        audit_email=audit_email,
-        audit_ip=audit_ip,
-        audit_page=str(max(1, safe_audit_page - 1)),
-    )
-    security_page_next_url = _url_with_params(
-        "/admin",
-        room_sort=room_sort,
-        public_user_q=public_user_q,
-        public_user_status=public_user_status,
-        public_user_verified=public_user_verified,
-        public_user_page=str(safe_public_user_page),
-        audit_event_type=audit_event_type,
-        audit_status=audit_status,
-        audit_email=audit_email,
-        audit_ip=audit_ip,
-        audit_page=str(min(security_events_total_pages, safe_audit_page + 1)),
-    )
+    def _admin_page_url(**overrides: str) -> str:
+        params = {
+            "room_sort": room_sort,
+            "public_user_q": public_user_q,
+            "public_user_status": public_user_status,
+            "public_user_verified": public_user_verified,
+            "public_user_page": str(safe_public_user_page),
+            "sessions_page": str(safe_sessions_page),
+            "payments_page": str(safe_payments_page),
+            "audit_event_type": audit_event_type,
+            "audit_status": audit_status,
+            "audit_email": audit_email,
+            "audit_ip": audit_ip,
+            "audit_page": str(safe_audit_page),
+        }
+        for k, v in overrides.items():
+            params[k] = v
+        return _url_with_params("/admin", **params)
+
+    public_users_page_prev_url = _admin_page_url(public_user_page=str(max(1, safe_public_user_page - 1)))
+    public_users_page_next_url = _admin_page_url(public_user_page=str(min(public_users_total_pages, safe_public_user_page + 1)))
+    security_page_prev_url = _admin_page_url(audit_page=str(max(1, safe_audit_page - 1)))
+    security_page_next_url = _admin_page_url(audit_page=str(min(security_events_total_pages, safe_audit_page + 1)))
+    sessions_page_prev_url = _admin_page_url(sessions_page=str(max(1, safe_sessions_page - 1)))
+    sessions_page_next_url = _admin_page_url(sessions_page=str(min(sessions_total_pages, safe_sessions_page + 1)))
+    payments_page_prev_url = _admin_page_url(payments_page=str(max(1, safe_payments_page - 1)))
+    payments_page_next_url = _admin_page_url(payments_page=str(min(payments_total_pages, safe_payments_page + 1)))
 
     return templates.TemplateResponse(
         request,
@@ -1425,6 +1417,26 @@ def admin_dashboard(
                 "has_next": safe_audit_page < security_events_total_pages,
                 "prev_url": security_page_prev_url,
                 "next_url": security_page_next_url,
+            },
+            "sessions_pagination": {
+                "page": safe_sessions_page,
+                "page_size": sessions_page_size,
+                "total": sessions_total,
+                "total_pages": sessions_total_pages,
+                "has_prev": safe_sessions_page > 1,
+                "has_next": safe_sessions_page < sessions_total_pages,
+                "prev_url": sessions_page_prev_url,
+                "next_url": sessions_page_next_url,
+            },
+            "payments_pagination": {
+                "page": safe_payments_page,
+                "page_size": payments_page_size,
+                "total": payments_total,
+                "total_pages": payments_total_pages,
+                "has_prev": safe_payments_page > 1,
+                "has_next": safe_payments_page < payments_total_pages,
+                "prev_url": payments_page_prev_url,
+                "next_url": payments_page_next_url,
             },
             "room_filters": {
                 "sort": (
