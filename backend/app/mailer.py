@@ -1,6 +1,6 @@
 import os
 import smtplib
-from concurrent.futures import ThreadPoolExecutor
+from concurrent.futures import Future, ThreadPoolExecutor
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 
@@ -20,6 +20,13 @@ def _smtp_transport_mode() -> str:
     if mode in {"none", "plain"}:
         return "none"
     return "starttls"
+
+
+def _mailer_delivery_mode() -> str:
+    mode = os.getenv("MAILER_DELIVERY_MODE", "async").strip().lower()
+    if mode in {"sync", "synchronous"}:
+        return "sync"
+    return "async"
 
 
 def _looks_like_placeholder(value: str) -> bool:
@@ -195,6 +202,15 @@ def _send_mail(to_email: str, subject: str, body: str, html_body: str | None = N
         return False, str(exc)
 
 
+def _log_mail_future(prefix: str, fut: Future[tuple[bool, str]]) -> None:
+    try:
+        ok, info = fut.result()
+        if not ok:
+            print(f"[MAILER][ERROR] {prefix} failed asynchronously: {info}")
+    except Exception as exc:
+        print(f"[MAILER][ERROR] {prefix} crashed asynchronously: {exc}")
+
+
 def validate_mailer_settings() -> tuple[bool, str]:
     smtp_host = os.getenv("SMTP_HOST", "").strip()
     smtp_user = os.getenv("SMTP_USER", "").strip()
@@ -253,7 +269,10 @@ def queue_email_verification_email(to_email: str, verification_url: str, full_na
     ok, reason = validate_mailer_settings()
     if not ok:
         return False, reason
-    _MAILER_EXECUTOR.submit(send_email_verification_email, to_email, verification_url, full_name)
+    if _mailer_delivery_mode() == "sync":
+        return send_email_verification_email(to_email, verification_url, full_name)
+    fut = _MAILER_EXECUTOR.submit(send_email_verification_email, to_email, verification_url, full_name)
+    fut.add_done_callback(lambda done: _log_mail_future("email_verification", done))
     return True, "queued"
 
 
@@ -261,5 +280,8 @@ def queue_password_reset_email(to_email: str, reset_url: str, full_name: str = "
     ok, reason = validate_mailer_settings()
     if not ok:
         return False, reason
-    _MAILER_EXECUTOR.submit(send_password_reset_email, to_email, reset_url, full_name)
+    if _mailer_delivery_mode() == "sync":
+        return send_password_reset_email(to_email, reset_url, full_name)
+    fut = _MAILER_EXECUTOR.submit(send_password_reset_email, to_email, reset_url, full_name)
+    fut.add_done_callback(lambda done: _log_mail_future("password_reset", done))
     return True, "queued"
