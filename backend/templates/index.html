@@ -263,7 +263,6 @@
           <a class="btn ghost" href="#plans-section">قارن الخطط</a>
         </div>
         <div class="toplinks" style="margin-top:10px;">
-          <a class="btn primary" href="/admin/login">دخول الإدارة</a>
           {% if public_user %}
             <a class="btn ghost" href="/public/verify-pending?next=/index?center_id={{ center_id }}">
               {{ public_user.full_name }}{% if not public_user.email_verified %} (غير موثق){% endif %}
