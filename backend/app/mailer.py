@@ -1,5 +1,8 @@
 import os
 import smtplib
+import json
+import urllib.error
+import urllib.request
 from concurrent.futures import Future, ThreadPoolExecutor
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
@@ -27,6 +30,10 @@ def _mailer_delivery_mode() -> str:
     if mode in {"sync", "synchronous"}:
         return "sync"
     return "async"
+
+
+def _relay_endpoint() -> str:
+    return os.getenv("MAIL_RELAY_URL", os.getenv("APPS_SCRIPT_WEBHOOK_URL", "")).strip()
 
 
 def _looks_like_placeholder(value: str) -> bool:
@@ -93,6 +100,49 @@ def _send_smtp_message(
         server.sendmail(smtp_from, [to_email], msg_raw)
 
 
+def _send_via_http_relay(
+    *,
+    to_email: str,
+    subject: str,
+    body: str,
+    html_body: str | None,
+) -> tuple[bool, str]:
+    relay_url = _relay_endpoint()
+    relay_token = os.getenv("MAIL_RELAY_TOKEN", "").strip()
+    if not relay_url:
+        return False, "missing_mail_relay_url"
+    if not relay_token:
+        return False, "missing_mail_relay_token"
+    payload = {
+        "token": relay_token,
+        "to": to_email,
+        "subject": subject,
+        "text": body,
+        "html": html_body or "",
+        "from": os.getenv("SMTP_FROM", "").strip(),
+    }
+    data = json.dumps(payload).encode("utf-8")
+    req = urllib.request.Request(
+        relay_url,
+        data=data,
+        method="POST",
+        headers={"Content-Type": "application/json", "User-Agent": "MaestroYoga-Mailer/1.0"},
+    )
+    try:
+        with urllib.request.urlopen(req, timeout=20) as response:
+            status = int(getattr(response, "status", 200))
+            body_bytes = response.read() or b""
+            body_text = body_bytes.decode("utf-8", errors="ignore").strip()
+            if 200 <= status < 300:
+                return True, "ok"
+            return False, f"relay_http_{status}:{body_text[:200]}"
+    except urllib.error.HTTPError as exc:
+        err_body = exc.read().decode("utf-8", errors="ignore").strip()
+        return False, f"relay_http_{exc.code}:{err_body[:200]}"
+    except Exception as exc:
+        return False, f"relay_error:{exc}"
+
+
 def _brand_email_html(
     *,
     app_name: str,
@@ -147,6 +197,9 @@ def _send_mail(to_email: str, subject: str, body: str, html_body: str | None = N
         return False, "missing_smtp_user"
 
     try:
+        if mail_provider in {"http_relay", "apps_script"}:
+            return _send_via_http_relay(to_email=to_email, subject=subject, body=body, html_body=html_body)
+
         if mail_provider == "pywhatkit":
             if pywhatkit is None:
                 raise RuntimeError("pywhatkit is not installed")
@@ -212,6 +265,14 @@ def _log_mail_future(prefix: str, fut: Future[tuple[bool, str]]) -> None:
 
 
 def validate_mailer_settings() -> tuple[bool, str]:
+    mail_provider = os.getenv("MAIL_PROVIDER", "smtp").strip().lower()
+    if mail_provider in {"http_relay", "apps_script"}:
+        if not _relay_endpoint():
+            return False, "missing_mail_relay_url"
+        if _looks_like_placeholder(os.getenv("MAIL_RELAY_TOKEN", "").strip()):
+            return False, "invalid_mail_relay_token_placeholder"
+        return True, "ok"
+
     smtp_host = os.getenv("SMTP_HOST", "").strip()
     smtp_user = os.getenv("SMTP_USER", "").strip()
     smtp_password = os.getenv("SMTP_PASSWORD", "").strip()
