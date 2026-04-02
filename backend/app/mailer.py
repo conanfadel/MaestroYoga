@@ -35,6 +35,57 @@ def _looks_like_placeholder(value: str) -> bool:
     }
 
 
+def _parse_smtp_port(value: str) -> int:
+    try:
+        return int(value.strip())
+    except ValueError:
+        return 587
+
+
+def _build_smtp_attempts(smtp_host: str, smtp_port: int, smtp_security: str) -> list[tuple[str, int]]:
+    # Start with user-configured mode/port, then try pragmatic Gmail fallback.
+    attempts: list[tuple[str, int]] = [(smtp_security, smtp_port)]
+    host = smtp_host.strip().lower()
+    if host in {"smtp.gmail.com", "smtp.googlemail.com"}:
+        if (smtp_security, smtp_port) != ("starttls", 587):
+            attempts.append(("starttls", 587))
+        if (smtp_security, smtp_port) != ("ssl", 465):
+            attempts.append(("ssl", 465))
+
+    deduped: list[tuple[str, int]] = []
+    seen: set[tuple[str, int]] = set()
+    for item in attempts:
+        if item in seen:
+            continue
+        seen.add(item)
+        deduped.append(item)
+    return deduped
+
+
+def _send_smtp_message(
+    *,
+    smtp_host: str,
+    smtp_port: int,
+    smtp_security: str,
+    smtp_user: str,
+    smtp_password: str,
+    smtp_from: str,
+    to_email: str,
+    msg_raw: str,
+) -> None:
+    if smtp_security == "ssl":
+        with smtplib.SMTP_SSL(smtp_host, smtp_port, timeout=20) as server:
+            server.login(smtp_user, smtp_password)
+            server.sendmail(smtp_from, [to_email], msg_raw)
+        return
+
+    with smtplib.SMTP(smtp_host, smtp_port, timeout=20) as server:
+        if smtp_security == "starttls":
+            server.starttls()
+        server.login(smtp_user, smtp_password)
+        server.sendmail(smtp_from, [to_email], msg_raw)
+
+
 def _brand_email_html(
     *,
     app_name: str,
@@ -74,7 +125,7 @@ def _brand_email_html(
 
 def _send_mail(to_email: str, subject: str, body: str, html_body: str | None = None) -> tuple[bool, str]:
     smtp_host = os.getenv("SMTP_HOST", "").strip()
-    smtp_port = int(os.getenv("SMTP_PORT", "587"))
+    smtp_port = _parse_smtp_port(os.getenv("SMTP_PORT", "587"))
     smtp_user = os.getenv("SMTP_USER", "").strip()
     smtp_password = os.getenv("SMTP_PASSWORD", "").strip()
     smtp_from = os.getenv("SMTP_FROM", smtp_user or "no-reply@maestroyoga.local")
@@ -116,18 +167,29 @@ def _send_mail(to_email: str, subject: str, body: str, html_body: str | None = N
             msg["From"] = smtp_from
             msg["To"] = to_email
 
-        if smtp_security == "ssl":
-            with smtplib.SMTP_SSL(smtp_host, smtp_port, timeout=20) as server:
-                server.login(smtp_user, smtp_password)
-                server.sendmail(smtp_from, [to_email], msg.as_string())
-            return True, "ok"
-
-        with smtplib.SMTP(smtp_host, smtp_port, timeout=20) as server:
-            if smtp_security == "starttls":
-                server.starttls()
-            server.login(smtp_user, smtp_password)
-            server.sendmail(smtp_from, [to_email], msg.as_string())
-        return True, "ok"
+        msg_raw = msg.as_string()
+        last_error = "unknown"
+        for mode, port in _build_smtp_attempts(smtp_host, smtp_port, smtp_security):
+            try:
+                _send_smtp_message(
+                    smtp_host=smtp_host,
+                    smtp_port=port,
+                    smtp_security=mode,
+                    smtp_user=smtp_user,
+                    smtp_password=smtp_password,
+                    smtp_from=smtp_from,
+                    to_email=to_email,
+                    msg_raw=msg_raw,
+                )
+                if (mode, port) != (smtp_security, smtp_port):
+                    print(
+                        "[MAILER][WARN] Primary SMTP transport failed; "
+                        f"succeeded via fallback mode={mode} port={port}"
+                    )
+                return True, "ok"
+            except Exception as exc:
+                last_error = f"mode={mode} port={port} error={exc}"
+        raise RuntimeError(last_error)
     except Exception as exc:
         print(f"[MAILER][ERROR] Failed to send email to {to_email}: {exc}")
         return False, str(exc)
