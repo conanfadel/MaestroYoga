@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>دخول المستخدم — Maestro Yoga</title>
+  {% if analytics_enabled and ga4_measurement_id %}
+  <script async src="https://www.googletagmanager.com/gtag/js?id={{ ga4_measurement_id }}"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){ dataLayer.push(arguments); }
+    gtag("js", new Date());
+    gtag("config", "{{ ga4_measurement_id }}", { send_page_view: true });
+  </script>
+  {% endif %}
+  <style>
+    body { font-family: system-ui, sans-serif; background: radial-gradient(circle at top right, #ecfdf5, #f0fdfa 40%, #f8fafc); margin: 0; padding: 24px; }
+    .card { max-width: 430px; margin: 30px auto; background: #fff; border: 1px solid #a7f3d0; border-radius: 16px; padding: 24px; box-shadow: 0 12px 32px rgba(6,95,70,.14); }
+    h1 { margin: 0 0 8px; font-size: 1.35rem; color: #065f46; }
+    p { margin: 0 0 16px; color: #475569; }
+    label { display: block; margin: 10px 0 6px; font-weight: 700; font-size: .92rem; }
+    input { width: 100%; padding: 10px 12px; border: 1px solid #99f6e4; border-radius: 10px; box-sizing: border-box; }
+    button { width: 100%; margin-top: 14px; padding: 11px; border: 0; border-radius: 10px; background: linear-gradient(120deg, #0f766e, #10b981); color: #fff; font-weight: 700; cursor: pointer; }
+    .warn { margin-bottom: 10px; border: 1px solid #fde68a; background: #fffbeb; color: #92400e; padding: 10px 12px; border-radius: 10px; font-size: .9rem; }
+    .err { margin-bottom: 10px; border: 1px solid #fecaca; background: #fef2f2; color: #991b1b; padding: 10px 12px; border-radius: 10px; font-size: .9rem; }
+    .links { margin-top: 12px; font-size: .9rem; }
+    a { color: #0f766e; text-decoration: none; font-weight: 700; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h1>دخول المستخدم</h1>
+    <p>سجّل الدخول لإكمال الحجز أو الاشتراك.</p>
+    {% if request.query_params.get('msg') == 'invalid_credentials' %}
+      <div class="err">البريد أو كلمة المرور غير صحيحين.</div>
+    {% endif %}
+    {% if request.query_params.get('msg') == 'inactive' %}
+      <div class="err">هذا الحساب غير نشط.</div>
+    {% endif %}
+    {% if request.query_params.get('msg') == 'account_exists' %}
+      <div class="warn">هذا البريد مسجل مسبقًا، يمكنك تسجيل الدخول مباشرة.</div>
+    {% endif %}
+    {% if request.query_params.get('msg') == 'auth_required' %}
+      <div class="warn">يلزم تسجيل الدخول قبل المتابعة.</div>
+    {% endif %}
+    {% if request.query_params.get('msg') == 'ip_blocked' %}
+      <div class="err">تم حظر هذا الـ IP مؤقتًا لأسباب أمنية. حاول لاحقًا.</div>
+    {% endif %}
+    {% if request.query_params.get('msg') == 'rate_limited' %}
+      <div class="warn">محاولات كثيرة. حاول مجددًا بعد دقائق.</div>
+    {% endif %}
+    {% if request.query_params.get('msg') == 'password_reset_success' %}
+      <div class="warn">تم تحديث كلمة المرور. يمكنك تسجيل الدخول الآن.</div>
+    {% endif %}
+    <form method="post" action="/public/login">
+      <input type="hidden" name="next" value="{{ request.query_params.get('next', next) }}" />
+      <label>البريد الإلكتروني</label>
+      <input name="email" type="email" required />
+      <label>كلمة المرور</label>
+      <input name="password" type="password" required />
+      <button type="submit">دخول</button>
+    </form>
+    <div class="links">
+      ليس لديك حساب؟ <a href="/public/register">تسجيل جديد</a><br/>
+      <a href="/public/forgot-password">نسيت كلمة المرور؟</a><br/>
+      <a href="/index?center_id=1">العودة للواجهة العامة</a>
+    </div>
+  </div>
+  <script>
+    (function () {
+      function track(eventName, payload) {
+        window.dataLayer = window.dataLayer || [];
+        window.dataLayer.push({ event: eventName, ...payload });
+        if (typeof window.gtag === "function") window.gtag("event", eventName, payload || {});
+      }
+      const msg = {{ request.query_params.get('msg', '')|tojson }};
+      track("page_view_public_login", { page_name: {{ analytics_page_name|tojson }} });
+      if (msg === "invalid_credentials" || msg === "inactive" || msg === "rate_limited" || msg === "ip_blocked") {
+        track("login_failed", { reason: msg });
+      }
+      if (msg === "password_reset_success") {
+        track("password_reset_completed", {});
+      }
+      const form = document.querySelector("form[action='/public/login']");
+      if (form) {
+        form.addEventListener("submit", function () {
+          track("login_attempt", {});
+        });
+      }
+    })();
+  </script>
+</body>
+</html>

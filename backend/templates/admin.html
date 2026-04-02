@@ -1,0 +1,1279 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>إدارة الجلسات — Maestro Yoga</title>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      font-family: system-ui, sans-serif;
+      background: radial-gradient(circle at top right, #ecfdf5, #f0fdfa 40%, #f8fafc);
+      margin: 0;
+      padding: 20px;
+      color: #1f2937;
+    }
+    .container { max-width: 1200px; margin: 0 auto; }
+    .top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 12px;
+      margin-bottom: 18px;
+      background: linear-gradient(140deg, #065f46, #0d9488 60%, #10b981);
+      border-radius: 18px;
+      padding: 20px;
+      color: #f0fdfa;
+      box-shadow: 0 16px 36px rgba(6, 95, 70, .25);
+    }
+    h1 { margin: 0; font-size: 1.45rem; }
+    .muted { color: #d1fae5; font-size: 0.95rem; }
+    a.btn {
+      display: inline-block;
+      padding: 8px 14px;
+      background: #ecfdf5;
+      border-radius: 999px;
+      text-decoration: none;
+      color: #065f46;
+      font-weight: 700;
+      margin-inline-start: 6px;
+    }
+    .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 10px; margin-bottom: 16px; }
+    .stat {
+      background: #ffffffd9;
+      border: 1px solid #99f6e4;
+      border-radius: 14px;
+      padding: 12px;
+    }
+    .stat .k { color: #64748b; font-size: .82rem; }
+    .stat .v { color: #065f46; font-size: 1.4rem; font-weight: 800; margin-top: 4px; }
+    .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(290px, 1fr)); gap: 14px; }
+    .card {
+      background: #ffffffd9;
+      border: 1px solid #ccfbf1;
+      border-radius: 14px;
+      padding: 16px;
+      box-shadow: 0 4px 16px rgba(0,0,0,.05);
+    }
+    h2 { margin: 0 0 12px; font-size: 1.05rem; color: #134e4a; }
+    label { display: block; margin: 12px 0 6px; font-weight: 600; font-size: 0.9rem; }
+    input, select { width: 100%; padding: 10px 12px; border: 1px solid #99f6e4; border-radius: 10px; background: #fff; }
+    button {
+      margin-top: 12px;
+      padding: 10px 16px;
+      border: 0;
+      border-radius: 10px;
+      background: linear-gradient(120deg, #0f766e, #10b981);
+      color: #fff;
+      font-weight: 700;
+      cursor: pointer;
+    }
+    button.danger { background: #dc2626; }
+    table { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
+    th, td { border-bottom: 1px solid #e5e7eb; padding: 10px 8px; text-align: right; }
+    th { background: #f0fdfa; font-weight: 700; color: #134e4a; }
+    .badge { display: inline-block; padding: 2px 8px; border-radius: 999px; background: #ccfbf1; font-size: 0.8rem; color: #0f766e; }
+    .badge.paid { background: #dcfce7; color: #166534; }
+    .badge.pending { background: #fef9c3; color: #854d0e; }
+    .badge.failed { background: #fee2e2; color: #991b1b; }
+    .badge.low { background: #dcfce7; color: #166534; }
+    .badge.medium { background: #fef3c7; color: #92400e; }
+    .badge.high { background: #fee2e2; color: #991b1b; }
+    .small { color: #64748b; font-size: .86rem; }
+    .alert {
+      margin: 0 0 14px;
+      padding: 10px 12px;
+      border-radius: 10px;
+      border: 1px solid #99f6e4;
+      background: #ecfeff;
+      color: #155e75;
+      font-size: .9rem;
+    }
+    .alert.warn {
+      border-color: #fcd34d;
+      background: #fffbeb;
+      color: #92400e;
+    }
+    .inline-form { display: flex; gap: 6px; align-items: center; flex-wrap: nowrap; }
+    .inline-form input { min-width: 110px; width: auto; flex: 1 1 auto; }
+    .inline-form button { margin-top: 0; padding: 8px 10px; font-size: .82rem; }
+    .filters { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 8px; margin-bottom: 10px; }
+    .filters button { margin-top: 0; }
+    .mono { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: .78rem; color: #334155; }
+    .controls-wrap {
+      display: flex;
+      gap: 6px;
+      flex-wrap: nowrap;
+      align-items: center;
+      overflow-x: auto;
+      white-space: nowrap;
+    }
+    .controls-wrap form { margin: 0; }
+    .controls-wrap button {
+      margin-top: 0;
+      padding: 7px 10px;
+      font-size: .8rem;
+      border-radius: 8px;
+    }
+    .controls-wrap .soft {
+      background: linear-gradient(120deg, #2563eb, #0ea5e9);
+    }
+    .controls-wrap .warn {
+      background: linear-gradient(120deg, #d97706, #f59e0b);
+      color: #fff;
+      border: 0;
+    }
+    .accordion {
+      border: 1px solid #a7f3d0;
+      border-radius: 12px;
+      background: #ffffffcc;
+      margin: 10px 0;
+      overflow: hidden;
+    }
+    .accordion-body { padding: 12px; display: none; }
+    .accordion.open .accordion-body { display: block; }
+    .drag-handle {
+      cursor: grab;
+      user-select: none;
+      color: #0f766e;
+      font-weight: 700;
+      letter-spacing: 1px;
+    }
+    .faq-draggable.dragging { opacity: .45; }
+    .section-tabs {
+      display: flex;
+      gap: 8px;
+      overflow-x: auto;
+      white-space: nowrap;
+      padding-bottom: 4px;
+      margin: 6px 0 12px;
+    }
+    .section-tab {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      border: 1px solid #99f6e4;
+      border-radius: 999px;
+      background: #ecfdf5;
+      color: #0f766e;
+      font-weight: 700;
+      font-size: .84rem;
+      padding: 7px 12px;
+      text-decoration: none;
+      cursor: pointer;
+      flex: 0 0 auto;
+    }
+    .section-tab.active {
+      background: linear-gradient(120deg, #0f766e, #10b981);
+      color: #fff;
+      border-color: transparent;
+    }
+    .plans-shell {
+      border: 1px solid #ccfbf1;
+      border-radius: 14px;
+      background: #f8fffd;
+      padding: 10px;
+    }
+    .plans-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 8px;
+      flex-wrap: wrap;
+    }
+    .plans-note { font-size: .82rem; color: #475569; }
+    .plan-type-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: 3px 9px;
+      border-radius: 999px;
+      font-size: .76rem;
+      font-weight: 700;
+    }
+    .plan-type-icon {
+      width: 14px;
+      height: 14px;
+      display: inline-block;
+      color: currentColor;
+      flex: 0 0 auto;
+    }
+    .plan-type-weekly { background: #e0f2fe; color: #075985; }
+    .plan-type-monthly { background: #dcfce7; color: #166534; }
+    .plan-type-yearly { background: #fef3c7; color: #92400e; }
+    .plans-cards {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 12px;
+    }
+    .plan-card {
+      border: 1px solid #bff7ea;
+      border-radius: 12px;
+      background: #ffffff;
+      padding: 12px;
+      box-shadow: 0 3px 10px rgba(2, 132, 199, .08);
+      position: relative;
+      overflow: hidden;
+    }
+    .plan-card::before {
+      content: "";
+      position: absolute;
+      top: 0;
+      right: 0;
+      left: 0;
+      height: 4px;
+      background: #14b8a6;
+    }
+    .plan-card.plan-weekly {
+      border-color: #bae6fd;
+      background: linear-gradient(180deg, #f0f9ff 0%, #ffffff 32%);
+    }
+    .plan-card.plan-weekly::before { background: #0ea5e9; }
+    .plan-card.plan-monthly {
+      border-color: #bbf7d0;
+      background: linear-gradient(180deg, #f0fdf4 0%, #ffffff 32%);
+    }
+    .plan-card.plan-monthly::before { background: #22c55e; }
+    .plan-card.plan-yearly {
+      border-color: #fde68a;
+      background: linear-gradient(180deg, #fffbeb 0%, #ffffff 32%);
+    }
+    .plan-card.plan-yearly::before { background: #f59e0b; }
+    .plan-card-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 8px;
+      margin-bottom: 8px;
+    }
+    .plan-card-id {
+      font-size: .78rem;
+      color: #64748b;
+      margin-bottom: 2px;
+    }
+    .plan-card h3 {
+      margin: 0;
+      font-size: 1rem;
+      color: #134e4a;
+    }
+    .plan-meta {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 8px;
+      margin-bottom: 10px;
+    }
+    .plan-meta-item {
+      background: #f0fdfa;
+      border: 1px solid #ccfbf1;
+      border-radius: 10px;
+      padding: 7px 9px;
+    }
+    .plan-meta-item .k {
+      display: block;
+      font-size: .75rem;
+      color: #64748b;
+      margin-bottom: 2px;
+    }
+    .plan-meta-item .v {
+      font-size: .9rem;
+      color: #0f766e;
+      font-weight: 700;
+    }
+    .plan-card .plan-name-form {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 6px;
+      align-items: center;
+      margin-bottom: 8px;
+    }
+    .plan-card .plan-name-form input { margin: 0; }
+    .plan-card .plan-name-form button { margin-top: 0; }
+    .plan-card .plan-details-form {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 6px;
+      align-items: center;
+      margin-bottom: 8px;
+    }
+    .plan-card .plan-details-form input,
+    .plan-card .plan-details-form select { margin: 0; }
+    .plan-card .plan-details-form button {
+      grid-column: 1 / -1;
+      width: 100%;
+      margin-top: 0;
+    }
+    .plan-card .plan-delete-form button {
+      margin-top: 0;
+      width: 100%;
+    }
+    .plan-empty {
+      border: 1px dashed #99f6e4;
+      border-radius: 12px;
+      padding: 14px;
+      color: #0f766e;
+      background: #f0fdfa;
+      text-align: center;
+    }
+    @media (max-width: 1200px) {
+      .plan-card .plan-details-form { grid-template-columns: 1fr; }
+    }
+    @media (max-width: 640px) {
+      .plan-meta { grid-template-columns: 1fr; }
+      .plan-card .plan-name-form { grid-template-columns: 1fr; }
+      .plan-card .plan-name-form button { width: 100%; }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="top">
+      <div>
+        <h1>لوحة تحكم الإدارة | {{ center.name if center else 'المركز' }}</h1>
+        <div class="muted">مرحبًا {{ user.full_name }} · {{ user.email }}</div>
+      </div>
+      <div>
+        <a class="btn" href="/index">الواجهة العامة</a>
+        <a class="btn" href="/admin/logout">تسجيل الخروج</a>
+      </div>
+    </div>
+
+    {% if msg == 'room_created' %}
+      <div class="alert">تمت إضافة الغرفة بنجاح.</div>
+    {% elif msg == 'room_updated' %}
+      <div class="alert">تم تحديث بيانات الغرفة بنجاح.</div>
+    {% elif msg == 'room_deleted' %}
+      <div class="alert">تم حذف الغرفة بنجاح.</div>
+    {% elif msg == 'room_has_sessions' %}
+      <div class="alert warn">لا يمكن حذف الغرفة لوجود جلسات مرتبطة بها. احذف الجلسات أو غيّر الغرفة أولًا.</div>
+    {% elif msg == 'room_has_bookings' %}
+      <div class="alert warn">تعذر حذف الغرفة لأن جلساتها تحتوي حجوزات. انقل الحجوزات أو احذفها أولًا.</div>
+    {% elif msg == 'rooms_none_selected' %}
+      <div class="alert warn">اختر غرفة واحدة على الأقل للحذف الجماعي.</div>
+    {% elif msg == 'rooms_not_found' %}
+      <div class="alert warn">الغرف المحددة غير موجودة.</div>
+    {% elif msg == 'rooms_deleted' %}
+      <div class="alert">تم حذف الغرف المحددة بنجاح.</div>
+    {% elif msg == 'rooms_deleted_partial' %}
+      <div class="alert warn">تم حذف بعض الغرف، وتعذر حذف غرف أخرى لوجود جلسات مرتبطة بها.</div>
+    {% elif msg == 'rooms_deleted_partial_bookings' %}
+      <div class="alert warn">تم حذف بعض الغرف، وتعذر حذف غرف أخرى لأن جلساتها تحتوي حجوزات.</div>
+    {% elif msg == 'rooms_delete_has_bookings' %}
+      <div class="alert warn">تعذر حذف الغرف المحددة لأن جلساتها تحتوي حجوزات.</div>
+    {% elif msg == 'rooms_delete_blocked' %}
+      <div class="alert warn">تعذر حذف الغرف المحددة لوجود جلسات مرتبطة بها.</div>
+    {% elif msg == 'room_capacity_invalid' %}
+      <div class="alert warn">سعة الغرفة يجب أن تكون أكبر من صفر.</div>
+    {% elif msg == 'plan_created' %}
+      <div class="alert">تمت إضافة خطة الاشتراك.</div>
+    {% elif msg == 'plan_updated' %}
+      <div class="alert">تم تعديل اسم خطة الاشتراك.</div>
+    {% elif msg == 'plan_deleted' %}
+      <div class="alert">تم حذف خطة الاشتراك.</div>
+    {% elif msg == 'plan_has_subscriptions' %}
+      <div class="alert warn">لا يمكن حذف الخطة لوجود اشتراكات مرتبطة بها.</div>
+    {% elif msg == 'plan_name_invalid' %}
+      <div class="alert warn">اسم الخطة لا يمكن أن يكون فارغًا.</div>
+    {% elif msg == 'plan_details_updated' %}
+      <div class="alert">تم تحديث نوع الخطة والسعر وحد الجلسات بنجاح.</div>
+    {% elif msg == 'plan_details_invalid' %}
+      <div class="alert warn">بيانات الخطة غير صالحة. تحقق من النوع/السعر/حد الجلسات.</div>
+    {% elif msg == 'session_created' %}
+      <div class="alert">تمت إضافة الجلسة بنجاح.</div>
+    {% elif msg == 'session_deleted' %}
+      <div class="alert">تم حذف الجلسة بنجاح.</div>
+    {% elif msg == 'ip_blocked' %}
+      <div class="alert warn">تم حظر الـ IP مؤقتًا.</div>
+    {% elif msg == 'ip_unblocked' %}
+      <div class="alert">تم فك حظر الـ IP.</div>
+    {% elif msg == 'ip_unblock_not_found' %}
+      <div class="alert warn">تعذر العثور على الـ IP لفك الحظر.</div>
+    {% elif msg == 'ip_block_invalid' %}
+      <div class="alert warn">قيمة IP غير صالحة.</div>
+    {% elif msg == 'public_user_updated' %}
+      <div class="alert">تم تحديث حالة المستخدم بنجاح.</div>
+    {% elif msg == 'public_user_not_found' %}
+      <div class="alert warn">تعذر العثور على المستخدم المطلوب.</div>
+    {% elif msg == 'public_user_deleted' %}
+      <div class="alert">تم حذف المستخدم بنجاح.</div>
+    {% elif msg == 'public_user_verification_resent' %}
+      <div class="alert">تم إرسال رابط التحقق للمستخدم بنجاح.</div>
+    {% elif msg == 'public_user_verification_mail_failed' %}
+      <div class="alert warn">تعذر إرسال رابط التحقق. تحقق من إعدادات SMTP.</div>
+    {% elif msg == 'public_user_already_verified' %}
+      <div class="alert warn">هذا المستخدم موثق بالفعل.</div>
+    {% elif msg == 'public_user_restored' %}
+      <div class="alert">تمت استعادة المستخدم بنجاح.</div>
+    {% elif msg == 'public_users_none_selected' %}
+      <div class="alert warn">اختر مستخدمًا واحدًا على الأقل لتنفيذ العملية الجماعية.</div>
+    {% elif msg == 'public_users_bulk_invalid_action' %}
+      <div class="alert warn">الإجراء الجماعي غير صالح.</div>
+    {% elif msg == 'public_users_bulk_done' %}
+      <div class="alert">تم تنفيذ العملية الجماعية على المستخدمين المحددين.</div>
+    {% elif msg == 'faq_created' %}
+      <div class="alert">تمت إضافة السؤال الشائع بنجاح.</div>
+    {% elif msg == 'faq_updated' %}
+      <div class="alert">تم تحديث السؤال الشائع بنجاح.</div>
+    {% elif msg == 'faq_deleted' %}
+      <div class="alert">تم حذف السؤال الشائع بنجاح.</div>
+    {% elif msg == 'faq_invalid' %}
+      <div class="alert warn">بيانات السؤال الشائع غير صالحة.</div>
+    {% elif msg == 'faq_not_found' %}
+      <div class="alert warn">تعذر العثور على السؤال المطلوب.</div>
+    {% elif msg == 'faq_reordered' %}
+      <div class="alert">تم حفظ ترتيب الأسئلة الشائعة بنجاح.</div>
+    {% elif msg == 'faq_reorder_invalid' %}
+      <div class="alert warn">تعذر حفظ ترتيب الأسئلة. تحقق من القائمة ثم أعد المحاولة.</div>
+    {% endif %}
+
+    <div class="stats">
+      <div class="stat"><div class="k">عدد العملاء</div><div class="v">{{ dashboard.clients_count }}</div></div>
+      <div class="stat"><div class="k">عدد الغرف</div><div class="v">{{ dashboard.rooms_count }}</div></div>
+      <div class="stat"><div class="k">عدد الجلسات</div><div class="v">{{ dashboard.sessions_count }}</div></div>
+      <div class="stat"><div class="k">عدد الحجوزات</div><div class="v">{{ dashboard.bookings_count }}</div></div>
+      <div class="stat"><div class="k">الخطط النشطة</div><div class="v">{{ dashboard.active_plans_count }}</div></div>
+      <div class="stat"><div class="k">الاشتراكات الفعّالة</div><div class="v">{{ dashboard.active_subscriptions_count }}</div></div>
+      <div class="stat"><div class="k">إيراد اليوم</div><div class="v">{{ dashboard.revenue_today }} SAR</div></div>
+      <div class="stat"><div class="k">الإيراد الكلي</div><div class="v">{{ dashboard.revenue_total }} SAR</div></div>
+      <div class="stat"><div class="k">مستخدمو الجمهور</div><div class="v">{{ dashboard.public_users_count }}</div></div>
+      <div class="stat"><div class="k">جدد آخر 7 أيام</div><div class="v">{{ dashboard.public_users_new_7d }}</div></div>
+      <div class="stat"><div class="k">محذوفون (Soft)</div><div class="v">{{ dashboard.public_users_deleted_count }}</div></div>
+    </div>
+
+    <div class="section-tabs" id="section-tabs">
+      <a class="section-tab" data-target="section-create" href="#section-create">
+        الإضافات السريعة
+      </a>
+      <a class="section-tab" data-target="section-rooms" href="#section-rooms">
+        إدارة الغرف
+      </a>
+      <a class="section-tab" data-target="section-plans" href="#section-plans">
+        إدارة خطط الاشتراك
+      </a>
+      <a class="section-tab" data-target="section-public-users" href="#section-public-users">
+        إدارة مستخدمي الجمهور
+      </a>
+      <a class="section-tab" data-target="section-sessions" href="#section-sessions">
+        إدارة الجلسات والمدفوعات
+      </a>
+      <a class="section-tab" data-target="section-faq" href="#section-faq">
+        إدارة الأسئلة الشائعة
+      </a>
+      <a class="section-tab" data-target="section-security" href="#section-security">
+        مركز الأمان والمخاطر
+      </a>
+    </div>
+
+    <section id="section-create" class="accordion">
+      <div class="accordion-body">
+    <div class="grid">
+      <div class="card">
+        <h2>إضافة غرفة</h2>
+        <form method="post" action="/admin/rooms" data-preserve-scroll="1">
+          <label>اسم الغرفة</label>
+          <input name="name" required placeholder="مثال: قاعة التأمل" />
+          <label>السعة (العدد)</label>
+          <input name="capacity" type="number" min="1" value="10" required />
+          <button type="submit">حفظ الغرفة</button>
+        </form>
+      </div>
+
+      <div class="card">
+        <h2>إضافة جلسة جديدة</h2>
+        <form method="post" action="/admin/sessions" data-preserve-scroll="1">
+          <label>الغرفة</label>
+          <select name="room_id" required>
+            {% for r in rooms %}
+              <option value="{{ r.id }}">{{ r.name }} (سعة {{ r.capacity }})</option>
+            {% else %}
+              <option value="" disabled>لا توجد غرف — أضف غرفة أولًا</option>
+            {% endfor %}
+          </select>
+          <label>عنوان الجلسة</label>
+          <input name="title" required />
+          <label>المدرب</label>
+          <input name="trainer_name" required />
+          <label>المستوى</label>
+          <select name="level" required>
+            <option value="beginner">مبتدئ</option>
+            <option value="intermediate">متوسط</option>
+            <option value="advanced">متقدم</option>
+          </select>
+          <label>التاريخ والوقت</label>
+          <input name="starts_at" type="datetime-local" required />
+          <label>المدة (دقيقة)</label>
+          <input name="duration_minutes" type="number" min="15" value="60" required />
+          <label>السعر (دخول لمرة واحدة)</label>
+          <input name="price_drop_in" type="number" step="0.01" min="0" value="60" required />
+          <button type="submit">نشر الجلسة</button>
+        </form>
+      </div>
+
+      <div class="card">
+        <h2>إضافة خطة اشتراك</h2>
+        <form method="post" action="/admin/plans" data-preserve-scroll="1">
+          <label>اسم الخطة</label>
+          <input name="name" required placeholder="مثال: باقة التوازن" />
+          <label>نوع الخطة</label>
+          <select name="plan_type" required>
+            <option value="weekly">أسبوعي</option>
+            <option value="monthly">شهري</option>
+            <option value="yearly">سنوي</option>
+          </select>
+          <label>السعر (SAR)</label>
+          <input name="price" type="number" min="0" step="0.01" required />
+          <label>حد الجلسات (اختياري)</label>
+          <input name="session_limit" type="number" min="1" placeholder="اتركه فارغًا لعدد غير محدود" />
+          <button type="submit">حفظ الخطة</button>
+        </form>
+      </div>
+    </div>
+      </div>
+    </section>
+
+    <section id="section-rooms" class="accordion">
+      <div class="accordion-body">
+    <div class="card" style="margin-top:0;">
+      <h2>إدارة الغرف (تعديل الاسم/السعة/الحذف)</h2>
+      <form method="get" action="/admin" class="filters" style="margin-bottom:10px;">
+        <input type="hidden" name="public_user_q" value="{{ public_user_filters.q }}" />
+        <input type="hidden" name="public_user_status" value="{{ public_user_filters.status }}" />
+        <input type="hidden" name="public_user_verified" value="{{ public_user_filters.verified }}" />
+        <input type="hidden" name="audit_event_type" value="{{ security_filters.event_type }}" />
+        <input type="hidden" name="audit_status" value="{{ security_filters.status }}" />
+        <input type="hidden" name="audit_email" value="{{ security_filters.email }}" />
+        <input type="hidden" name="audit_ip" value="{{ security_filters.ip }}" />
+        <select name="room_sort" aria-label="ترتيب الغرف" onchange="this.form.submit()">
+          <option value="name" {{ 'selected' if room_filters.sort == 'name' else '' }}>ترتيب حسب الاسم</option>
+          <option value="newest" {{ 'selected' if room_filters.sort == 'newest' else '' }}>ترتيب حسب الأحدث إضافة</option>
+          <option value="capacity_desc" {{ 'selected' if room_filters.sort == 'capacity_desc' else '' }}>السعة من الأعلى إلى الأقل</option>
+          <option value="capacity_asc" {{ 'selected' if room_filters.sort == 'capacity_asc' else '' }}>السعة من الأقل إلى الأعلى</option>
+          <option value="sessions_desc" {{ 'selected' if room_filters.sort == 'sessions_desc' else '' }}>عدد الجلسات من الأكثر إلى الأقل</option>
+          <option value="sessions_asc" {{ 'selected' if room_filters.sort == 'sessions_asc' else '' }}>عدد الجلسات من الأقل إلى الأكثر</option>
+        </select>
+        <button type="submit">تطبيق الترتيب</button>
+      </form>
+      <form id="bulk-delete-rooms-form" method="post" action="/admin/rooms/delete-bulk" data-preserve-scroll="1" style="margin-bottom: 12px;">
+        <button type="submit" class="danger" onclick="return confirm('حذف الغرف المحددة؟');">حذف المحدد</button>
+      </form>
+      <div>
+        <table class="plans-table">
+          <thead>
+            <tr>
+              <th><input type="checkbox" id="rooms-select-all" title="تحديد الكل" /></th>
+              <th>#</th>
+              <th>الاسم الحالي</th>
+              <th>السعة الحالية</th>
+              <th>تعديل الغرفة</th>
+              <th>حذف</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for r in rooms %}
+            <tr>
+              <td>
+                <input
+                  type="checkbox"
+                  name="room_ids"
+                  value="{{ r.id }}"
+                  form="bulk-delete-rooms-form"
+                  class="room-select-checkbox"
+                />
+              </td>
+              <td>{{ r.id }}</td>
+              <td>{{ r.name }}</td>
+              <td>{{ r.capacity }}</td>
+              <td>
+                <form method="post" action="/admin/rooms/update" class="inline-form" data-preserve-scroll="1">
+                  <input type="hidden" name="room_id" value="{{ r.id }}" />
+                  <input name="name" value="{{ r.name }}" required />
+                  <input name="capacity" type="number" min="1" value="{{ r.capacity }}" required />
+                  <button type="submit">تحديث</button>
+                </form>
+              </td>
+              <td>
+                <form method="post" action="/admin/rooms/delete" data-preserve-scroll="1" onsubmit="return confirm('حذف هذه الغرفة؟');">
+                  <input type="hidden" name="room_id" value="{{ r.id }}" />
+                  <button type="submit" class="danger">حذف</button>
+                </form>
+              </td>
+            </tr>
+            {% else %}
+            <tr><td colspan="6">لا توجد غرف بعد.</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+      </div>
+    </section>
+
+    <section id="section-plans" class="accordion">
+      <div class="accordion-body">
+    <div class="card" style="margin-top:0;">
+      <div class="plans-shell">
+      <div class="plans-head">
+        <h2 style="margin:0;">خطط الاشتراكات الحالية</h2>
+        <span class="plans-note">تنسيق متكامل لعرض وتعديل كل عناصر الخطة بوضوح.</span>
+      </div>
+      <div class="plans-cards">
+        {% for p in plans %}
+        <article class="plan-card plan-{{ p.plan_type }}">
+          <div class="plan-card-top">
+            <div>
+              <div class="plan-card-id">#{{ p.id }}</div>
+              <h3>{{ p.name }}</h3>
+            </div>
+            <span class="badge">{{ 'نشطة' if p.is_active else 'موقفة' }}</span>
+          </div>
+
+          <div class="plan-meta">
+            <div class="plan-meta-item">
+              <span class="k">النوع</span>
+              <span class="v">
+                <span class="plan-type-badge plan-type-{{ p.plan_type }}">
+                  {% if p.plan_type == 'weekly' %}
+                  <svg class="plan-type-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                    <path d="M7 2v3M17 2v3M3 9h18M5 5h14a2 2 0 0 1 2 2v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2Z" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+                    <path d="M8 13h3M8 17h2M14 13h2M14 17h3" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+                  </svg>
+                  {% elif p.plan_type == 'monthly' %}
+                  <svg class="plan-type-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                    <path d="M7 2v3M17 2v3M3 9h18M5 5h14a2 2 0 0 1 2 2v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2Z" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+                    <path d="M8 14h8" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+                  </svg>
+                  {% else %}
+                  <svg class="plan-type-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                    <path d="M12 3v18M3 12h18" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+                    <circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.8"/>
+                  </svg>
+                  {% endif %}
+                  {{ p.plan_type_label }}
+                </span>
+              </span>
+            </div>
+            <div class="plan-meta-item">
+              <span class="k">السعر</span>
+              <span class="v">{{ p.price }} SAR</span>
+            </div>
+            <div class="plan-meta-item">
+              <span class="k">حد الجلسات</span>
+              <span class="v">{{ p.session_limit if p.session_limit else 'غير محدود' }}</span>
+            </div>
+          </div>
+
+          <form method="post" action="/admin/plans/update-name" class="plan-name-form" data-preserve-scroll="1">
+            <input type="hidden" name="plan_id" value="{{ p.id }}" />
+            <input name="name" value="{{ p.name }}" required />
+            <button type="submit">تعديل</button>
+          </form>
+
+          <form method="post" action="/admin/plans/update-details" class="plan-details-form" data-preserve-scroll="1">
+            <input type="hidden" name="plan_id" value="{{ p.id }}" />
+            <select name="plan_type">
+              <option value="weekly" {{ 'selected' if p.plan_type == 'weekly' else '' }}>أسبوعي</option>
+              <option value="monthly" {{ 'selected' if p.plan_type == 'monthly' else '' }}>شهري</option>
+              <option value="yearly" {{ 'selected' if p.plan_type == 'yearly' else '' }}>سنوي</option>
+            </select>
+            <input name="price" type="number" min="0" step="0.01" value="{{ p.price }}" required />
+            <input
+              name="session_limit"
+              type="number"
+              min="1"
+              value="{{ p.session_limit if p.session_limit else '' }}"
+              placeholder="غير محدود"
+            />
+            <button type="submit">تعديل التفاصيل</button>
+          </form>
+
+          <form method="post" action="/admin/plans/delete" class="plan-delete-form" data-preserve-scroll="1" onsubmit="return confirm('حذف خطة الاشتراك؟');">
+            <input type="hidden" name="plan_id" value="{{ p.id }}" />
+            <button type="submit" class="danger">حذف</button>
+          </form>
+        </article>
+        {% else %}
+        <div class="plan-empty">لا توجد خطط اشتراك بعد.</div>
+        {% endfor %}
+      </div>
+      </div>
+    </div>
+      </div>
+    </section>
+
+    <section id="section-public-users" class="accordion">
+      <div class="accordion-body">
+    <div class="card" style="margin-top:0;">
+      <h2>المستخدمون الجدد (لوحة تحكم الجمهور)</h2>
+      <form method="get" action="/admin" class="filters" style="margin-bottom:10px;">
+        <input name="public_user_q" placeholder="بحث بالاسم/البريد/الجوال" value="{{ public_user_filters.q }}" />
+        <select name="public_user_status">
+          <option value="active" {{ 'selected' if public_user_filters.status == 'active' else '' }}>نشطون</option>
+          <option value="inactive" {{ 'selected' if public_user_filters.status == 'inactive' else '' }}>غير نشطين</option>
+          <option value="deleted" {{ 'selected' if public_user_filters.status == 'deleted' else '' }}>محذوفون Soft</option>
+        </select>
+        <select name="public_user_verified">
+          <option value="all" {{ 'selected' if public_user_filters.verified == 'all' else '' }}>الكل</option>
+          <option value="verified" {{ 'selected' if public_user_filters.verified == 'verified' else '' }}>موثق</option>
+          <option value="unverified" {{ 'selected' if public_user_filters.verified == 'unverified' else '' }}>غير موثق</option>
+        </select>
+        <button type="submit">فلترة المستخدمين</button>
+      </form>
+      <form id="public-users-bulk-form" method="post" action="/admin/public-users/bulk-action" data-preserve-scroll="1" style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:10px;">
+        <select name="action" style="max-width:280px;">
+          <option value="activate">تفعيل المحدد</option>
+          <option value="deactivate">تعطيل المحدد</option>
+          <option value="verify">توثيق بريد المحدد</option>
+          <option value="unverify">إلغاء توثيق المحدد</option>
+          <option value="resend_verification">إعادة إرسال تحقق للمحدد</option>
+          <option value="soft_delete">حذف Soft للمحدد</option>
+          <option value="restore">استعادة المحدد</option>
+        </select>
+        <button type="submit">تنفيذ جماعي</button>
+      </form>
+      <div style="overflow-x:auto;">
+        <table>
+          <thead>
+            <tr>
+              <th><input type="checkbox" id="public-users-select-all" title="تحديد الكل" /></th>
+              <th>#</th>
+              <th>الاسم</th>
+              <th>البريد</th>
+              <th>رقم الجوال</th>
+              <th>تاريخ التسجيل</th>
+              <th>تاريخ الحذف</th>
+              <th>الحالة</th>
+              <th>توثيق البريد</th>
+              <th>التحكم</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for pu in public_users %}
+            <tr>
+              <td>
+                <input
+                  type="checkbox"
+                  name="public_user_ids"
+                  value="{{ pu.id }}"
+                  form="public-users-bulk-form"
+                  class="public-user-select-checkbox"
+                />
+              </td>
+              <td>{{ pu.id }}</td>
+              <td>{{ pu.full_name }}</td>
+              <td>{{ pu.email }}</td>
+              <td>{{ pu.phone }}</td>
+              <td>{{ pu.created_at_display }}</td>
+              <td>{{ pu.deleted_at_display }}</td>
+              <td>
+                <span class="badge {{ 'failed' if pu.is_deleted else ('completed' if pu.is_active else 'pending') }}">
+                  {{ 'محذوف Soft' if pu.is_deleted else ('نشط' if pu.is_active else 'معطل') }}
+                </span>
+              </td>
+              <td>
+                <span class="badge {{ 'completed' if pu.email_verified else 'pending' }}">
+                  {{ 'موثق' if pu.email_verified else 'غير موثق' }}
+                </span>
+              </td>
+              <td>
+                <div class="controls-wrap">
+                  {% if pu.is_deleted %}
+                  <form method="post" action="/admin/public-users/restore" data-preserve-scroll="1">
+                    <input type="hidden" name="public_user_id" value="{{ pu.id }}" />
+                    <button type="submit" class="soft">استعادة</button>
+                  </form>
+                  {% else %}
+                  <form method="post" action="/admin/public-users/toggle-active" data-preserve-scroll="1">
+                    <input type="hidden" name="public_user_id" value="{{ pu.id }}" />
+                    <button type="submit" class="{{ 'danger' if pu.is_active else 'soft' }}">
+                      {{ 'تعطيل' if pu.is_active else 'تفعيل' }}
+                    </button>
+                  </form>
+                  <form method="post" action="/admin/public-users/toggle-verified" data-preserve-scroll="1">
+                    <input type="hidden" name="public_user_id" value="{{ pu.id }}" />
+                    <button type="submit" class="soft">
+                      {{ 'إلغاء التوثيق' if pu.email_verified else 'توثيق البريد' }}
+                    </button>
+                  </form>
+                  {% if not pu.email_verified %}
+                  <form method="post" action="/admin/public-users/resend-verification" data-preserve-scroll="1">
+                    <input type="hidden" name="public_user_id" value="{{ pu.id }}" />
+                    <button type="submit" class="warn">إعادة إرسال التحقق</button>
+                  </form>
+                  {% endif %}
+                  <form method="post" action="/admin/public-users/delete" data-preserve-scroll="1" onsubmit="return confirm('تحويل المستخدم إلى حذف Soft؟');">
+                    <input type="hidden" name="public_user_id" value="{{ pu.id }}" />
+                    <button type="submit" class="danger">حذف Soft</button>
+                  </form>
+                  {% endif %}
+                </div>
+              </td>
+            </tr>
+            {% else %}
+            <tr><td colspan="10">لا يوجد مستخدمون ضمن الفلاتر الحالية.</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+      </div>
+    </section>
+
+    <section id="section-sessions" class="accordion">
+      <div class="accordion-body">
+    <div class="card" style="margin-top:0;">
+      <h2>الجلسات الحالية</h2>
+      <div style="overflow-x:auto;">
+        <table>
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>العنوان</th>
+              <th>الغرفة</th>
+              <th>الوقت</th>
+              <th>المدة</th>
+              <th>السعر</th>
+              <th>المتاح</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for s in sessions %}
+            <tr>
+              <td>{{ s.id }}</td>
+              <td>{{ s.title }}<div class="small">{{ s.trainer_name }} · {{ s.level_label }}</div></td>
+              <td>{{ s.room_name }}</td>
+              <td>{{ s.starts_at_display }}</td>
+              <td>{{ s.duration_minutes }} د</td>
+              <td>{{ s.price_drop_in }} SAR</td>
+              <td><span class="badge">{{ s.spots_available }} / {{ s.capacity }}</span></td>
+              <td>
+                <form method="post" action="/admin/sessions/delete" data-preserve-scroll="1" onsubmit="return confirm('حذف هذه الجلسة؟');">
+                  <input type="hidden" name="session_id" value="{{ s.id }}" />
+                  <button type="submit" class="danger">حذف</button>
+                </form>
+              </td>
+            </tr>
+            {% else %}
+            <tr><td colspan="8">لا توجد جلسات بعد.</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="card" style="margin-top:14px;">
+      <h2>آخر المدفوعات</h2>
+      <div style="overflow-x:auto;">
+        <table>
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>العميل</th>
+              <th>الطريقة</th>
+              <th>المبلغ</th>
+              <th>الحالة</th>
+              <th>التاريخ</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for pay in recent_payments %}
+            <tr>
+              <td>{{ pay.id }}</td>
+              <td>{{ pay.client_name }}</td>
+              <td>{{ pay.payment_method }}</td>
+              <td>{{ pay.amount }} {{ pay.currency }}</td>
+              <td><span class="badge {{ pay.status }}">{{ pay.status_label }}</span></td>
+              <td>{{ pay.paid_at_display }}</td>
+            </tr>
+            {% else %}
+            <tr><td colspan="6">لا توجد مدفوعات بعد.</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+      </div>
+    </section>
+
+    <section id="section-faq" class="accordion">
+      <div class="accordion-body">
+    <div class="card" style="margin-top:0;">
+      <h2>إدارة الأسئلة الشائعة</h2>
+      <div class="filters" style="margin-bottom:10px;">
+        <input id="faq-search-input" placeholder="بحث داخل السؤال أو الإجابة..." />
+      </div>
+      <form method="post" action="/admin/faqs" data-preserve-scroll="1" class="form" style="margin-bottom:12px;">
+        <label>السؤال</label>
+        <input name="question" required placeholder="مثال: هل يمكن الإلغاء؟" />
+        <label>الإجابة</label>
+        <input name="answer" required placeholder="اكتب الإجابة المختصرة والواضحة" />
+        <label>الترتيب</label>
+        <input name="sort_order" type="number" min="0" value="0" />
+        <label style="display:flex;align-items:center;gap:8px;">
+          <input type="checkbox" name="is_active" value="1" checked style="width:auto;" />
+          نشط للعرض في الصفحة العامة
+        </label>
+        <button type="submit">إضافة سؤال</button>
+      </form>
+      <form id="faq-reorder-form" method="post" action="/admin/faqs/reorder" data-preserve-scroll="1" style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:10px;">
+        <input type="hidden" id="faq-ordered-ids" name="ordered_ids_csv" value="" />
+        <button type="submit">حفظ ترتيب السحب</button>
+        <span class="small">اسحب الصفوف من عمود السحب ثم احفظ الترتيب.</span>
+      </form>
+      <div style="overflow-x:auto;">
+        <table>
+          <thead>
+            <tr>
+              <th>سحب</th>
+              <th>#</th>
+              <th>السؤال</th>
+              <th>الإجابة</th>
+              <th>الترتيب</th>
+              <th>الحالة</th>
+              <th>تعديل</th>
+              <th>حذف</th>
+            </tr>
+          </thead>
+          <tbody id="faq-tbody">
+            {% for f in faq_items %}
+            <tr class="faq-draggable" data-faq-id="{{ f.id }}">
+              <td><span class="drag-handle" title="اسحب للتغيير">⋮⋮</span></td>
+              <td>{{ f.id }}</td>
+              <td>{{ f.question }}</td>
+              <td>{{ f.answer }}</td>
+              <td>{{ f.sort_order }}</td>
+              <td><span class="badge">{{ 'نشط' if f.is_active else 'مخفي' }}</span></td>
+              <td>
+                <form method="post" action="/admin/faqs/update" class="inline-form" data-preserve-scroll="1">
+                  <input type="hidden" name="faq_id" value="{{ f.id }}" />
+                  <input name="question" value="{{ f.question }}" required style="min-width:170px;" />
+                  <input name="answer" value="{{ f.answer }}" required style="min-width:220px;" />
+                  <input name="sort_order" type="number" min="0" value="{{ f.sort_order }}" style="min-width:80px;" />
+                  <select name="is_active" style="min-width:90px;">
+                    <option value="1" {{ 'selected' if f.is_active else '' }}>نشط</option>
+                    <option value="0" {{ '' if f.is_active else 'selected' }}>مخفي</option>
+                  </select>
+                  <button type="submit">تحديث</button>
+                </form>
+              </td>
+              <td>
+                <form method="post" action="/admin/faqs/delete" data-preserve-scroll="1" onsubmit="return confirm('حذف هذا السؤال؟');">
+                  <input type="hidden" name="faq_id" value="{{ f.id }}" />
+                  <button type="submit" class="danger">حذف</button>
+                </form>
+              </td>
+            </tr>
+            {% else %}
+            <tr><td colspan="8">لا توجد أسئلة شائعة بعد.</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+      </div>
+    </section>
+
+    <section id="section-security" class="accordion">
+      <div class="accordion-body">
+    <div class="card" style="margin-top:0;">
+      <h2>Security Audit Logs</h2>
+      <p class="small" style="margin: 0 0 8px;">
+        محاولات دخول فاشلة خلال آخر 24 ساعة: <strong>{{ security_summary.failed_logins_24h }}</strong>
+        {% if security_summary.suspicious_ips %}
+          · IPات مشبوهة:
+          {% for item in security_summary.suspicious_ips %}
+            <span class="badge {{ item.risk_level }}">{{ item.ip }} ({{ item.hits }}) · {{ item.risk_level|upper }}</span>
+            <form method="post" action="/admin/security/ip-block" data-preserve-scroll="1" style="display:inline-flex;gap:4px;align-items:center;">
+              <input type="hidden" name="ip" value="{{ item.ip }}" />
+              <select name="minutes" style="width:auto;min-width:72px;padding:4px 6px;">
+                <option value="15">15د</option>
+                <option value="60" selected>60د</option>
+                <option value="180">180د</option>
+                <option value="1440">24س</option>
+              </select>
+              <input type="hidden" name="reason" value="auto_suspicious_ip" />
+              <button type="submit" class="danger" style="margin-top:0;padding:4px 8px;">حظر</button>
+            </form>
+          {% endfor %}
+        {% endif %}
+      </p>
+      <p style="margin: 0 0 10px;">
+        <a class="btn" href="{{ security_export_url }}">تصدير CSV للسجلات الحالية</a>
+      </p>
+      <form method="post" action="/admin/security/ip-block" data-preserve-scroll="1" class="filters" style="margin-bottom:10px;">
+        <input name="ip" placeholder="IP للحظر اليدوي" required />
+        <select name="minutes">
+          <option value="15">15 دقيقة</option>
+          <option value="60" selected>60 دقيقة</option>
+          <option value="180">180 دقيقة</option>
+          <option value="1440">24 ساعة</option>
+        </select>
+        <input name="reason" placeholder="السبب (اختياري)" value="manual_block" />
+        <button type="submit" class="danger">حظر يدوي</button>
+      </form>
+      <form method="get" action="/admin" class="filters">
+        <input name="audit_event_type" placeholder="نوع الحدث" value="{{ security_filters.event_type }}" />
+        <input name="audit_status" placeholder="الحالة" value="{{ security_filters.status }}" />
+        <input name="audit_email" placeholder="البريد" value="{{ security_filters.email }}" />
+        <input name="audit_ip" placeholder="IP" value="{{ security_filters.ip }}" />
+        <button type="submit">فلترة</button>
+      </form>
+      <div style="overflow-x:auto;">
+        <table>
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>الوقت</th>
+              <th>الحدث</th>
+              <th>الحالة</th>
+              <th>البريد</th>
+              <th>IP</th>
+              <th>المسار</th>
+              <th>التفاصيل</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for ev in security_events %}
+            <tr>
+              <td>{{ ev.id }}</td>
+              <td>{{ ev.created_at_display }}</td>
+              <td>{{ ev.event_type }}</td>
+              <td><span class="badge">{{ ev.status }}</span></td>
+              <td>{{ ev.email }}</td>
+              <td>{{ ev.ip }}</td>
+              <td>{{ ev.path }}</td>
+              <td><span class="mono">{{ ev.details }}</span></td>
+            </tr>
+            {% else %}
+            <tr><td colspan="8">لا توجد سجلات أمنية بعد.</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      <h3 style="margin:14px 0 8px; color:#134e4a;">IP المحظورة حاليًا</h3>
+      <div style="overflow-x:auto;">
+        <table>
+          <thead>
+            <tr>
+              <th>IP</th>
+              <th>السبب</th>
+              <th>محظور حتى</th>
+              <th>إجراء</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for b in security_summary.blocked_ips %}
+            <tr>
+              <td>{{ b.ip }}</td>
+              <td>{{ b.reason }}</td>
+              <td>{{ b.blocked_until }}</td>
+              <td>
+                <form method="post" action="/admin/security/ip-unblock" data-preserve-scroll="1">
+                  <input type="hidden" name="ip" value="{{ b.ip }}" />
+                  <button type="submit">فك الحظر</button>
+                </form>
+              </td>
+            </tr>
+            {% else %}
+            <tr><td colspan="4">لا توجد IP محظورة حاليًا.</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      <h3 style="margin:14px 0 8px; color:#134e4a;">سجل الحظر وفك الحظر</h3>
+      <div style="overflow-x:auto;">
+        <table>
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>الوقت</th>
+              <th>العملية</th>
+              <th>الحالة</th>
+              <th>مدير النظام</th>
+              <th>IP الهدف</th>
+              <th>المدة (د)</th>
+              <th>السبب</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for h in block_history %}
+            <tr>
+              <td>{{ h.id }}</td>
+              <td>{{ h.created_at_display }}</td>
+              <td>{{ h.event_type }}</td>
+              <td><span class="badge">{{ h.status }}</span></td>
+              <td>{{ h.admin_email }}</td>
+              <td>{{ h.target_ip }}</td>
+              <td>{{ h.minutes }}</td>
+              <td>{{ h.reason }}</td>
+            </tr>
+            {% else %}
+            <tr><td colspan="8">لا يوجد سجل حظر بعد.</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+      </div>
+    </section>
+  </div>
+  <script>
+    (function () {
+      const STORAGE_KEY = "maestro_admin_scroll_y";
+      const ACCORDION_KEY = "maestro_admin_accordion_state";
+      const forms = document.querySelectorAll("form[data-preserve-scroll='1']");
+      forms.forEach(function (form) {
+        let scrollInput = form.querySelector("input[name='scroll_y']");
+        if (!scrollInput) {
+          scrollInput = document.createElement("input");
+          scrollInput.type = "hidden";
+          scrollInput.name = "scroll_y";
+          form.appendChild(scrollInput);
+        }
+        form.addEventListener("submit", function () {
+          const y = String(window.scrollY || 0);
+          scrollInput.value = y;
+          sessionStorage.setItem(STORAGE_KEY, y);
+        });
+      });
+
+      const params = new URLSearchParams(window.location.search);
+      const fromQuery = params.get("scroll_y");
+      const savedY = fromQuery || sessionStorage.getItem(STORAGE_KEY);
+      if (savedY !== null && savedY !== "") {
+        const targetY = parseInt(savedY, 10) || 0;
+        history.scrollRestoration = "manual";
+        requestAnimationFrame(function () {
+          window.scrollTo(0, targetY);
+          setTimeout(function () { window.scrollTo(0, targetY); }, 0);
+        });
+        sessionStorage.removeItem(STORAGE_KEY);
+      }
+
+      const selectAll = document.getElementById("rooms-select-all");
+      if (selectAll) {
+        const checkboxes = Array.from(document.querySelectorAll(".room-select-checkbox"));
+        selectAll.addEventListener("change", function () {
+          checkboxes.forEach(function (cb) { cb.checked = selectAll.checked; });
+        });
+      }
+
+      const usersSelectAll = document.getElementById("public-users-select-all");
+      if (usersSelectAll) {
+        const userCheckboxes = Array.from(document.querySelectorAll(".public-user-select-checkbox"));
+        usersSelectAll.addEventListener("change", function () {
+          userCheckboxes.forEach(function (cb) { cb.checked = usersSelectAll.checked; });
+        });
+      }
+
+      const faqSearchInput = document.getElementById("faq-search-input");
+      const faqTbody = document.getElementById("faq-tbody");
+      if (faqSearchInput && faqTbody) {
+        faqSearchInput.addEventListener("input", function () {
+          const q = faqSearchInput.value.trim().toLowerCase();
+          const rows = Array.from(faqTbody.querySelectorAll("tr.faq-draggable"));
+          rows.forEach(function (row) {
+            const text = row.textContent ? row.textContent.toLowerCase() : "";
+            row.style.display = !q || text.includes(q) ? "" : "none";
+          });
+        });
+      }
+
+      const faqReorderForm = document.getElementById("faq-reorder-form");
+      const faqOrderedIds = document.getElementById("faq-ordered-ids");
+      if (faqTbody && faqReorderForm && faqOrderedIds) {
+        const getVisibleRows = function () {
+          return Array.from(faqTbody.querySelectorAll("tr.faq-draggable"))
+            .filter(function (r) { return r.style.display !== "none"; });
+        };
+        const refreshOrderedIds = function () {
+          const ids = getVisibleRows().map(function (r) { return r.dataset.faqId; }).filter(Boolean);
+          faqOrderedIds.value = ids.join(",");
+        };
+
+        let draggedRow = null;
+        faqTbody.querySelectorAll("tr.faq-draggable").forEach(function (row) {
+          row.setAttribute("draggable", "true");
+          row.addEventListener("dragstart", function () {
+            draggedRow = row;
+            row.classList.add("dragging");
+          });
+          row.addEventListener("dragend", function () {
+            row.classList.remove("dragging");
+            refreshOrderedIds();
+          });
+          row.addEventListener("dragover", function (e) {
+            e.preventDefault();
+            if (!draggedRow || draggedRow === row) return;
+            const rect = row.getBoundingClientRect();
+            const placeAfter = (e.clientY - rect.top) > (rect.height / 2);
+            if (placeAfter) {
+              row.parentNode.insertBefore(draggedRow, row.nextSibling);
+            } else {
+              row.parentNode.insertBefore(draggedRow, row);
+            }
+          });
+        });
+        refreshOrderedIds();
+        faqReorderForm.addEventListener("submit", function () {
+          refreshOrderedIds();
+        });
+      }
+
+      const accordions = Array.from(document.querySelectorAll(".accordion[id]"));
+      try {
+        const stored = sessionStorage.getItem(ACCORDION_KEY);
+        if (stored) {
+          const state = JSON.parse(stored);
+          accordions.forEach(function (el) {
+            if (Object.prototype.hasOwnProperty.call(state, el.id)) {
+              el.classList.toggle("open", !!state[el.id]);
+            }
+          });
+        }
+      } catch (_) {}
+
+      function persistAccordionState() {
+        const state = {};
+        accordions.forEach(function (d) { state[d.id] = d.classList.contains("open"); });
+        sessionStorage.setItem(ACCORDION_KEY, JSON.stringify(state));
+      }
+
+      function openAccordion(section) {
+        accordions.forEach(function (other) {
+          other.classList.toggle("open", other === section);
+        });
+        persistAccordionState();
+      }
+
+      // First visit fallback: open only first section.
+      if (!accordions.some(function (d) { return d.classList.contains("open"); }) && accordions.length > 0) {
+        accordions[0].classList.add("open");
+        persistAccordionState();
+      }
+
+      const tabs = Array.from(document.querySelectorAll(".section-tab[data-target]"));
+      function refreshActiveTab() {
+        const openSection = accordions.find(function (d) { return d.classList.contains("open"); });
+        tabs.forEach(function (tab) {
+          const isActive = openSection && tab.dataset.target === openSection.id;
+          tab.classList.toggle("active", !!isActive);
+        });
+      }
+      tabs.forEach(function (tab) {
+        tab.addEventListener("click", function (e) {
+          e.preventDefault();
+          const targetId = tab.dataset.target;
+          const section = document.getElementById(targetId);
+          if (!section) return;
+          openAccordion(section);
+          section.scrollIntoView({ behavior: "smooth", block: "start" });
+          refreshActiveTab();
+        });
+      });
+      refreshActiveTab();
+    })();
+  </script>
+</body>
+</html>

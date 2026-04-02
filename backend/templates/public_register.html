@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>تسجيل مستخدم جديد — Maestro Yoga</title>
+  {% if analytics_enabled and ga4_measurement_id %}
+  <script async src="https://www.googletagmanager.com/gtag/js?id={{ ga4_measurement_id }}"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){ dataLayer.push(arguments); }
+    gtag("js", new Date());
+    gtag("config", "{{ ga4_measurement_id }}", { send_page_view: true });
+  </script>
+  {% endif %}
+  <style>
+    body { font-family: system-ui, sans-serif; background: radial-gradient(circle at top right, #ecfdf5, #f0fdfa 40%, #f8fafc); margin: 0; padding: 24px; }
+    .card { max-width: 460px; margin: 30px auto; background: #fff; border: 1px solid #a7f3d0; border-radius: 16px; padding: 24px; box-shadow: 0 12px 32px rgba(6,95,70,.14); }
+    h1 { margin: 0 0 8px; font-size: 1.35rem; color: #065f46; }
+    p { margin: 0 0 16px; color: #475569; }
+    label { display: block; margin: 10px 0 6px; font-weight: 700; font-size: .92rem; }
+    input { width: 100%; padding: 10px 12px; border: 1px solid #99f6e4; border-radius: 10px; box-sizing: border-box; }
+    button { width: 100%; margin-top: 14px; padding: 11px; border: 0; border-radius: 10px; background: linear-gradient(120deg, #0f766e, #10b981); color: #fff; font-weight: 700; cursor: pointer; }
+    .warn { margin-bottom: 10px; border: 1px solid #fde68a; background: #fffbeb; color: #92400e; padding: 10px 12px; border-radius: 10px; font-size: .9rem; }
+    .links { margin-top: 12px; font-size: .9rem; }
+    a { color: #0f766e; text-decoration: none; font-weight: 700; }
+    .field-error { margin-top: 6px; font-size: .82rem; color: #991b1b; min-height: 18px; }
+    .field-ok { color: #166534; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h1>تسجيل مستخدم جديد</h1>
+    <p>أنشئ حسابًا موثوقًا لحجز الجلسات وتفعيل الاشتراكات بسهولة.</p>
+    {% if request.query_params.get('msg') == 'weak_password' %}
+      <div class="warn">كلمة المرور ضعيفة. الحد الأدنى 8 أحرف.</div>
+    {% endif %}
+    {% if request.query_params.get('msg') == 'rate_limited' %}
+      <div class="warn">محاولات كثيرة من نفس المصدر. حاول لاحقًا.</div>
+    {% endif %}
+    {% if request.query_params.get('msg') == 'required_fields' %}
+      <div class="warn">جميع الحقول مطلوبة.</div>
+    {% endif %}
+    {% if request.query_params.get('msg') == 'invalid_phone' %}
+      <div class="warn">رقم الجوال غير صحيح بالنسبة لمفتاح الدولة المختار.</div>
+    {% endif %}
+    {% if request.query_params.get('msg') == 'phone_exists' %}
+      <div class="warn">رقم الجوال مستخدم مسبقًا.</div>
+    {% endif %}
+    {% if request.query_params.get('msg') == 'mail_failed' %}
+      <div class="warn">تم إنشاء الحساب، لكن تعذر إرسال رابط التحقق الفعلي. صحّح SMTP ثم سجّل الدخول واضغط إعادة إرسال.</div>
+    {% endif %}
+    <form id="register-form" method="post" action="/public/register">
+      <label>الاسم الكامل</label>
+      <input name="full_name" required />
+      <label>البريد الإلكتروني</label>
+      <input name="email" type="email" required />
+      <label>رقم الجوال</label>
+      <div style="display:grid;grid-template-columns:140px 1fr;gap:8px;">
+        <select id="country_code" name="country_code" required>
+          <option value="+966" selected>+966 السعودية</option>
+          <option value="+971">+971 الإمارات</option>
+          <option value="+965">+965 الكويت</option>
+          <option value="+973">+973 البحرين</option>
+          <option value="+974">+974 قطر</option>
+          <option value="+968">+968 عُمان</option>
+          <option value="+20">+20 مصر</option>
+        </select>
+        <input id="phone" name="phone" type="tel" inputmode="numeric" placeholder="05XXXXXXXX" required />
+      </div>
+      <div id="phone_error" class="field-error"></div>
+      <label>كلمة المرور</label>
+      <input name="password" type="password" minlength="8" required />
+      <button type="submit">إنشاء الحساب</button>
+    </form>
+    <div class="links">
+      لديك حساب؟ <a href="/public/login">سجّل الدخول</a><br/>
+      <a href="/index?center_id=1">العودة للواجهة العامة</a>
+    </div>
+  </div>
+  <script>
+    (function () {
+      function track(eventName, payload) {
+        window.dataLayer = window.dataLayer || [];
+        window.dataLayer.push({ event: eventName, ...payload });
+        if (typeof window.gtag === "function") window.gtag("event", eventName, payload || {});
+      }
+      const msg = {{ request.query_params.get('msg', '')|tojson }};
+      track("page_view_public_register", { page_name: {{ analytics_page_name|tojson }} });
+      if (msg === "weak_password" || msg === "rate_limited" || msg === "required_fields" || msg === "invalid_phone" || msg === "phone_exists" || msg === "mail_failed") {
+        track("sign_up_failed", { reason: msg });
+      }
+      const form = document.getElementById("register-form");
+      const phoneInput = document.getElementById("phone");
+      const countryCodeInput = document.getElementById("country_code");
+      const phoneError = document.getElementById("phone_error");
+      if (!form || !phoneInput || !countryCodeInput || !phoneError) return;
+
+      function updatePlaceholder() {
+        if (countryCodeInput.value === "+966") {
+          phoneInput.placeholder = "05XXXXXXXX";
+        } else {
+          phoneInput.placeholder = "رقم الجوال بدون مفتاح الدولة";
+        }
+      }
+      function validatePhone() {
+        const digits = phoneInput.value.replace(/\D/g, "");
+        if (!digits) {
+          phoneError.textContent = "رقم الجوال مطلوب.";
+          phoneError.classList.remove("field-ok");
+          return false;
+        }
+        if (countryCodeInput.value === "+966") {
+          if (!/^05\d{8}$/.test(digits)) {
+            phoneError.textContent = "الرقم السعودي يجب أن يكون بصيغة 05XXXXXXXX";
+            phoneError.classList.remove("field-ok");
+            return false;
+          }
+          phoneError.textContent = "رقم الجوال صحيح.";
+          phoneError.classList.add("field-ok");
+          return true;
+        }
+        if (digits.length < 7 || digits.length > 12) {
+          phoneError.textContent = "رقم الجوال يجب أن يكون بين 7 و 12 رقمًا.";
+          phoneError.classList.remove("field-ok");
+          return false;
+        }
+        phoneError.textContent = "رقم الجوال صحيح.";
+        phoneError.classList.add("field-ok");
+        return true;
+      }
+      updatePlaceholder();
+      validatePhone();
+      countryCodeInput.addEventListener("change", function () {
+        updatePlaceholder();
+        validatePhone();
+      });
+
+      phoneInput.addEventListener("input", function () {
+        let value = phoneInput.value.trim();
+        const digits = value.replace(/\D/g, "");
+        if (countryCodeInput.value === "+966") {
+          phoneInput.value = digits.slice(0, 10);
+          validatePhone();
+          return;
+        }
+        phoneInput.value = digits.slice(0, 12);
+        validatePhone();
+      });
+      phoneInput.addEventListener("blur", function () {
+        if (countryCodeInput.value !== "+966") return;
+        const v = phoneInput.value.trim();
+        if (/^05\d{8}$/.test(v)) {
+          phoneInput.value = v;
+        }
+        validatePhone();
+      });
+      form.addEventListener("submit", function (e) {
+        if (!validatePhone()) {
+          e.preventDefault();
+          phoneInput.focus();
+          track("sign_up_failed", { reason: "client_phone_validation" });
+          return;
+        }
+        track("sign_up_attempt", {});
+      });
+    })();
+  </script>
+</body>
+</html>

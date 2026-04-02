@@ -1,0 +1,7 @@
+.venv/
+__pycache__/
+*.pyc
+maestro_yoga.db
+.idea/
+logs/
+.env

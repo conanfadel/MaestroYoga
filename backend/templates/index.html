@@ -1,0 +1,577 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>حجز الجلسات | {{ center.name }} | Maestro Yoga</title>
+  <meta name="description" content="احجز جلسات اليوغا أو اشترك في باقات أسبوعية وشهرية وسنوية مع دفع آمن وسريع." />
+  <meta property="og:title" content="Maestro Yoga - {{ center.name }}" />
+  <meta property="og:description" content="جلسات يومية، مدربون محترفون، اشتراكات مرنة، ودفع إلكتروني آمن." />
+  <meta property="og:type" content="website" />
+  <meta property="og:locale" content="ar_SA" />
+  {% if analytics_enabled and ga4_measurement_id %}
+  <script async src="https://www.googletagmanager.com/gtag/js?id={{ ga4_measurement_id }}"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){ dataLayer.push(arguments); }
+    gtag("js", new Date());
+    gtag("config", "{{ ga4_measurement_id }}", { send_page_view: true });
+  </script>
+  {% endif %}
+  <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "HealthClub",
+      "name": "{{ center.name }}",
+      "description": "Maestro Yoga center for classes and subscriptions",
+      "url": "/index?center_id={{ center_id }}"
+    }
+  </script>
+  <style>
+    * { box-sizing: border-box; }
+    html:focus-within { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      padding: 20px;
+      font-family: system-ui, sans-serif;
+      color: #1f2937;
+      background: radial-gradient(circle at top right, #f0fdf4, #ecfeff 40%, #f8fafc);
+    }
+    .container { max-width: 1150px; margin: 0 auto; }
+    .skip-link {
+      position: absolute; inset-inline-start: -9999px; top: 0;
+      background: #065f46; color: #fff; padding: 8px 12px; border-radius: 8px;
+      z-index: 999;
+    }
+    .skip-link:focus { inset-inline-start: 12px; top: 12px; }
+    .hero {
+      border-radius: 20px;
+      color: #ecfeff;
+      background: linear-gradient(140deg, #065f46, #0f766e 55%, #0d9488);
+      box-shadow: 0 16px 38px rgba(15, 118, 110, .26);
+      display: grid;
+      grid-template-columns: 1.3fr .7fr;
+      gap: 16px;
+      padding: 22px;
+      margin-bottom: 16px;
+      overflow: hidden;
+    }
+    .hero h1 { margin: 0 0 8px; font-size: 1.9rem; }
+    .muted { margin: 0; color: #d1fae5; }
+    .hero-media {
+      border-radius: 14px;
+      min-height: 170px;
+      background:
+        linear-gradient(rgba(6,95,70,.24), rgba(6,95,70,.24)),
+        url("https://images.unsplash.com/photo-1545205597-3d9d02c29597?q=80&w=1200&auto=format&fit=crop");
+      background-size: cover;
+      background-position: center;
+    }
+    .hero-actions, .toplinks, .hero-meta { display: flex; gap: 8px; flex-wrap: wrap; }
+    .hero-actions { margin-top: 12px; }
+    .btn {
+      border: 0;
+      border-radius: 999px;
+      padding: 9px 14px;
+      font-weight: 700;
+      text-decoration: none;
+      cursor: pointer;
+    }
+    .btn.primary { background: #d1fae5; color: #065f46; }
+    .btn.ghost { background: transparent; color: #d1fae5; border: 1px solid rgba(209,250,229,.45); }
+    .chip {
+      border: 1px solid rgba(255,255,255,.3);
+      color: #e6fffa;
+      background: rgba(255,255,255,.08);
+      padding: 6px 10px;
+      border-radius: 999px;
+      font-size: .82rem;
+    }
+    .alert {
+      margin: 0 0 12px;
+      padding: 11px 14px;
+      border-radius: 12px;
+      border: 1px solid #99f6e4;
+      background: #ecfeff;
+      color: #115e59;
+    }
+    .alert.warn { background: #fffbeb; border-color: #fde68a; color: #92400e; }
+    .alert.err { background: #fef2f2; border-color: #fecaca; color: #991b1b; }
+    .steps {
+      display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; margin-bottom: 16px;
+    }
+    .step {
+      background: #fff; border: 1px solid #ccfbf1; border-radius: 12px; padding: 10px;
+    }
+    .step b { color: #065f46; }
+    .grid-two { display: grid; grid-template-columns: 1.45fr .9fr; gap: 16px; align-items: start; }
+    .card {
+      background: #ffffffd9; border: 1px solid #d1fae5; border-radius: 16px; padding: 16px;
+      box-shadow: 0 8px 20px rgba(0, 0, 0, .04); margin-bottom: 14px;
+    }
+    h2 { margin: 0 0 10px; color: #065f46; font-size: 1.08rem; }
+    .small { font-size: .85rem; color: #64748b; }
+    .filters-row {
+      display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 8px; margin-bottom: 10px;
+    }
+    input, select {
+      width: 100%; padding: 9px 10px; border: 1px solid #a7f3d0; border-radius: 10px; background: #fff;
+    }
+    .table-wrap { overflow-x: auto; }
+    table { width: 100%; border-collapse: collapse; font-size: .92rem; background: #fff; border-radius: 12px; overflow: hidden; }
+    th, td { border-bottom: 1px solid #e5e7eb; padding: 9px 8px; text-align: right; vertical-align: top; }
+    th { background: #f0fdfa; color: #134e4a; }
+    .availability {
+      min-width: 90px;
+    }
+    .bar { height: 6px; border-radius: 99px; background: #e2e8f0; overflow: hidden; margin-top: 4px; }
+    .bar > span { display: block; height: 100%; background: linear-gradient(90deg, #0f766e, #10b981); }
+    .book-btn, .sub-btn {
+      border: 0; border-radius: 10px; padding: 9px 11px; color: #fff; font-weight: 700; cursor: pointer;
+      background: linear-gradient(120deg, #0f766e, #10b981);
+    }
+    .book-btn:disabled { background: #94a3b8; cursor: not-allowed; }
+    .plans-shell {
+      border: 1px solid #ccfbf1;
+      border-radius: 14px;
+      background: #f8fffd;
+      padding: 10px;
+    }
+    .plans-cards {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+      gap: 10px;
+    }
+    .plan-card {
+      border: 1px solid #bff7ea;
+      border-radius: 12px;
+      background: #fff;
+      padding: 11px;
+      box-shadow: 0 3px 10px rgba(2, 132, 199, .08);
+      position: relative;
+      overflow: hidden;
+    }
+    .plan-card::before {
+      content: "";
+      position: absolute;
+      top: 0;
+      right: 0;
+      left: 0;
+      height: 4px;
+      background: #14b8a6;
+    }
+    .plan-card.plan-weekly {
+      border-color: #bae6fd;
+      background: linear-gradient(180deg, #f0f9ff 0%, #ffffff 34%);
+    }
+    .plan-card.plan-weekly::before { background: #0ea5e9; }
+    .plan-card.plan-monthly {
+      border-color: #bbf7d0;
+      background: linear-gradient(180deg, #f0fdf4 0%, #ffffff 34%);
+    }
+    .plan-card.plan-monthly::before { background: #22c55e; }
+    .plan-card.plan-yearly {
+      border-color: #fde68a;
+      background: linear-gradient(180deg, #fffbeb 0%, #ffffff 34%);
+    }
+    .plan-card.plan-yearly::before { background: #f59e0b; }
+    .plan-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 8px;
+      margin-bottom: 8px;
+    }
+    .plan-head h3 { margin: 0; font-size: .98rem; color: #134e4a; }
+    .plan-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      border-radius: 999px;
+      font-size: .76rem;
+      font-weight: 700;
+      padding: 3px 9px;
+    }
+    .plan-badge svg { width: 14px; height: 14px; }
+    .plan-badge.weekly { background: #e0f2fe; color: #075985; }
+    .plan-badge.monthly { background: #dcfce7; color: #166534; }
+    .plan-badge.yearly { background: #fef3c7; color: #92400e; }
+    .plan-meta {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 7px;
+      margin-bottom: 8px;
+    }
+    .plan-meta > div {
+      background: #f0fdfa;
+      border: 1px solid #ccfbf1;
+      border-radius: 10px;
+      padding: 6px 8px;
+      font-size: .84rem;
+      color: #0f766e;
+    }
+    .plan-meta .k { display: block; color: #64748b; font-size: .74rem; }
+    .plan-card .sub-btn { width: 100%; }
+    .best-note { margin-top: 6px; color: #92400e; font-size: .82rem; font-weight: 700; }
+    .plan-empty {
+      border: 1px dashed #99f6e4;
+      border-radius: 12px;
+      padding: 12px;
+      text-align: center;
+      color: #0f766e;
+      background: #f0fdfa;
+    }
+    .testimonial, .faq-item {
+      border: 1px solid #ccfbf1; background: #f8fffd; border-radius: 12px; padding: 10px; margin-bottom: 8px;
+    }
+    .sticky-booking {
+      position: sticky; bottom: 10px; z-index: 20; margin-top: 6px;
+      display: flex; justify-content: space-between; align-items: center; gap: 8px; flex-wrap: wrap;
+      background: #065f46; color: #ecfeff; border-radius: 14px; padding: 10px 12px;
+      box-shadow: 0 10px 26px rgba(6,95,70,.25);
+    }
+    .sticky-booking .label { font-size: .88rem; color: #d1fae5; }
+    .sticky-booking .value { font-weight: 800; }
+    .sticky-booking a { color: #065f46; background: #d1fae5; border-radius: 999px; padding: 7px 12px; text-decoration: none; font-weight: 700; }
+    .sr-only {
+      position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden;
+      clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0;
+    }
+    @media (max-width: 980px) {
+      .hero { grid-template-columns: 1fr; }
+      .grid-two { grid-template-columns: 1fr; }
+      .filters-row { grid-template-columns: 1fr 1fr; }
+      .plan-meta { grid-template-columns: 1fr; }
+      body { padding: 14px; }
+    }
+  </style>
+</head>
+<body>
+  <a class="skip-link" href="#main-content">تخطي إلى المحتوى</a>
+  <div class="container">
+    <header class="hero" aria-label="واجهة البداية">
+      <div>
+        <h1>Maestro Yoga | {{ center.name }}</h1>
+        <p class="muted">توازن الجسد والعقل يبدأ بخطوة بسيطة. احجز جلستك أو اشترك بخطة مناسبة لك.</p>
+        <div class="hero-meta" style="margin-top:10px;">
+          <span class="chip">جلسات يومية</span>
+          <span class="chip">مدربون محترفون</span>
+          <span class="chip">دفع إلكتروني آمن</span>
+        </div>
+        <div class="hero-actions">
+          <a class="btn primary" href="#sessions-section">احجز الآن</a>
+          <a class="btn ghost" href="#plans-section">قارن الخطط</a>
+        </div>
+        <div class="toplinks" style="margin-top:10px;">
+          <a class="btn primary" href="/admin/login">دخول الإدارة</a>
+          {% if public_user %}
+            <a class="btn ghost" href="/public/verify-pending?next=/index?center_id={{ center_id }}">
+              {{ public_user.full_name }}{% if not public_user.email_verified %} (غير موثق){% endif %}
+            </a>
+            <a class="btn primary" href="/public/logout">خروج</a>
+          {% else %}
+            <a class="btn primary" href="/public/login?next=/index?center_id={{ center_id }}">دخول المستخدم</a>
+            <a class="btn ghost" href="/public/register">تسجيل جديد</a>
+          {% endif %}
+        </div>
+      </div>
+      <div class="hero-media" role="img" aria-label="صورة يوغا هادئة"></div>
+    </header>
+
+    <div class="steps" aria-label="خطوات الدفع">
+      <div class="step"><b>1)</b> اختر الجلسة أو الخطة المناسبة.</div>
+      <div class="step"><b>2)</b> سجّل الدخول وفعّل بريدك الإلكتروني.</div>
+      <div class="step"><b>3)</b> أكمل الدفع وتحقق من حالة الطلب.</div>
+    </div>
+
+    {% if payment == 'success' %}<div class="alert">تم إتمام الدفع بنجاح. تم تأكيد طلبك.</div>{% endif %}
+    {% if payment == 'cancelled' %}<div class="alert warn">تم إلغاء عملية الدفع. يمكنك المحاولة مرة أخرى.</div>{% endif %}
+    {% if msg == 'email_verified' %}<div class="alert">تم التحقق من البريد الإلكتروني بنجاح.</div>{% endif %}
+    {% if msg == 'logged_out' %}<div class="alert">تم تسجيل الخروج بنجاح.</div>{% endif %}
+    {% if msg == 'auth_required' %}<div class="alert warn">الرجاء تسجيل الدخول أولًا قبل الحجز أو الاشتراك.</div>{% endif %}
+    {% if msg == 'ip_blocked' %}<div class="alert err">تم حظر هذا الـ IP مؤقتًا لأسباب أمنية. حاول لاحقًا أو تواصل مع الإدارة.</div>{% endif %}
+    {% if msg == 'full' %}<div class="alert err">لا توجد أماكن متاحة في هذه الجلسة.</div>{% endif %}
+    {% if msg == 'duplicate' %}<div class="alert err">لديك حجز فعّال لهذه الجلسة بالفعل.</div>{% endif %}
+    {% if msg == 'paid_mock' %}<div class="alert">تم تأكيد الحجز (وضع تجريبي للدفع).</div>{% endif %}
+    {% if msg == 'subscribed' or msg == 'subscribed_mock' %}<div class="alert">تم تفعيل الاشتراك بنجاح، أهلًا بك في رحلتك الصحية.</div>{% endif %}
+    {% if msg == 'subscription_cancelled' %}<div class="alert warn">لم يكتمل دفع الاشتراك.</div>{% endif %}
+    {% if msg == 'stripe_error' %}<div class="alert err">تعذر بدء الدفع عبر Stripe. تحقق من المفاتيح.</div>{% endif %}
+    {% if msg == 'stripe_no_url' %}<div class="alert err">لم يتم استلام رابط الدفع من Stripe.</div>{% endif %}
+
+    <main id="main-content" class="grid-two">
+      <section id="sessions-section" class="card" aria-label="قائمة الجلسات">
+        <h2>الجلسات المتاحة للحجز الفوري</h2>
+        <p class="small">استخدم الفلاتر لعرض الجلسات الأقرب والأفضل لجدولك.</p>
+        <div class="filters-row">
+          <input id="session-search" placeholder="بحث بعنوان/مدرب" aria-label="بحث في الجلسات" />
+          <select id="session-level" aria-label="فلتر المستوى">
+            <option value="">كل المستويات</option>
+            <option value="مبتدئ">مبتدئ</option>
+            <option value="متوسط">متوسط</option>
+            <option value="متقدم">متقدم</option>
+          </select>
+          <select id="session-availability" aria-label="فلتر المقاعد">
+            <option value="">كل الحالات</option>
+            <option value="available">المتاح فقط</option>
+            <option value="full">الممتلئة فقط</option>
+          </select>
+          <input id="session-max-price" type="number" min="0" step="1" placeholder="حد أعلى للسعر" aria-label="حد أعلى للسعر" />
+          <select id="session-sort" aria-label="الترتيب">
+            <option value="time_asc">الأقرب وقتًا</option>
+            <option value="price_asc">الأرخص سعرًا</option>
+            <option value="price_desc">الأعلى سعرًا</option>
+            <option value="availability_desc">الأكثر توفرًا</option>
+          </select>
+        </div>
+
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>الجلسة</th>
+                <th>الغرفة</th>
+                <th>الوقت</th>
+                <th>المدة</th>
+                <th>السعر</th>
+                <th>المتاح</th>
+                <th>الحجز</th>
+              </tr>
+            </thead>
+            <tbody id="sessions-tbody">
+              {% for s in sessions %}
+              <tr
+                class="session-row"
+                data-title="{{ s.title }} {{ s.trainer_name }}"
+                data-level="{{ s.level_label }}"
+                data-available="{{ s.spots_available }}"
+                data-price="{{ s.price_drop_in }}"
+                data-time="{{ s.starts_at.isoformat() if s.starts_at else '' }}"
+              >
+                <td>{{ s.id }}</td>
+                <td>{{ s.title }}<br/><span class="small">{{ s.trainer_name }} · {{ s.level_label }}</span></td>
+                <td>{{ s.room_name }}</td>
+                <td>{{ s.starts_at_display }}</td>
+                <td>{{ s.duration_minutes }} د</td>
+                <td>{{ s.price_drop_in }} SAR</td>
+                <td class="availability">
+                  <strong>{{ s.spots_available }}</strong>
+                  <div class="bar"><span style="width: {{ 100 if s.spots_available > 10 else (s.spots_available * 10) }}%;"></span></div>
+                </td>
+                <td>
+                  {% if s.spots_available > 0 %}
+                  <form class="form" method="post" action="/public/book">
+                    <input type="hidden" name="center_id" value="{{ center_id }}" />
+                    <input type="hidden" name="session_id" value="{{ s.id }}" />
+                    <button
+                      type="submit"
+                      class="book-btn js-book-btn"
+                      data-kind="جلسة"
+                      data-name="{{ s.title }}"
+                      data-price="{{ s.price_drop_in }} SAR"
+                    >
+                      احجز الآن وادفع
+                    </button>
+                  </form>
+                  {% else %}
+                  <button class="book-btn" disabled>ممتلئة</button>
+                  {% endif %}
+                </td>
+              </tr>
+              {% else %}
+              <tr><td colspan="8">لا توجد جلسات متاحة حاليًا.</td></tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <aside>
+        <section id="plans-section" class="card" aria-label="مقارنة الخطط">
+          <h2>مقارنة الاشتراكات (أسبوعي / شهري / سنوي)</h2>
+          <div class="plans-shell">
+            <div class="plans-cards">
+              {% for plan in plans %}
+              <article class="plan-card plan-{{ plan.plan_type }}">
+                <div class="plan-head">
+                  <h3>{{ plan.name }}</h3>
+                  <span class="plan-badge {{ plan.plan_type }}">
+                    {% if plan.plan_type == 'weekly' %}
+                    <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                      <path d="M7 2v3M17 2v3M3 9h18M5 5h14a2 2 0 0 1 2 2v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2Z" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+                      <path d="M8 13h3M8 17h2M14 13h2M14 17h3" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+                    </svg>
+                    {% elif plan.plan_type == 'monthly' %}
+                    <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                      <path d="M7 2v3M17 2v3M3 9h18M5 5h14a2 2 0 0 1 2 2v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2Z" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+                      <path d="M8 14h8" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+                    </svg>
+                    {% else %}
+                    <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                      <path d="M12 3v18M3 12h18" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+                      <circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.8"/>
+                    </svg>
+                    {% endif %}
+                    {{ plan.plan_type_label }}
+                  </span>
+                </div>
+
+                <div class="plan-meta">
+                  <div><span class="k">المدة</span>{{ plan.duration_days }} يوم</div>
+                  <div><span class="k">السعر</span>{{ plan.price }} SAR</div>
+                  <div><span class="k">حد الجلسات</span>{{ plan.session_limit if plan.session_limit else 'غير محدود' }}</div>
+                </div>
+
+                {% if plan.plan_type == 'yearly' %}
+                <div class="best-note">أفضل قيمة</div>
+                {% endif %}
+
+                <form class="form" method="post" action="/public/subscribe" style="margin-top:8px;">
+                  <input type="hidden" name="center_id" value="{{ center_id }}" />
+                  <input type="hidden" name="plan_id" value="{{ plan.id }}" />
+                  <button
+                    type="submit"
+                    class="sub-btn js-plan-btn"
+                    data-kind="اشتراك"
+                    data-name="{{ plan.name }}"
+                    data-price="{{ plan.price }} SAR"
+                  >
+                    اشترك وادفع
+                  </button>
+                </form>
+              </article>
+              {% else %}
+              <div class="plan-empty">لا توجد خطط اشتراك مفعلة حاليًا.</div>
+              {% endfor %}
+            </div>
+          </div>
+        </section>
+
+        <section class="card" aria-label="آراء العملاء">
+          <h2>آراء العملاء</h2>
+          <div class="testimonial">"تجربة ممتازة وتنظيم احترافي للجلسات." <span class="small">— سارة</span></div>
+          <div class="testimonial">"الاشتراك الشهري ساعدني على الالتزام بالرياضة." <span class="small">— نورة</span></div>
+          <div class="testimonial">"الدفع والحجز سهل جدًا من الجوال." <span class="small">— ريم</span></div>
+        </section>
+
+        <section class="card" aria-label="الأسئلة الشائعة">
+          <h2>أسئلة شائعة</h2>
+          {% for faq in faq_items %}
+            <div class="faq-item"><b>{{ faq.question }}</b><br/><span class="small">{{ faq.answer }}</span></div>
+          {% else %}
+            <div class="faq-item"><span class="small">لا توجد أسئلة شائعة متاحة حاليًا.</span></div>
+          {% endfor %}
+        </section>
+      </aside>
+    </main>
+
+    <div class="sticky-booking" id="sticky-booking" aria-live="polite">
+      <div>
+        <div class="label">الاختيار الحالي</div>
+        <div class="value" id="sticky-selection">لم يتم تحديد عنصر بعد</div>
+      </div>
+      <a href="#sessions-section">الانتقال للحجز</a>
+    </div>
+  </div>
+
+  <script>
+    (function () {
+      const tbody = document.getElementById("sessions-tbody");
+      const search = document.getElementById("session-search");
+      const level = document.getElementById("session-level");
+      const availability = document.getElementById("session-availability");
+      const maxPrice = document.getElementById("session-max-price");
+      const sort = document.getElementById("session-sort");
+      const stickySelection = document.getElementById("sticky-selection");
+
+      if (tbody) {
+        const rows = Array.from(tbody.querySelectorAll(".session-row"));
+        function applyFilters() {
+          const q = (search?.value || "").trim().toLowerCase();
+          const lv = level?.value || "";
+          const av = availability?.value || "";
+          const mp = parseFloat(maxPrice?.value || "");
+          rows.forEach(function (row) {
+            const title = (row.dataset.title || "").toLowerCase();
+            const rowLevel = row.dataset.level || "";
+            const avail = parseInt(row.dataset.available || "0", 10);
+            const price = parseFloat(row.dataset.price || "0");
+            let show = true;
+            if (q && !title.includes(q)) show = false;
+            if (lv && rowLevel !== lv) show = false;
+            if (av === "available" && avail <= 0) show = false;
+            if (av === "full" && avail > 0) show = false;
+            if (!Number.isNaN(mp) && price > mp) show = false;
+            row.style.display = show ? "" : "none";
+          });
+          applySort();
+        }
+        function applySort() {
+          const mode = sort?.value || "time_asc";
+          const visible = rows.filter(function (r) { return r.style.display !== "none"; });
+          visible.sort(function (a, b) {
+            const aPrice = parseFloat(a.dataset.price || "0");
+            const bPrice = parseFloat(b.dataset.price || "0");
+            const aAvail = parseInt(a.dataset.available || "0", 10);
+            const bAvail = parseInt(b.dataset.available || "0", 10);
+            const aTime = Date.parse(a.dataset.time || "") || 0;
+            const bTime = Date.parse(b.dataset.time || "") || 0;
+            if (mode === "price_asc") return aPrice - bPrice;
+            if (mode === "price_desc") return bPrice - aPrice;
+            if (mode === "availability_desc") return bAvail - aAvail;
+            return aTime - bTime;
+          });
+          visible.forEach(function (r) { tbody.appendChild(r); });
+        }
+
+        [search, level, availability, maxPrice, sort].forEach(function (el) {
+          if (el) el.addEventListener("input", applyFilters);
+          if (el) el.addEventListener("change", applyFilters);
+        });
+        applyFilters();
+      }
+
+      function track(eventName, payload) {
+        window.dataLayer = window.dataLayer || [];
+        window.dataLayer.push({ event: eventName, ...payload });
+        if (typeof window.gtag === "function") {
+          window.gtag("event", eventName, payload || {});
+        }
+      }
+
+      track("page_view_public_index", {
+        page_name: {{ analytics_page_name|tojson }},
+        center_id: {{ center_id|tojson }}
+      });
+
+      const paymentStatus = {{ (payment or '')|tojson }};
+      const msgStatus = {{ (msg or '')|tojson }};
+      if (paymentStatus === "success") {
+        track("purchase_success", { source: "index_return" });
+      } else if (paymentStatus === "cancelled") {
+        track("purchase_cancelled", { source: "index_return" });
+      }
+      if (msgStatus === "stripe_error" || msgStatus === "stripe_no_url" || msgStatus === "subscription_cancelled") {
+        track("purchase_failed", { reason: msgStatus });
+      }
+      if (msgStatus === "subscribed" || msgStatus === "subscribed_mock") {
+        track("subscription_activated", { mode: msgStatus });
+      }
+      if (msgStatus === "paid_mock") {
+        track("booking_paid_mock", { mode: "mock" });
+      }
+
+      document.querySelectorAll(".js-book-btn, .js-plan-btn").forEach(function (btn) {
+        btn.addEventListener("click", function () {
+          const kind = btn.dataset.kind || "";
+          const name = btn.dataset.name || "";
+          const price = btn.dataset.price || "";
+          if (stickySelection) stickySelection.textContent = kind + ": " + name + " - " + price;
+          track("public_cta_click", { kind: kind, name: name, price: price });
+          track("begin_checkout", { item_category: kind, item_name: name, value_text: price });
+        });
+      });
+    })();
+  </script>
+</body>
+</html>

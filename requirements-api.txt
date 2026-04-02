@@ -1,0 +1,13 @@
+fastapi
+python-multipart
+uvicorn
+sqlalchemy
+pydantic
+python-jose[cryptography]
+psycopg2-binary
+stripe
+openpyxl
+jinja2
+redis
+pywhatkit
+python-dotenv
