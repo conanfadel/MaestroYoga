@@ -62,7 +62,36 @@ powershell -ExecutionPolicy Bypass -File scripts/bootstrap_env.ps1
 - `requirements-mobile.txt` لمكونات تطبيق الموبايل
 - `requirements.txt` يجمع الاثنين تلقائيًا للتثبيت الكامل كما السابق
 
-2) تشغيل الـ API:
+## جاهزية النقل إلى Hetzner من الآن
+
+تم تجهيز ملفات جاهزة لتسهيل الانتقال لاحقًا بدون إعادة هيكلة كبيرة:
+
+- `Dockerfile`
+- `docker-compose.prod.yml`
+- `.env.production.example`
+- `.env.staging.example`
+- `scripts/backup_postgres.sh`
+- `scripts/restore_postgres.sh`
+- `docs/render_to_hetzner_migration_checklist.md`
+
+خطوة مقترحة الآن:
+
+1) على التطوير المحلي/Render استمر باستخدام `render.env` أو `.env` حسب الحاجة.  
+2) عند بدء النقل الفعلي إلى VPS:
+   - انسخ `.env.production.example` إلى `.env.production` مع القيم الحقيقية.
+   - شغل: `docker compose -f docker-compose.prod.yml --env-file .env.production up -d --build`
+   - طبق Checklist النقل من الملف:
+     `docs/render_to_hetzner_migration_checklist.md`
+3) سكربتات مساعدة على السيرفر:
+   - تهيئة أولية Ubuntu: `scripts/bootstrap_hetzner_ubuntu.sh`
+   - نشر التحديثات: `scripts/deploy_prod.sh`
+   - التحقق السريع بعد النشر: `scripts/healthcheck_prod.sh`
+4) الرجوع/الاستعادة:
+   - تحضير قبل النقل: `docs/pre_migration_prep.md`
+   - النسخ الاحتياطي: `scripts/backup_postgres.sh`
+   - الاسترجاع: `scripts/restore_postgres.sh`
+
+## تشغيل الـ API
 
 ```bash
 uvicorn backend.app.main:app --reload

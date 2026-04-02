@@ -5,3 +5,8 @@ maestro_yoga.db
 .idea/
 logs/
 .env
+render.env
+.env.production
+.env.staging
+backups/
+*.dump
