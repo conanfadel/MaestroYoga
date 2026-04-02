@@ -199,6 +199,13 @@ def public_index(
         .order_by(models.YogaSession.starts_at.asc())
         .all()
     )
+    room_ids = sorted({s.room_id for s in sessions if s.room_id is not None})
+    rooms_by_id = {}
+    if room_ids:
+        rooms_by_id = {
+            r.id: r
+            for r in db.query(models.Room).filter(models.Room.center_id == center_id, models.Room.id.in_(room_ids)).all()
+        }
     rows = []
     level_labels = {
         "beginner": "مبتدئ",
@@ -206,7 +213,7 @@ def public_index(
         "advanced": "متقدم",
     }
     for s in sessions:
-        room = db.get(models.Room, s.room_id)
+        room = rooms_by_id.get(s.room_id)
         rows.append(
             {
                 "id": s.id,
@@ -1005,8 +1012,9 @@ def admin_dashboard(
         "intermediate": "متوسط",
         "advanced": "متقدم",
     }
+    rooms_by_id = {r.id: r for r in rooms}
     for s in sessions:
-        room = db.get(models.Room, s.room_id)
+        room = rooms_by_id.get(s.room_id)
         session_rows.append(
             {
                 "id": s.id,
@@ -1716,22 +1724,33 @@ def admin_delete_rooms_bulk(
     if not rooms:
         return _admin_redirect("rooms_not_found", scroll_y)
 
+    room_ids = [r.id for r in rooms]
+    all_sessions = (
+        db.query(models.YogaSession)
+        .filter(models.YogaSession.center_id == cid, models.YogaSession.room_id.in_(room_ids))
+        .all()
+    )
+    sessions_by_room: dict[int, list[models.YogaSession]] = {}
+    session_ids: list[int] = []
+    for session in all_sessions:
+        sessions_by_room.setdefault(session.room_id, []).append(session)
+        session_ids.append(session.id)
+    booked_session_ids: set[int] = set()
+    if session_ids:
+        booked_session_ids = {
+            sid
+            for (sid,) in db.query(models.Booking.session_id)
+            .filter(models.Booking.center_id == cid, models.Booking.session_id.in_(session_ids))
+            .distinct()
+            .all()
+        }
+
     blocked_bookings = 0
     deleted = 0
     for room in rooms:
-        room_sessions = (
-            db.query(models.YogaSession)
-            .filter(models.YogaSession.center_id == cid, models.YogaSession.room_id == room.id)
-            .all()
-        )
+        room_sessions = sessions_by_room.get(room.id, [])
         if room_sessions:
-            session_ids = [s.id for s in room_sessions]
-            has_bookings = (
-                db.query(models.Booking.id)
-                .filter(models.Booking.center_id == cid, models.Booking.session_id.in_(session_ids))
-                .first()
-            )
-            if has_bookings:
+            if any(s.id in booked_session_ids for s in room_sessions):
                 blocked_bookings += 1
                 continue
             for session in room_sessions:

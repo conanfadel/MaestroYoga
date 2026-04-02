@@ -1,6 +1,7 @@
 import json
 import logging
 import os
+from concurrent.futures import ThreadPoolExecutor
 from logging.handlers import RotatingFileHandler
 from pathlib import Path
 from typing import Any
@@ -15,6 +16,11 @@ from .request_ip import get_client_ip
 _LOGGER_NAME = "maestro.security.audit"
 _logger = logging.getLogger(_LOGGER_NAME)
 _configured = False
+_executor = ThreadPoolExecutor(max_workers=max(1, int(os.getenv("SECURITY_AUDIT_ASYNC_WORKERS", "1"))))
+
+
+def _is_async_enabled() -> bool:
+    return os.getenv("SECURITY_AUDIT_ASYNC", "0").strip().lower() in {"1", "true", "yes", "on"}
 
 
 def _configure_logger() -> None:
@@ -57,7 +63,10 @@ def log_security_event(
         "details": details or {},
     }
     _logger.info(json.dumps(payload, ensure_ascii=True))
-    _save_event_db(payload)
+    if _is_async_enabled():
+        _executor.submit(_save_event_db, payload)
+    else:
+        _save_event_db(payload)
 
 
 def _save_event_db(payload: dict[str, Any]) -> None:
