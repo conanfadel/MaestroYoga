@@ -178,6 +178,15 @@ def _admin_login_redirect() -> RedirectResponse:
     return RedirectResponse(url="/admin/login", status_code=303)
 
 
+def _require_admin_user_or_redirect(
+    request: Request, db: Session
+) -> tuple[models.User | None, RedirectResponse | None]:
+    user = _admin_user_from_request(request, db)
+    if not user:
+        return None, _admin_login_redirect()
+    return user, None
+
+
 def _public_login_redirect(next_url: str = "/index?center_id=1", msg: str | None = None) -> RedirectResponse:
     safe_next = _sanitize_next_url(next_url)
     return RedirectResponse(url=_url_with_params("/public/login", next=safe_next, msg=msg), status_code=303)
@@ -990,9 +999,10 @@ def admin_dashboard(
     audit_page: int = 1,
     db: Session = Depends(get_db),
 ):
-    user = _admin_user_from_request(request, db)
-    if not user:
-        return RedirectResponse(url="/admin/login", status_code=303)
+    user, redirect = _require_admin_user_or_redirect(request, db)
+    if redirect:
+        return redirect
+    assert user is not None
     cid = require_user_center_id(user)
     center = db.get(models.Center, cid)
     room_sort_key = (room_sort or "name").strip().lower()
@@ -1542,9 +1552,9 @@ def export_security_events_csv(
     audit_ip: str = "",
     db: Session = Depends(get_db),
 ):
-    user = _admin_user_from_request(request, db)
-    if not user:
-        return RedirectResponse(url="/admin/login", status_code=303)
+    user, redirect = _require_admin_user_or_redirect(request, db)
+    if redirect:
+        return redirect
 
     query = db.query(models.SecurityAuditEvent)
     if audit_event_type.strip():
@@ -1588,9 +1598,10 @@ def admin_block_ip(
     reason: str = Form("manual_block"),
     db: Session = Depends(get_db),
 ):
-    user = _admin_user_from_request(request, db)
-    if not user:
-        return _admin_login_redirect()
+    user, redirect = _require_admin_user_or_redirect(request, db)
+    if redirect:
+        return redirect
+    assert user is not None
 
     target_ip = ip.strip()
     if not target_ip:
@@ -1622,7 +1633,7 @@ def admin_block_ip(
         email=user.email,
         details={"target_ip": target_ip, "minutes": minutes, "reason": reason[:255]},
     )
-    return RedirectResponse(url="/admin?msg=ip_blocked", status_code=303)
+    return _admin_redirect("ip_blocked")
 
 
 @router.post("/admin/security/ip-unblock")
@@ -1631,9 +1642,10 @@ def admin_unblock_ip(
     ip: str = Form(...),
     db: Session = Depends(get_db),
 ):
-    user = _admin_user_from_request(request, db)
-    if not user:
-        return _admin_login_redirect()
+    user, redirect = _require_admin_user_or_redirect(request, db)
+    if redirect:
+        return redirect
+    assert user is not None
     target_ip = ip.strip()
     if not target_ip:
         return _admin_redirect("ip_block_invalid")
@@ -1659,9 +1671,10 @@ def admin_toggle_public_user_active(
     scroll_y: str = Form(default=""),
     db: Session = Depends(get_db),
 ):
-    user = _admin_user_from_request(request, db)
-    if not user:
-        return RedirectResponse(url="/admin/login", status_code=303)
+    user, redirect = _require_admin_user_or_redirect(request, db)
+    if redirect:
+        return redirect
+    assert user is not None
     row, redirect = _get_public_user_or_redirect(db, public_user_id, scroll_y)
     if redirect:
         return redirect
@@ -1678,9 +1691,10 @@ def admin_toggle_public_user_verified(
     scroll_y: str = Form(default=""),
     db: Session = Depends(get_db),
 ):
-    user = _admin_user_from_request(request, db)
-    if not user:
-        return RedirectResponse(url="/admin/login", status_code=303)
+    user, redirect = _require_admin_user_or_redirect(request, db)
+    if redirect:
+        return redirect
+    assert user is not None
     row, redirect = _get_public_user_or_redirect(db, public_user_id, scroll_y)
     if redirect:
         return redirect
@@ -1697,9 +1711,10 @@ def admin_delete_public_user(
     scroll_y: str = Form(default=""),
     db: Session = Depends(get_db),
 ):
-    user = _admin_user_from_request(request, db)
-    if not user:
-        return RedirectResponse(url="/admin/login", status_code=303)
+    user, redirect = _require_admin_user_or_redirect(request, db)
+    if redirect:
+        return redirect
+    assert user is not None
     row, redirect = _get_public_user_or_redirect(db, public_user_id, scroll_y)
     if redirect:
         return redirect
@@ -1728,9 +1743,10 @@ def admin_resend_public_user_verification(
     scroll_y: str = Form(default=""),
     db: Session = Depends(get_db),
 ):
-    admin_user = _admin_user_from_request(request, db)
-    if not admin_user:
-        return RedirectResponse(url="/admin/login", status_code=303)
+    admin_user, redirect = _require_admin_user_or_redirect(request, db)
+    if redirect:
+        return redirect
+    assert admin_user is not None
     row, redirect = _get_public_user_or_redirect(db, public_user_id, scroll_y)
     if redirect:
         return redirect
@@ -1772,9 +1788,10 @@ def admin_restore_public_user(
     scroll_y: str = Form(default=""),
     db: Session = Depends(get_db),
 ):
-    admin_user = _admin_user_from_request(request, db)
-    if not admin_user:
-        return RedirectResponse(url="/admin/login", status_code=303)
+    admin_user, redirect = _require_admin_user_or_redirect(request, db)
+    if redirect:
+        return redirect
+    assert admin_user is not None
     row, redirect = _get_public_user_or_redirect(db, public_user_id, scroll_y, allow_deleted=True)
     if redirect:
         return redirect
@@ -1803,9 +1820,10 @@ def admin_public_users_bulk_action(
     scroll_y: str = Form(default=""),
     db: Session = Depends(get_db),
 ):
-    admin_user = _admin_user_from_request(request, db)
-    if not admin_user:
-        return RedirectResponse(url="/admin/login", status_code=303)
+    admin_user, redirect = _require_admin_user_or_redirect(request, db)
+    if redirect:
+        return redirect
+    assert admin_user is not None
     ids = sorted(set(public_user_ids))
     if not ids:
         return _admin_redirect("public_users_none_selected", scroll_y)
