@@ -10,6 +10,7 @@ from sqlalchemy.exc import SQLAlchemyError
 
 from .database import SessionLocal
 from .models import SecurityAuditEvent
+from .request_ip import get_client_ip
 
 _LOGGER_NAME = "maestro.security.audit"
 _logger = logging.getLogger(_LOGGER_NAME)
@@ -50,7 +51,7 @@ def log_security_event(
         "event_type": event_type,
         "status": status,
         "email": (email or "").lower().strip(),
-        "ip": request.client.host if request.client else "unknown",
+        "ip": get_client_ip(request),
         "user_agent": request.headers.get("user-agent", ""),
         "path": str(request.url.path),
         "details": details or {},

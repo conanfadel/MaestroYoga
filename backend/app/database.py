@@ -14,8 +14,21 @@ SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 Base = declarative_base()
 
 
+def _public_users_is_deleted_sql(dialect: str) -> str:
+    if dialect == "postgresql":
+        return "ALTER TABLE public_users ADD COLUMN is_deleted BOOLEAN DEFAULT FALSE"
+    return "ALTER TABLE public_users ADD COLUMN is_deleted BOOLEAN DEFAULT 0"
+
+
+def _public_users_deleted_at_sql(dialect: str) -> str:
+    if dialect == "postgresql":
+        return "ALTER TABLE public_users ADD COLUMN deleted_at TIMESTAMP"
+    return "ALTER TABLE public_users ADD COLUMN deleted_at DATETIME"
+
+
 def migrate_schema() -> None:
     """Lightweight migrations for existing SQLite/Postgres DBs."""
+    dialect = engine.dialect.name
     insp = inspect(engine)
     if not insp.has_table("payments"):
         return
@@ -44,10 +57,13 @@ def migrate_schema() -> None:
         if needs_public_user_phone:
             conn.execute(text("ALTER TABLE public_users ADD COLUMN phone VARCHAR"))
         if needs_public_user_is_deleted:
-            conn.execute(text("ALTER TABLE public_users ADD COLUMN is_deleted BOOLEAN DEFAULT 0"))
-            conn.execute(text("UPDATE public_users SET is_deleted = 0 WHERE is_deleted IS NULL"))
+            conn.execute(text(_public_users_is_deleted_sql(dialect)))
+            if dialect == "postgresql":
+                conn.execute(text("UPDATE public_users SET is_deleted = FALSE WHERE is_deleted IS NULL"))
+            else:
+                conn.execute(text("UPDATE public_users SET is_deleted = 0 WHERE is_deleted IS NULL"))
         if needs_public_user_deleted_at:
-            conn.execute(text("ALTER TABLE public_users ADD COLUMN deleted_at DATETIME"))
+            conn.execute(text(_public_users_deleted_at_sql(dialect)))
 
 
 def init_db() -> None:

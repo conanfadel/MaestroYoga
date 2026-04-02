@@ -23,6 +23,7 @@ from .mailer import (
 )
 from .payments import StripePaymentProvider, get_payment_provider
 from .rate_limiter import rate_limiter
+from .request_ip import get_client_ip
 from .security_audit import log_security_event
 from .security import (
     create_access_token,
@@ -39,6 +40,17 @@ from .security import (
 )
 from .tenant_utils import require_user_center_id
 from .time_utils import utcnow_naive
+from .web_shared import (
+    _cookie_secure_flag,
+    _fmt_dt,
+    _is_email_verification_required,
+    _is_truthy_env,
+    _normalize_phone_with_country,
+    _plan_duration_days,
+    _public_base,
+    _sanitize_next_url,
+    _url_with_params,
+)
 
 templates = Jinja2Templates(directory=str(Path(__file__).resolve().parent.parent / "templates"))
 
@@ -46,19 +58,6 @@ router = APIRouter(tags=["web"])
 PUBLIC_COOKIE_NAME = "public_access_token"
 MAX_LOCKOUT_SECONDS = int(os.getenv("RATE_LIMIT_MAX_LOCKOUT_SECONDS", "900"))
 GA4_MEASUREMENT_ID = os.getenv("GA4_MEASUREMENT_ID", "").strip()
-PUBLIC_BASE_URL = os.getenv("PUBLIC_BASE_URL", "").strip().rstrip("/")
-COOKIE_SECURE = os.getenv("COOKIE_SECURE", "").strip().lower() in {"1", "true", "yes", "on"}
-
-
-def _public_base(request: Request) -> str:
-    if PUBLIC_BASE_URL:
-        return PUBLIC_BASE_URL
-    return str(request.base_url).rstrip("/")
-
-
-def _is_email_verification_required() -> bool:
-    value = os.getenv("PUBLIC_REQUIRE_EMAIL_VERIFICATION", "1").strip().lower()
-    return value not in {"0", "false", "no", "off"}
 
 
 def _current_public_user(request: Request, db: Session) -> models.PublicUser | None:
@@ -69,18 +68,6 @@ def _current_public_user(request: Request, db: Session) -> models.PublicUser | N
         return get_public_user_from_token_string(token, db)
     except HTTPException:
         return None
-
-
-def _sanitize_next_url(next_url: str | None, fallback: str = "/index?center_id=1") -> str:
-    candidate = (next_url or "").strip()
-    if not candidate:
-        return fallback
-    parsed = urlsplit(candidate)
-    if parsed.scheme or parsed.netloc:
-        return fallback
-    if not parsed.path.startswith("/"):
-        return fallback
-    return candidate
 
 
 def _build_verify_url(request: Request, user: models.PublicUser, next_url: str = "/index?center_id=1") -> str:
@@ -97,39 +84,13 @@ def _build_reset_url(request: Request, user: models.PublicUser) -> str:
 
 
 def _request_key(request: Request, prefix: str, identity: str = "") -> str:
-    client_ip = request.client.host if request.client else "unknown"
+    client_ip = get_client_ip(request)
     scope = identity.strip().lower() if identity else client_ip
     return f"{prefix}:{scope}"
 
 
 def _client_ip(request: Request) -> str:
-    return request.client.host if request.client else "unknown"
-
-
-def _normalize_phone_with_country(country_code: str, phone: str) -> str | None:
-    cc = country_code.strip()
-    if not cc.startswith("+") or not cc[1:].isdigit():
-        return None
-    digits = "".join(ch for ch in phone if ch.isdigit())
-    if not digits:
-        return None
-
-    # Saudi-specific validation (strict local/mobile format).
-    if cc == "+966":
-        if digits.startswith("0"):
-            digits = digits[1:]
-        if digits.startswith("966"):
-            digits = digits[3:]
-        if len(digits) != 9 or not digits.startswith("5"):
-            return None
-        return f"{cc}{digits}"
-
-    # Generic mobile/phone sanity check for other country codes.
-    if digits.startswith("0"):
-        digits = digits[1:]
-    if len(digits) < 7 or len(digits) > 12:
-        return None
-    return f"{cc}{digits}"
+    return get_client_ip(request)
 
 
 def _active_block_for_ip(db: Session, ip: str) -> models.BlockedIP | None:
@@ -150,21 +111,6 @@ def _is_ip_blocked(db: Session, request: Request) -> bool:
     return _active_block_for_ip(db, _client_ip(request)) is not None
 
 
-def _plan_duration_days(plan_type: str) -> int:
-    mapping = {
-        "weekly": 7,
-        "monthly": 30,
-        "yearly": 365,
-    }
-    return mapping.get(plan_type, 30)
-
-
-def _fmt_dt(value: datetime | None) -> str:
-    if not value:
-        return "-"
-    return value.strftime("%Y-%m-%d %H:%M")
-
-
 def _admin_redirect(msg: str | None = None, scroll_y: str | None = None) -> RedirectResponse:
     params: dict[str, str] = {}
     if msg:
@@ -182,27 +128,9 @@ def _admin_redirect(msg: str | None = None, scroll_y: str | None = None) -> Redi
     return RedirectResponse(url=url, status_code=303)
 
 
-def _url_with_params(path: str, **params: str) -> str:
-    clean = {k: v for k, v in params.items() if v is not None and v != ""}
-    if not clean:
-        return path
-    return f"{path}?{urlencode(clean)}"
-
-
 def _public_login_redirect(next_url: str = "/index?center_id=1", msg: str | None = None) -> RedirectResponse:
-    return RedirectResponse(url=_url_with_params("/public/login", next=next_url, msg=msg), status_code=303)
-
-
-def _is_truthy_env(value: str | None) -> bool:
-    if value is None:
-        return False
-    return value.strip().lower() in {"1", "true", "yes", "on"}
-
-
-def _cookie_secure_flag(request: Request) -> bool:
-    if COOKIE_SECURE:
-        return True
-    return request.url.scheme == "https"
+    safe_next = _sanitize_next_url(next_url)
+    return RedirectResponse(url=_url_with_params("/public/login", next=safe_next, msg=msg), status_code=303)
 
 
 def _admin_user_from_request(request: Request, db: Session) -> models.User | None:
@@ -627,8 +555,9 @@ def public_login(
     next: str = Form("/index?center_id=1"),
     db: Session = Depends(get_db),
 ):
+    safe_next = _sanitize_next_url(next)
     if _is_ip_blocked(db, request):
-        return _public_login_redirect(next_url=next, msg="ip_blocked")
+        return _public_login_redirect(next_url=safe_next, msg="ip_blocked")
     email_normalized = email.lower().strip()
     login_key = _request_key(request, "public_login", email_normalized)
     if not rate_limiter.allow(
@@ -639,7 +568,7 @@ def public_login(
         max_lockout_seconds=MAX_LOCKOUT_SECONDS,
     ):
         log_security_event("public_login", request, "rate_limited", email=email_normalized)
-        return _public_login_redirect(next_url=next, msg="rate_limited")
+        return _public_login_redirect(next_url=safe_next, msg="rate_limited")
     user = (
         db.query(models.PublicUser)
         .filter(models.PublicUser.email == email_normalized, models.PublicUser.is_deleted.is_(False))
@@ -647,16 +576,16 @@ def public_login(
     )
     if not user or not verify_password(password, user.password_hash):
         log_security_event("public_login", request, "invalid_credentials", email=email_normalized)
-        return _public_login_redirect(next_url=next, msg="invalid_credentials")
+        return _public_login_redirect(next_url=safe_next, msg="invalid_credentials")
     if not user.is_active:
         log_security_event("public_login", request, "inactive", email=email_normalized)
-        return _public_login_redirect(next_url=next, msg="inactive")
+        return _public_login_redirect(next_url=safe_next, msg="inactive")
 
     token = create_public_access_token(user.id)
     if _is_email_verification_required() and not user.email_verified:
-        response = RedirectResponse(url=_url_with_params("/public/verify-pending", next=next), status_code=303)
+        response = RedirectResponse(url=_url_with_params("/public/verify-pending", next=safe_next), status_code=303)
     else:
-        response = RedirectResponse(url=next, status_code=303)
+        response = RedirectResponse(url=safe_next, status_code=303)
     response.set_cookie(
         key=PUBLIC_COOKIE_NAME,
         value=token,
@@ -685,20 +614,21 @@ def public_logout():
 
 @router.get("/public/verify-pending", response_class=HTMLResponse)
 def public_verify_pending(request: Request, next: str = "/index?center_id=1", db: Session = Depends(get_db)):
+    safe_next = _sanitize_next_url(next)
     user = _current_public_user(request, db)
     if not user:
-        return _public_login_redirect(next_url=next)
+        return _public_login_redirect(next_url=safe_next)
     if not _is_email_verification_required():
-        return RedirectResponse(url=next, status_code=303)
+        return RedirectResponse(url=safe_next, status_code=303)
     if user.email_verified:
-        return RedirectResponse(url=next, status_code=303)
+        return RedirectResponse(url=safe_next, status_code=303)
     show_dev_verify_link = _is_truthy_env(os.getenv("SHOW_DEV_VERIFY_LINK"))
-    dev_verify_url = _build_verify_url(request, user, next_url=next) if show_dev_verify_link else ""
+    dev_verify_url = _build_verify_url(request, user, next_url=safe_next) if show_dev_verify_link else ""
     return templates.TemplateResponse(
         request,
         "public_verify_pending.html",
         {
-            "next": next,
+            "next": safe_next,
             "user": user,
             "show_dev_verify_link": show_dev_verify_link,
             "dev_verify_url": dev_verify_url,
@@ -713,8 +643,9 @@ def public_resend_verification(
     next: str = Form("/index?center_id=1"),
     db: Session = Depends(get_db),
 ):
+    safe_next = _sanitize_next_url(next)
     if _is_ip_blocked(db, request):
-        return _public_login_redirect(next_url=next, msg="ip_blocked")
+        return _public_login_redirect(next_url=safe_next, msg="ip_blocked")
     resend_key = _request_key(request, "public_resend_verify")
     if not rate_limiter.allow(
         resend_key,
@@ -725,22 +656,22 @@ def public_resend_verification(
     ):
         log_security_event("public_resend_verification", request, "rate_limited")
         return RedirectResponse(
-            url=_url_with_params("/public/verify-pending", msg="rate_limited", next=next),
+            url=_url_with_params("/public/verify-pending", msg="rate_limited", next=safe_next),
             status_code=303,
         )
     user = _current_public_user(request, db)
     if not user:
-        return _public_login_redirect(next_url=next)
+        return _public_login_redirect(next_url=safe_next)
     now = utcnow_naive()
     if user.verification_sent_at and (now - user.verification_sent_at).total_seconds() < 60:
         log_security_event("public_resend_verification", request, "too_soon", email=user.email)
         return RedirectResponse(
-            url=_url_with_params("/public/verify-pending", msg="resend_too_soon", next=next),
+            url=_url_with_params("/public/verify-pending", msg="resend_too_soon", next=safe_next),
             status_code=303,
         )
     user.verification_sent_at = now
     db.commit()
-    queued, mail_info = _queue_verify_email_for_user(request, user, next_url=next)
+    queued, mail_info = _queue_verify_email_for_user(request, user, next_url=safe_next)
     if not queued:
         log_security_event(
             "public_resend_verification",
@@ -750,7 +681,7 @@ def public_resend_verification(
             details={"mail_error": mail_info[:200]},
         )
         return RedirectResponse(
-            url=_url_with_params("/public/verify-pending", msg="mail_failed", next=next),
+            url=_url_with_params("/public/verify-pending", msg="mail_failed", next=safe_next),
             status_code=303,
         )
     log_security_event(
@@ -760,7 +691,10 @@ def public_resend_verification(
         email=user.email,
         details={"mail_status": "queued"},
     )
-    return RedirectResponse(url=_url_with_params("/public/verify-pending", msg="resent", next=next), status_code=303)
+    return RedirectResponse(
+        url=_url_with_params("/public/verify-pending", msg="resent", next=safe_next),
+        status_code=303,
+    )
 
 
 @router.get("/public/verify-email")

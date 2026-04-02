@@ -2,10 +2,12 @@ import csv
 import io
 from datetime import datetime, timezone
 from io import BytesIO
+import logging
 import os
 from pathlib import Path
 import subprocess
 import sys
+from urllib.parse import urlsplit
 
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
 if str(PROJECT_ROOT) not in sys.path:
@@ -79,11 +81,14 @@ except ImportError:
     from backend.app.tenant_utils import require_user_center_id
 
 load_dotenv()
+logger = logging.getLogger(__name__)
 
 app = FastAPI(title="Maestro Yoga API", version="1.0.0")
 init_db()
 app.include_router(web_ui_router)
 SEED_DEMO_KEY = os.getenv("SEED_DEMO_KEY", "").strip()
+PUBLIC_BASE_URL = os.getenv("PUBLIC_BASE_URL", "").strip().rstrip("/")
+STRIPE_CHECKOUT_ALLOWED_ORIGINS = [x.strip().rstrip("/") for x in os.getenv("STRIPE_CHECKOUT_ALLOWED_ORIGINS", "").split(",") if x.strip()]
 
 
 @app.get("/")
@@ -98,6 +103,25 @@ def _payments_query(db: Session, center_id: int, client_id: int | None = None, s
     if status:
         query = query.filter(models.Payment.status == status)
     return query
+
+
+def _allowed_checkout_origins() -> list[str]:
+    if STRIPE_CHECKOUT_ALLOWED_ORIGINS:
+        return STRIPE_CHECKOUT_ALLOWED_ORIGINS
+    if PUBLIC_BASE_URL:
+        return [PUBLIC_BASE_URL]
+    return ["http://127.0.0.1:8000", "http://localhost:8000"]
+
+
+def _is_checkout_redirect_allowed(url: str) -> bool:
+    try:
+        parsed = urlsplit(url.strip())
+    except Exception:
+        return False
+    if parsed.scheme not in {"http", "https"} or not parsed.netloc:
+        return False
+    origin = f"{parsed.scheme}://{parsed.netloc}".rstrip("/")
+    return origin in _allowed_checkout_origins()
 
 
 def _is_local_client(request: Request) -> bool:
@@ -400,6 +424,11 @@ def create_checkout_session(
     provider = get_payment_provider()
     if not isinstance(provider, StripePaymentProvider):
         raise HTTPException(status_code=400, detail="Checkout session requires Stripe provider")
+    if not _is_checkout_redirect_allowed(payload.success_url) or not _is_checkout_redirect_allowed(payload.cancel_url):
+        raise HTTPException(
+            status_code=400,
+            detail="success_url/cancel_url must match allowed checkout origins",
+        )
 
     payment = models.Payment(
         center_id=center_id,
@@ -430,7 +459,8 @@ def create_checkout_session(
             cancel_url=payload.cancel_url,
         )
     except Exception as exc:
-        raise HTTPException(status_code=500, detail=str(exc))
+        logger.exception("Failed to create Stripe checkout session: %s", exc)
+        raise HTTPException(status_code=500, detail="Checkout session creation failed")
 
     payment.provider_ref = provider_result.provider_ref
     db.commit()
