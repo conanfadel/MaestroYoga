@@ -915,10 +915,12 @@ def admin_dashboard(
     public_user_q: str = "",
     public_user_status: str = "active",
     public_user_verified: str = "all",
+    public_user_page: int = 1,
     audit_event_type: str = "",
     audit_status: str = "",
     audit_email: str = "",
     audit_ip: str = "",
+    audit_page: int = 1,
     db: Session = Depends(get_db),
 ):
     user = _admin_user_from_request(request, db)
@@ -1005,7 +1007,19 @@ def admin_dashboard(
         public_users_query = public_users_query.filter(models.PublicUser.email_verified.is_(True))
     elif verified_key == "unverified":
         public_users_query = public_users_query.filter(models.PublicUser.email_verified.is_(False))
-    public_users = public_users_query.order_by(models.PublicUser.created_at.desc()).limit(300).all()
+    public_users_page_size = 50
+    safe_public_user_page = max(1, int(public_user_page or 1))
+    public_users_total = public_users_query.order_by(None).count()
+    public_users_total_pages = max(1, (public_users_total + public_users_page_size - 1) // public_users_page_size)
+    if safe_public_user_page > public_users_total_pages:
+        safe_public_user_page = public_users_total_pages
+    public_users_offset = (safe_public_user_page - 1) * public_users_page_size
+    public_users = (
+        public_users_query.order_by(models.PublicUser.created_at.desc())
+        .offset(public_users_offset)
+        .limit(public_users_page_size)
+        .all()
+    )
     session_rows = []
     level_labels = {
         "beginner": "مبتدئ",
@@ -1194,7 +1208,19 @@ def admin_dashboard(
     if audit_ip.strip():
         audit_query = audit_query.filter(models.SecurityAuditEvent.ip.ilike(f"%{audit_ip.strip()}%"))
 
-    security_events = audit_query.order_by(models.SecurityAuditEvent.created_at.desc()).limit(120).all()
+    audit_page_size = 50
+    safe_audit_page = max(1, int(audit_page or 1))
+    security_events_total = audit_query.order_by(None).count()
+    security_events_total_pages = max(1, (security_events_total + audit_page_size - 1) // audit_page_size)
+    if safe_audit_page > security_events_total_pages:
+        safe_audit_page = security_events_total_pages
+    security_events_offset = (safe_audit_page - 1) * audit_page_size
+    security_events = (
+        audit_query.order_by(models.SecurityAuditEvent.created_at.desc())
+        .offset(security_events_offset)
+        .limit(audit_page_size)
+        .all()
+    )
     security_event_rows = [
         {
             "id": ev.id,
@@ -1298,6 +1324,58 @@ def admin_dashboard(
         audit_email=audit_email,
         audit_ip=audit_ip,
     )
+    public_users_page_prev_url = _url_with_params(
+        "/admin",
+        room_sort=room_sort,
+        public_user_q=public_user_q,
+        public_user_status=public_user_status,
+        public_user_verified=public_user_verified,
+        public_user_page=str(max(1, safe_public_user_page - 1)),
+        audit_event_type=audit_event_type,
+        audit_status=audit_status,
+        audit_email=audit_email,
+        audit_ip=audit_ip,
+        audit_page=str(safe_audit_page),
+    )
+    public_users_page_next_url = _url_with_params(
+        "/admin",
+        room_sort=room_sort,
+        public_user_q=public_user_q,
+        public_user_status=public_user_status,
+        public_user_verified=public_user_verified,
+        public_user_page=str(min(public_users_total_pages, safe_public_user_page + 1)),
+        audit_event_type=audit_event_type,
+        audit_status=audit_status,
+        audit_email=audit_email,
+        audit_ip=audit_ip,
+        audit_page=str(safe_audit_page),
+    )
+    security_page_prev_url = _url_with_params(
+        "/admin",
+        room_sort=room_sort,
+        public_user_q=public_user_q,
+        public_user_status=public_user_status,
+        public_user_verified=public_user_verified,
+        public_user_page=str(safe_public_user_page),
+        audit_event_type=audit_event_type,
+        audit_status=audit_status,
+        audit_email=audit_email,
+        audit_ip=audit_ip,
+        audit_page=str(max(1, safe_audit_page - 1)),
+    )
+    security_page_next_url = _url_with_params(
+        "/admin",
+        room_sort=room_sort,
+        public_user_q=public_user_q,
+        public_user_status=public_user_status,
+        public_user_verified=public_user_verified,
+        public_user_page=str(safe_public_user_page),
+        audit_event_type=audit_event_type,
+        audit_status=audit_status,
+        audit_email=audit_email,
+        audit_ip=audit_ip,
+        audit_page=str(min(security_events_total_pages, safe_audit_page + 1)),
+    )
 
     return templates.TemplateResponse(
         request,
@@ -1327,6 +1405,26 @@ def admin_dashboard(
                 "q": public_user_q,
                 "status": status_key,
                 "verified": verified_key or "all",
+            },
+            "public_user_pagination": {
+                "page": safe_public_user_page,
+                "page_size": public_users_page_size,
+                "total": public_users_total,
+                "total_pages": public_users_total_pages,
+                "has_prev": safe_public_user_page > 1,
+                "has_next": safe_public_user_page < public_users_total_pages,
+                "prev_url": public_users_page_prev_url,
+                "next_url": public_users_page_next_url,
+            },
+            "security_pagination": {
+                "page": safe_audit_page,
+                "page_size": audit_page_size,
+                "total": security_events_total,
+                "total_pages": security_events_total_pages,
+                "has_prev": safe_audit_page > 1,
+                "has_next": safe_audit_page < security_events_total_pages,
+                "prev_url": security_page_prev_url,
+                "next_url": security_page_next_url,
             },
             "room_filters": {
                 "sort": (

@@ -706,6 +706,8 @@
     <div class="card" style="margin-top:0;">
       <h2>المستخدمون الجدد (لوحة تحكم الجمهور)</h2>
       <form method="get" action="/admin" class="filters" style="margin-bottom:10px;">
+        <input type="hidden" name="public_user_page" value="1" />
+        <input type="hidden" name="audit_page" value="{{ security_pagination.page }}" />
         <input name="public_user_q" placeholder="بحث بالاسم/البريد/الجوال" value="{{ public_user_filters.q }}" />
         <select name="public_user_status">
           <option value="active" {{ 'selected' if public_user_filters.status == 'active' else '' }}>نشطون</option>
@@ -814,6 +816,15 @@
             {% endfor %}
           </tbody>
         </table>
+      </div>
+      <div class="small" style="margin-top:8px;display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
+        <span>الصفحة {{ public_user_pagination.page }} من {{ public_user_pagination.total_pages }} (إجمالي: {{ public_user_pagination.total }})</span>
+        {% if public_user_pagination.has_prev %}
+          <a class="soft-link" href="{{ public_user_pagination.prev_url }}">السابق</a>
+        {% endif %}
+        {% if public_user_pagination.has_next %}
+          <a class="soft-link" href="{{ public_user_pagination.next_url }}">التالي</a>
+        {% endif %}
       </div>
     </div>
       </div>
@@ -1013,6 +1024,8 @@
         <button type="submit" class="danger">حظر يدوي</button>
       </form>
       <form method="get" action="/admin" class="filters">
+        <input type="hidden" name="public_user_page" value="{{ public_user_pagination.page }}" />
+        <input type="hidden" name="audit_page" value="1" />
         <input name="audit_event_type" placeholder="نوع الحدث" value="{{ security_filters.event_type }}" />
         <input name="audit_status" placeholder="الحالة" value="{{ security_filters.status }}" />
         <input name="audit_email" placeholder="البريد" value="{{ security_filters.email }}" />
@@ -1050,6 +1063,15 @@
             {% endfor %}
           </tbody>
         </table>
+      </div>
+      <div class="small" style="margin-top:8px;display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
+        <span>الصفحة {{ security_pagination.page }} من {{ security_pagination.total_pages }} (إجمالي: {{ security_pagination.total }})</span>
+        {% if security_pagination.has_prev %}
+          <a class="soft-link" href="{{ security_pagination.prev_url }}">السابق</a>
+        {% endif %}
+        {% if security_pagination.has_next %}
+          <a class="soft-link" href="{{ security_pagination.next_url }}">التالي</a>
+        {% endif %}
       </div>
       <h3 style="margin:14px 0 8px; color:#134e4a;">IP المحظورة حاليًا</h3>
       <div style="overflow-x:auto;">
