@@ -62,6 +62,8 @@ ADMIN_SESSIONS_PAGE_SIZE = 50
 ADMIN_PUBLIC_USERS_PAGE_SIZE = 50
 ADMIN_SECURITY_AUDIT_PAGE_SIZE = 50
 ADMIN_PAYMENTS_PAGE_SIZE = 20
+ADMIN_IP_BLOCK_DEFAULT_MINUTES = 60
+ADMIN_IP_BLOCK_MAX_MINUTES = 10080
 
 ADMIN_FLASH_MESSAGES: dict[str, tuple[str, str]] = {
     "room_created": ("تمت إضافة الغرفة بنجاح.", "info"),
@@ -1642,7 +1644,7 @@ def export_security_events_csv(
 def admin_block_ip(
     request: Request,
     ip: str = Form(...),
-    minutes: int = Form(60),
+    minutes: int = Form(ADMIN_IP_BLOCK_DEFAULT_MINUTES),
     reason: str = Form("manual_block"),
     db: Session = Depends(get_db),
 ):
@@ -1655,9 +1657,9 @@ def admin_block_ip(
     if not target_ip:
         return _admin_redirect("ip_block_invalid")
     if minutes <= 0:
-        minutes = 60
-    if minutes > 10080:
-        minutes = 10080
+        minutes = ADMIN_IP_BLOCK_DEFAULT_MINUTES
+    if minutes > ADMIN_IP_BLOCK_MAX_MINUTES:
+        minutes = ADMIN_IP_BLOCK_MAX_MINUTES
     blocked_until = utcnow_naive() + timedelta(minutes=minutes)
 
     row = db.query(models.BlockedIP).filter(models.BlockedIP.ip == target_ip).first()
