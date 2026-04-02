@@ -9,7 +9,7 @@ from urllib.parse import urlencode, urlsplit
 from fastapi import APIRouter, Depends, Form, HTTPException, Request
 from fastapi.responses import HTMLResponse, RedirectResponse, StreamingResponse
 from fastapi.templating import Jinja2Templates
-from sqlalchemy import and_, func, or_
+from sqlalchemy import and_, case, func, or_
 from sqlalchemy.orm import Session
 
 from . import models
@@ -1052,19 +1052,66 @@ def admin_dashboard(
 
     today = utcnow_naive().date()
     recent_public_cutoff = utcnow_naive() - timedelta(days=7)
+    paid_revenue_total, paid_revenue_today = (
+        db.query(
+            func.coalesce(
+                func.sum(
+                    case(
+                        (models.Payment.status == "paid", models.Payment.amount),
+                        else_=0.0,
+                    )
+                ),
+                0.0,
+            ),
+            func.coalesce(
+                func.sum(
+                    case(
+                        (
+                            and_(
+                                models.Payment.status == "paid",
+                                func.date(models.Payment.paid_at) == today,
+                            ),
+                            models.Payment.amount,
+                        ),
+                        else_=0.0,
+                    )
+                ),
+                0.0,
+            ),
+        )
+        .filter(models.Payment.center_id == cid)
+        .one()
+    )
+    public_users_count, public_users_deleted_count, public_users_new_7d = (
+        db.query(
+            func.count(models.PublicUser.id),
+            func.coalesce(
+                func.sum(case((models.PublicUser.is_deleted.is_(True), 1), else_=0)),
+                0,
+            ),
+            func.coalesce(
+                func.sum(
+                    case(
+                        (
+                            and_(
+                                models.PublicUser.created_at >= recent_public_cutoff,
+                                models.PublicUser.is_deleted.is_(False),
+                            ),
+                            1,
+                        ),
+                        else_=0,
+                    )
+                ),
+                0,
+            ),
+        ).one()
+    )
     dashboard = {
         "rooms_count": len(rooms),
         "sessions_count": len(sessions),
         "bookings_count": db.query(models.Booking).filter(models.Booking.center_id == cid).count(),
         "clients_count": db.query(models.Client).filter(models.Client.center_id == cid).count(),
-        "active_plans_count": (
-            db.query(models.SubscriptionPlan)
-            .filter(
-                models.SubscriptionPlan.center_id == cid,
-                models.SubscriptionPlan.is_active.is_(True),
-            )
-            .count()
-        ),
+        "active_plans_count": sum(1 for p in plans if p.is_active),
         "active_subscriptions_count": (
             db.query(models.ClientSubscription)
             .join(models.Client, models.Client.id == models.ClientSubscription.client_id)
@@ -1074,29 +1121,11 @@ def admin_dashboard(
             )
             .count()
         ),
-        "revenue_total": float(
-            db.query(func.coalesce(func.sum(models.Payment.amount), 0.0))
-            .filter(models.Payment.center_id == cid, models.Payment.status == "paid")
-            .scalar()
-            or 0.0
-        ),
-        "revenue_today": float(
-            db.query(func.coalesce(func.sum(models.Payment.amount), 0.0))
-            .filter(
-                models.Payment.center_id == cid,
-                models.Payment.status == "paid",
-                func.date(models.Payment.paid_at) == today,
-            )
-            .scalar()
-            or 0.0
-        ),
-        "public_users_count": db.query(models.PublicUser).filter(models.PublicUser.is_deleted.is_(False)).count(),
-        "public_users_deleted_count": db.query(models.PublicUser).filter(models.PublicUser.is_deleted.is_(True)).count(),
-        "public_users_new_7d": (
-            db.query(models.PublicUser)
-            .filter(models.PublicUser.created_at >= recent_public_cutoff, models.PublicUser.is_deleted.is_(False))
-            .count()
-        ),
+        "revenue_total": float(paid_revenue_total or 0.0),
+        "revenue_today": float(paid_revenue_today or 0.0),
+        "public_users_count": int(public_users_count) - int(public_users_deleted_count),
+        "public_users_deleted_count": int(public_users_deleted_count),
+        "public_users_new_7d": int(public_users_new_7d),
     }
     recent_payments = (
         db.query(models.Payment)
