@@ -76,6 +76,20 @@ ADMIN_QP_AUDIT_STATUS = "audit_status"
 ADMIN_QP_AUDIT_EMAIL = "audit_email"
 ADMIN_QP_AUDIT_IP = "audit_ip"
 ADMIN_QP_AUDIT_PAGE = "audit_page"
+ADMIN_MSG_IP_BLOCK_INVALID = "ip_block_invalid"
+ADMIN_MSG_IP_BLOCKED = "ip_blocked"
+ADMIN_MSG_IP_UNBLOCK_NOT_FOUND = "ip_unblock_not_found"
+ADMIN_MSG_IP_UNBLOCKED = "ip_unblocked"
+ADMIN_MSG_PUBLIC_USER_NOT_FOUND = "public_user_not_found"
+ADMIN_MSG_PUBLIC_USER_UPDATED = "public_user_updated"
+ADMIN_MSG_PUBLIC_USER_DELETED = "public_user_deleted"
+ADMIN_MSG_PUBLIC_USER_ALREADY_VERIFIED = "public_user_already_verified"
+ADMIN_MSG_PUBLIC_USER_VERIFICATION_MAIL_FAILED = "public_user_verification_mail_failed"
+ADMIN_MSG_PUBLIC_USER_VERIFICATION_RESENT = "public_user_verification_resent"
+ADMIN_MSG_PUBLIC_USER_RESTORED = "public_user_restored"
+ADMIN_MSG_PUBLIC_USERS_NONE_SELECTED = "public_users_none_selected"
+ADMIN_MSG_PUBLIC_USERS_BULK_INVALID_ACTION = "public_users_bulk_invalid_action"
+ADMIN_MSG_PUBLIC_USERS_BULK_DONE = "public_users_bulk_done"
 
 ADMIN_FLASH_MESSAGES: dict[str, tuple[str, str]] = {
     "room_created": ("تمت إضافة الغرفة بنجاح.", "info"),
@@ -232,9 +246,9 @@ def _get_public_user_or_redirect(
 ) -> tuple[models.PublicUser | None, RedirectResponse | None]:
     row = db.get(models.PublicUser, public_user_id)
     if not row:
-        return None, _admin_redirect("public_user_not_found", scroll_y)
+        return None, _admin_redirect(ADMIN_MSG_PUBLIC_USER_NOT_FOUND, scroll_y)
     if not allow_deleted and row.is_deleted:
-        return None, _admin_redirect("public_user_not_found", scroll_y)
+        return None, _admin_redirect(ADMIN_MSG_PUBLIC_USER_NOT_FOUND, scroll_y)
     return row, None
 
 
@@ -1675,7 +1689,7 @@ def admin_block_ip(
 
     target_ip = ip.strip()
     if not target_ip:
-        return _admin_redirect("ip_block_invalid")
+        return _admin_redirect(ADMIN_MSG_IP_BLOCK_INVALID)
     if minutes <= 0:
         minutes = ADMIN_IP_BLOCK_DEFAULT_MINUTES
     if minutes > ADMIN_IP_BLOCK_MAX_MINUTES:
@@ -1703,7 +1717,7 @@ def admin_block_ip(
         email=user.email,
         details={"target_ip": target_ip, "minutes": minutes, "reason": reason[:255]},
     )
-    return _admin_redirect("ip_blocked")
+    return _admin_redirect(ADMIN_MSG_IP_BLOCKED)
 
 
 @router.post("/admin/security/ip-unblock")
@@ -1718,10 +1732,10 @@ def admin_unblock_ip(
     assert user is not None
     target_ip = ip.strip()
     if not target_ip:
-        return _admin_redirect("ip_block_invalid")
+        return _admin_redirect(ADMIN_MSG_IP_BLOCK_INVALID)
     row = db.query(models.BlockedIP).filter(models.BlockedIP.ip == target_ip).first()
     if not row:
-        return _admin_redirect("ip_unblock_not_found")
+        return _admin_redirect(ADMIN_MSG_IP_UNBLOCK_NOT_FOUND)
     row.is_active = False
     db.commit()
     log_security_event(
@@ -1731,7 +1745,7 @@ def admin_unblock_ip(
         email=user.email,
         details={"target_ip": target_ip, "reason": "manual_unblock"},
     )
-    return _admin_redirect("ip_unblocked")
+    return _admin_redirect(ADMIN_MSG_IP_UNBLOCKED)
 
 
 @router.post("/admin/public-users/toggle-active")
@@ -1751,7 +1765,7 @@ def admin_toggle_public_user_active(
     assert row is not None
     row.is_active = not row.is_active
     db.commit()
-    return _admin_redirect("public_user_updated", scroll_y)
+    return _admin_redirect(ADMIN_MSG_PUBLIC_USER_UPDATED, scroll_y)
 
 
 @router.post("/admin/public-users/toggle-verified")
@@ -1771,7 +1785,7 @@ def admin_toggle_public_user_verified(
     assert row is not None
     row.email_verified = not row.email_verified
     db.commit()
-    return _admin_redirect("public_user_updated", scroll_y)
+    return _admin_redirect(ADMIN_MSG_PUBLIC_USER_UPDATED, scroll_y)
 
 
 @router.post("/admin/public-users/delete")
@@ -1803,7 +1817,7 @@ def admin_delete_public_user(
             "mode": "soft_delete",
         },
     )
-    return _admin_redirect("public_user_deleted", scroll_y)
+    return _admin_redirect(ADMIN_MSG_PUBLIC_USER_DELETED, scroll_y)
 
 
 @router.post("/admin/public-users/resend-verification")
@@ -1822,7 +1836,7 @@ def admin_resend_public_user_verification(
         return redirect
     assert row is not None
     if row.email_verified:
-        return _admin_redirect("public_user_already_verified", scroll_y)
+        return _admin_redirect(ADMIN_MSG_PUBLIC_USER_ALREADY_VERIFIED, scroll_y)
 
     queued, mail_info = _queue_verify_email_for_user(request, row)
     if not queued:
@@ -1837,7 +1851,7 @@ def admin_resend_public_user_verification(
                 "mail_error": mail_info[:200],
             },
         )
-        return _admin_redirect("public_user_verification_mail_failed", scroll_y)
+        return _admin_redirect(ADMIN_MSG_PUBLIC_USER_VERIFICATION_MAIL_FAILED, scroll_y)
 
     row.verification_sent_at = utcnow_naive()
     db.commit()
@@ -1848,7 +1862,7 @@ def admin_resend_public_user_verification(
         email=admin_user.email,
         details={"target_user_id": row.id, "target_email": row.email, "mail_status": "queued"},
     )
-    return _admin_redirect("public_user_verification_resent", scroll_y)
+    return _admin_redirect(ADMIN_MSG_PUBLIC_USER_VERIFICATION_RESENT, scroll_y)
 
 
 @router.post("/admin/public-users/restore")
@@ -1867,7 +1881,7 @@ def admin_restore_public_user(
         return redirect
     assert row is not None
     if not row.is_deleted:
-        return _admin_redirect("public_user_updated", scroll_y)
+        return _admin_redirect(ADMIN_MSG_PUBLIC_USER_UPDATED, scroll_y)
     row.is_deleted = False
     row.deleted_at = None
     row.is_active = True
@@ -1879,7 +1893,7 @@ def admin_restore_public_user(
         email=admin_user.email,
         details={"restored_public_user_id": row.id, "restored_email": row.email},
     )
-    return _admin_redirect("public_user_restored", scroll_y)
+    return _admin_redirect(ADMIN_MSG_PUBLIC_USER_RESTORED, scroll_y)
 
 
 @router.post("/admin/public-users/bulk-action")
@@ -1896,19 +1910,19 @@ def admin_public_users_bulk_action(
     assert admin_user is not None
     ids = sorted(set(public_user_ids))
     if not ids:
-        return _admin_redirect("public_users_none_selected", scroll_y)
+        return _admin_redirect(ADMIN_MSG_PUBLIC_USERS_NONE_SELECTED, scroll_y)
     rows = db.query(models.PublicUser).filter(models.PublicUser.id.in_(ids)).all()
     if not rows:
-        return _admin_redirect("public_user_not_found", scroll_y)
+        return _admin_redirect(ADMIN_MSG_PUBLIC_USER_NOT_FOUND, scroll_y)
 
     action_key = action.strip().lower()
     if action_key not in PUBLIC_USER_BULK_ACTIONS:
-        return _admin_redirect("public_users_bulk_invalid_action", scroll_y)
+        return _admin_redirect(ADMIN_MSG_PUBLIC_USERS_BULK_INVALID_ACTION, scroll_y)
     if action_key == "resend_verification":
         # Fast fail if SMTP settings are invalid.
         sample_ok, _ = validate_mailer_settings()
         if not sample_ok:
-            return _admin_redirect("public_user_verification_mail_failed", scroll_y)
+            return _admin_redirect(ADMIN_MSG_PUBLIC_USER_VERIFICATION_MAIL_FAILED, scroll_y)
 
     updated = 0
     queued = 0
@@ -1924,7 +1938,7 @@ def admin_public_users_bulk_action(
         email=admin_user.email,
         details={"action": action_key, "selected": len(ids), "updated": updated, "queued": queued},
     )
-    return _admin_redirect("public_users_bulk_done", scroll_y)
+    return _admin_redirect(ADMIN_MSG_PUBLIC_USERS_BULK_DONE, scroll_y)
 
 
 @router.post("/admin/rooms")
