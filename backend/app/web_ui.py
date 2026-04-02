@@ -192,6 +192,21 @@ def _admin_user_from_request(request: Request, db: Session) -> models.User | Non
     return user
 
 
+def _get_public_user_or_redirect(
+    db: Session,
+    public_user_id: int,
+    scroll_y: str,
+    *,
+    allow_deleted: bool = False,
+) -> tuple[models.PublicUser | None, RedirectResponse | None]:
+    row = db.get(models.PublicUser, public_user_id)
+    if not row:
+        return None, _admin_redirect("public_user_not_found", scroll_y)
+    if not allow_deleted and row.is_deleted:
+        return None, _admin_redirect("public_user_not_found", scroll_y)
+    return row, None
+
+
 def _analytics_context(page_name: str, **extra: str) -> dict:
     data = {
         "ga4_measurement_id": GA4_MEASUREMENT_ID,
@@ -1643,9 +1658,10 @@ def admin_toggle_public_user_active(
     user = _admin_user_from_request(request, db)
     if not user:
         return RedirectResponse(url="/admin/login", status_code=303)
-    row = db.get(models.PublicUser, public_user_id)
-    if not row or row.is_deleted:
-        return _admin_redirect("public_user_not_found", scroll_y)
+    row, redirect = _get_public_user_or_redirect(db, public_user_id, scroll_y)
+    if redirect:
+        return redirect
+    assert row is not None
     row.is_active = not row.is_active
     db.commit()
     return _admin_redirect("public_user_updated", scroll_y)
@@ -1661,9 +1677,10 @@ def admin_toggle_public_user_verified(
     user = _admin_user_from_request(request, db)
     if not user:
         return RedirectResponse(url="/admin/login", status_code=303)
-    row = db.get(models.PublicUser, public_user_id)
-    if not row or row.is_deleted:
-        return _admin_redirect("public_user_not_found", scroll_y)
+    row, redirect = _get_public_user_or_redirect(db, public_user_id, scroll_y)
+    if redirect:
+        return redirect
+    assert row is not None
     row.email_verified = not row.email_verified
     db.commit()
     return _admin_redirect("public_user_updated", scroll_y)
@@ -1679,9 +1696,10 @@ def admin_delete_public_user(
     user = _admin_user_from_request(request, db)
     if not user:
         return RedirectResponse(url="/admin/login", status_code=303)
-    row = db.get(models.PublicUser, public_user_id)
-    if not row or row.is_deleted:
-        return _admin_redirect("public_user_not_found", scroll_y)
+    row, redirect = _get_public_user_or_redirect(db, public_user_id, scroll_y)
+    if redirect:
+        return redirect
+    assert row is not None
     deleted_email, deleted_phone = _soft_delete_public_user(row)
     db.commit()
     log_security_event(
@@ -1709,9 +1727,10 @@ def admin_resend_public_user_verification(
     admin_user = _admin_user_from_request(request, db)
     if not admin_user:
         return RedirectResponse(url="/admin/login", status_code=303)
-    row = db.get(models.PublicUser, public_user_id)
-    if not row or row.is_deleted:
-        return _admin_redirect("public_user_not_found", scroll_y)
+    row, redirect = _get_public_user_or_redirect(db, public_user_id, scroll_y)
+    if redirect:
+        return redirect
+    assert row is not None
     if row.email_verified:
         return _admin_redirect("public_user_already_verified", scroll_y)
 
@@ -1752,9 +1771,10 @@ def admin_restore_public_user(
     admin_user = _admin_user_from_request(request, db)
     if not admin_user:
         return RedirectResponse(url="/admin/login", status_code=303)
-    row = db.get(models.PublicUser, public_user_id)
-    if not row:
-        return _admin_redirect("public_user_not_found", scroll_y)
+    row, redirect = _get_public_user_or_redirect(db, public_user_id, scroll_y, allow_deleted=True)
+    if redirect:
+        return redirect
+    assert row is not None
     if not row.is_deleted:
         return _admin_redirect("public_user_updated", scroll_y)
     row.is_deleted = False
