@@ -1176,8 +1176,14 @@
     (function () {
       const STORAGE_KEY = "maestro_admin_scroll_y";
       const ACCORDION_KEY = "maestro_admin_accordion_state";
+      const ACTIVE_SECTION_KEY = "maestro_admin_active_section";
       const forms = document.querySelectorAll("form[data-preserve-scroll='1']");
       const preserveLinks = document.querySelectorAll("a[data-preserve-scroll-link='1']");
+      function closestAccordionId(el) {
+        if (!el || !el.closest) return "";
+        const section = el.closest(".accordion[id]");
+        return section ? section.id : "";
+      }
       forms.forEach(function (form) {
         let scrollInput = form.querySelector("input[name='scroll_y']");
         if (!scrollInput) {
@@ -1190,11 +1196,19 @@
           const y = String(window.scrollY || 0);
           scrollInput.value = y;
           sessionStorage.setItem(STORAGE_KEY, y);
+          const sectionId = closestAccordionId(form);
+          if (sectionId) {
+            sessionStorage.setItem(ACTIVE_SECTION_KEY, sectionId);
+          }
         });
       });
       preserveLinks.forEach(function (link) {
         link.addEventListener("click", function () {
           sessionStorage.setItem(STORAGE_KEY, String(window.scrollY || 0));
+          const sectionId = closestAccordionId(link);
+          if (sectionId) {
+            sessionStorage.setItem(ACTIVE_SECTION_KEY, sectionId);
+          }
         });
       });
 
@@ -1305,12 +1319,26 @@
           other.classList.toggle("open", other === section);
         });
         persistAccordionState();
+        if (section && section.id) {
+          sessionStorage.setItem(ACTIVE_SECTION_KEY, section.id);
+        }
+      }
+
+      const hashTargetId = (window.location.hash || "").replace(/^#/, "");
+      const storedActiveSectionId = sessionStorage.getItem(ACTIVE_SECTION_KEY) || "";
+      const preferredSectionId = hashTargetId || storedActiveSectionId;
+      if (preferredSectionId) {
+        const preferredSection = document.getElementById(preferredSectionId);
+        if (preferredSection && preferredSection.classList.contains("accordion")) {
+          openAccordion(preferredSection);
+        }
       }
 
       // First visit fallback: open only first section.
       if (!accordions.some(function (d) { return d.classList.contains("open"); }) && accordions.length > 0) {
         accordions[0].classList.add("open");
         persistAccordionState();
+        sessionStorage.setItem(ACTIVE_SECTION_KEY, accordions[0].id);
       }
 
       const tabs = Array.from(document.querySelectorAll(".section-tab[data-target]"));
@@ -1320,6 +1348,9 @@
           const isActive = openSection && tab.dataset.target === openSection.id;
           tab.classList.toggle("active", !!isActive);
         });
+        if (openSection && openSection.id) {
+          sessionStorage.setItem(ACTIVE_SECTION_KEY, openSection.id);
+        }
       }
       tabs.forEach(function (tab) {
         tab.addEventListener("click", function (e) {
