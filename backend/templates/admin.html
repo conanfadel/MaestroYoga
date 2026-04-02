@@ -81,6 +81,16 @@
     .badge.medium { background: #fef3c7; color: #92400e; }
     .badge.high { background: #fee2e2; color: #991b1b; }
     .small { color: #64748b; font-size: .86rem; }
+    .soft-link {
+      display: inline-block;
+      padding: 4px 10px;
+      border-radius: 999px;
+      text-decoration: none;
+      background: #ecfdf5;
+      border: 1px solid #99f6e4;
+      color: #0f766e;
+      font-weight: 700;
+    }
     .alert {
       margin: 0 0 14px;
       padding: 10px 12px;
@@ -814,7 +824,7 @@
               </td>
             </tr>
             {% else %}
-            <tr><td colspan="10">لا يوجد مستخدمون ضمن الفلاتر الحالية.</td></tr>
+            <tr><td colspan="10">لا توجد نتائج في هذه الصفحة. غيّر الفلاتر أو عد للصفحة الأولى.</td></tr>
             {% endfor %}
           </tbody>
         </table>
@@ -822,10 +832,10 @@
       <div class="small" style="margin-top:8px;display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
         <span>الصفحة {{ public_user_pagination.page }} من {{ public_user_pagination.total_pages }} (إجمالي: {{ public_user_pagination.total }})</span>
         {% if public_user_pagination.has_prev %}
-          <a class="soft-link" href="{{ public_user_pagination.prev_url }}">السابق</a>
+          <a class="soft-link" data-preserve-scroll-link="1" href="{{ public_user_pagination.prev_url }}">السابق</a>
         {% endif %}
         {% if public_user_pagination.has_next %}
-          <a class="soft-link" href="{{ public_user_pagination.next_url }}">التالي</a>
+          <a class="soft-link" data-preserve-scroll-link="1" href="{{ public_user_pagination.next_url }}">التالي</a>
         {% endif %}
       </div>
     </div>
@@ -868,7 +878,7 @@
               </td>
             </tr>
             {% else %}
-            <tr><td colspan="8">لا توجد جلسات بعد.</td></tr>
+            <tr><td colspan="8">لا توجد جلسات للعرض في هذه الصفحة حاليًا.</td></tr>
             {% endfor %}
           </tbody>
         </table>
@@ -876,10 +886,10 @@
       <div class="small" style="margin-top:8px;display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
         <span>الصفحة {{ sessions_pagination.page }} من {{ sessions_pagination.total_pages }} (إجمالي: {{ sessions_pagination.total }})</span>
         {% if sessions_pagination.has_prev %}
-          <a class="soft-link" href="{{ sessions_pagination.prev_url }}">السابق</a>
+          <a class="soft-link" data-preserve-scroll-link="1" href="{{ sessions_pagination.prev_url }}">السابق</a>
         {% endif %}
         {% if sessions_pagination.has_next %}
-          <a class="soft-link" href="{{ sessions_pagination.next_url }}">التالي</a>
+          <a class="soft-link" data-preserve-scroll-link="1" href="{{ sessions_pagination.next_url }}">التالي</a>
         {% endif %}
       </div>
     </div>
@@ -909,7 +919,7 @@
               <td>{{ pay.paid_at_display }}</td>
             </tr>
             {% else %}
-            <tr><td colspan="6">لا توجد مدفوعات بعد.</td></tr>
+            <tr><td colspan="6">لا توجد مدفوعات للعرض في هذه الصفحة حاليًا.</td></tr>
             {% endfor %}
           </tbody>
         </table>
@@ -917,10 +927,10 @@
       <div class="small" style="margin-top:8px;display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
         <span>الصفحة {{ payments_pagination.page }} من {{ payments_pagination.total_pages }} (إجمالي: {{ payments_pagination.total }})</span>
         {% if payments_pagination.has_prev %}
-          <a class="soft-link" href="{{ payments_pagination.prev_url }}">السابق</a>
+          <a class="soft-link" data-preserve-scroll-link="1" href="{{ payments_pagination.prev_url }}">السابق</a>
         {% endif %}
         {% if payments_pagination.has_next %}
-          <a class="soft-link" href="{{ payments_pagination.next_url }}">التالي</a>
+          <a class="soft-link" data-preserve-scroll-link="1" href="{{ payments_pagination.next_url }}">التالي</a>
         {% endif %}
       </div>
     </div>
@@ -1081,7 +1091,7 @@
               <td><span class="mono">{{ ev.details }}</span></td>
             </tr>
             {% else %}
-            <tr><td colspan="8">لا توجد سجلات أمنية بعد.</td></tr>
+            <tr><td colspan="8">لا توجد سجلات أمنية مطابقة في هذه الصفحة.</td></tr>
             {% endfor %}
           </tbody>
         </table>
@@ -1089,10 +1099,10 @@
       <div class="small" style="margin-top:8px;display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
         <span>الصفحة {{ security_pagination.page }} من {{ security_pagination.total_pages }} (إجمالي: {{ security_pagination.total }})</span>
         {% if security_pagination.has_prev %}
-          <a class="soft-link" href="{{ security_pagination.prev_url }}">السابق</a>
+          <a class="soft-link" data-preserve-scroll-link="1" href="{{ security_pagination.prev_url }}">السابق</a>
         {% endif %}
         {% if security_pagination.has_next %}
-          <a class="soft-link" href="{{ security_pagination.next_url }}">التالي</a>
+          <a class="soft-link" data-preserve-scroll-link="1" href="{{ security_pagination.next_url }}">التالي</a>
         {% endif %}
       </div>
       <h3 style="margin:14px 0 8px; color:#134e4a;">IP المحظورة حاليًا</h3>
@@ -1167,6 +1177,7 @@
       const STORAGE_KEY = "maestro_admin_scroll_y";
       const ACCORDION_KEY = "maestro_admin_accordion_state";
       const forms = document.querySelectorAll("form[data-preserve-scroll='1']");
+      const preserveLinks = document.querySelectorAll("a[data-preserve-scroll-link='1']");
       forms.forEach(function (form) {
         let scrollInput = form.querySelector("input[name='scroll_y']");
         if (!scrollInput) {
@@ -1179,6 +1190,11 @@
           const y = String(window.scrollY || 0);
           scrollInput.value = y;
           sessionStorage.setItem(STORAGE_KEY, y);
+        });
+      });
+      preserveLinks.forEach(function (link) {
+        link.addEventListener("click", function () {
+          sessionStorage.setItem(STORAGE_KEY, String(window.scrollY || 0));
         });
       });
 
