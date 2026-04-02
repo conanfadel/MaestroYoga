@@ -24,7 +24,7 @@ class User(Base):
     __tablename__ = "users"
 
     id = Column(Integer, primary_key=True, index=True)
-    center_id = Column(Integer, ForeignKey("centers.id"), nullable=True)
+    center_id = Column(Integer, ForeignKey("centers.id"), nullable=True, index=True)
     full_name = Column(String, nullable=False)
     email = Column(String, nullable=False, unique=True, index=True)
     password_hash = Column(String, nullable=False)
@@ -55,7 +55,7 @@ class Client(Base):
     __tablename__ = "clients"
 
     id = Column(Integer, primary_key=True, index=True)
-    center_id = Column(Integer, ForeignKey("centers.id"), nullable=False)
+    center_id = Column(Integer, ForeignKey("centers.id"), nullable=False, index=True)
     full_name = Column(String, nullable=False)
     email = Column(String, nullable=False)
     phone = Column(String, nullable=True)
@@ -71,7 +71,7 @@ class SubscriptionPlan(Base):
     __tablename__ = "subscription_plans"
 
     id = Column(Integer, primary_key=True, index=True)
-    center_id = Column(Integer, ForeignKey("centers.id"), nullable=False)
+    center_id = Column(Integer, ForeignKey("centers.id"), nullable=False, index=True)
     name = Column(String, nullable=False)
     plan_type = Column(String, nullable=False)  # monthly | yearly
     price = Column(Float, nullable=False)
@@ -101,11 +101,11 @@ class ClientSubscription(Base):
     __tablename__ = "client_subscriptions"
 
     id = Column(Integer, primary_key=True, index=True)
-    client_id = Column(Integer, ForeignKey("clients.id"), nullable=False)
-    plan_id = Column(Integer, ForeignKey("subscription_plans.id"), nullable=False)
+    client_id = Column(Integer, ForeignKey("clients.id"), nullable=False, index=True)
+    plan_id = Column(Integer, ForeignKey("subscription_plans.id"), nullable=False, index=True)
     start_date = Column(DateTime, nullable=False)
     end_date = Column(DateTime, nullable=False)
-    status = Column(String, default="active")
+    status = Column(String, default="active", index=True)
 
     client = relationship("Client", back_populates="subscriptions")
     plan = relationship("SubscriptionPlan", back_populates="subscriptions")
@@ -115,7 +115,7 @@ class Room(Base):
     __tablename__ = "rooms"
 
     id = Column(Integer, primary_key=True, index=True)
-    center_id = Column(Integer, ForeignKey("centers.id"), nullable=False)
+    center_id = Column(Integer, ForeignKey("centers.id"), nullable=False, index=True)
     name = Column(String, nullable=False)
     capacity = Column(Integer, nullable=False, default=10)
 
@@ -127,12 +127,12 @@ class YogaSession(Base):
     __tablename__ = "yoga_sessions"
 
     id = Column(Integer, primary_key=True, index=True)
-    center_id = Column(Integer, ForeignKey("centers.id"), nullable=False)
-    room_id = Column(Integer, ForeignKey("rooms.id"), nullable=False)
+    center_id = Column(Integer, ForeignKey("centers.id"), nullable=False, index=True)
+    room_id = Column(Integer, ForeignKey("rooms.id"), nullable=False, index=True)
     title = Column(String, nullable=False)
     trainer_name = Column(String, nullable=False)
     level = Column(String, nullable=False)  # beginner/intermediate/advanced
-    starts_at = Column(DateTime, nullable=False)
+    starts_at = Column(DateTime, nullable=False, index=True)
     duration_minutes = Column(Integer, nullable=False, default=60)
     price_drop_in = Column(Float, nullable=False, default=0.0)
 
@@ -145,12 +145,12 @@ class Booking(Base):
     __tablename__ = "bookings"
 
     id = Column(Integer, primary_key=True, index=True)
-    center_id = Column(Integer, ForeignKey("centers.id"), nullable=False)
-    session_id = Column(Integer, ForeignKey("yoga_sessions.id"), nullable=False)
-    client_id = Column(Integer, ForeignKey("clients.id"), nullable=False)
+    center_id = Column(Integer, ForeignKey("centers.id"), nullable=False, index=True)
+    session_id = Column(Integer, ForeignKey("yoga_sessions.id"), nullable=False, index=True)
+    client_id = Column(Integer, ForeignKey("clients.id"), nullable=False, index=True)
     # booked legacy | confirmed paid or staff | pending_payment awaiting payment | cancelled
-    status = Column(String, default="booked")
-    booked_at = Column(DateTime, default=utcnow_naive)
+    status = Column(String, default="booked", index=True)
+    booked_at = Column(DateTime, default=utcnow_naive, index=True)
 
     session = relationship("YogaSession", back_populates="bookings")
     client = relationship("Client", back_populates="bookings")
@@ -161,15 +161,15 @@ class Payment(Base):
     __tablename__ = "payments"
 
     id = Column(Integer, primary_key=True, index=True)
-    center_id = Column(Integer, ForeignKey("centers.id"), nullable=False)
-    client_id = Column(Integer, ForeignKey("clients.id"), nullable=False)
-    booking_id = Column(Integer, ForeignKey("bookings.id"), nullable=True)
+    center_id = Column(Integer, ForeignKey("centers.id"), nullable=False, index=True)
+    client_id = Column(Integer, ForeignKey("clients.id"), nullable=False, index=True)
+    booking_id = Column(Integer, ForeignKey("bookings.id"), nullable=True, index=True)
     amount = Column(Float, nullable=False)
     currency = Column(String, default="SAR")
     payment_method = Column(String, default="in_app_mock")
     provider_ref = Column(String, nullable=True)
-    status = Column(String, default="paid")
-    paid_at = Column(DateTime, default=utcnow_naive)
+    status = Column(String, default="paid", index=True)
+    paid_at = Column(DateTime, default=utcnow_naive, index=True)
 
     client = relationship("Client", back_populates="payments")
     booking = relationship("Booking", back_populates="payments")
