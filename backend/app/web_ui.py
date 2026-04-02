@@ -220,6 +220,50 @@ def _get_public_user_or_redirect(
     return row, None
 
 
+PUBLIC_USER_BULK_ACTIONS = frozenset(
+    {
+        "activate",
+        "deactivate",
+        "verify",
+        "unverify",
+        "resend_verification",
+        "soft_delete",
+        "restore",
+    }
+)
+
+
+def _apply_public_user_bulk_action(action_key: str, row: models.PublicUser, request: Request) -> tuple[int, int]:
+    updated = 0
+    queued = 0
+    if action_key == "activate" and not row.is_deleted:
+        row.is_active = True
+        updated = 1
+    elif action_key == "deactivate" and not row.is_deleted:
+        row.is_active = False
+        updated = 1
+    elif action_key == "verify" and not row.is_deleted:
+        row.email_verified = True
+        updated = 1
+    elif action_key == "unverify" and not row.is_deleted:
+        row.email_verified = False
+        updated = 1
+    elif action_key == "resend_verification" and (not row.is_deleted) and (not row.email_verified):
+        ok, _ = _queue_verify_email_for_user(request, row)
+        if ok:
+            row.verification_sent_at = utcnow_naive()
+            queued = 1
+    elif action_key == "soft_delete" and not row.is_deleted:
+        _soft_delete_public_user(row)
+        updated = 1
+    elif action_key == "restore" and row.is_deleted:
+        row.is_deleted = False
+        row.deleted_at = None
+        row.is_active = True
+        updated = 1
+    return updated, queued
+
+
 def _analytics_context(page_name: str, **extra: str) -> dict:
     data = {
         "ga4_measurement_id": GA4_MEASUREMENT_ID,
@@ -1832,8 +1876,7 @@ def admin_public_users_bulk_action(
         return _admin_redirect("public_user_not_found", scroll_y)
 
     action_key = action.strip().lower()
-    allowed = {"activate", "deactivate", "verify", "unverify", "resend_verification", "soft_delete", "restore"}
-    if action_key not in allowed:
+    if action_key not in PUBLIC_USER_BULK_ACTIONS:
         return _admin_redirect("public_users_bulk_invalid_action", scroll_y)
     if action_key == "resend_verification":
         # Fast fail if SMTP settings are invalid.
@@ -1844,31 +1887,9 @@ def admin_public_users_bulk_action(
     updated = 0
     queued = 0
     for row in rows:
-        if action_key == "activate" and not row.is_deleted:
-            row.is_active = True
-            updated += 1
-        elif action_key == "deactivate" and not row.is_deleted:
-            row.is_active = False
-            updated += 1
-        elif action_key == "verify" and not row.is_deleted:
-            row.email_verified = True
-            updated += 1
-        elif action_key == "unverify" and not row.is_deleted:
-            row.email_verified = False
-            updated += 1
-        elif action_key == "resend_verification" and (not row.is_deleted) and (not row.email_verified):
-            ok, _ = _queue_verify_email_for_user(request, row)
-            if ok:
-                row.verification_sent_at = utcnow_naive()
-                queued += 1
-        elif action_key == "soft_delete" and not row.is_deleted:
-            _soft_delete_public_user(row)
-            updated += 1
-        elif action_key == "restore" and row.is_deleted:
-            row.is_deleted = False
-            row.deleted_at = None
-            row.is_active = True
-            updated += 1
+        row_updated, row_queued = _apply_public_user_bulk_action(action_key, row, request)
+        updated += row_updated
+        queued += row_queued
     db.commit()
     log_security_event(
         "admin_public_users_bulk_action",
