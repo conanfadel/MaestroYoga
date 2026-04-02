@@ -58,6 +58,10 @@ router = APIRouter(tags=["web"])
 PUBLIC_COOKIE_NAME = "public_access_token"
 MAX_LOCKOUT_SECONDS = int(os.getenv("RATE_LIMIT_MAX_LOCKOUT_SECONDS", "900"))
 GA4_MEASUREMENT_ID = os.getenv("GA4_MEASUREMENT_ID", "").strip()
+ADMIN_SESSIONS_PAGE_SIZE = 50
+ADMIN_PUBLIC_USERS_PAGE_SIZE = 50
+ADMIN_SECURITY_AUDIT_PAGE_SIZE = 50
+ADMIN_PAYMENTS_PAGE_SIZE = 20
 
 ADMIN_FLASH_MESSAGES: dict[str, tuple[str, str]] = {
     "room_created": ("تمت إضافة الغرفة بنجاح.", "info"),
@@ -1099,7 +1103,7 @@ def admin_dashboard(
         offset = (safe_page - 1) * page_size
         return safe_page, total_pages, offset
 
-    sessions_page_size = 50
+    sessions_page_size = ADMIN_SESSIONS_PAGE_SIZE
     sessions_base_query = db.query(models.YogaSession).filter(models.YogaSession.center_id == cid)
     sessions_total = sessions_base_query.order_by(None).count()
     safe_sessions_page, sessions_total_pages, sessions_offset = _normalize_page(
@@ -1145,7 +1149,7 @@ def admin_dashboard(
         public_users_query = public_users_query.filter(models.PublicUser.email_verified.is_(True))
     elif verified_key == "unverified":
         public_users_query = public_users_query.filter(models.PublicUser.email_verified.is_(False))
-    public_users_page_size = 50
+    public_users_page_size = ADMIN_PUBLIC_USERS_PAGE_SIZE
     public_users_total = public_users_query.order_by(None).count()
     safe_public_user_page, public_users_total_pages, public_users_offset = _normalize_page(
         public_user_page,
@@ -1279,7 +1283,7 @@ def admin_dashboard(
         "public_users_deleted_count": int(public_users_deleted_count),
         "public_users_new_7d": int(public_users_new_7d),
     }
-    payments_page_size = 20
+    payments_page_size = ADMIN_PAYMENTS_PAGE_SIZE
     payments_base_query = db.query(models.Payment).filter(models.Payment.center_id == cid)
     payments_total = payments_base_query.order_by(None).count()
     safe_payments_page, payments_total_pages, payments_offset = _normalize_page(
@@ -1353,7 +1357,7 @@ def admin_dashboard(
     if audit_ip.strip():
         audit_query = audit_query.filter(models.SecurityAuditEvent.ip.ilike(f"%{audit_ip.strip()}%"))
 
-    audit_page_size = 50
+    audit_page_size = ADMIN_SECURITY_AUDIT_PAGE_SIZE
     security_events_total = audit_query.order_by(None).count()
     safe_audit_page, security_events_total_pages, security_events_offset = _normalize_page(
         audit_page,
