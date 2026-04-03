@@ -1,20 +1,22 @@
 import csv
 import io
 import json
-from datetime import datetime, timedelta
+from collections import defaultdict
+from datetime import date, datetime, timedelta
 import os
 from pathlib import Path
-from urllib.parse import urlencode, urlsplit
+from typing import Any
+from urllib.parse import urlencode, urlparse, urlsplit
 
 from fastapi import APIRouter, Depends, File, Form, HTTPException, Request, UploadFile
 from fastapi.responses import HTMLResponse, RedirectResponse, StreamingResponse
 from fastapi.templating import Jinja2Templates
-from sqlalchemy import and_, case, func, or_
+from sqlalchemy import and_, case, func, nullslast, or_
 from sqlalchemy.orm import Session
 
 from . import models
 from .booking_utils import ACTIVE_BOOKING_STATUSES, spots_available
-from .bootstrap import ensure_demo_data
+from .bootstrap import DEMO_CENTER_NAME, ensure_demo_data, ensure_demo_news_posts
 from .database import get_db
 from .mailer import (
     queue_email_verification_email,
@@ -83,6 +85,22 @@ ADMIN_QP_AUDIT_STATUS = "audit_status"
 ADMIN_QP_AUDIT_EMAIL = "audit_email"
 ADMIN_QP_AUDIT_IP = "audit_ip"
 ADMIN_QP_AUDIT_PAGE = "audit_page"
+ADMIN_QP_PAYMENT_DATE_FROM = "payment_date_from"
+ADMIN_QP_PAYMENT_DATE_TO = "payment_date_to"
+ADMIN_QP_POST_EDIT = "post_edit"
+
+ALLOWED_ADMIN_RETURN_SECTIONS = frozenset(
+    {
+        "section-branding",
+        "section-rooms",
+        "section-plans",
+        "section-public-users",
+        "section-sessions",
+        "section-faq",
+        "section-security",
+        "section-center-posts",
+    }
+)
 
 # Admin redirect/flash message keys.
 ADMIN_MSG_IP_BLOCK_INVALID = "ip_block_invalid"
@@ -131,11 +149,29 @@ ADMIN_MSG_FAQ_REORDER_INVALID = "faq_reorder_invalid"
 ADMIN_MSG_CENTER_BRANDING_UPDATED = "center_branding_updated"
 ADMIN_MSG_CENTER_BRANDING_BAD_FILE = "center_branding_bad_file"
 ADMIN_MSG_CENTER_BRANDING_CENTER_MISSING = "center_branding_center_missing"
+ADMIN_MSG_TRAINER_ADMIN_FORBIDDEN = "trainer_admin_forbidden"
+ADMIN_MSG_SECURITY_OWNER_ONLY = "security_owner_only"
+ADMIN_MSG_CENTER_POST_SAVED = "center_post_saved"
+ADMIN_MSG_CENTER_POST_DELETED = "center_post_deleted"
+ADMIN_MSG_CENTER_POST_NOT_FOUND = "center_post_not_found"
+ADMIN_MSG_CENTER_POST_INVALID = "center_post_invalid"
 
 CENTER_LOGO_UPLOAD_DIR = Path(__file__).resolve().parent.parent / "static" / "uploads" / "centers"
+CENTER_POST_UPLOAD_DIR = CENTER_LOGO_UPLOAD_DIR / "posts"
 APP_STATIC_ROOT = Path(__file__).resolve().parent.parent / "static"
 CENTER_LOGO_MAX_BYTES = 2 * 1024 * 1024
 CENTER_LOGO_ALLOWED_EXT = frozenset({"png", "jpg", "jpeg", "webp", "gif"})
+CENTER_POST_MAX_GALLERY = 15
+CENTER_POST_MAX_BODY_CHARS = 24_000
+CENTER_POST_REMOTE_URL_MAX_LEN = 2048
+CENTER_POST_TYPES = frozenset({"news", "announcement", "trip", "competition", "report"})
+CENTER_POST_TYPE_LABELS = {
+    "news": "خبر",
+    "announcement": "إعلان",
+    "trip": "رحلة",
+    "competition": "مسابقة",
+    "report": "تقرير",
+}
 
 
 def _resolved_path_under_static(public_path: str | None) -> Path | None:
@@ -168,6 +204,7 @@ def _clear_center_branding_urls_if_files_missing(db: Session, center: models.Cen
     hp = _resolved_path_under_static(center.hero_image_url)
     if hp is not None and not hp.is_file():
         center.hero_image_url = None
+        center.hero_show_stock_photo = True
         changed = True
     if changed:
         db.add(center)
@@ -220,6 +257,12 @@ ADMIN_FLASH_MESSAGES: dict[str, tuple[str, str]] = {
     ADMIN_MSG_CENTER_BRANDING_UPDATED: ("تم حفظ هوية المركز (الشعار، غلاف الصفحة، التلميح) في الواجهة العامة.", "info"),
     ADMIN_MSG_CENTER_BRANDING_BAD_FILE: ("إحدى الصور غير مقبولة. استخدم PNG أو JPG أو WebP أو GIF بحجم أقل من 2 ميجابايت لكل ملف.", "warn"),
     ADMIN_MSG_CENTER_BRANDING_CENTER_MISSING: ("تعذر العثور على بيانات المركز المرتبطة بحسابك.", "warn"),
+    ADMIN_MSG_TRAINER_ADMIN_FORBIDDEN: ("هذا الإجراء غير متاح لدور المدرب. يمكنك إدارة الجلسات من قسم «الجلسات والمدفوعات» فقط.", "warn"),
+    ADMIN_MSG_SECURITY_OWNER_ONLY: ("قسم الأمان والتصدير الحساس متاح لمالك المركز فقط.", "warn"),
+    ADMIN_MSG_CENTER_POST_SAVED: ("تم حفظ المنشور بنجاح.", "info"),
+    ADMIN_MSG_CENTER_POST_DELETED: ("تم حذف المنشور.", "info"),
+    ADMIN_MSG_CENTER_POST_NOT_FOUND: ("المنشور غير موجود أو لا يتبع مركزك.", "warn"),
+    ADMIN_MSG_CENTER_POST_INVALID: ("بيانات المنشور غير صالحة أو الصورة غير مقبولة.", "warn"),
 }
 
 
@@ -288,7 +331,58 @@ def _delete_center_hero_files(center_id: int) -> None:
         path.unlink(missing_ok=True)
 
 
-def _admin_redirect(msg: str | None = None, scroll_y: str | None = None) -> RedirectResponse:
+def _sanitize_center_post_remote_image_url(raw: str | None) -> str | None:
+    """يقبل فقط http/https لعرضها في المتصفح (بدون تنزيل من الخادم)."""
+    s = (raw or "").strip()
+    if not s:
+        return None
+    if len(s) > CENTER_POST_REMOTE_URL_MAX_LEN:
+        return None
+    parsed = urlparse(s)
+    if parsed.scheme not in ("http", "https"):
+        return None
+    if not parsed.netloc:
+        return None
+    return s
+
+
+def _parse_center_post_gallery_remote_urls(blob: str) -> list[str]:
+    seen: set[str] = set()
+    out: list[str] = []
+    for line in (blob or "").splitlines():
+        for part in line.split(","):
+            u = _sanitize_center_post_remote_image_url(part)
+            if u and u not in seen:
+                seen.add(u)
+                out.append(u)
+    return out
+
+
+def _delete_center_post_disk_files(center_id: int, post_id: int) -> None:
+    if not CENTER_POST_UPLOAD_DIR.is_dir():
+        return
+    prefix = f"center_{center_id}_post_{post_id}_"
+    for path in CENTER_POST_UPLOAD_DIR.iterdir():
+        if path.is_file() and path.name.startswith(prefix):
+            path.unlink(missing_ok=True)
+
+
+def _unlink_static_url_file(public_url: str | None) -> None:
+    p = _resolved_path_under_static(public_url)
+    if p and p.is_file():
+        p.unlink(missing_ok=True)
+
+
+def _sanitize_admin_return_section(raw: str | None) -> str | None:
+    s = (raw or "").strip()
+    return s if s in ALLOWED_ADMIN_RETURN_SECTIONS else None
+
+
+def _admin_redirect(
+    msg: str | None = None,
+    scroll_y: str | None = None,
+    return_section: str | None = None,
+) -> RedirectResponse:
     params: dict[str, str] = {}
     if msg:
         params["msg"] = msg
@@ -302,7 +396,36 @@ def _admin_redirect(msg: str | None = None, scroll_y: str | None = None) -> Redi
     url = "/admin"
     if params:
         url = f"{url}?{urlencode(params)}"
+    sec = _sanitize_admin_return_section(return_section)
+    if sec:
+        url = f"{url}#{sec}"
     return RedirectResponse(url=url, status_code=303)
+
+
+def _parse_optional_date_str(value: str | None) -> date | None:
+    s = (value or "").strip()[:10]
+    if len(s) < 8:
+        return None
+    try:
+        return datetime.strptime(s, "%Y-%m-%d").date()
+    except ValueError:
+        return None
+
+
+def _trainer_forbidden_redirect(return_section: str | None = None) -> RedirectResponse:
+    return _admin_redirect(
+        ADMIN_MSG_TRAINER_ADMIN_FORBIDDEN,
+        scroll_y=None,
+        return_section=return_section,
+    )
+
+
+def _security_owner_forbidden_redirect(return_section: str | None = None) -> RedirectResponse:
+    return _admin_redirect(
+        ADMIN_MSG_SECURITY_OWNER_ONLY,
+        scroll_y=None,
+        return_section=return_section,
+    )
 
 
 def _admin_login_redirect() -> RedirectResponse:
@@ -342,12 +465,13 @@ def _get_public_user_or_redirect(
     scroll_y: str,
     *,
     allow_deleted: bool = False,
+    return_section: str | None = None,
 ) -> tuple[models.PublicUser | None, RedirectResponse | None]:
     row = db.get(models.PublicUser, public_user_id)
     if not row:
-        return None, _admin_redirect(ADMIN_MSG_PUBLIC_USER_NOT_FOUND, scroll_y)
+        return None, _admin_redirect(ADMIN_MSG_PUBLIC_USER_NOT_FOUND, scroll_y, return_section)
     if not allow_deleted and row.is_deleted:
-        return None, _admin_redirect(ADMIN_MSG_PUBLIC_USER_NOT_FOUND, scroll_y)
+        return None, _admin_redirect(ADMIN_MSG_PUBLIC_USER_NOT_FOUND, scroll_y, return_section)
     return row, None
 
 
@@ -442,6 +566,9 @@ def public_index(
     if not center:
         raise HTTPException(status_code=404, detail="Center not found")
 
+    if center.name == DEMO_CENTER_NAME:
+        ensure_demo_news_posts(db, center.id)
+
     _clear_center_branding_urls_if_files_missing(db, center)
 
     sessions = (
@@ -496,6 +623,52 @@ def public_index(
         .order_by(models.FAQItem.sort_order.asc(), models.FAQItem.created_at.asc())
         .all()
     )
+    pinned_post = (
+        db.query(models.CenterPost)
+        .filter(
+            models.CenterPost.center_id == center_id,
+            models.CenterPost.is_published.is_(True),
+            models.CenterPost.is_pinned.is_(True),
+        )
+        .order_by(nullslast(models.CenterPost.published_at.desc()), models.CenterPost.id.desc())
+        .first()
+    )
+    recent_posts_q = (
+        db.query(models.CenterPost)
+        .filter(models.CenterPost.center_id == center_id, models.CenterPost.is_published.is_(True))
+        .order_by(nullslast(models.CenterPost.published_at.desc()), models.CenterPost.id.desc())
+        .limit(8)
+        .all()
+    )
+    pinned_public_post = None
+    if pinned_post:
+        pinned_public_post = {
+            "id": pinned_post.id,
+            "title": pinned_post.title,
+            "post_type": pinned_post.post_type,
+            "type_label": CENTER_POST_TYPE_LABELS.get(pinned_post.post_type, pinned_post.post_type),
+            "summary": (pinned_post.summary or "").strip(),
+            "cover_image_url": pinned_post.cover_image_url,
+            "detail_url": _url_with_params("/post", center_id=str(center_id), post_id=str(pinned_post.id)),
+        }
+    public_posts_teasers = []
+    for p in recent_posts_q:
+        if pinned_post and p.id == pinned_post.id:
+            continue
+        public_posts_teasers.append(
+            {
+                "id": p.id,
+                "title": p.title,
+                "post_type": p.post_type,
+                "type_label": CENTER_POST_TYPE_LABELS.get(p.post_type, p.post_type),
+                "summary": (p.summary or "").strip(),
+                "cover_image_url": p.cover_image_url,
+                "published_at_display": _fmt_dt(p.published_at) if p.published_at else "",
+                "detail_url": _url_with_params("/post", center_id=str(center_id), post_id=str(p.id)),
+            }
+        )
+        if len(public_posts_teasers) >= 6:
+            break
     plan_labels = {
         "weekly": "أسبوعي",
         "monthly": "شهري",
@@ -525,7 +698,55 @@ def public_index(
             "msg": msg,
             "public_user": public_user,
             "faq_items": faq_items,
+            "pinned_public_post": pinned_public_post,
+            "public_posts_teasers": public_posts_teasers,
             **_analytics_context("index", center_id=str(center_id)),
+        },
+    )
+
+
+@router.get("/post", response_class=HTMLResponse)
+def public_post_detail(
+    request: Request,
+    center_id: int,
+    post_id: int,
+    db: Session = Depends(get_db),
+):
+    center = db.get(models.Center, center_id)
+    if not center:
+        raise HTTPException(status_code=404, detail="Center not found")
+    post = db.get(models.CenterPost, post_id)
+    if not post or post.center_id != center_id or not post.is_published:
+        raise HTTPException(status_code=404, detail="Post not found")
+    _clear_center_branding_urls_if_files_missing(db, center)
+    imgs = (
+        db.query(models.CenterPostImage)
+        .filter(models.CenterPostImage.post_id == post.id)
+        .order_by(models.CenterPostImage.sort_order.asc(), models.CenterPostImage.id.asc())
+        .all()
+    )
+    gallery = [{"id": i.id, "url": i.image_url} for i in imgs]
+    public_user = _current_public_user(request, db)
+    return templates.TemplateResponse(
+        request,
+        "post_detail.html",
+        {
+            "center": center,
+            "center_id": center_id,
+            "public_user": public_user,
+            "post": {
+                "id": post.id,
+                "title": post.title,
+                "post_type": post.post_type,
+                "type_label": CENTER_POST_TYPE_LABELS.get(post.post_type, post.post_type),
+                "summary": post.summary or "",
+                "body": post.body or "",
+                "cover_image_url": post.cover_image_url,
+                "published_at_display": _fmt_dt(post.published_at) if post.published_at else "",
+            },
+            "gallery": gallery,
+            "index_url": _url_with_params("/index", center_id=str(center_id)),
+            **_analytics_context("post", center_id=str(center_id), post_id=str(post_id)),
         },
     )
 
@@ -635,6 +856,10 @@ def public_book(
                 },
                 success_url=f"{base}/index?center_id={center_id}&payment=success",
                 cancel_url=f"{base}/index?center_id={center_id}&payment=cancelled",
+                line_item_name=f"حجز جلسة — {yoga_session.title}"[:120],
+                line_item_description=f"{center.name} · {_fmt_dt(yoga_session.starts_at)} · {yoga_session.duration_minutes} دقيقة"[
+                    :500
+                ],
             )
         except Exception as exc:
             booking.status = "cancelled"
@@ -681,8 +906,13 @@ def public_book(
 
 
 @router.get("/public/register", response_class=HTMLResponse)
-def public_register_page(request: Request):
-    return templates.TemplateResponse(request, "public_register.html", _analytics_context("public_register"))
+def public_register_page(request: Request, next: str = "/index?center_id=1"):
+    safe_next = _sanitize_next_url(request.query_params.get("next") or next)
+    return templates.TemplateResponse(
+        request,
+        "public_register.html",
+        {"next": safe_next, **_analytics_context("public_register")},
+    )
 
 
 @router.post("/public/register")
@@ -693,10 +923,12 @@ def public_register(
     country_code: str = Form(...),
     phone: str = Form(...),
     password: str = Form(...),
+    next: str = Form("/index?center_id=1"),
     db: Session = Depends(get_db),
 ):
+    safe_next = _sanitize_next_url(next)
     if _is_ip_blocked(db, request):
-        return _public_login_redirect(msg="ip_blocked")
+        return _public_login_redirect(next_url=safe_next, msg="ip_blocked")
     email_normalized = email.lower().strip()
     full_name_normalized = full_name.strip()
     phone_normalized = _normalize_phone_with_country(country_code, phone)
@@ -707,9 +939,15 @@ def public_register(
         or not phone.strip()
         or not country_code.strip()
     ):
-        return RedirectResponse(url="/public/register?msg=required_fields", status_code=303)
+        return RedirectResponse(
+            url=_url_with_params("/public/register", msg="required_fields", next=safe_next),
+            status_code=303,
+        )
     if phone_normalized is None:
-        return RedirectResponse(url="/public/register?msg=invalid_phone", status_code=303)
+        return RedirectResponse(
+            url=_url_with_params("/public/register", msg="invalid_phone", next=safe_next),
+            status_code=303,
+        )
     register_key = _request_key(request, "public_register", email_normalized)
     if not rate_limiter.allow(
         register_key,
@@ -719,7 +957,10 @@ def public_register(
         max_lockout_seconds=MAX_LOCKOUT_SECONDS,
     ):
         log_security_event("public_register", request, "rate_limited", email=email_normalized)
-        return RedirectResponse(url="/public/register?msg=rate_limited", status_code=303)
+        return RedirectResponse(
+            url=_url_with_params("/public/register", msg="rate_limited", next=safe_next),
+            status_code=303,
+        )
     exists = db.query(models.PublicUser).filter(models.PublicUser.email == email_normalized).first()
     if exists and not exists.is_deleted:
         log_security_event("public_register", request, "already_exists", email=email_normalized)
@@ -731,10 +972,16 @@ def public_register(
     )
     if phone_exists:
         log_security_event("public_register", request, "phone_already_exists", email=email_normalized)
-        return RedirectResponse(url="/public/register?msg=phone_exists", status_code=303)
+        return RedirectResponse(
+            url=_url_with_params("/public/register", msg="phone_exists", next=safe_next),
+            status_code=303,
+        )
     if not _is_strong_public_password(password):
         log_security_event("public_register", request, "weak_password", email=email_normalized)
-        return RedirectResponse(url="/public/register?msg=weak_password", status_code=303)
+        return RedirectResponse(
+            url=_url_with_params("/public/register", msg="weak_password", next=safe_next),
+            status_code=303,
+        )
 
     if exists and exists.is_deleted:
         user = exists
@@ -766,7 +1013,7 @@ def public_register(
 
     queued, mail_info = (True, "verification_bypassed")
     if _is_email_verification_required():
-        queued, mail_info = _queue_verify_email_for_user(request, user)
+        queued, mail_info = _queue_verify_email_for_user(request, user, next_url=safe_next)
     if not queued:
         log_security_event(
             "public_register",
@@ -786,9 +1033,13 @@ def public_register(
     token = create_public_access_token(user.id)
     if _is_email_verification_required():
         next_msg = "registered" if queued else "mail_failed"
-        response = RedirectResponse(url=f"/public/verify-pending?msg={next_msg}", status_code=303)
+        response = RedirectResponse(
+            url=_url_with_params("/public/verify-pending", msg=next_msg, next=safe_next),
+            status_code=303,
+        )
     else:
-        response = RedirectResponse(url="/index?center_id=1&msg=registered_no_verify", status_code=303)
+        sep = "&" if "?" in safe_next else "?"
+        response = RedirectResponse(url=f"{safe_next}{sep}msg=registered_no_verify", status_code=303)
     response.set_cookie(
         key=PUBLIC_COOKIE_NAME,
         value=token,
@@ -1001,7 +1252,13 @@ def public_verify_email(
         secure=_cookie_secure_flag(request),
         max_age=60 * 60 * 24 * 7,
     )
-    # No Request object in this signature for IP/user-agent audit.
+    log_security_event(
+        "public_verify_email",
+        request,
+        "success",
+        email=user.email,
+        details={"public_user_id": user.id},
+    )
     return response
 
 
@@ -1132,12 +1389,26 @@ def admin_login(
     password: str = Form(...),
     db: Session = Depends(get_db),
 ):
-    user = db.query(models.User).filter(models.User.email == email.lower()).first()
+    email_norm = (email or "").strip().lower()
+    user = db.query(models.User).filter(models.User.email == email_norm).first()
     if not user or not verify_password(password, user.password_hash):
+        log_security_event(
+            "admin_login",
+            request,
+            "invalid_credentials",
+            email=email_norm,
+        )
         return RedirectResponse(url="/admin/login?error=1", status_code=303)
     if user.role not in ("center_owner", "center_staff", "trainer"):
+        log_security_event(
+            "admin_login",
+            request,
+            "forbidden_role",
+            email=user.email,
+        )
         return RedirectResponse(url="/admin/login?error=role", status_code=303)
 
+    log_security_event("admin_login", request, "success", email=user.email)
     token = create_access_token(user.id)
     response = RedirectResponse(url="/admin", status_code=303)
     response.set_cookie(
@@ -1174,6 +1445,9 @@ def admin_dashboard(
     audit_email: str = "",
     audit_ip: str = "",
     audit_page: int = 1,
+    payment_date_from: str = "",
+    payment_date_to: str = "",
+    post_edit: int = 0,
     db: Session = Depends(get_db),
 ):
     user, redirect = _require_admin_user_or_redirect(request, db)
@@ -1183,6 +1457,8 @@ def admin_dashboard(
     cid = require_user_center_id(user)
     center = db.get(models.Center, cid)
     if center:
+        if center.name == DEMO_CENTER_NAME:
+            ensure_demo_news_posts(db, center.id)
         _clear_center_branding_urls_if_files_missing(db, center)
     room_sort_key = (room_sort or "id_asc").strip().lower()
     room_ordering = {
@@ -1226,6 +1502,7 @@ def admin_dashboard(
         .order_by(models.SubscriptionPlan.price.asc())
         .all()
     )
+    rooms_by_id = {r.id: r for r in rooms}
 
     def _normalize_page(page_value: int, total_items: int, page_size: int) -> tuple[int, int, int]:
         safe_page = max(1, int(page_value or 1))
@@ -1300,7 +1577,6 @@ def admin_dashboard(
         "intermediate": "متوسط",
         "advanced": "متقدم",
     }
-    rooms_by_id = {r.id: r for r in rooms}
     for s in sessions:
         room = rooms_by_id.get(s.room_id)
         session_rows.append(
@@ -1339,6 +1615,142 @@ def admin_dashboard(
     ]
 
     today = utcnow_naive().date()
+    tomorrow_d = today + timedelta(days=1)
+    now_na = utcnow_naive()
+    payment_from_dt = _parse_optional_date_str(payment_date_from)
+    payment_to_dt = _parse_optional_date_str(payment_date_to)
+
+    sessions_today_no_bookings = (
+        db.query(models.YogaSession.id)
+        .outerjoin(
+            models.Booking,
+            and_(
+                models.Booking.session_id == models.YogaSession.id,
+                models.Booking.status.in_(ACTIVE_BOOKING_STATUSES),
+            ),
+        )
+        .filter(
+            models.YogaSession.center_id == cid,
+            func.date(models.YogaSession.starts_at) == today,
+        )
+        .group_by(models.YogaSession.id)
+        .having(func.count(models.Booking.id) == 0)
+        .count()
+    )
+    subs_expiring_7d = (
+        db.query(models.ClientSubscription)
+        .join(models.Client, models.Client.id == models.ClientSubscription.client_id)
+        .filter(
+            models.Client.center_id == cid,
+            models.ClientSubscription.status == "active",
+            models.ClientSubscription.end_date >= now_na,
+            models.ClientSubscription.end_date <= now_na + timedelta(days=7),
+        )
+        .count()
+    )
+    public_users_unverified_count = (
+        db.query(models.PublicUser)
+        .filter(
+            models.PublicUser.is_deleted.is_(False),
+            models.PublicUser.is_active.is_(True),
+            models.PublicUser.email_verified.is_(False),
+        )
+        .count()
+    )
+
+    revenue_7d_bars: list[dict[str, Any]] = []
+    max_rev_7d = 0.01
+    for i in range(6, -1, -1):
+        d = today - timedelta(days=i)
+        amt = float(
+            db.query(func.coalesce(func.sum(models.Payment.amount), 0.0))
+            .filter(
+                models.Payment.center_id == cid,
+                models.Payment.status == "paid",
+                func.date(models.Payment.paid_at) == d,
+            )
+            .scalar()
+            or 0.0
+        )
+        revenue_7d_bars.append({"date_iso": d.isoformat(), "amount": amt, "label": f"{d.day}/{d.month}"})
+        max_rev_7d = max(max_rev_7d, amt)
+    for bar in revenue_7d_bars:
+        bar["bar_pct"] = int(round(100 * float(bar["amount"]) / max_rev_7d)) if max_rev_7d > 0 else 0
+
+    ops_sessions_q = (
+        db.query(models.YogaSession)
+        .filter(
+            models.YogaSession.center_id == cid,
+            or_(
+                func.date(models.YogaSession.starts_at) == today,
+                func.date(models.YogaSession.starts_at) == tomorrow_d,
+            ),
+        )
+        .order_by(models.YogaSession.starts_at.asc())
+        .limit(36)
+        .all()
+    )
+    ops_today_rows: list[dict[str, str | int]] = []
+    ops_tomorrow_rows: list[dict[str, str | int]] = []
+    for s in ops_sessions_q:
+        room = rooms_by_id.get(s.room_id)
+        row = {
+            "id": s.id,
+            "title": s.title,
+            "trainer": s.trainer_name,
+            "room": room.name if room else "-",
+            "starts": _fmt_dt(s.starts_at),
+            "spots": spots_available(db, s),
+            "capacity": room.capacity if room else 0,
+        }
+        if s.starts_at.date() == today:
+            ops_today_rows.append(row)
+        elif s.starts_at.date() == tomorrow_d:
+            ops_tomorrow_rows.append(row)
+
+    window_start = now_na - timedelta(hours=6)
+    future_for_conflicts = (
+        db.query(models.YogaSession)
+        .filter(models.YogaSession.center_id == cid, models.YogaSession.starts_at >= window_start)
+        .order_by(models.YogaSession.room_id, models.YogaSession.starts_at)
+        .all()
+    )
+    by_room_sessions: dict[int, list[models.YogaSession]] = defaultdict(list)
+    for s in future_for_conflicts:
+        by_room_sessions[s.room_id].append(s)
+    schedule_conflicts: list[dict[str, str | int]] = []
+    for rid, lst in by_room_sessions.items():
+        lst.sort(key=lambda x: x.starts_at)
+        for i in range(len(lst) - 1):
+            a, b = lst[i], lst[i + 1]
+            end_a = a.starts_at + timedelta(minutes=int(a.duration_minutes or 0))
+            if end_a > b.starts_at:
+                schedule_conflicts.append(
+                    {
+                        "room_name": (rooms_by_id.get(rid).name if rooms_by_id.get(rid) else f"غرفة #{rid}"),
+                        "a_id": a.id,
+                        "a_title": a.title,
+                        "a_start": _fmt_dt(a.starts_at),
+                        "b_id": b.id,
+                        "b_title": b.title,
+                        "b_start": _fmt_dt(b.starts_at),
+                    }
+                )
+
+    admin_login_audit_rows = [
+        {
+            "created_at_display": _fmt_dt(ev.created_at),
+            "status": ev.status,
+            "email": ev.email or "-",
+            "ip": ev.ip or "-",
+        }
+        for ev in db.query(models.SecurityAuditEvent)
+        .filter(models.SecurityAuditEvent.event_type == "admin_login")
+        .order_by(models.SecurityAuditEvent.created_at.desc())
+        .limit(20)
+        .all()
+    ]
+
     recent_public_cutoff = utcnow_naive() - timedelta(days=7)
     paid_revenue_total, paid_revenue_today = (
         db.query(
@@ -1417,6 +1829,10 @@ def admin_dashboard(
     }
     payments_page_size = ADMIN_PAYMENTS_PAGE_SIZE
     payments_base_query = db.query(models.Payment).filter(models.Payment.center_id == cid)
+    if payment_from_dt:
+        payments_base_query = payments_base_query.filter(func.date(models.Payment.paid_at) >= payment_from_dt)
+    if payment_to_dt:
+        payments_base_query = payments_base_query.filter(func.date(models.Payment.paid_at) <= payment_to_dt)
     payments_total = payments_base_query.order_by(None).count()
     safe_payments_page, payments_total_pages, payments_offset = _normalize_page(
         payments_page,
@@ -1625,6 +2041,8 @@ def admin_dashboard(
         ADMIN_QP_AUDIT_EMAIL: audit_email,
         ADMIN_QP_AUDIT_IP: audit_ip,
         ADMIN_QP_AUDIT_PAGE: str(safe_audit_page),
+        ADMIN_QP_PAYMENT_DATE_FROM: (payment_date_from or "").strip()[:32],
+        ADMIN_QP_PAYMENT_DATE_TO: (payment_date_to or "").strip()[:32],
     }
 
     def _admin_page_url(**overrides: str) -> str:
@@ -1649,6 +2067,107 @@ def admin_dashboard(
     payments_page_next_url = _admin_page_url(
         **{ADMIN_QP_PAYMENTS_PAGE: str(min(payments_total_pages, safe_payments_page + 1))}
     )
+
+    safe_post_edit = max(0, int(post_edit or 0))
+    center_posts_all = (
+        db.query(models.CenterPost)
+        .filter(models.CenterPost.center_id == cid)
+        .order_by(models.CenterPost.updated_at.desc())
+        .all()
+    )
+
+    def _post_admin_edit_url(edit_id: int) -> str:
+        return _admin_page_url(**{ADMIN_QP_POST_EDIT: str(edit_id)}) + "#section-center-posts"
+
+    center_post_admin_rows: list[dict[str, str | int | bool]] = []
+    for cp in center_posts_all:
+        center_post_admin_rows.append(
+            {
+                "id": cp.id,
+                "title": cp.title,
+                "post_type": cp.post_type,
+                "type_label": CENTER_POST_TYPE_LABELS.get(cp.post_type, cp.post_type),
+                "is_published": cp.is_published,
+                "is_pinned": cp.is_pinned,
+                "updated_display": _fmt_dt(cp.updated_at),
+                "gallery_count": len(cp.images),
+                "public_url": _url_with_params("/post", center_id=str(cid), post_id=str(cp.id))
+                if cp.is_published
+                else "",
+                "edit_url": _post_admin_edit_url(cp.id),
+            }
+        )
+
+    editing_post: dict[str, Any] | None = None
+    if safe_post_edit:
+        ep = db.get(models.CenterPost, safe_post_edit)
+        if ep and ep.center_id == cid:
+            gi = sorted(ep.images, key=lambda x: (x.sort_order, x.id))
+            editing_post = {
+                "id": ep.id,
+                "title": ep.title,
+                "summary": ep.summary or "",
+                "body": ep.body or "",
+                "post_type": ep.post_type,
+                "is_pinned": ep.is_pinned,
+                "is_published": ep.is_published,
+                "cover_image_url": ep.cover_image_url or "",
+                "gallery": [{"id": g.id, "url": g.image_url} for g in gi],
+            }
+
+    center_post_type_choices = [
+        {"value": k, "label": v} for k, v in sorted(CENTER_POST_TYPE_LABELS.items(), key=lambda x: x[1])
+    ]
+
+    dash_home = _admin_page_url()
+    admin_insights: list[dict[str, str]] = []
+    if sessions_today_no_bookings:
+        admin_insights.append(
+            {
+                "label": f"جلسات اليوم بلا حجوزات نشطة: {sessions_today_no_bookings}",
+                "href": f"{dash_home}#section-sessions",
+                "kind": "warn",
+            }
+        )
+    if subs_expiring_7d:
+        admin_insights.append(
+            {
+                "label": f"اشتراكات تنتهي خلال 7 أيام: {subs_expiring_7d}",
+                "href": f"{dash_home}#section-plans",
+                "kind": "info",
+            }
+        )
+    if public_users_unverified_count:
+        admin_insights.append(
+            {
+                "label": f"مستخدمو جمهور غير موثّقين (عام): {public_users_unverified_count}",
+                "href": f"{dash_home}#section-public-users",
+                "kind": "info",
+            }
+        )
+    if schedule_conflicts:
+        admin_insights.append(
+            {
+                "label": f"تضارب جدولة في نفس الغرفة: {len(schedule_conflicts)}",
+                "href": f"{dash_home}#section-sessions",
+                "kind": "warn",
+            }
+        )
+
+    export_pay_params: dict[str, str] = {}
+    pf = (payment_date_from or "").strip()[:32]
+    pt = (payment_date_to or "").strip()[:32]
+    if pf:
+        export_pay_params[ADMIN_QP_PAYMENT_DATE_FROM] = pf
+    if pt:
+        export_pay_params[ADMIN_QP_PAYMENT_DATE_TO] = pt
+    data_export_urls = {
+        "clients": "/admin/export/clients.csv",
+        "bookings": "/admin/export/bookings.csv",
+        "payments": _url_with_params("/admin/export/payments.csv", **export_pay_params)
+        if export_pay_params
+        else "/admin/export/payments.csv",
+    }
 
     return templates.TemplateResponse(
         request,
@@ -1727,7 +2246,183 @@ def admin_dashboard(
                     else "id_asc"
                 ),
             },
+            "center_id": cid,
+            "admin_public_index_url": _url_with_params("/index", center_id=str(cid)),
+            "admin_insights": admin_insights,
+            "revenue_7d_bars": revenue_7d_bars,
+            "ops_today_rows": ops_today_rows,
+            "ops_tomorrow_rows": ops_tomorrow_rows,
+            "schedule_conflicts": schedule_conflicts,
+            "admin_login_audit_rows": admin_login_audit_rows,
+            "data_export_urls": data_export_urls,
+            "payment_date_from_value": pf,
+            "payment_date_to_value": pt,
+            "is_trainer": user.role == "trainer",
+            "is_center_owner": user.role == "center_owner",
+            "show_security_section": user.role == "center_owner",
+            "center_post_admin_rows": center_post_admin_rows,
+            "editing_post": editing_post,
+            "center_post_type_choices": center_post_type_choices,
+            "post_edit_id": safe_post_edit,
         },
+    )
+
+
+def _admin_user_for_data_export(
+    request: Request, db: Session
+) -> tuple[models.User | None, RedirectResponse | None]:
+    user, redirect = _require_admin_user_or_redirect(request, db)
+    if redirect:
+        return None, redirect
+    assert user is not None
+    if user.role == "trainer":
+        return None, _trainer_forbidden_redirect()
+    return user, None
+
+
+@router.get("/admin/export/clients.csv")
+def export_clients_csv(request: Request, db: Session = Depends(get_db)):
+    user, redirect = _admin_user_for_data_export(request, db)
+    if redirect:
+        return redirect
+    assert user is not None
+    cid = require_user_center_id(user)
+    rows = (
+        db.query(models.Client)
+        .filter(models.Client.center_id == cid)
+        .order_by(models.Client.created_at.desc())
+        .all()
+    )
+    output = io.StringIO()
+    writer = csv.writer(output)
+    writer.writerow(["id", "full_name", "email", "phone", "created_at"])
+    for c in rows:
+        writer.writerow(
+            [
+                c.id,
+                c.full_name,
+                c.email,
+                c.phone or "",
+                c.created_at.isoformat() if c.created_at else "",
+            ]
+        )
+    content = "\ufeff" + output.getvalue()
+    output.close()
+    fn = f"clients_center_{cid}_{utcnow_naive().strftime('%Y%m%d_%H%M%S')}.csv"
+    return StreamingResponse(
+        iter([content]),
+        media_type="text/csv; charset=utf-8",
+        headers={"Content-Disposition": f'attachment; filename="{fn}"'},
+    )
+
+
+@router.get("/admin/export/bookings.csv")
+def export_bookings_csv(request: Request, db: Session = Depends(get_db)):
+    user, redirect = _admin_user_for_data_export(request, db)
+    if redirect:
+        return redirect
+    assert user is not None
+    cid = require_user_center_id(user)
+    q = (
+        db.query(models.Booking, models.YogaSession, models.Client)
+        .join(models.YogaSession, models.YogaSession.id == models.Booking.session_id)
+        .join(models.Client, models.Client.id == models.Booking.client_id)
+        .filter(models.Booking.center_id == cid)
+        .order_by(models.Booking.booked_at.desc())
+        .limit(50_000)
+        .all()
+    )
+    output = io.StringIO()
+    writer = csv.writer(output)
+    writer.writerow(
+        [
+            "booking_id",
+            "status",
+            "booked_at",
+            "session_id",
+            "session_title",
+            "session_starts_at",
+            "client_id",
+            "client_name",
+            "client_email",
+        ]
+    )
+    for bk, sess, cl in q:
+        writer.writerow(
+            [
+                bk.id,
+                bk.status,
+                bk.booked_at.isoformat() if bk.booked_at else "",
+                sess.id,
+                sess.title,
+                sess.starts_at.isoformat() if sess.starts_at else "",
+                cl.id,
+                cl.full_name,
+                cl.email,
+            ]
+        )
+    content = "\ufeff" + output.getvalue()
+    output.close()
+    fn = f"bookings_center_{cid}_{utcnow_naive().strftime('%Y%m%d_%H%M%S')}.csv"
+    return StreamingResponse(
+        iter([content]),
+        media_type="text/csv; charset=utf-8",
+        headers={"Content-Disposition": f'attachment; filename="{fn}"'},
+    )
+
+
+@router.get("/admin/export/payments.csv")
+def export_payments_csv(
+    request: Request,
+    payment_date_from: str = "",
+    payment_date_to: str = "",
+    db: Session = Depends(get_db),
+):
+    user, redirect = _admin_user_for_data_export(request, db)
+    if redirect:
+        return redirect
+    assert user is not None
+    cid = require_user_center_id(user)
+    pq = db.query(models.Payment).filter(models.Payment.center_id == cid)
+    pdf = _parse_optional_date_str(payment_date_from)
+    pdt = _parse_optional_date_str(payment_date_to)
+    if pdf:
+        pq = pq.filter(func.date(models.Payment.paid_at) >= pdf)
+    if pdt:
+        pq = pq.filter(func.date(models.Payment.paid_at) <= pdt)
+    rows = pq.order_by(models.Payment.paid_at.desc()).limit(50_000).all()
+    client_ids = list({p.client_id for p in rows})
+    clients_map = {
+        c.id: c
+        for c in db.query(models.Client).filter(models.Client.id.in_(client_ids)).all()
+    } if client_ids else {}
+    output = io.StringIO()
+    writer = csv.writer(output)
+    writer.writerow(
+        ["payment_id", "client_id", "client_name", "amount", "currency", "status", "method", "paid_at", "booking_id"]
+    )
+    for p in rows:
+        cl = clients_map.get(p.client_id)
+        writer.writerow(
+            [
+                p.id,
+                p.client_id,
+                cl.full_name if cl else "",
+                p.amount,
+                p.currency,
+                p.status,
+                p.payment_method,
+                p.paid_at.isoformat() if p.paid_at else "",
+                p.booking_id or "",
+            ]
+        )
+    content = "\ufeff" + output.getvalue()
+    output.close()
+    fn = f"payments_center_{cid}_{utcnow_naive().strftime('%Y%m%d_%H%M%S')}.csv"
+    return StreamingResponse(
+        iter([content]),
+        media_type="text/csv; charset=utf-8",
+        headers={"Content-Disposition": f'attachment; filename="{fn}"'},
     )
 
 
@@ -1743,6 +2438,9 @@ def export_security_events_csv(
     user, redirect = _require_admin_user_or_redirect(request, db)
     if redirect:
         return redirect
+    assert user is not None
+    if user.role != "center_owner":
+        return _security_owner_forbidden_redirect()
 
     query = db.query(models.SecurityAuditEvent)
     if audit_event_type.strip():
@@ -1784,16 +2482,19 @@ def admin_block_ip(
     ip: str = Form(...),
     minutes: int = Form(ADMIN_IP_BLOCK_DEFAULT_MINUTES),
     reason: str = Form("manual_block"),
+    return_section: str = Form(""),
     db: Session = Depends(get_db),
 ):
     user, redirect = _require_admin_user_or_redirect(request, db)
     if redirect:
         return redirect
     assert user is not None
+    if user.role != "center_owner":
+        return _security_owner_forbidden_redirect(return_section)
 
     target_ip = ip.strip()
     if not target_ip:
-        return _admin_redirect(ADMIN_MSG_IP_BLOCK_INVALID)
+        return _admin_redirect(ADMIN_MSG_IP_BLOCK_INVALID, return_section=return_section)
     if minutes <= 0:
         minutes = ADMIN_IP_BLOCK_DEFAULT_MINUTES
     if minutes > ADMIN_IP_BLOCK_MAX_MINUTES:
@@ -1821,25 +2522,28 @@ def admin_block_ip(
         email=user.email,
         details={"target_ip": target_ip, "minutes": minutes, "reason": reason[:255]},
     )
-    return _admin_redirect(ADMIN_MSG_IP_BLOCKED)
+    return _admin_redirect(ADMIN_MSG_IP_BLOCKED, return_section=return_section)
 
 
 @router.post("/admin/security/ip-unblock")
 def admin_unblock_ip(
     request: Request,
     ip: str = Form(...),
+    return_section: str = Form(""),
     db: Session = Depends(get_db),
 ):
     user, redirect = _require_admin_user_or_redirect(request, db)
     if redirect:
         return redirect
     assert user is not None
+    if user.role != "center_owner":
+        return _security_owner_forbidden_redirect(return_section)
     target_ip = ip.strip()
     if not target_ip:
-        return _admin_redirect(ADMIN_MSG_IP_BLOCK_INVALID)
+        return _admin_redirect(ADMIN_MSG_IP_BLOCK_INVALID, return_section=return_section)
     row = db.query(models.BlockedIP).filter(models.BlockedIP.ip == target_ip).first()
     if not row:
-        return _admin_redirect(ADMIN_MSG_IP_UNBLOCK_NOT_FOUND)
+        return _admin_redirect(ADMIN_MSG_IP_UNBLOCK_NOT_FOUND, return_section=return_section)
     row.is_active = False
     db.commit()
     log_security_event(
@@ -1849,7 +2553,7 @@ def admin_unblock_ip(
         email=user.email,
         details={"target_ip": target_ip, "reason": "manual_unblock"},
     )
-    return _admin_redirect(ADMIN_MSG_IP_UNBLOCKED)
+    return _admin_redirect(ADMIN_MSG_IP_UNBLOCKED, return_section=return_section)
 
 
 @router.post("/admin/public-users/toggle-active")
@@ -1857,19 +2561,22 @@ def admin_toggle_public_user_active(
     request: Request,
     public_user_id: int = Form(...),
     scroll_y: str = Form(default=""),
+    return_section: str = Form(""),
     db: Session = Depends(get_db),
 ):
     user, redirect = _require_admin_user_or_redirect(request, db)
     if redirect:
         return redirect
     assert user is not None
-    row, redirect = _get_public_user_or_redirect(db, public_user_id, scroll_y)
+    if user.role == "trainer":
+        return _trainer_forbidden_redirect(return_section)
+    row, redirect = _get_public_user_or_redirect(db, public_user_id, scroll_y, return_section=return_section)
     if redirect:
         return redirect
     assert row is not None
     row.is_active = not row.is_active
     db.commit()
-    return _admin_redirect(ADMIN_MSG_PUBLIC_USER_UPDATED, scroll_y)
+    return _admin_redirect(ADMIN_MSG_PUBLIC_USER_UPDATED, scroll_y, return_section)
 
 
 @router.post("/admin/public-users/toggle-verified")
@@ -1877,19 +2584,22 @@ def admin_toggle_public_user_verified(
     request: Request,
     public_user_id: int = Form(...),
     scroll_y: str = Form(default=""),
+    return_section: str = Form(""),
     db: Session = Depends(get_db),
 ):
     user, redirect = _require_admin_user_or_redirect(request, db)
     if redirect:
         return redirect
     assert user is not None
-    row, redirect = _get_public_user_or_redirect(db, public_user_id, scroll_y)
+    if user.role == "trainer":
+        return _trainer_forbidden_redirect(return_section)
+    row, redirect = _get_public_user_or_redirect(db, public_user_id, scroll_y, return_section=return_section)
     if redirect:
         return redirect
     assert row is not None
     row.email_verified = not row.email_verified
     db.commit()
-    return _admin_redirect(ADMIN_MSG_PUBLIC_USER_UPDATED, scroll_y)
+    return _admin_redirect(ADMIN_MSG_PUBLIC_USER_UPDATED, scroll_y, return_section)
 
 
 @router.post("/admin/public-users/delete")
@@ -1897,13 +2607,16 @@ def admin_delete_public_user(
     request: Request,
     public_user_id: int = Form(...),
     scroll_y: str = Form(default=""),
+    return_section: str = Form(""),
     db: Session = Depends(get_db),
 ):
     user, redirect = _require_admin_user_or_redirect(request, db)
     if redirect:
         return redirect
     assert user is not None
-    row, redirect = _get_public_user_or_redirect(db, public_user_id, scroll_y)
+    if user.role == "trainer":
+        return _trainer_forbidden_redirect(return_section)
+    row, redirect = _get_public_user_or_redirect(db, public_user_id, scroll_y, return_section=return_section)
     if redirect:
         return redirect
     assert row is not None
@@ -1921,7 +2634,7 @@ def admin_delete_public_user(
             "mode": "soft_delete",
         },
     )
-    return _admin_redirect(ADMIN_MSG_PUBLIC_USER_DELETED, scroll_y)
+    return _admin_redirect(ADMIN_MSG_PUBLIC_USER_DELETED, scroll_y, return_section)
 
 
 @router.post("/admin/public-users/resend-verification")
@@ -1929,18 +2642,21 @@ def admin_resend_public_user_verification(
     request: Request,
     public_user_id: int = Form(...),
     scroll_y: str = Form(default=""),
+    return_section: str = Form(""),
     db: Session = Depends(get_db),
 ):
     admin_user, redirect = _require_admin_user_or_redirect(request, db)
     if redirect:
         return redirect
     assert admin_user is not None
-    row, redirect = _get_public_user_or_redirect(db, public_user_id, scroll_y)
+    if admin_user.role == "trainer":
+        return _trainer_forbidden_redirect(return_section)
+    row, redirect = _get_public_user_or_redirect(db, public_user_id, scroll_y, return_section=return_section)
     if redirect:
         return redirect
     assert row is not None
     if row.email_verified:
-        return _admin_redirect(ADMIN_MSG_PUBLIC_USER_ALREADY_VERIFIED, scroll_y)
+        return _admin_redirect(ADMIN_MSG_PUBLIC_USER_ALREADY_VERIFIED, scroll_y, return_section)
 
     queued, mail_info = _queue_verify_email_for_user(request, row)
     if not queued:
@@ -1955,7 +2671,7 @@ def admin_resend_public_user_verification(
                 "mail_error": mail_info[:200],
             },
         )
-        return _admin_redirect(ADMIN_MSG_PUBLIC_USER_VERIFICATION_MAIL_FAILED, scroll_y)
+        return _admin_redirect(ADMIN_MSG_PUBLIC_USER_VERIFICATION_MAIL_FAILED, scroll_y, return_section)
 
     row.verification_sent_at = utcnow_naive()
     db.commit()
@@ -1966,7 +2682,7 @@ def admin_resend_public_user_verification(
         email=admin_user.email,
         details={"target_user_id": row.id, "target_email": row.email, "mail_status": "queued"},
     )
-    return _admin_redirect(ADMIN_MSG_PUBLIC_USER_VERIFICATION_RESENT, scroll_y)
+    return _admin_redirect(ADMIN_MSG_PUBLIC_USER_VERIFICATION_RESENT, scroll_y, return_section)
 
 
 @router.post("/admin/public-users/restore")
@@ -1974,18 +2690,23 @@ def admin_restore_public_user(
     request: Request,
     public_user_id: int = Form(...),
     scroll_y: str = Form(default=""),
+    return_section: str = Form(""),
     db: Session = Depends(get_db),
 ):
     admin_user, redirect = _require_admin_user_or_redirect(request, db)
     if redirect:
         return redirect
     assert admin_user is not None
-    row, redirect = _get_public_user_or_redirect(db, public_user_id, scroll_y, allow_deleted=True)
+    if admin_user.role == "trainer":
+        return _trainer_forbidden_redirect(return_section)
+    row, redirect = _get_public_user_or_redirect(
+        db, public_user_id, scroll_y, allow_deleted=True, return_section=return_section
+    )
     if redirect:
         return redirect
     assert row is not None
     if not row.is_deleted:
-        return _admin_redirect(ADMIN_MSG_PUBLIC_USER_UPDATED, scroll_y)
+        return _admin_redirect(ADMIN_MSG_PUBLIC_USER_UPDATED, scroll_y, return_section)
     row.is_deleted = False
     row.deleted_at = None
     row.is_active = True
@@ -1997,7 +2718,7 @@ def admin_restore_public_user(
         email=admin_user.email,
         details={"restored_public_user_id": row.id, "restored_email": row.email},
     )
-    return _admin_redirect(ADMIN_MSG_PUBLIC_USER_RESTORED, scroll_y)
+    return _admin_redirect(ADMIN_MSG_PUBLIC_USER_RESTORED, scroll_y, return_section)
 
 
 @router.post("/admin/public-users/bulk-action")
@@ -2006,27 +2727,30 @@ def admin_public_users_bulk_action(
     action: str = Form(...),
     public_user_ids: list[int] = Form(default=[]),
     scroll_y: str = Form(default=""),
+    return_section: str = Form(""),
     db: Session = Depends(get_db),
 ):
     admin_user, redirect = _require_admin_user_or_redirect(request, db)
     if redirect:
         return redirect
     assert admin_user is not None
+    if admin_user.role == "trainer":
+        return _trainer_forbidden_redirect(return_section)
     ids = sorted(set(public_user_ids))
     if not ids:
-        return _admin_redirect(ADMIN_MSG_PUBLIC_USERS_NONE_SELECTED, scroll_y)
+        return _admin_redirect(ADMIN_MSG_PUBLIC_USERS_NONE_SELECTED, scroll_y, return_section)
     rows = db.query(models.PublicUser).filter(models.PublicUser.id.in_(ids)).all()
     if not rows:
-        return _admin_redirect(ADMIN_MSG_PUBLIC_USER_NOT_FOUND, scroll_y)
+        return _admin_redirect(ADMIN_MSG_PUBLIC_USER_NOT_FOUND, scroll_y, return_section)
 
     action_key = action.strip().lower()
     if action_key not in PUBLIC_USER_BULK_ACTIONS:
-        return _admin_redirect(ADMIN_MSG_PUBLIC_USERS_BULK_INVALID_ACTION, scroll_y)
+        return _admin_redirect(ADMIN_MSG_PUBLIC_USERS_BULK_INVALID_ACTION, scroll_y, return_section)
     if action_key == "resend_verification":
         # Fast fail if SMTP settings are invalid.
         sample_ok, _ = validate_mailer_settings()
         if not sample_ok:
-            return _admin_redirect(ADMIN_MSG_PUBLIC_USER_VERIFICATION_MAIL_FAILED, scroll_y)
+            return _admin_redirect(ADMIN_MSG_PUBLIC_USER_VERIFICATION_MAIL_FAILED, scroll_y, return_section)
 
     updated = 0
     queued = 0
@@ -2042,7 +2766,7 @@ def admin_public_users_bulk_action(
         email=admin_user.email,
         details={"action": action_key, "selected": len(ids), "updated": updated, "queued": queued},
     )
-    return _admin_redirect(ADMIN_MSG_PUBLIC_USERS_BULK_DONE, scroll_y)
+    return _admin_redirect(ADMIN_MSG_PUBLIC_USERS_BULK_DONE, scroll_y, return_section)
 
 
 @router.post("/admin/rooms")
@@ -2050,6 +2774,7 @@ def admin_create_room(
     name: str = Form(...),
     capacity: int = Form(10),
     scroll_y: str = Form(default=""),
+    return_section: str = Form(""),
     db: Session = Depends(get_db),
     user: models.User = Depends(require_roles_cookie_or_bearer("center_owner", "center_staff")),
 ):
@@ -2057,7 +2782,7 @@ def admin_create_room(
     room = models.Room(center_id=cid, name=name, capacity=capacity)
     db.add(room)
     db.commit()
-    return _admin_redirect(ADMIN_MSG_ROOM_CREATED, scroll_y)
+    return _admin_redirect(ADMIN_MSG_ROOM_CREATED, scroll_y, return_section)
 
 
 @router.post("/admin/rooms/update")
@@ -2066,6 +2791,7 @@ def admin_update_room(
     name: str = Form(...),
     capacity: int = Form(...),
     scroll_y: str = Form(default=""),
+    return_section: str = Form(""),
     db: Session = Depends(get_db),
     user: models.User = Depends(require_roles_cookie_or_bearer("center_owner", "center_staff")),
 ):
@@ -2074,17 +2800,18 @@ def admin_update_room(
     if not room or room.center_id != cid:
         raise HTTPException(status_code=404, detail="Room not found")
     if capacity <= 0:
-        return _admin_redirect(ADMIN_MSG_ROOM_CAPACITY_INVALID, scroll_y)
+        return _admin_redirect(ADMIN_MSG_ROOM_CAPACITY_INVALID, scroll_y, return_section)
     room.name = name.strip() or room.name
     room.capacity = capacity
     db.commit()
-    return _admin_redirect(ADMIN_MSG_ROOM_UPDATED, scroll_y)
+    return _admin_redirect(ADMIN_MSG_ROOM_UPDATED, scroll_y, return_section)
 
 
 @router.post("/admin/rooms/delete")
 def admin_delete_room(
     room_id: int = Form(...),
     scroll_y: str = Form(default=""),
+    return_section: str = Form(""),
     db: Session = Depends(get_db),
     user: models.User = Depends(require_roles_cookie_or_bearer("center_owner", "center_staff")),
 ):
@@ -2106,26 +2833,27 @@ def admin_delete_room(
             .first()
         )
         if has_bookings:
-            return _admin_redirect(ADMIN_MSG_ROOM_HAS_BOOKINGS, scroll_y)
+            return _admin_redirect(ADMIN_MSG_ROOM_HAS_BOOKINGS, scroll_y, return_section)
         for session in room_sessions:
             db.delete(session)
 
     db.delete(room)
     db.commit()
-    return _admin_redirect(ADMIN_MSG_ROOM_DELETED, scroll_y)
+    return _admin_redirect(ADMIN_MSG_ROOM_DELETED, scroll_y, return_section)
 
 
 @router.post("/admin/rooms/delete-bulk")
 def admin_delete_rooms_bulk(
     room_ids: list[int] = Form(default=[]),
     scroll_y: str = Form(default=""),
+    return_section: str = Form(""),
     db: Session = Depends(get_db),
     user: models.User = Depends(require_roles_cookie_or_bearer("center_owner", "center_staff")),
 ):
     cid = require_user_center_id(user)
     selected_ids = sorted(set(room_ids))
     if not selected_ids:
-        return _admin_redirect(ADMIN_MSG_ROOMS_NONE_SELECTED, scroll_y)
+        return _admin_redirect(ADMIN_MSG_ROOMS_NONE_SELECTED, scroll_y, return_section)
 
     rooms = (
         db.query(models.Room)
@@ -2133,7 +2861,7 @@ def admin_delete_rooms_bulk(
         .all()
     )
     if not rooms:
-        return _admin_redirect(ADMIN_MSG_ROOMS_NOT_FOUND, scroll_y)
+        return _admin_redirect(ADMIN_MSG_ROOMS_NOT_FOUND, scroll_y, return_section)
 
     room_ids = [r.id for r in rooms]
     all_sessions = (
@@ -2171,12 +2899,12 @@ def admin_delete_rooms_bulk(
     db.commit()
 
     if deleted > 0 and blocked_bookings > 0:
-        return _admin_redirect(ADMIN_MSG_ROOMS_DELETED_PARTIAL_BOOKINGS, scroll_y)
+        return _admin_redirect(ADMIN_MSG_ROOMS_DELETED_PARTIAL_BOOKINGS, scroll_y, return_section)
     if deleted > 0:
-        return _admin_redirect(ADMIN_MSG_ROOMS_DELETED, scroll_y)
+        return _admin_redirect(ADMIN_MSG_ROOMS_DELETED, scroll_y, return_section)
     if blocked_bookings > 0:
-        return _admin_redirect(ADMIN_MSG_ROOMS_DELETE_HAS_BOOKINGS, scroll_y)
-    return _admin_redirect(ADMIN_MSG_ROOMS_DELETE_BLOCKED, scroll_y)
+        return _admin_redirect(ADMIN_MSG_ROOMS_DELETE_HAS_BOOKINGS, scroll_y, return_section)
+    return _admin_redirect(ADMIN_MSG_ROOMS_DELETE_BLOCKED, scroll_y, return_section)
 
 
 @router.post("/admin/sessions")
@@ -2189,6 +2917,7 @@ def admin_create_session(
     duration_minutes: int = Form(60),
     price_drop_in: float = Form(0.0),
     scroll_y: str = Form(default=""),
+    return_section: str = Form(""),
     db: Session = Depends(get_db),
     user: models.User = Depends(require_roles_cookie_or_bearer("center_owner", "center_staff", "trainer")),
 ):
@@ -2214,13 +2943,14 @@ def admin_create_session(
     )
     db.add(yoga_session)
     db.commit()
-    return _admin_redirect(ADMIN_MSG_SESSION_CREATED, scroll_y)
+    return _admin_redirect(ADMIN_MSG_SESSION_CREATED, scroll_y, return_section)
 
 
 @router.post("/admin/sessions/delete")
 def admin_delete_session(
     session_id: int = Form(...),
     scroll_y: str = Form(default=""),
+    return_section: str = Form(""),
     db: Session = Depends(get_db),
     user: models.User = Depends(require_roles_cookie_or_bearer("center_owner", "center_staff", "trainer")),
 ):
@@ -2237,7 +2967,7 @@ def admin_delete_session(
     db.query(models.Booking).filter(models.Booking.session_id == session_id).delete()
     db.delete(yoga_session)
     db.commit()
-    return _admin_redirect(ADMIN_MSG_SESSION_DELETED, scroll_y)
+    return _admin_redirect(ADMIN_MSG_SESSION_DELETED, scroll_y, return_section)
 
 
 @router.post("/admin/plans")
@@ -2247,6 +2977,7 @@ def admin_create_plan(
     price: float = Form(...),
     session_limit: str = Form(default=""),
     scroll_y: str = Form(default=""),
+    return_section: str = Form(""),
     db: Session = Depends(get_db),
     user: models.User = Depends(require_roles_cookie_or_bearer("center_owner", "center_staff")),
 ):
@@ -2273,7 +3004,7 @@ def admin_create_plan(
     )
     db.add(plan)
     db.commit()
-    return _admin_redirect(ADMIN_MSG_PLAN_CREATED, scroll_y)
+    return _admin_redirect(ADMIN_MSG_PLAN_CREATED, scroll_y, return_section)
 
 
 @router.post("/admin/plans/update-name")
@@ -2281,6 +3012,7 @@ def admin_update_plan_name(
     plan_id: int = Form(...),
     name: str = Form(...),
     scroll_y: str = Form(default=""),
+    return_section: str = Form(""),
     db: Session = Depends(get_db),
     user: models.User = Depends(require_roles_cookie_or_bearer("center_owner", "center_staff")),
 ):
@@ -2290,10 +3022,10 @@ def admin_update_plan_name(
         raise HTTPException(status_code=404, detail="Plan not found")
     new_name = name.strip()
     if not new_name:
-        return _admin_redirect(ADMIN_MSG_PLAN_NAME_INVALID, scroll_y)
+        return _admin_redirect(ADMIN_MSG_PLAN_NAME_INVALID, scroll_y, return_section)
     plan.name = new_name
     db.commit()
-    return _admin_redirect(ADMIN_MSG_PLAN_UPDATED, scroll_y)
+    return _admin_redirect(ADMIN_MSG_PLAN_UPDATED, scroll_y, return_section)
 
 
 @router.post("/admin/plans/update-details")
@@ -2303,6 +3035,7 @@ def admin_update_plan_details(
     price: float = Form(...),
     session_limit: str = Form(default=""),
     scroll_y: str = Form(default=""),
+    return_section: str = Form(""),
     db: Session = Depends(get_db),
     user: models.User = Depends(require_roles_cookie_or_bearer("center_owner", "center_staff")),
 ):
@@ -2313,30 +3046,31 @@ def admin_update_plan_details(
 
     plan_type_clean = plan_type.strip().lower()
     if plan_type_clean not in ("weekly", "monthly", "yearly"):
-        return _admin_redirect(ADMIN_MSG_PLAN_DETAILS_INVALID, scroll_y)
+        return _admin_redirect(ADMIN_MSG_PLAN_DETAILS_INVALID, scroll_y, return_section)
     if price < 0:
-        return _admin_redirect(ADMIN_MSG_PLAN_DETAILS_INVALID, scroll_y)
+        return _admin_redirect(ADMIN_MSG_PLAN_DETAILS_INVALID, scroll_y, return_section)
 
     parsed_session_limit = None
     if session_limit.strip():
         try:
             parsed_session_limit = int(session_limit)
         except ValueError:
-            return _admin_redirect(ADMIN_MSG_PLAN_DETAILS_INVALID, scroll_y)
+            return _admin_redirect(ADMIN_MSG_PLAN_DETAILS_INVALID, scroll_y, return_section)
         if parsed_session_limit <= 0:
-            return _admin_redirect(ADMIN_MSG_PLAN_DETAILS_INVALID, scroll_y)
+            return _admin_redirect(ADMIN_MSG_PLAN_DETAILS_INVALID, scroll_y, return_section)
 
     plan.plan_type = plan_type_clean
     plan.price = float(price)
     plan.session_limit = parsed_session_limit
     db.commit()
-    return _admin_redirect(ADMIN_MSG_PLAN_DETAILS_UPDATED, scroll_y)
+    return _admin_redirect(ADMIN_MSG_PLAN_DETAILS_UPDATED, scroll_y, return_section)
 
 
 @router.post("/admin/plans/delete")
 def admin_delete_plan(
     plan_id: int = Form(...),
     scroll_y: str = Form(default=""),
+    return_section: str = Form(""),
     db: Session = Depends(get_db),
     user: models.User = Depends(require_roles_cookie_or_bearer("center_owner", "center_staff")),
 ):
@@ -2346,10 +3080,10 @@ def admin_delete_plan(
         raise HTTPException(status_code=404, detail="Plan not found")
     has_subscriptions = db.query(models.ClientSubscription).filter(models.ClientSubscription.plan_id == plan_id).first()
     if has_subscriptions:
-        return _admin_redirect(ADMIN_MSG_PLAN_HAS_SUBSCRIPTIONS, scroll_y)
+        return _admin_redirect(ADMIN_MSG_PLAN_HAS_SUBSCRIPTIONS, scroll_y, return_section)
     db.delete(plan)
     db.commit()
-    return _admin_redirect(ADMIN_MSG_PLAN_DELETED, scroll_y)
+    return _admin_redirect(ADMIN_MSG_PLAN_DELETED, scroll_y, return_section)
 
 
 @router.post("/admin/faqs")
@@ -2359,6 +3093,7 @@ def admin_create_faq(
     sort_order: int = Form(0),
     is_active: str = Form("1"),
     scroll_y: str = Form(default=""),
+    return_section: str = Form(""),
     db: Session = Depends(get_db),
     user: models.User = Depends(require_roles_cookie_or_bearer("center_owner", "center_staff")),
 ):
@@ -2366,7 +3101,7 @@ def admin_create_faq(
     q = question.strip()
     a = answer.strip()
     if not q or not a:
-        return _admin_redirect(ADMIN_MSG_FAQ_INVALID, scroll_y)
+        return _admin_redirect(ADMIN_MSG_FAQ_INVALID, scroll_y, return_section)
     row = models.FAQItem(
         center_id=cid,
         question=q,
@@ -2376,7 +3111,7 @@ def admin_create_faq(
     )
     db.add(row)
     db.commit()
-    return _admin_redirect(ADMIN_MSG_FAQ_CREATED, scroll_y)
+    return _admin_redirect(ADMIN_MSG_FAQ_CREATED, scroll_y, return_section)
 
 
 @router.post("/admin/faqs/update")
@@ -2387,56 +3122,59 @@ def admin_update_faq(
     sort_order: int = Form(0),
     is_active: str = Form("1"),
     scroll_y: str = Form(default=""),
+    return_section: str = Form(""),
     db: Session = Depends(get_db),
     user: models.User = Depends(require_roles_cookie_or_bearer("center_owner", "center_staff")),
 ):
     cid = require_user_center_id(user)
     row = db.get(models.FAQItem, faq_id)
     if not row or row.center_id != cid:
-        return _admin_redirect(ADMIN_MSG_FAQ_NOT_FOUND, scroll_y)
+        return _admin_redirect(ADMIN_MSG_FAQ_NOT_FOUND, scroll_y, return_section)
     q = question.strip()
     a = answer.strip()
     if not q or not a:
-        return _admin_redirect(ADMIN_MSG_FAQ_INVALID, scroll_y)
+        return _admin_redirect(ADMIN_MSG_FAQ_INVALID, scroll_y, return_section)
     row.question = q
     row.answer = a
     row.sort_order = max(0, int(sort_order))
     row.is_active = is_active in {"1", "true", "on", "yes"}
     db.commit()
-    return _admin_redirect(ADMIN_MSG_FAQ_UPDATED, scroll_y)
+    return _admin_redirect(ADMIN_MSG_FAQ_UPDATED, scroll_y, return_section)
 
 
 @router.post("/admin/faqs/delete")
 def admin_delete_faq(
     faq_id: int = Form(...),
     scroll_y: str = Form(default=""),
+    return_section: str = Form(""),
     db: Session = Depends(get_db),
     user: models.User = Depends(require_roles_cookie_or_bearer("center_owner", "center_staff")),
 ):
     cid = require_user_center_id(user)
     row = db.get(models.FAQItem, faq_id)
     if not row or row.center_id != cid:
-        return _admin_redirect(ADMIN_MSG_FAQ_NOT_FOUND, scroll_y)
+        return _admin_redirect(ADMIN_MSG_FAQ_NOT_FOUND, scroll_y, return_section)
     db.delete(row)
     db.commit()
-    return _admin_redirect(ADMIN_MSG_FAQ_DELETED, scroll_y)
+    return _admin_redirect(ADMIN_MSG_FAQ_DELETED, scroll_y, return_section)
 
 
 @router.post("/admin/faqs/reorder")
 def admin_reorder_faqs(
     ordered_ids_csv: str = Form(...),
     scroll_y: str = Form(default=""),
+    return_section: str = Form(""),
     db: Session = Depends(get_db),
     user: models.User = Depends(require_roles_cookie_or_bearer("center_owner", "center_staff")),
 ):
     cid = require_user_center_id(user)
     raw = [x.strip() for x in ordered_ids_csv.split(",") if x.strip()]
     if not raw:
-        return _admin_redirect(ADMIN_MSG_FAQ_REORDER_INVALID, scroll_y)
+        return _admin_redirect(ADMIN_MSG_FAQ_REORDER_INVALID, scroll_y, return_section)
     try:
         ids = [int(x) for x in raw]
     except ValueError:
-        return _admin_redirect(ADMIN_MSG_FAQ_REORDER_INVALID, scroll_y)
+        return _admin_redirect(ADMIN_MSG_FAQ_REORDER_INVALID, scroll_y, return_section)
     unique_ids = list(dict.fromkeys(ids))
     rows = (
         db.query(models.FAQItem)
@@ -2444,12 +3182,16 @@ def admin_reorder_faqs(
         .all()
     )
     if len(rows) != len(unique_ids):
-        return _admin_redirect(ADMIN_MSG_FAQ_REORDER_INVALID, scroll_y)
+        return _admin_redirect(ADMIN_MSG_FAQ_REORDER_INVALID, scroll_y, return_section)
     row_by_id = {r.id: r for r in rows}
     for idx, faq_id in enumerate(unique_ids, start=1):
         row_by_id[faq_id].sort_order = idx
     db.commit()
-    return _admin_redirect(ADMIN_MSG_FAQ_REORDERED, scroll_y)
+    return _admin_redirect(ADMIN_MSG_FAQ_REORDERED, scroll_y, return_section)
+
+
+def _truthy_form_flag(value: str) -> bool:
+    return (value or "").strip().lower() in {"1", "true", "on", "yes"}
 
 
 @router.post("/admin/center/branding")
@@ -2457,16 +3199,20 @@ async def admin_center_branding(
     brand_tagline: str = Form(""),
     remove_logo: str = Form(""),
     remove_hero: str = Form(""),
+    restore_hero_stock: str = Form(""),
+    hero_gradient_only: str = Form(""),
     logo: UploadFile | None = File(default=None),
     hero: UploadFile | None = File(default=None),
     scroll_y: str = Form(default=""),
+    return_section: str = Form(""),
     db: Session = Depends(get_db),
     user: models.User = Depends(require_roles_cookie_or_bearer("center_owner", "center_staff")),
 ):
     cid = require_user_center_id(user)
     center = db.get(models.Center, cid)
     if not center:
-        return _admin_redirect(ADMIN_MSG_CENTER_BRANDING_CENTER_MISSING, scroll_y)
+        return _admin_redirect(ADMIN_MSG_CENTER_BRANDING_CENTER_MISSING, scroll_y, return_section)
+    had_custom_hero = bool(center.hero_image_url)
 
     logo_raw = (logo.filename or "").strip() if logo else ""
     logo_ext: str | None = None
@@ -2474,10 +3220,10 @@ async def admin_center_branding(
     if logo and logo_raw:
         ext = logo_raw.rsplit(".", 1)[-1].lower() if "." in logo_raw else ""
         if ext not in CENTER_LOGO_ALLOWED_EXT:
-            return _admin_redirect(ADMIN_MSG_CENTER_BRANDING_BAD_FILE, scroll_y)
+            return _admin_redirect(ADMIN_MSG_CENTER_BRANDING_BAD_FILE, scroll_y, return_section)
         body = await logo.read()
         if not body or len(body) > CENTER_LOGO_MAX_BYTES:
-            return _admin_redirect(ADMIN_MSG_CENTER_BRANDING_BAD_FILE, scroll_y)
+            return _admin_redirect(ADMIN_MSG_CENTER_BRANDING_BAD_FILE, scroll_y, return_section)
         logo_ext = ext
         logo_bytes = body
 
@@ -2487,18 +3233,20 @@ async def admin_center_branding(
     if hero and hero_raw:
         ext = hero_raw.rsplit(".", 1)[-1].lower() if "." in hero_raw else ""
         if ext not in CENTER_LOGO_ALLOWED_EXT:
-            return _admin_redirect(ADMIN_MSG_CENTER_BRANDING_BAD_FILE, scroll_y)
+            return _admin_redirect(ADMIN_MSG_CENTER_BRANDING_BAD_FILE, scroll_y, return_section)
         body = await hero.read()
         if not body or len(body) > CENTER_LOGO_MAX_BYTES:
-            return _admin_redirect(ADMIN_MSG_CENTER_BRANDING_BAD_FILE, scroll_y)
+            return _admin_redirect(ADMIN_MSG_CENTER_BRANDING_BAD_FILE, scroll_y, return_section)
         hero_ext = ext
         hero_bytes = body
 
     tag = brand_tagline.strip()[:500]
     center.brand_tagline = tag if tag else None
 
-    remove = remove_logo.lower() in {"1", "true", "on", "yes"}
-    remove_h = remove_hero.lower() in {"1", "true", "on", "yes"}
+    remove = _truthy_form_flag(remove_logo)
+    remove_h = _truthy_form_flag(remove_hero)
+    restore_stock = _truthy_form_flag(restore_hero_stock)
+    gradient_only = _truthy_form_flag(hero_gradient_only)
 
     if logo_ext is not None and logo_bytes is not None:
         CENTER_LOGO_UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
@@ -2510,18 +3258,201 @@ async def admin_center_branding(
         _delete_center_logo_files(cid)
         center.logo_url = None
 
-    if hero_ext is not None and hero_bytes is not None:
+    if restore_stock:
+        _delete_center_hero_files(cid)
+        center.hero_image_url = None
+        center.hero_show_stock_photo = True
+    elif hero_ext is not None and hero_bytes is not None:
         CENTER_LOGO_UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
         _delete_center_hero_files(cid)
         dest = CENTER_LOGO_UPLOAD_DIR / f"center_{cid}_hero.{hero_ext}"
         dest.write_bytes(hero_bytes)
         center.hero_image_url = f"/static/uploads/centers/center_{cid}_hero.{hero_ext}"
+        center.hero_show_stock_photo = False
     elif remove_h:
         _delete_center_hero_files(cid)
         center.hero_image_url = None
+        center.hero_show_stock_photo = False
+    elif gradient_only and not had_custom_hero:
+        center.hero_show_stock_photo = False
 
     db.commit()
-    return _admin_redirect(ADMIN_MSG_CENTER_BRANDING_UPDATED, scroll_y)
+    return _admin_redirect(ADMIN_MSG_CENTER_BRANDING_UPDATED, scroll_y, return_section)
+
+
+@router.post("/admin/center/posts/save")
+async def admin_save_center_post(
+    request: Request,
+    title: str = Form(...),
+    post_type: str = Form(...),
+    summary: str = Form(""),
+    body: str = Form(""),
+    post_id: str = Form(""),
+    is_pinned: str = Form(""),
+    is_published: str = Form(""),
+    remove_cover: str = Form(""),
+    remove_image_ids: str = Form(""),
+    cover_remote_url: str = Form(""),
+    gallery_remote_urls: str = Form(""),
+    cover: UploadFile | None = File(None),
+    scroll_y: str = Form(default=""),
+    return_section: str = Form(""),
+    db: Session = Depends(get_db),
+    user: models.User = Depends(require_roles_cookie_or_bearer("center_owner", "center_staff")),
+):
+    cid = require_user_center_id(user)
+    ptype = (post_type or "").strip().lower()
+    if ptype not in CENTER_POST_TYPES:
+        return _admin_redirect(ADMIN_MSG_CENTER_POST_INVALID, scroll_y, return_section)
+    ttl = (title or "").strip()
+    if not ttl or len(ttl) > 220:
+        return _admin_redirect(ADMIN_MSG_CENTER_POST_INVALID, scroll_y, return_section)
+    summ = (summary or "").strip()[:600]
+    bod = (body or "").strip()
+    if len(bod) > CENTER_POST_MAX_BODY_CHARS:
+        return _admin_redirect(ADMIN_MSG_CENTER_POST_INVALID, scroll_y, return_section)
+
+    pid = 0
+    if (post_id or "").strip().isdigit():
+        pid = int(post_id.strip())
+    row: models.CenterPost | None = None
+    if pid:
+        row = db.get(models.CenterPost, pid)
+        if not row or row.center_id != cid:
+            return _admin_redirect(ADMIN_MSG_CENTER_POST_NOT_FOUND, scroll_y, return_section)
+    else:
+        row = models.CenterPost(center_id=cid, post_type=ptype, title=ttl)
+        db.add(row)
+        db.flush()
+
+    row.post_type = ptype
+    row.title = ttl
+    row.summary = summ if summ else None
+    row.body = bod if bod else None
+    row.is_pinned = _truthy_form_flag(is_pinned)
+    row.is_published = _truthy_form_flag(is_published)
+    if row.is_published and row.published_at is None:
+        row.published_at = utcnow_naive()
+    row.updated_at = utcnow_naive()
+
+    if row.is_pinned:
+        db.query(models.CenterPost).filter(
+            models.CenterPost.center_id == cid,
+            models.CenterPost.id != row.id,
+        ).update({models.CenterPost.is_pinned: False})
+
+    if _truthy_form_flag(remove_cover) and row.cover_image_url:
+        _unlink_static_url_file(row.cover_image_url)
+        row.cover_image_url = None
+
+    cover_raw = (cover.filename or "").strip() if cover else ""
+    if cover and cover_raw:
+        ext = cover_raw.rsplit(".", 1)[-1].lower() if "." in cover_raw else ""
+        if ext not in CENTER_LOGO_ALLOWED_EXT:
+            return _admin_redirect(ADMIN_MSG_CENTER_POST_INVALID, scroll_y, return_section)
+        cbody = await cover.read()
+        if not cbody or len(cbody) > CENTER_LOGO_MAX_BYTES:
+            return _admin_redirect(ADMIN_MSG_CENTER_POST_INVALID, scroll_y, return_section)
+        if row.cover_image_url:
+            _unlink_static_url_file(row.cover_image_url)
+        CENTER_POST_UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
+        dest = CENTER_POST_UPLOAD_DIR / f"center_{cid}_post_{row.id}_cover.{ext}"
+        dest.write_bytes(cbody)
+        row.cover_image_url = f"/static/uploads/centers/posts/{dest.name}"
+
+    cover_remote_raw = (cover_remote_url or "").strip()
+    if cover_remote_raw and not (cover and cover_raw):
+        sanitized_remote = _sanitize_center_post_remote_image_url(cover_remote_raw)
+        if not sanitized_remote:
+            return _admin_redirect(ADMIN_MSG_CENTER_POST_INVALID, scroll_y, return_section)
+        if row.cover_image_url and row.cover_image_url != sanitized_remote:
+            _unlink_static_url_file(row.cover_image_url)
+        row.cover_image_url = sanitized_remote
+
+    for part in (remove_image_ids or "").replace(" ", "").split(","):
+        if not part.isdigit():
+            continue
+        img_id = int(part)
+        img_row = db.get(models.CenterPostImage, img_id)
+        if not img_row or img_row.post_id != row.id:
+            continue
+        _unlink_static_url_file(img_row.image_url)
+        db.delete(img_row)
+
+    form = await request.form()
+    gallery_files = [
+        f
+        for f in form.getlist("gallery")
+        if hasattr(f, "filename") and (getattr(f, "filename", None) or "").strip()
+    ]
+    current_n = (
+        db.query(models.CenterPostImage)
+        .filter(models.CenterPostImage.post_id == row.id)
+        .count()
+    )
+    max_sort = (
+        db.query(func.coalesce(func.max(models.CenterPostImage.sort_order), 0))
+        .filter(models.CenterPostImage.post_id == row.id)
+        .scalar()
+    )
+    next_order = int(max_sort or 0)
+
+    for gf in gallery_files:
+        if current_n >= CENTER_POST_MAX_GALLERY:
+            break
+        gname = (gf.filename or "").strip()
+        ext = gname.rsplit(".", 1)[-1].lower() if "." in gname else ""
+        if ext not in CENTER_LOGO_ALLOWED_EXT:
+            return _admin_redirect(ADMIN_MSG_CENTER_POST_INVALID, scroll_y, return_section)
+        gbody = await gf.read()
+        if not gbody or len(gbody) > CENTER_LOGO_MAX_BYTES:
+            return _admin_redirect(ADMIN_MSG_CENTER_POST_INVALID, scroll_y, return_section)
+        next_order += 1
+        CENTER_POST_UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
+        dest = CENTER_POST_UPLOAD_DIR / f"center_{cid}_post_{row.id}_gallery_{next_order}_{utcnow_naive().timestamp():.0f}.{ext}"
+        dest.write_bytes(gbody)
+        db.add(
+            models.CenterPostImage(
+                post_id=row.id,
+                image_url=f"/static/uploads/centers/posts/{dest.name}",
+                sort_order=next_order,
+            )
+        )
+        current_n += 1
+
+    for remote_g in _parse_center_post_gallery_remote_urls(gallery_remote_urls):
+        if current_n >= CENTER_POST_MAX_GALLERY:
+            break
+        next_order += 1
+        db.add(
+            models.CenterPostImage(
+                post_id=row.id,
+                image_url=remote_g,
+                sort_order=next_order,
+            )
+        )
+        current_n += 1
+
+    db.commit()
+    return _admin_redirect(ADMIN_MSG_CENTER_POST_SAVED, scroll_y, return_section)
+
+
+@router.post("/admin/center/posts/delete")
+def admin_delete_center_post(
+    post_id: int = Form(...),
+    scroll_y: str = Form(default=""),
+    return_section: str = Form(""),
+    db: Session = Depends(get_db),
+    user: models.User = Depends(require_roles_cookie_or_bearer("center_owner", "center_staff")),
+):
+    cid = require_user_center_id(user)
+    row = db.get(models.CenterPost, post_id)
+    if not row or row.center_id != cid:
+        return _admin_redirect(ADMIN_MSG_CENTER_POST_NOT_FOUND, scroll_y, return_section)
+    _delete_center_post_disk_files(cid, row.id)
+    db.delete(row)
+    db.commit()
+    return _admin_redirect(ADMIN_MSG_CENTER_POST_DELETED, scroll_y, return_section)
 
 
 @router.post("/public/subscribe")
@@ -2610,6 +3541,8 @@ def public_subscribe(
                 },
                 success_url=f"{base}/index?center_id={center_id}&payment=success&msg=subscribed",
                 cancel_url=f"{base}/index?center_id={center_id}&payment=cancelled&msg=subscription_cancelled",
+                line_item_name=f"اشتراك — {plan.name}"[:120],
+                line_item_description=f"{center.name} · باقة {plan.plan_type}"[:500],
             )
         except Exception as exc:
             payment_row.status = "failed"

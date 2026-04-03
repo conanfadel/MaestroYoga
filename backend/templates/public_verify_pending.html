@@ -29,6 +29,10 @@
     <h1>تحقق البريد الإلكتروني</h1>
     <p>أرسلنا رابط التحقق إلى: <strong>{{ user.email }}</strong></p>
     <p>بعد التحقق، يمكنك إكمال الحجز والدفع بشكل طبيعي.</p>
+    <p class="alert" style="font-size:.86rem;line-height:1.55;">
+      <strong>لم يصل البريد؟</strong> تحقق من مجلد «العروض/Spam». في الإنتاج يجب ضبط
+      <strong>SMTP_*</strong> و<strong>PUBLIC_BASE_URL</strong> (رابط الموقع الحقيقي مع https) حتى يعمل رابط التأكيد من الجهاز والبريد.
+    </p>
 
     {% if request.query_params.get('msg') == 'registered' %}
       <div class="alert">تم إنشاء الحساب وإرسال رسالة التحقق إلى بريدك.</div>

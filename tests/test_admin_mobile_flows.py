@@ -41,6 +41,61 @@ def test_admin_login_create_delete_room(client):
     assert delete_room.headers["location"].startswith("/admin?msg=room_deleted")
 
 
+def test_admin_center_post_remote_cover_and_gallery_urls(client):
+    login = client.post(
+        "/admin/login",
+        data={"email": "owner@maestroyoga.local", "password": "Admin@12345"},
+        follow_redirects=False,
+    )
+    assert login.status_code == 303
+
+    title = f"Pytest Remote Images Post {int(time.time())}"
+    cover = "https://picsum.photos/seed/pytest-post-cover/800/450"
+    g1 = "https://picsum.photos/seed/pytest-post-g1/400/300"
+    g2 = "https://picsum.photos/seed/pytest-post-g2/400/300"
+    save = client.post(
+        "/admin/center/posts/save",
+        data={
+            "title": title,
+            "post_type": "news",
+            "summary": "اختبار روابط الصور",
+            "body": "نص تجريبي",
+            "is_published": "1",
+            "cover_remote_url": cover,
+            "gallery_remote_urls": f"{g1}\n{g2}, ",
+        },
+        follow_redirects=False,
+    )
+    assert save.status_code == 303
+    assert "center_post_saved" in (save.headers.get("location") or "")
+
+    db = SessionLocal()
+    post = (
+        db.query(models.CenterPost)
+        .filter(models.CenterPost.title == title)
+        .order_by(models.CenterPost.id.desc())
+        .first()
+    )
+    assert post is not None
+    assert post.cover_image_url == cover
+    urls = [
+        img.image_url
+        for img in sorted(post.images, key=lambda x: (x.sort_order, x.id))
+    ]
+    assert urls == [g1, g2]
+    db.close()
+
+    detail = client.get(f"/post?center_id={post.center_id}&post_id={post.id}")
+    assert detail.status_code == 200
+    assert cover in detail.text
+
+    client.post(
+        "/admin/center/posts/delete",
+        data={"post_id": str(post.id)},
+        follow_redirects=False,
+    )
+
+
 def test_admin_center_branding_upload_and_tagline(client):
     login = client.post(
         "/admin/login",
@@ -85,6 +140,33 @@ def test_admin_center_branding_upload_and_tagline(client):
     center = db.get(models.Center, center_id)
     assert center is not None
     assert center.hero_image_url and f"center_{center_id}_hero.jpg" in center.hero_image_url
+    assert center.hero_show_stock_photo is False
+    db.close()
+
+    rm_hero = client.post(
+        "/admin/center/branding",
+        data={"scroll_y": "0", "remove_hero": "1"},
+        follow_redirects=False,
+    )
+    assert rm_hero.status_code == 303
+    db = SessionLocal()
+    center = db.get(models.Center, center_id)
+    assert center is not None
+    assert center.hero_image_url is None
+    assert center.hero_show_stock_photo is False
+    db.close()
+
+    restore = client.post(
+        "/admin/center/branding",
+        data={"scroll_y": "0", "restore_hero_stock": "1"},
+        follow_redirects=False,
+    )
+    assert restore.status_code == 303
+    db = SessionLocal()
+    center = db.get(models.Center, center_id)
+    assert center is not None
+    assert center.hero_image_url is None
+    assert center.hero_show_stock_photo is True
     db.close()
 
     bad = client.post(

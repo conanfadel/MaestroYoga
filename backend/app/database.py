@@ -62,6 +62,9 @@ def _ensure_performance_indexes(conn, insp) -> None:
         ("client_subscriptions", "idx_client_subscriptions_plan_id", "plan_id"),
         ("public_users", "idx_public_users_created_at", "created_at"),
         ("security_audit_events", "idx_security_audit_created_status", "created_at, status"),
+        ("center_posts", "idx_center_posts_center_published_pinned", "center_id, is_published, is_pinned"),
+        ("center_posts", "idx_center_posts_published_at", "published_at"),
+        ("center_post_images", "idx_center_post_images_post_id", "post_id"),
     ]
     for table_name, index_name, columns in index_specs:
         if insp.has_table(table_name):
@@ -90,11 +93,13 @@ def migrate_schema() -> None:
     needs_center_logo_url = False
     needs_center_brand_tagline = False
     needs_center_hero_image_url = False
+    needs_center_hero_show_stock_photo = False
     if insp.has_table("centers"):
         center_cols = {c["name"] for c in insp.get_columns("centers")}
         needs_center_logo_url = "logo_url" not in center_cols
         needs_center_brand_tagline = "brand_tagline" not in center_cols
         needs_center_hero_image_url = "hero_image_url" not in center_cols
+        needs_center_hero_show_stock_photo = "hero_show_stock_photo" not in center_cols
 
     if (
         not needs_payment_booking_id
@@ -104,6 +109,7 @@ def migrate_schema() -> None:
         and not needs_center_logo_url
         and not needs_center_brand_tagline
         and not needs_center_hero_image_url
+        and not needs_center_hero_show_stock_photo
     ):
         with engine.begin() as conn:
             _cleanup_stale_center_logo_urls_sql(conn)
@@ -129,6 +135,14 @@ def migrate_schema() -> None:
             conn.execute(text("ALTER TABLE centers ADD COLUMN brand_tagline VARCHAR"))
         if needs_center_hero_image_url:
             conn.execute(text("ALTER TABLE centers ADD COLUMN hero_image_url VARCHAR"))
+        if needs_center_hero_show_stock_photo:
+            if dialect == "postgresql":
+                conn.execute(
+                    text("ALTER TABLE centers ADD COLUMN hero_show_stock_photo BOOLEAN NOT NULL DEFAULT TRUE")
+                )
+            else:
+                conn.execute(text("ALTER TABLE centers ADD COLUMN hero_show_stock_photo BOOLEAN DEFAULT 1"))
+                conn.execute(text("UPDATE centers SET hero_show_stock_photo = 1 WHERE hero_show_stock_photo IS NULL"))
         _cleanup_stale_center_logo_urls_sql(conn)
         _clear_legacy_default_hero_url(conn, inspect(conn))
         _ensure_performance_indexes(conn, insp)

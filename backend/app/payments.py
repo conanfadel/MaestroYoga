@@ -24,6 +24,9 @@ class BasePaymentProvider:
         metadata: dict[str, Any],
         success_url: str,
         cancel_url: str,
+        *,
+        line_item_name: str = "Maestro Yoga",
+        line_item_description: str = "",
     ) -> PaymentResult:
         raise NotImplementedError
 
@@ -39,6 +42,9 @@ class MockPaymentProvider(BasePaymentProvider):
         metadata: dict[str, Any],
         success_url: str,
         cancel_url: str,
+        *,
+        line_item_name: str = "Maestro Yoga",
+        line_item_description: str = "",
     ) -> PaymentResult:
         return PaymentResult(
             provider_ref=f"mock_checkout_{uuid4().hex[:12]}",
@@ -65,23 +71,40 @@ class StripePaymentProvider(BasePaymentProvider):
         metadata: dict[str, Any],
         success_url: str,
         cancel_url: str,
+        *,
+        line_item_name: str = "Maestro Yoga",
+        line_item_description: str = "",
     ) -> PaymentResult:
-        session = stripe.checkout.Session.create(
-            mode="payment",
-            success_url=success_url,
-            cancel_url=cancel_url,
-            line_items=[
+        """
+        Checkout بالبطاقة (SAR). لحساب Stripe مسجّل في السعودية تُقبل بطاقات **مدى**
+        ضمن نموذج البطاقة نفسه — راجع توثيق Stripe لمادا.
+        """
+        locale = os.getenv("STRIPE_CHECKOUT_LOCALE", "auto").strip() or "auto"
+        product_data: dict[str, Any] = {"name": (line_item_name or "Maestro Yoga")[:120]}
+        desc = (line_item_description or "").strip()
+        if desc:
+            product_data["description"] = desc[:500]
+
+        create_kwargs: dict[str, Any] = {
+            "mode": "payment",
+            "success_url": success_url,
+            "cancel_url": cancel_url,
+            "line_items": [
                 {
                     "price_data": {
                         "currency": currency.lower(),
-                        "product_data": {"name": "Maestro Yoga Session"},
+                        "product_data": product_data,
                         "unit_amount": int(round(amount * 100)),
                     },
                     "quantity": 1,
                 }
             ],
-            metadata=metadata,
-        )
+            "metadata": metadata,
+        }
+        if locale.lower() != "auto":
+            create_kwargs["locale"] = locale
+
+        session = stripe.checkout.Session.create(**create_kwargs)
         return PaymentResult(provider_ref=session.id, status="pending", checkout_url=session.url)
 
     @staticmethod

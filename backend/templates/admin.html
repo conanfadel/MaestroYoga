@@ -103,6 +103,13 @@
       box-shadow: none;
     }
     a.btn.secondary:hover { border-color: var(--gold); }
+    button.secondary {
+      background: transparent;
+      color: var(--charcoal);
+      border: 2px solid var(--mint-mid);
+      box-shadow: none;
+    }
+    button.secondary:hover { border-color: var(--gold); box-shadow: 0 4px 14px rgba(197, 160, 89, 0.2); }
     .stats {
       display: grid;
       grid-template-columns: repeat(auto-fill, minmax(128px, 1fr));
@@ -118,6 +125,106 @@
     }
     .stat .k { color: var(--charcoal-muted); font-size: .82rem; font-weight: 600; }
     .stat .v { color: var(--gold-dark); font-size: 1.45rem; font-weight: 800; margin-top: 6px; }
+    .admin-insights {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-bottom: 14px;
+    }
+    .admin-insight {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 14px;
+      border-radius: 14px;
+      text-decoration: none;
+      font-weight: 700;
+      font-size: 0.9rem;
+      border: 1px solid rgba(197, 160, 89, 0.35);
+      background: var(--white);
+      color: var(--charcoal);
+      box-shadow: 0 6px 18px rgba(45, 52, 54, 0.06);
+      transition: transform 0.12s ease, box-shadow 0.12s ease;
+    }
+    .admin-insight:hover { transform: translateY(-1px); box-shadow: 0 10px 24px rgba(45, 52, 54, 0.1); }
+    .admin-insight.warn {
+      border-color: #fcd34d;
+      background: #fffbeb;
+      color: #92400e;
+    }
+    .admin-insight.info {
+      border-color: rgba(170, 240, 209, 0.95);
+      background: var(--mint-bg);
+    }
+    .revenue-7d-wrap {
+      margin-bottom: 14px;
+      background: var(--white);
+      border: 1px solid rgba(197, 160, 89, 0.22);
+      border-radius: 18px;
+      padding: 14px 16px;
+      box-shadow: 0 10px 28px rgba(45, 52, 54, 0.06);
+    }
+    .revenue-7d-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-bottom: 12px;
+    }
+    .revenue-7d-bars {
+      display: flex;
+      align-items: flex-end;
+      gap: 8px;
+      min-height: 110px;
+    }
+    .revenue-7d-bar-col {
+      flex: 1;
+      min-width: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+    }
+    .revenue-7d-bar {
+      width: 100%;
+      max-width: 48px;
+      margin: 0 auto;
+      border-radius: 8px 8px 4px 4px;
+      background: linear-gradient(180deg, var(--gold) 0%, var(--mint-mid) 100%);
+      min-height: 4px;
+      transition: height 0.2s ease;
+    }
+    .revenue-7d-label { font-size: 0.72rem; color: var(--charcoal-muted); font-weight: 600; }
+    .revenue-7d-amt { font-size: 0.7rem; color: var(--gold-dark); font-weight: 800; }
+    .ops-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(min(100%, 260px), 1fr));
+      gap: 12px;
+      margin-bottom: 14px;
+    }
+    .ops-card {
+      background: var(--white);
+      border: 1px solid rgba(197, 160, 89, 0.22);
+      border-radius: 16px;
+      padding: 14px;
+      box-shadow: 0 8px 22px rgba(45, 52, 54, 0.05);
+    }
+    .ops-card h3 { margin: 0 0 10px; font-size: 1rem; color: var(--charcoal); }
+    .ops-list { margin: 0; padding: 0; list-style: none; font-size: 0.88rem; }
+    .ops-list li { padding: 8px 0; border-bottom: 1px solid #eef2f6; }
+    .ops-list li:last-child { border-bottom: 0; }
+    .conflict-banner {
+      margin: 0 0 12px;
+      padding: 12px 14px;
+      border-radius: 12px;
+      border: 1px solid #fecaca;
+      background: #fef2f2;
+      color: #991b1b;
+      font-size: 0.9rem;
+    }
+    .top-actions { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+    button.btn-inline, .top-actions button { margin-top: 0; }
     .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 252px), 1fr)); gap: 14px; }
     .card {
       background: var(--white);
@@ -526,14 +633,57 @@
         <h1><span>لوحة الإدارة</span> | {{ center.name if center else 'المركز' }}</h1>
         <div class="muted">مرحبًا {{ user.full_name }} · {{ user.email }}</div>
       </div>
-      <div>
-        <a class="btn secondary" href="/index">الواجهة العامة</a>
+      <div class="top-actions">
+        <button type="button" class="secondary" id="admin-copy-public-url" data-public-url="{{ request.url.scheme }}://{{ request.url.netloc }}{{ admin_public_index_url }}" title="نسخ رابط صفحة الحجز للمركز">نسخ رابط الواجهة العامة</button>
+        <a class="btn secondary" href="{{ admin_public_index_url }}">الواجهة العامة</a>
         <a class="btn" href="/admin/logout">تسجيل الخروج</a>
       </div>
     </div>
 
     {% if admin_flash %}
       <div class="alert{{ ' warn' if admin_flash.level == 'warn' else '' }}">{{ admin_flash.text }}</div>
+    {% endif %}
+
+    {% if admin_insights %}
+    <div class="admin-insights" role="navigation" aria-label="تنبيهات سريعة">
+      {% for it in admin_insights %}
+      <a class="admin-insight {{ it.kind }}" href="{{ it.href }}">{{ it.label }} →</a>
+      {% endfor %}
+    </div>
+    {% endif %}
+
+    {% if revenue_7d_bars %}
+    <div class="revenue-7d-wrap" aria-label="إيراد آخر 7 أيام">
+      <div class="revenue-7d-head">
+        <strong>إيراد مدفوعات آخر 7 أيام (ريال)</strong>
+        <span class="small">مجموع أسبوعي تقريبي للمقارنة البصرية</span>
+      </div>
+      <div class="revenue-7d-bars">
+        {% for b in revenue_7d_bars %}
+        <div class="revenue-7d-bar-col">
+          <div class="revenue-7d-bar" style="height: {{ b.bar_pct }}px; max-height: 96px;" title="{{ b.amount }} ريال"></div>
+          <span class="revenue-7d-label">{{ b.label }}</span>
+          <span class="revenue-7d-amt">{{ '%.0f'|format(b.amount) }}</span>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+    {% endif %}
+
+    {% if not is_trainer %}
+    <div class="card" style="margin-bottom:14px;">
+      <h2 style="margin-bottom:8px;">قالب رسالة تذكير بالحجز</h2>
+      <p class="small" style="margin:0 0 8px;">انسخ النص وعدّله في تطبيق الرسائل أو البريد (لا يُرسل تلقائياً من النظام).</p>
+      <textarea id="admin-reminder-template" readonly rows="5" style="min-height:120px;">مرحبًا [اسم_العميل]،
+
+نذكّرك بجلسة اليوغا «[عنوان_الجلسة]» يوم [التاريخ_والوقت] في [اسم_المركز].
+
+رابط الحجز والتفاصيل:
+{{ request.url.scheme }}://{{ request.url.netloc }}{{ admin_public_index_url }}
+
+مع تحيات فريق {{ center.name if center else 'المركز' }}</textarea>
+      <button type="button" class="btn-inline" id="admin-copy-reminder-btn">نسخ القالب</button>
+    </div>
     {% endif %}
 
     <div class="stats">
@@ -551,6 +701,7 @@
     </div>
 
     <div class="section-tabs" id="section-tabs">
+      {% if not is_trainer %}
       <a class="section-tab" data-target="section-branding" href="#section-branding">
         هوية المركز
       </a>
@@ -563,17 +714,31 @@
       <a class="section-tab" data-target="section-public-users" href="#section-public-users">
         إدارة مستخدمي الجمهور
       </a>
+      <a class="section-tab" data-target="section-center-posts" href="#section-center-posts">
+        أخبار ومنشورات المركز
+      </a>
+      {% endif %}
+      {% if is_trainer %}
+      <a class="section-tab" data-target="section-rooms" href="#section-rooms">
+        نشر جلسة جديدة
+      </a>
+      {% endif %}
       <a class="section-tab" data-target="section-sessions" href="#section-sessions">
         إدارة الجلسات والمدفوعات
       </a>
+      {% if not is_trainer %}
       <a class="section-tab" data-target="section-faq" href="#section-faq">
         إدارة الأسئلة الشائعة
       </a>
+      {% endif %}
+      {% if show_security_section %}
       <a class="section-tab" data-target="section-security" href="#section-security">
         مركز الأمان والمخاطر
       </a>
+      {% endif %}
     </div>
 
+    {% if not is_trainer %}
     <section id="section-branding" class="accordion">
       <div class="accordion-body">
         <div class="card">
@@ -583,7 +748,7 @@
           <form method="post" action="/admin/center/branding" enctype="multipart/form-data" data-preserve-scroll="1">
             <h3 class="branding-subhead">صورة الغلاف (أعلى صفحة الحجز)</h3>
             <p class="small" style="margin:0 0 10px;line-height:1.55;">
-              تظهر بجانب عنوان المركز في الواجهة العامة. يُفضّل <strong>صورة أفقية</strong> بنسبة تقريبية <strong>3∶2</strong> أو <strong>16∶9</strong>، بعرض حوالي <strong>1200–1600 بكسل</strong> (ارتفاع نحو 600–900 بكسل)، بصيغة PNG أو JPG أو WebP أو GIF — حتى <strong>2 ميجابايت</strong> لكل ملف.
+              تظهر بجانب عنوان المركز في الواجهة العامة. بدون رفع صورة يمكنك اختيار <strong>صورة يوغا توضيحية</strong> (افتراضي) أو <strong>تدرج ألوان فقط</strong>. عند رفع غلاف مخصص يُستبدل العرض بالكامل. يُفضّل <strong>صورة أفقية</strong> بنسبة تقريبية <strong>3∶2</strong> أو <strong>16∶9</strong>، بعرض حوالي <strong>1200–1600 بكسل</strong> (ارتفاع نحو 600–900 بكسل)، بصيغة PNG أو JPG أو WebP أو GIF — حتى <strong>2 ميجابايت</strong> لكل ملف.
             </p>
             {% if center and center.hero_image_url %}
             <p class="small" style="margin-bottom:8px;">معاينة الغلاف الحالي:</p>
@@ -597,9 +762,24 @@
             <div class="branding-remove-zone" role="group" aria-labelledby="remove-hero-label" style="margin-top:14px;">
               <div class="branding-remove-zone__head">
                 <input type="checkbox" id="remove_hero_chk" class="branding-remove-zone__checkbox" name="remove_hero" value="1" />
-                <label id="remove-hero-label" class="branding-remove-zone__title" for="remove_hero_chk">إزالة صورة الغلاف بالكامل</label>
+                <label id="remove-hero-label" class="branding-remove-zone__title" for="remove_hero_chk">إزالة صورة الغلاف المرفوعة</label>
               </div>
-              <p class="branding-remove-zone__help">بعد الحفظ يُخفى مربع الغلاف بالكامل في أعلى صفحة الحجز حتى ترفع صورة غلاف جديدة.</p>
+              <p class="branding-remove-zone__help">بعد الحفظ يظهر في الواجهة العامة <strong>التدرج اللوني فقط</strong> (بدون صورة يوغا توضيحية). يمكنك لاحقًا استعادة الصورة التوضيحية أو رفع غلاف جديد.</p>
+            </div>
+            {% endif %}
+            {% if center and not center.hero_image_url and (center.hero_show_stock_photo | default(true)) %}
+            <div class="branding-remove-zone" role="group" aria-labelledby="hero-gradient-only-label" style="margin-top:14px;">
+              <div class="branding-remove-zone__head">
+                <input type="checkbox" id="hero_gradient_only_chk" class="branding-remove-zone__checkbox" name="hero_gradient_only" value="1" />
+                <label id="hero-gradient-only-label" class="branding-remove-zone__title" for="hero_gradient_only_chk">التدرج اللوني فقط (إخفاء صورة اليوغا التوضيحية)</label>
+              </div>
+              <p class="branding-remove-zone__help">فعّل الخيار ثم اضغط «حفظ هوية المركز» لإظهار خلفية متدرجة فقط في الواجهة العامة.</p>
+            </div>
+            {% endif %}
+            {% if center and not center.hero_image_url and not (center.hero_show_stock_photo | default(true)) %}
+            <div style="margin-top:14px;">
+              <button type="submit" name="restore_hero_stock" value="1" class="soft">استعادة صورة اليوغا التوضيحية</button>
+              <p class="small" style="margin:8px 0 0;line-height:1.55;">يُعاد عرض صورة اليوغا الافتراضية للتطبيق (متناسقة مع ألوان الواجهة) فوق التدرج في صفحة الحجز.</p>
             </div>
             {% endif %}
 
@@ -636,10 +816,12 @@
         </div>
       </div>
     </section>
+    {% endif %}
 
     <section id="section-rooms" class="accordion">
       <div class="accordion-body">
     <div class="grid" style="margin-bottom:14px;">
+      {% if not is_trainer %}
       <div class="card">
         <h2>إضافة غرفة</h2>
         <form method="post" action="/admin/rooms" data-preserve-scroll="1">
@@ -650,6 +832,7 @@
           <button type="submit">حفظ الغرفة</button>
         </form>
       </div>
+      {% endif %}
 
       <div class="card">
         <h2>إضافة جلسة جديدة</h2>
@@ -682,6 +865,7 @@
         </form>
       </div>
 
+      {% if not is_trainer %}
       <div class="card">
         <h2>إضافة خطة اشتراك</h2>
         <form method="post" action="/admin/plans" data-preserve-scroll="1">
@@ -700,7 +884,9 @@
           <button type="submit">حفظ الخطة</button>
         </form>
       </div>
+      {% endif %}
     </div>
+    {% if not is_trainer %}
     <div class="card" style="margin-top:0;">
       <h2>إدارة الغرف (تعديل الاسم/السعة/الحذف)</h2>
       <form method="get" action="/admin" class="filters" style="margin-bottom:10px;">
@@ -774,9 +960,11 @@
         </table>
       </div>
     </div>
+    {% endif %}
       </div>
     </section>
 
+    {% if not is_trainer %}
     <section id="section-plans" class="accordion">
       <div class="accordion-body">
     <div class="card" style="margin-top:0;">
@@ -1000,8 +1188,186 @@
       </div>
     </section>
 
+    <section id="section-center-posts" class="accordion">
+      <div class="accordion-body">
+        <div class="card" style="margin-top:0;">
+          <h2>أخبار ومنشورات المركز</h2>
+          <p class="small" style="margin:0 0 14px;line-height:1.55;">
+            يظهر المحتوى المنشور في صفحة الحجز العامة ضمن قسم «ما الجديد في المركز» مع صورة غلاف ومعرض. يمكنك رفع الصور أو إرفاقها بروابط مباشرة (https). الأنواع: أخبار، إعلانات، رحلات، مسابقات، تقارير. حد النص حوالي 24 ألف حرف، والمعرض حتى 15 صورة إجمالًا (ملفات أو روابط)، حتى 2 ميجابايت لكل ملف مرفوع.
+          </p>
+          <p style="margin:0 0 14px;">
+            <a class="soft-link" href="/admin#section-center-posts">منشور جديد</a>
+            {% if editing_post %}
+            <span class="small" style="margin-inline-start:10px;">تعديل المنشور #{{ editing_post.id }}</span>
+            {% endif %}
+          </p>
+
+          <form
+            id="center-post-save-form"
+            method="post"
+            action="/admin/center/posts/save"
+            enctype="multipart/form-data"
+            data-preserve-scroll="1"
+            class="form"
+            style="margin-bottom:20px;"
+          >
+            <input type="hidden" name="post_id" value="{{ editing_post.id if editing_post else '' }}" />
+            <input type="hidden" name="remove_image_ids" id="center-post-remove-ids" value="" />
+            <label for="cp_title">عنوان المنشور</label>
+            <input id="cp_title" name="title" required maxlength="220" value="{{ editing_post.title if editing_post else '' }}" placeholder="مثال: رحلة يوغا إلى الجبال" />
+            <label for="cp_type">نوع المنشور</label>
+            <select id="cp_type" name="post_type" required>
+              {% for c in center_post_type_choices %}
+              <option value="{{ c.value }}" {{ 'selected' if editing_post and editing_post.post_type == c.value else '' }}>{{ c.label }}</option>
+              {% endfor %}
+            </select>
+            <label for="cp_summary">ملخص قصير (يظهر في البطاقات)</label>
+            <textarea id="cp_summary" name="summary" rows="2" maxlength="600" placeholder="سطر أو سطران للمعاينة في الصفحة العامة">{{ editing_post.summary if editing_post else '' }}</textarea>
+            <label for="cp_body">نص تفصيلي (اختياري)</label>
+            <textarea id="cp_body" name="body" rows="10" placeholder="النص الكامل في صفحة التفاصيل">{{ editing_post.body if editing_post else '' }}</textarea>
+            <label style="display:flex;align-items:center;gap:8px;">
+              <input type="checkbox" name="is_published" value="1" style="width:auto;" {{ 'checked' if not editing_post or editing_post.is_published else '' }} />
+              منشور للجمهور
+            </label>
+            <label style="display:flex;align-items:center;gap:8px;">
+              <input type="checkbox" name="is_pinned" value="1" style="width:auto;" {{ 'checked' if editing_post and editing_post.is_pinned else '' }} />
+              تثبيت في أعلى قسم الأخبار (منشور واحد فقط)
+            </label>
+            <label for="cp_cover">صورة الغلاف — رفع ملف (اختياري)</label>
+            <input id="cp_cover" name="cover" type="file" accept="image/png,image/jpeg,image/webp,image/gif,.png,.jpg,.jpeg,.webp,.gif" />
+            <label for="cp_cover_remote">أو رابط صورة الغلاف من الإنترنت (http/https)</label>
+            <input
+              id="cp_cover_remote"
+              name="cover_remote_url"
+              type="url"
+              inputmode="url"
+              placeholder="https://example.com/cover.jpg"
+              value="{% if editing_post and editing_post.cover_image_url and (editing_post.cover_image_url.startswith('http://') or editing_post.cover_image_url.startswith('https://')) %}{{ editing_post.cover_image_url }}{% endif %}"
+            />
+            <p class="small" style="margin:6px 0 10px;line-height:1.5;">
+              إذا رفعت ملفًا أعلاه يُستخدم الملف ويُتجاهل الرابط في نفس الطلب. اترك حقل الرابط فارغًا دون تغيير لإبقاء غلاف مرفوع سابقًا من السيرفر.
+            </p>
+            {% if editing_post and editing_post.cover_image_url %}
+            <div style="margin:10px 0;border-radius:12px;overflow:hidden;border:1px solid rgba(197,160,89,0.28);max-width:320px;">
+              <img src="{{ editing_post.cover_image_url }}" alt="غلاف حالي" style="width:100%;max-height:140px;object-fit:cover;display:block;" />
+            </div>
+            <label style="display:flex;align-items:center;gap:8px;">
+              <input type="checkbox" name="remove_cover" value="1" style="width:auto;" />
+              إزالة صورة الغلاف
+            </label>
+            {% endif %}
+            <label for="cp_gallery_remote">روابط صور المعرض من الإنترنت (سطر لكل رابط، أو مفصولة بفواصل)</label>
+            <textarea id="cp_gallery_remote" name="gallery_remote_urls" rows="3" placeholder="https://example.com/a.jpg&#10;https://example.com/b.jpg"></textarea>
+            <p class="small" style="margin:6px 0 10px;">تُضاف بعد الملفات المرفوعة في نفس الطلب؛ الروابط غير الصالحة تُتخطّى. الحد الأقصى 15 صورة للمعرض إجمالًا.</p>
+            <label for="cp_gallery">صور المعرض — رفع ملفات (يمكن اختيار عدة ملفات)</label>
+            <input id="cp_gallery" name="gallery" type="file" accept="image/png,image/jpeg,image/webp,image/gif,.png,.jpg,.jpeg,.webp,.gif" multiple />
+            {% if editing_post and editing_post.gallery %}
+            <p class="small" style="margin:12px 0 8px;">صور المعرض الحالية — حدد «حذف» لإزالتها عند الحفظ:</p>
+            <div style="display:flex;flex-wrap:wrap;gap:12px;margin-bottom:12px;">
+              {% for g in editing_post.gallery %}
+              <div style="border:1px solid rgba(197,160,89,0.25);border-radius:10px;padding:8px;background:var(--page-bg);max-width:140px;">
+                <img src="{{ g.url }}" alt="" style="width:120px;height:80px;object-fit:cover;border-radius:6px;display:block;margin-bottom:6px;" />
+                <label class="small" style="display:flex;align-items:center;gap:6px;">
+                  <input type="checkbox" class="js-rm-gallery" value="{{ g.id }}" style="width:auto;" />
+                  حذف
+                </label>
+              </div>
+              {% endfor %}
+            </div>
+            {% endif %}
+            <button type="submit">{{ 'حفظ التعديلات' if editing_post else 'إنشاء المنشور' }}</button>
+          </form>
+
+          <h3 style="margin:0 0 10px;font-size:1.1rem;">كل المنشورات</h3>
+          <div class="table-fluid">
+            <table>
+              <thead>
+                <tr>
+                  <th>#</th>
+                  <th>العنوان</th>
+                  <th>النوع</th>
+                  <th>جمهور</th>
+                  <th>تثبيت</th>
+                  <th>معرض</th>
+                  <th>آخر تحديث</th>
+                  <th>إجراءات</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for row in center_post_admin_rows %}
+                <tr>
+                  <td>{{ row.id }}</td>
+                  <td>{{ row.title }}</td>
+                  <td>{{ row.type_label }}</td>
+                  <td><span class="badge {{ 'completed' if row.is_published else 'pending' }}">{{ 'منشور' if row.is_published else 'مسودة' }}</span></td>
+                  <td>{% if row.is_pinned %}نعم{% else %}—{% endif %}</td>
+                  <td>{{ row.gallery_count }}</td>
+                  <td>{{ row.updated_display }}</td>
+                  <td>
+                    <div class="controls-wrap">
+                      {% if row.public_url %}
+                      <a class="soft-link" href="{{ row.public_url }}" target="_blank" rel="noopener">معاينة</a>
+                      {% endif %}
+                      <a class="soft-link" data-preserve-scroll-link="1" href="{{ row.edit_url }}">تعديل</a>
+                      <form method="post" action="/admin/center/posts/delete" data-preserve-scroll="1" onsubmit="return confirm('حذف هذا المنشور نهائياً؟');" style="display:inline;">
+                        <input type="hidden" name="post_id" value="{{ row.id }}" />
+                        <button type="submit" class="danger">حذف</button>
+                      </form>
+                    </div>
+                  </td>
+                </tr>
+                {% else %}
+                <tr><td colspan="8">لا توجد منشورات بعد. أنشئ منشوراً من النموذج أعلاه.</td></tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    {% endif %}
+
     <section id="section-sessions" class="accordion">
       <div class="accordion-body">
+    {% if ops_today_rows or ops_tomorrow_rows %}
+    <div class="ops-grid">
+      <div class="ops-card">
+        <h3>جلسات اليوم</h3>
+        {% if ops_today_rows %}
+        <ul class="ops-list">
+          {% for o in ops_today_rows %}
+          <li><strong>{{ o.title }}</strong> — {{ o.room }} — {{ o.starts }} · متاح {{ o.spots }}/{{ o.capacity }}</li>
+          {% endfor %}
+        </ul>
+        {% else %}
+        <p class="small" style="margin:0;">لا توجد جلسات مجدولة اليوم.</p>
+        {% endif %}
+      </div>
+      <div class="ops-card">
+        <h3>جلسات الغد</h3>
+        {% if ops_tomorrow_rows %}
+        <ul class="ops-list">
+          {% for o in ops_tomorrow_rows %}
+          <li><strong>{{ o.title }}</strong> — {{ o.room }} — {{ o.starts }} · متاح {{ o.spots }}/{{ o.capacity }}</li>
+          {% endfor %}
+        </ul>
+        {% else %}
+        <p class="small" style="margin:0;">لا توجد جلسات مجدولة غدًا.</p>
+        {% endif %}
+      </div>
+    </div>
+    {% endif %}
+    {% if schedule_conflicts %}
+    <div class="conflict-banner" role="alert">
+      <strong>تضارب في الجدولة:</strong> جلسات متداخلة زمنيًا في نفس الغرفة. راجع الجدول أدناه أو عدّل الأوقات.
+      <ul style="margin:8px 0 0;padding-inline-start:1.2rem;">
+        {% for c in schedule_conflicts %}
+        <li>{{ c.room_name }}: «{{ c.a_title }}» ({{ c.a_start }}) يتداخل مع «{{ c.b_title }}» ({{ c.b_start }})</li>
+        {% endfor %}
+      </ul>
+    </div>
+    {% endif %}
     <div class="card" style="margin-top:0;">
       <h2>الجلسات الحالية</h2>
       <div class="table-fluid">
@@ -1054,6 +1420,29 @@
 
     <div class="card" style="margin-top:14px;">
       <h2>آخر المدفوعات</h2>
+      {% if not is_trainer %}
+      <p class="small" style="margin:0 0 10px;">
+        <a class="soft-link" href="{{ data_export_urls.clients }}">تصدير العملاء CSV</a>
+        · <a class="soft-link" href="{{ data_export_urls.bookings }}">تصدير الحجوزات CSV</a>
+        · <a class="soft-link" href="{{ data_export_urls.payments }}">تصدير المدفوعات CSV</a>
+      </p>
+      <form method="get" action="/admin" class="filters" style="margin-bottom:12px;flex-wrap:wrap;">
+        <input type="hidden" name="public_user_page" value="{{ public_user_pagination.page }}" />
+        <input type="hidden" name="audit_page" value="{{ security_pagination.page }}" />
+        <input type="hidden" name="sessions_page" value="{{ sessions_pagination.page }}" />
+        <input type="hidden" name="payments_page" value="1" />
+        <input type="hidden" name="room_sort" value="{{ room_filters.sort }}" />
+        <label style="display:flex;align-items:center;gap:8px;margin:0;">
+          <span class="small" style="margin:0;">من تاريخ</span>
+          <input type="date" name="payment_date_from" value="{{ payment_date_from_value }}" style="width:auto;min-width:140px;" />
+        </label>
+        <label style="display:flex;align-items:center;gap:8px;margin:0;">
+          <span class="small" style="margin:0;">إلى تاريخ</span>
+          <input type="date" name="payment_date_to" value="{{ payment_date_to_value }}" style="width:auto;min-width:140px;" />
+        </label>
+        <button type="submit" style="margin-top:0;">تصفية المدفوعات</button>
+      </form>
+      {% endif %}
       <div class="table-fluid">
         <table>
           <thead>
@@ -1095,6 +1484,7 @@
       </div>
     </section>
 
+    {% if not is_trainer %}
     <section id="section-faq" class="accordion">
       <div class="accordion-body">
     <div class="card" style="margin-top:0;">
@@ -1172,11 +1562,13 @@
     </div>
       </div>
     </section>
+    {% endif %}
 
+    {% if show_security_section %}
     <section id="section-security" class="accordion">
       <div class="accordion-body">
     <div class="card" style="margin-top:0;">
-      <h2>Security Audit Logs</h2>
+      <h2>سجل الأمان والتدقيق</h2>
       <p class="small" style="margin: 0 0 8px;">
         محاولات دخول فاشلة خلال آخر 24 ساعة: <strong>{{ security_summary.failed_logins_24h }}</strong>
         {% if security_summary.suspicious_ips %}
@@ -1197,8 +1589,33 @@
           {% endfor %}
         {% endif %}
       </p>
+      <h3 style="margin:14px 0 8px;font-size:1rem;">دخول لوحة الإدارة (أحدث 20 سجلًا)</h3>
+      <div class="table-fluid" style="margin-bottom:14px;">
+        <table>
+          <thead>
+            <tr>
+              <th>الوقت</th>
+              <th>الحالة</th>
+              <th>البريد</th>
+              <th>IP</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for al in admin_login_audit_rows %}
+            <tr>
+              <td>{{ al.created_at_display }}</td>
+              <td><span class="badge">{{ al.status }}</span></td>
+              <td>{{ al.email }}</td>
+              <td>{{ al.ip }}</td>
+            </tr>
+            {% else %}
+            <tr><td colspan="4">لا توجد سجلات دخول للإدارة بعد.</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
       <p style="margin: 0 0 10px;">
-        <a class="btn" href="{{ security_export_url }}">تصدير CSV للسجلات الحالية</a>
+        <a class="btn" href="{{ security_export_url }}">تصدير CSV لسجل الأمان (الفلتر الحالي)</a>
       </p>
       <form method="post" action="/admin/security/ip-block" data-preserve-scroll="1" class="filters" style="margin-bottom:10px;">
         <input name="ip" placeholder="IP للحظر اليدوي" required />
@@ -1329,6 +1746,7 @@
     </div>
       </div>
     </section>
+    {% endif %}
   </div>
   <script>
     (function () {
@@ -1351,6 +1769,13 @@
           scrollInput.name = "scroll_y";
           form.appendChild(scrollInput);
         }
+        let returnSectionInput = form.querySelector("input[name='return_section']");
+        if (!returnSectionInput) {
+          returnSectionInput = document.createElement("input");
+          returnSectionInput.type = "hidden";
+          returnSectionInput.name = "return_section";
+          form.appendChild(returnSectionInput);
+        }
         form.addEventListener("submit", function () {
           const y = String(window.scrollY || 0);
           scrollInput.value = y;
@@ -1358,6 +1783,9 @@
           const sectionId = closestAccordionId(form);
           if (sectionId) {
             sessionStorage.setItem(ACTIVE_SECTION_KEY, sectionId);
+            returnSectionInput.value = sectionId;
+          } else {
+            returnSectionInput.value = sessionStorage.getItem(ACTIVE_SECTION_KEY) || "";
           }
         });
       });
@@ -1370,6 +1798,17 @@
           }
         });
       });
+
+      const centerPostForm = document.getElementById("center-post-save-form");
+      if (centerPostForm) {
+        centerPostForm.addEventListener("submit", function () {
+          const ids = Array.from(centerPostForm.querySelectorAll(".js-rm-gallery:checked")).map(function (c) {
+            return c.value;
+          });
+          const h = document.getElementById("center-post-remove-ids");
+          if (h) h.value = ids.join(",");
+        });
+      }
 
       const params = new URLSearchParams(window.location.search);
       const fromQuery = params.get("scroll_y");
@@ -1573,9 +2012,55 @@
           highlightSection(section);
           section.scrollIntoView({ behavior: prefersReducedMotion ? "auto" : "smooth", block: "start" });
           refreshActiveTab();
+          if (targetId && window.history && window.history.replaceState) {
+            const url = window.location.pathname + window.location.search + "#" + targetId;
+            window.history.replaceState(null, "", url);
+          }
         });
       });
       refreshActiveTab();
+
+      var copyPub = document.getElementById("admin-copy-public-url");
+      if (copyPub) {
+        copyPub.addEventListener("click", function () {
+          var u = copyPub.getAttribute("data-public-url") || "";
+          if (!u) return;
+          if (navigator.clipboard && navigator.clipboard.writeText) {
+            navigator.clipboard.writeText(u).then(function () {
+              copyPub.textContent = "تم النسخ!";
+              setTimeout(function () { copyPub.textContent = "نسخ رابط الواجهة العامة"; }, 2000);
+            });
+          } else {
+            var ta = document.createElement("textarea");
+            ta.value = u;
+            document.body.appendChild(ta);
+            ta.select();
+            try { document.execCommand("copy"); } catch (_) {}
+            document.body.removeChild(ta);
+            copyPub.textContent = "تم النسخ!";
+            setTimeout(function () { copyPub.textContent = "نسخ رابط الواجهة العامة"; }, 2000);
+          }
+        });
+      }
+      var btnRem = document.getElementById("admin-copy-reminder-btn");
+      if (btnRem) {
+        btnRem.addEventListener("click", function () {
+          var ta = document.getElementById("admin-reminder-template");
+          if (!ta) return;
+          var txt = ta.value || "";
+          if (navigator.clipboard && navigator.clipboard.writeText) {
+            navigator.clipboard.writeText(txt).then(function () {
+              btnRem.textContent = "تم النسخ!";
+              setTimeout(function () { btnRem.textContent = "نسخ القالب"; }, 2000);
+            });
+          } else {
+            ta.select();
+            try { document.execCommand("copy"); } catch (_) {}
+            btnRem.textContent = "تم النسخ!";
+            setTimeout(function () { btnRem.textContent = "نسخ القالب"; }, 2000);
+          }
+        });
+      }
     })();
   </script>
 </body>

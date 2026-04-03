@@ -6,6 +6,7 @@ from fastapi import Request
 
 
 def _public_base(request: Request) -> str:
+    """قاعدة الروابط العامة (روابط التحقق والدفع). يُفضّل PUBLIC_BASE_URL في الإنتاج خلف البروكسي."""
     public_base_url = os.getenv("PUBLIC_BASE_URL", "").strip().rstrip("/")
     if public_base_url:
         return public_base_url

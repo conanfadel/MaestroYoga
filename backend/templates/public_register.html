@@ -51,6 +51,7 @@
       <div class="warn">تم إنشاء الحساب، لكن تعذر إرسال رابط التحقق الفعلي. صحّح SMTP ثم سجّل الدخول واضغط إعادة إرسال.</div>
     {% endif %}
     <form id="register-form" method="post" action="/public/register">
+      <input type="hidden" name="next" value="{{ next }}" />
       <label>الاسم الكامل</label>
       <input name="full_name" required />
       <label>البريد الإلكتروني</label>
@@ -76,8 +77,8 @@
       <button type="submit">إنشاء الحساب</button>
     </form>
     <div class="links">
-      لديك حساب؟ <a href="/public/login">سجّل الدخول</a><br/>
-      <a href="/index?center_id=1">العودة للواجهة العامة</a>
+      لديك حساب؟ <a href="/public/login?next={{ next|urlencode }}">سجّل الدخول</a><br/>
+      <a href="{{ next }}">العودة للواجهة العامة</a>
     </div>
   </div>
   <script>

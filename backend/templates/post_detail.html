@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>{{ post.title }} | {{ center.name }} | Maestro Yoga</title>
+  <meta name="description" content="{{ (post.summary or post.title)|truncate(160) }}" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet" />
+  {% if analytics_enabled and ga4_measurement_id %}
+  <script async src="https://www.googletagmanager.com/gtag/js?id={{ ga4_measurement_id }}"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){ dataLayer.push(arguments); }
+    gtag("js", new Date());
+    gtag("config", "{{ ga4_measurement_id }}", { send_page_view: true });
+  </script>
+  {% endif %}
+  <style>
+    :root {
+      --gold: #c5a059;
+      --gold-dark: #9a7b3c;
+      --gold-soft: rgba(197, 160, 89, 0.15);
+      --mint: #aaf0d1;
+      --mint-mid: #7dd3ae;
+      --mint-bg: #e8fcf4;
+      --charcoal: #2d3436;
+      --charcoal-muted: #636e72;
+      --white: #ffffff;
+      --page-bg: #fafcfb;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      padding: 22px clamp(14px, 4vw, 48px) 40px;
+      font-family: "Tajawal", system-ui, sans-serif;
+      color: var(--charcoal);
+      background:
+        radial-gradient(ellipse 120% 80% at 100% 0%, var(--mint-bg) 0%, transparent 55%),
+        var(--page-bg);
+    }
+    .wrap { max-width: 760px; margin: 0 auto; }
+    .back {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 18px;
+      font-weight: 700;
+      font-size: 0.92rem;
+      color: var(--gold-dark);
+      text-decoration: none;
+      border-radius: 999px;
+      padding: 8px 14px;
+      border: 2px solid rgba(125, 211, 174, 0.65);
+      background: var(--white);
+      transition: border-color 0.15s ease, box-shadow 0.15s ease;
+    }
+    .back:hover { border-color: var(--gold); box-shadow: 0 4px 14px rgba(197, 160, 89, 0.2); }
+    .card {
+      background: var(--white);
+      border: 1px solid rgba(197, 160, 89, 0.28);
+      border-radius: 20px;
+      padding: 22px 24px 28px;
+      box-shadow: 0 18px 48px rgba(45, 52, 54, 0.07);
+      position: relative;
+      overflow: hidden;
+    }
+    .card::before {
+      content: "";
+      position: absolute;
+      inset-inline-start: 0;
+      top: 0;
+      bottom: 0;
+      width: 5px;
+      background: linear-gradient(180deg, var(--gold), var(--mint-mid));
+      border-start-start-radius: 20px;
+      border-end-start-radius: 20px;
+    }
+    .meta-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      align-items: center;
+      margin-bottom: 12px;
+    }
+    .chip {
+      border: 1px solid rgba(197, 160, 89, 0.45);
+      color: var(--charcoal-muted);
+      background: var(--gold-soft);
+      padding: 6px 12px;
+      border-radius: 999px;
+      font-size: 0.8rem;
+      font-weight: 700;
+    }
+    .chip--type { color: var(--charcoal); border-color: rgba(125, 211, 174, 0.85); background: rgba(170, 240, 209, 0.22); }
+    .date-line { font-size: 0.86rem; color: var(--charcoal-muted); font-weight: 600; }
+    h1 {
+      margin: 0 0 12px;
+      font-family: "Amiri", "Tajawal", serif;
+      font-size: clamp(1.45rem, 4vw, 1.85rem);
+      font-weight: 700;
+      line-height: 1.35;
+      color: var(--charcoal);
+    }
+    .summary {
+      margin: 0 0 18px;
+      font-size: 1.05rem;
+      line-height: 1.7;
+      color: var(--charcoal-muted);
+      font-weight: 500;
+    }
+    .cover {
+      margin: 0 0 20px;
+      border-radius: 16px;
+      overflow: hidden;
+      border: 1px solid rgba(197, 160, 89, 0.32);
+      box-shadow: 0 8px 28px rgba(45, 52, 54, 0.08);
+    }
+    .cover img {
+      display: block;
+      width: 100%;
+      height: auto;
+      max-height: 420px;
+      object-fit: cover;
+      vertical-align: middle;
+    }
+    .body-text {
+      margin: 0;
+      font-size: 1.02rem;
+      line-height: 1.85;
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+    .gallery {
+      margin-top: 26px;
+      padding-top: 22px;
+      border-top: 1px solid rgba(170, 240, 209, 0.65);
+    }
+    .gallery h2 {
+      margin: 0 0 14px;
+      font-family: "Amiri", "Tajawal", serif;
+      font-size: 1.15rem;
+      font-weight: 700;
+      color: var(--charcoal);
+    }
+    .gallery-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+      gap: 12px;
+    }
+    .gallery-grid a {
+      display: block;
+      border-radius: 12px;
+      overflow: hidden;
+      border: 1px solid rgba(197, 160, 89, 0.25);
+      box-shadow: 0 6px 18px rgba(45, 52, 54, 0.06);
+      transition: transform 0.15s ease, box-shadow 0.15s ease;
+    }
+    .gallery-grid a:hover { transform: translateY(-2px); box-shadow: 0 10px 26px rgba(45, 52, 54, 0.1); }
+    .gallery-grid img {
+      width: 100%;
+      height: 120px;
+      object-fit: cover;
+      display: block;
+    }
+    .toplinks { margin-top: 18px; display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; }
+    .btn {
+      border-radius: 999px;
+      padding: 10px 18px;
+      font-weight: 800;
+      text-decoration: none;
+      font-size: 0.92rem;
+      border: 0;
+      cursor: pointer;
+      font-family: inherit;
+    }
+    .btn.primary {
+      background: linear-gradient(135deg, var(--gold) 0%, #d4b56e 100%);
+      color: #1a1a1a;
+      box-shadow: 0 4px 14px rgba(197, 160, 89, 0.35);
+    }
+    .btn.ghost {
+      background: transparent;
+      color: var(--charcoal);
+      border: 2px solid var(--mint-mid);
+    }
+    .muted { color: var(--charcoal-muted); font-size: 0.9rem; }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <a class="back" href="{{ index_url }}">← العودة إلى حجز الجلسات</a>
+    <article class="card">
+      <div class="meta-row">
+        <span class="chip chip--type">{{ post.type_label }}</span>
+        {% if post.published_at_display %}
+        <span class="date-line">{{ post.published_at_display }}</span>
+        {% endif %}
+      </div>
+      <h1>{{ post.title }}</h1>
+      {% if post.summary %}
+      <p class="summary">{{ post.summary }}</p>
+      {% endif %}
+      {% if post.cover_image_url %}
+      <div class="cover">
+        <img src="{{ post.cover_image_url }}" alt="" decoding="async" loading="lazy" />
+      </div>
+      {% endif %}
+      {% if post.body %}
+      <div class="body-text">{{ post.body }}</div>
+      {% endif %}
+      {% if gallery %}
+      <section class="gallery" aria-label="معرض الصور">
+        <h2>معرض الصور</h2>
+        <div class="gallery-grid">
+          {% for g in gallery %}
+          <a href="{{ g.url }}" target="_blank" rel="noopener noreferrer">
+            <img src="{{ g.url }}" alt="" loading="lazy" decoding="async" />
+          </a>
+          {% endfor %}
+        </div>
+      </section>
+      {% endif %}
+    </article>
+    <div class="toplinks">
+      {% if public_user %}
+      <span class="muted" style="width:100%;text-align:center;">{{ public_user.full_name }}</span>
+      {% endif %}
+      <a class="btn primary" href="{{ index_url }}">حجز جلسة أو اشتراك</a>
+    </div>
+  </div>
+  {% if analytics_enabled and ga4_measurement_id %}
+  <script>
+    (function () {
+      window.dataLayer = window.dataLayer || [];
+      window.dataLayer.push({
+        event: "page_view_public_post",
+        page_name: {{ analytics_page_name|tojson }},
+        center_id: {{ center_id|tojson }},
+        post_id: {{ post.id|tojson }}
+      });
+      if (typeof gtag === "function") {
+        gtag("event", "page_view_public_post", { center_id: {{ center_id|tojson }}, post_id: {{ post.id|tojson }} });
+      }
+    })();
+  </script>
+  {% endif %}
+</body>
+</html>

@@ -151,8 +151,12 @@ def _brand_email_html(
     intro: str,
     cta_label: str,
     cta_url: str,
+    foot_note: str | None = None,
 ) -> str:
     support_email = os.getenv("SMTP_FROM", "support@maestroyoga.local").strip()
+    note_block = ""
+    if foot_note:
+        note_block = f'<p style="margin:0 0 16px;font-size:13px;color:#475569;line-height:1.65;">{foot_note}</p>'
     return f"""
 <div dir="rtl" style="margin:0;background:#f8fafc;padding:24px 12px;">
   <div style="max-width:640px;margin:0 auto;background:#ffffff;border:1px solid #d1fae5;border-radius:14px;overflow:hidden;">
@@ -163,6 +167,7 @@ def _brand_email_html(
     <div style="padding:22px 22px 16px;font-family:Arial,sans-serif;color:#0f172a;line-height:1.7;">
       <p style="margin:0 0 10px;">مرحبًا {recipient_name}،</p>
       <p style="margin:0 0 16px;">{intro}</p>
+      {note_block}
       <p style="margin:0 0 18px;">
         <a href="{cta_url}" style="display:inline-block;background:#0f766e;color:#ffffff;text-decoration:none;padding:11px 18px;border-radius:8px;font-weight:700;">
           {cta_label}
@@ -288,20 +293,30 @@ def validate_mailer_settings() -> tuple[bool, str]:
 def send_email_verification_email(to_email: str, verification_url: str, full_name: str = "") -> tuple[bool, str]:
     app_name = os.getenv("APP_NAME", "Maestro Yoga")
     recipient_name = full_name.strip() or "there"
+    try:
+        verify_mins = max(5, int(os.getenv("PUBLIC_EMAIL_VERIFY_EXPIRES_MINUTES", "30")))
+    except ValueError:
+        verify_mins = 30
+    foot_note = (
+        f"صلاحية الرابط نحو {verify_mins} دقيقة. بعد التأكيد يمكنك إكمال الحجز والدفع. "
+        "إذا لم تطلب إنشاء حساب، تجاهل هذه الرسالة."
+    )
 
     subject = f"{app_name} - تأكيد البريد الإلكتروني"
     body = (
         f"مرحبًا بك في {app_name}!\n\n"
-        f"يرجى تأكيد بريدك الإلكتروني عبر الرابط التالي:\n{verification_url}\n\n"
-        "إذا لم تطلب إنشاء هذا الحساب يمكنك تجاهل هذه الرسالة."
+        f"افتح الرابط التالي لتأكيد بريدك الإلكتروني:\n{verification_url}\n\n"
+        f"{foot_note}\n\n"
+        "إذا تعذر الضغط على الرابط، انسخه بالكامل والصقه في المتصفح."
     )
     html_body = _brand_email_html(
         app_name=app_name,
         title="تأكيد البريد الإلكتروني",
         recipient_name=recipient_name,
-        intro="يرجى تأكيد بريدك الإلكتروني لتفعيل الحساب ومتابعة الحجز والاشتراكات.",
+        intro="اضغط الزر أدناه لتفعيل حسابك. التأكيد مطلوب قبل إتمام حجز الجلسات أو الاشتراكات عند تفعيل خيار التحقق.",
         cta_label="تأكيد البريد",
         cta_url=verification_url,
+        foot_note=foot_note,
     )
     return _send_mail(to_email, subject, body, html_body=html_body)
 
