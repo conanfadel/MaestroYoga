@@ -285,6 +285,8 @@ def validate_mailer_settings() -> tuple[bool, str]:
         return False, "missing_smtp_host"
     if not smtp_user:
         return False, "missing_smtp_user"
+    if not smtp_password:
+        return False, "missing_smtp_password"
     if _looks_like_placeholder(smtp_password):
         return False, "invalid_smtp_password_placeholder"
     return True, "ok"
@@ -344,9 +346,13 @@ def send_password_reset_email(to_email: str, reset_url: str, full_name: str = ""
 def queue_email_verification_email(to_email: str, verification_url: str, full_name: str = "") -> tuple[bool, str]:
     ok, reason = validate_mailer_settings()
     if not ok:
+        print(f"[MAILER][CONFIG] email_verification blocked: {reason}")
         return False, reason
     if _mailer_delivery_mode() == "sync":
-        return send_email_verification_email(to_email, verification_url, full_name)
+        sent_ok, sent_reason = send_email_verification_email(to_email, verification_url, full_name)
+        if not sent_ok:
+            print(f"[MAILER][ERROR] email_verification send failed: {sent_reason}")
+        return sent_ok, sent_reason
     fut = _MAILER_EXECUTOR.submit(send_email_verification_email, to_email, verification_url, full_name)
     fut.add_done_callback(lambda done: _log_mail_future("email_verification", done))
     return True, "queued"
@@ -355,9 +361,13 @@ def queue_email_verification_email(to_email: str, verification_url: str, full_na
 def queue_password_reset_email(to_email: str, reset_url: str, full_name: str = "") -> tuple[bool, str]:
     ok, reason = validate_mailer_settings()
     if not ok:
+        print(f"[MAILER][CONFIG] password_reset blocked: {reason}")
         return False, reason
     if _mailer_delivery_mode() == "sync":
-        return send_password_reset_email(to_email, reset_url, full_name)
+        sent_ok, sent_reason = send_password_reset_email(to_email, reset_url, full_name)
+        if not sent_ok:
+            print(f"[MAILER][ERROR] password_reset send failed: {sent_reason}")
+        return sent_ok, sent_reason
     fut = _MAILER_EXECUTOR.submit(send_password_reset_email, to_email, reset_url, full_name)
     fut.add_done_callback(lambda done: _log_mail_future("password_reset", done))
     return True, "queued"

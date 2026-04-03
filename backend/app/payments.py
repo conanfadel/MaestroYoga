@@ -30,6 +30,16 @@ class BasePaymentProvider:
     ) -> PaymentResult:
         raise NotImplementedError
 
+    def create_checkout_session_multi_line(
+        self,
+        currency: str,
+        line_specs: list[tuple[float, str, str]],
+        metadata: dict[str, Any],
+        success_url: str,
+        cancel_url: str,
+    ) -> PaymentResult:
+        raise NotImplementedError
+
 
 class MockPaymentProvider(BasePaymentProvider):
     def charge(self, amount: float, currency: str, metadata: dict) -> PaymentResult:
@@ -48,6 +58,20 @@ class MockPaymentProvider(BasePaymentProvider):
     ) -> PaymentResult:
         return PaymentResult(
             provider_ref=f"mock_checkout_{uuid4().hex[:12]}",
+            status="paid",
+            checkout_url=success_url,
+        )
+
+    def create_checkout_session_multi_line(
+        self,
+        currency: str,
+        line_specs: list[tuple[float, str, str]],
+        metadata: dict[str, Any],
+        success_url: str,
+        cancel_url: str,
+    ) -> PaymentResult:
+        return PaymentResult(
+            provider_ref=f"mock_cart_{uuid4().hex[:12]}",
             status="paid",
             checkout_url=success_url,
         )
@@ -104,6 +128,45 @@ class StripePaymentProvider(BasePaymentProvider):
         if locale.lower() != "auto":
             create_kwargs["locale"] = locale
 
+        session = stripe.checkout.Session.create(**create_kwargs)
+        return PaymentResult(provider_ref=session.id, status="pending", checkout_url=session.url)
+
+    def create_checkout_session_multi_line(
+        self,
+        currency: str,
+        line_specs: list[tuple[float, str, str]],
+        metadata: dict[str, Any],
+        success_url: str,
+        cancel_url: str,
+    ) -> PaymentResult:
+        if not line_specs:
+            raise ValueError("line_specs required")
+        locale = os.getenv("STRIPE_CHECKOUT_LOCALE", "auto").strip() or "auto"
+        line_items: list[dict[str, Any]] = []
+        for amount, name, description in line_specs:
+            product_data: dict[str, Any] = {"name": (name or "Maestro Yoga")[:120]}
+            desc = (description or "").strip()
+            if desc:
+                product_data["description"] = desc[:500]
+            line_items.append(
+                {
+                    "price_data": {
+                        "currency": currency.lower(),
+                        "product_data": product_data,
+                        "unit_amount": int(round(float(amount) * 100)),
+                    },
+                    "quantity": 1,
+                }
+            )
+        create_kwargs: dict[str, Any] = {
+            "mode": "payment",
+            "success_url": success_url,
+            "cancel_url": cancel_url,
+            "line_items": line_items,
+            "metadata": metadata,
+        }
+        if locale.lower() != "auto":
+            create_kwargs["locale"] = locale
         session = stripe.checkout.Session.create(**create_kwargs)
         return PaymentResult(provider_ref=session.id, status="pending", checkout_url=session.url)
 

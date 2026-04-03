@@ -579,13 +579,150 @@
     }
     .sticky-booking .label { font-size: 0.88rem; color: var(--mint); }
     .sticky-booking .value { font-weight: 800; }
-    .sticky-booking a {
+    .sticky-booking a,
+    .sticky-booking button.sticky-cart-btn {
       color: var(--charcoal);
       background: linear-gradient(135deg, var(--gold), #e0c989);
       border-radius: 999px;
       padding: 9px 16px;
       text-decoration: none;
       font-weight: 800;
+      border: 0;
+      cursor: pointer;
+      font-family: inherit;
+      font-size: inherit;
+    }
+    .cart-drawer-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(45, 52, 54, 0.45);
+      z-index: 80;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.2s ease;
+    }
+    .cart-drawer-backdrop.is-open {
+      opacity: 1;
+      pointer-events: auto;
+    }
+    .cart-drawer {
+      position: fixed;
+      inset-inline-end: 0;
+      top: 0;
+      bottom: 0;
+      width: min(420px, 100%);
+      max-width: 100%;
+      background: var(--white);
+      box-shadow: -12px 0 40px rgba(45, 52, 54, 0.12);
+      z-index: 90;
+      transform: translateX(100%);
+      transition: transform 0.25s ease;
+      display: flex;
+      flex-direction: column;
+      border-inline-start: 1px solid rgba(197, 160, 89, 0.35);
+    }
+    html[dir="rtl"] .cart-drawer {
+      transform: translateX(-100%);
+    }
+    .cart-drawer.is-open {
+      transform: translateX(0);
+    }
+    .cart-drawer__head {
+      padding: 18px 20px;
+      border-bottom: 1px solid rgba(197, 160, 89, 0.25);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+    .cart-drawer__head h2 {
+      margin: 0;
+      font-size: 1.2rem;
+      font-family: "Amiri", "Tajawal", serif;
+    }
+    .cart-drawer__close {
+      border: 0;
+      background: var(--gold-soft);
+      color: var(--charcoal);
+      width: 40px;
+      height: 40px;
+      border-radius: 12px;
+      cursor: pointer;
+      font-size: 1.25rem;
+      line-height: 1;
+      font-weight: 800;
+    }
+    .cart-drawer__body {
+      flex: 1;
+      overflow: auto;
+      padding: 14px 20px;
+    }
+    .cart-drawer__foot {
+      padding: 16px 20px 22px;
+      border-top: 1px solid rgba(197, 160, 89, 0.25);
+      background: linear-gradient(180deg, #fff 0%, var(--mint-bg) 100%);
+    }
+    .cart-line {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 10px;
+      align-items: start;
+      padding: 12px 0;
+      border-bottom: 1px solid rgba(45, 52, 54, 0.08);
+    }
+    .cart-line:last-child { border-bottom: 0; }
+    .cart-line__meta { font-size: 0.88rem; color: var(--charcoal-muted); margin-top: 4px; }
+    .cart-line__price { font-weight: 800; color: var(--gold-dark); white-space: nowrap; }
+    .cart-line__rm {
+      grid-column: 1 / -1;
+      border: 0;
+      background: transparent;
+      color: #c0392b;
+      cursor: pointer;
+      font-size: 0.82rem;
+      font-weight: 700;
+      text-decoration: underline;
+      padding: 0;
+      font-family: inherit;
+      justify-self: start;
+    }
+    .cart-empty-hint {
+      color: var(--charcoal-muted);
+      font-size: 0.95rem;
+      line-height: 1.6;
+      margin: 8px 0 0;
+    }
+    .cart-total-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-weight: 800;
+      margin-bottom: 12px;
+      font-size: 1.05rem;
+    }
+    .cart-drawer-msg {
+      font-size: 0.88rem;
+      color: #c0392b;
+      margin: 0 0 10px;
+      min-height: 1.2em;
+    }
+    .btn-cart-submit {
+      width: 100%;
+      border: 0;
+      border-radius: 999px;
+      padding: 12px 18px;
+      font-weight: 800;
+      font-family: inherit;
+      font-size: 1rem;
+      cursor: pointer;
+      background: linear-gradient(135deg, var(--gold) 0%, #d4b56e 100%);
+      color: #1a1a1a;
+      box-shadow: 0 4px 14px rgba(197, 160, 89, 0.35);
+    }
+    .btn-cart-submit:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+      box-shadow: none;
     }
     .sr-only {
       position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden;
@@ -793,7 +930,7 @@
     <div class="steps" aria-label="خطوات الدفع">
       <div class="step"><b>1)</b> اختر الجلسة أو الخطة المناسبة.</div>
       <div class="step"><b>2)</b> سجّل الدخول وفعّل بريدك الإلكتروني.</div>
-      <div class="step"><b>3)</b> أكمل الدفع وتحقق من حالة الطلب.</div>
+      <div class="step"><b>3)</b> راجع السلة وأكمل الطلب منها.</div>
     </div>
 
     {% if payment == 'success' %}<div class="alert">تم إتمام الدفع بنجاح. تم تأكيد طلبك.</div>{% endif %}
@@ -809,6 +946,10 @@
     {% if msg == 'subscription_cancelled' %}<div class="alert warn">لم يكتمل دفع الاشتراك.</div>{% endif %}
     {% if msg == 'stripe_error' %}<div class="alert err">تعذر بدء الدفع عبر Stripe. تحقق من المفاتيح.</div>{% endif %}
     {% if msg == 'stripe_no_url' %}<div class="alert err">لم يتم استلام رابط الدفع من Stripe.</div>{% endif %}
+    {% if msg == 'cart_empty' %}<div class="alert warn">السلة فارغة. أضف جلسات أو خطة ثم أعد المحاولة.</div>{% endif %}
+    {% if msg == 'cart_invalid' %}<div class="alert err">تعذر قراءة السلة. أعد تحميل الصفحة وحاول مرة أخرى.</div>{% endif %}
+    {% if msg == 'cart_too_many' %}<div class="alert warn">تجاوزت السلة الحد المسموح للجلسات في طلب واحد.</div>{% endif %}
+    {% if msg == 'cart_session_full' %}<div class="alert err">إحدى الجلسات في السلة لم تعد متاحة. حدّث السلة وحاول مرة أخرى.</div>{% endif %}
 
     {% if pinned_public_post or public_posts_teasers %}
     <section id="center-news-section" class="center-news" aria-label="أخبار ونشاطات المركز">
@@ -860,7 +1001,7 @@
     <main id="main-content" class="grid-two">
       <section id="sessions-section" class="card sessions-panel" aria-label="قائمة الجلسات">
         <h2>الجلسات المتاحة للحجز الفوري</h2>
-        <p class="sessions-lead">صفِّ الجلسات حسب الوقت والسعر والمستوى، ثم اضغط «احجز الآن وادفع» لإكمال الحجز بعد تسجيل الدخول.</p>
+        <p class="sessions-lead">صفِّ الجلسات حسب الوقت والسعر والمستوى، ثم أضِف ما تريد إلى السلة واكمل الطلب منها بعد تسجيل الدخول.</p>
         <div class="sessions-filters">
           <p class="sessions-filters-title">تصفية وترتيب الجلسات</p>
           <div class="sessions-filters-grid">
@@ -934,19 +1075,16 @@
                     {% endif %}
                   </div>
                   {% if s.spots_available > 0 %}
-                  <form class="form" method="post" action="/public/book">
-                    <input type="hidden" name="center_id" value="{{ center_id }}" />
-                    <input type="hidden" name="session_id" value="{{ s.id }}" />
                     <button
-                      type="submit"
-                      class="book-btn book-btn-lg js-book-btn"
-                      data-kind="جلسة"
-                      data-name="{{ s.title }}"
-                      data-price="{{ s.price_drop_in }} SAR"
+                      type="button"
+                      class="book-btn book-btn-lg js-add-session"
+                      data-session-id="{{ s.id }}"
+                      data-title="{{ s.title|e }}"
+                      data-price="{{ s.price_drop_in }}"
+                      data-when="{{ s.starts_at_display|e }}"
                     >
-                      احجز الآن وادفع
+                      أضف للسلة
                     </button>
-                  </form>
                   {% else %}
                   <button class="book-btn book-btn-lg" type="button" disabled>ممتلئة</button>
                   {% endif %}
@@ -998,19 +1136,17 @@
                 <div class="best-note">أفضل قيمة</div>
                 {% endif %}
 
-                <form class="form" method="post" action="/public/subscribe" style="margin-top:10px;">
-                  <input type="hidden" name="center_id" value="{{ center_id }}" />
-                  <input type="hidden" name="plan_id" value="{{ plan.id }}" />
+                <div style="margin-top:10px;">
                   <button
-                    type="submit"
-                    class="sub-btn book-btn-lg js-plan-btn"
-                    data-kind="اشتراك"
-                    data-name="{{ plan.name }}"
-                    data-price="{{ plan.price }} SAR"
+                    type="button"
+                    class="sub-btn book-btn-lg js-add-plan"
+                    data-plan-id="{{ plan.id }}"
+                    data-plan-name="{{ plan.name|e }}"
+                    data-plan-price="{{ plan.price }}"
                   >
-                    اشترك وادفع
+                    أضف للسلة
                   </button>
-                </form>
+                </div>
               </article>
               {% else %}
               <div class="plan-empty">لا توجد خطط اشتراك مفعلة حاليًا.</div>
@@ -1039,12 +1175,40 @@
 
     <div class="sticky-booking" id="sticky-booking" aria-live="polite">
       <div>
-        <div class="label">الاختيار الحالي</div>
-        <div class="value" id="sticky-selection">لم يتم تحديد عنصر بعد</div>
+        <div class="label">سلة الحجز</div>
+        <div class="value" id="sticky-selection">السلة فارغة — أضف جلسات أو خطة</div>
       </div>
-      <a href="#sessions-section">الانتقال للحجز</a>
+      <button type="button" class="sticky-cart-btn" id="sticky-open-cart" aria-controls="cart-drawer" aria-expanded="false">عرض السلة</button>
     </div>
   </div>
+
+  <div class="cart-drawer-backdrop" id="cart-drawer-backdrop" hidden aria-hidden="true"></div>
+  <aside class="cart-drawer" id="cart-drawer" aria-labelledby="cart-drawer-title" aria-hidden="true" role="dialog">
+    <div class="cart-drawer__head">
+      <h2 id="cart-drawer-title">سلة المشتريات</h2>
+      <button type="button" class="cart-drawer__close" id="cart-drawer-close" aria-label="إغلاق السلة">×</button>
+    </div>
+    <div class="cart-drawer__body">
+      <div id="cart-lines"></div>
+      <p class="cart-empty-hint" id="cart-empty-hint">أضف جلسات أو خطة من الصفحة، ثم اضغط «إتمام الطلب» هنا لإكمال الحجز أو الاشتراك.</p>
+    </div>
+    <div class="cart-drawer__foot">
+      <p class="cart-drawer-msg" id="cart-drawer-msg" role="status"></p>
+      <div class="cart-total-row">
+        <span>المجموع</span>
+        <span id="cart-total">0 ر.س</span>
+      </div>
+      <form id="cart-checkout-form" method="post" action="/public/cart/checkout" style="display:none;">
+        <input type="hidden" name="center_id" value="{{ center_id }}" />
+        <input type="hidden" name="cart_json" id="cart-json-field" value="[]" />
+      </form>
+      <form id="cart-subscribe-form" method="post" action="/public/subscribe" style="display:none;">
+        <input type="hidden" name="center_id" value="{{ center_id }}" />
+        <input type="hidden" name="plan_id" id="cart-subscribe-plan-id" value="" />
+      </form>
+      <button type="button" class="btn-cart-submit" id="cart-complete-btn">إتمام الطلب</button>
+    </div>
+  </aside>
 
   <script>
     (function () {
@@ -1055,6 +1219,200 @@
       const maxPrice = document.getElementById("session-max-price");
       const sort = document.getElementById("session-sort");
       const stickySelection = document.getElementById("sticky-selection");
+      const CART_KEY = "maestro_cart_v1";
+      const PAGE_CENTER_ID = {{ center_id|tojson }};
+      const cartDrawer = document.getElementById("cart-drawer");
+      const cartBackdrop = document.getElementById("cart-drawer-backdrop");
+      const cartLines = document.getElementById("cart-lines");
+      const cartEmptyHint = document.getElementById("cart-empty-hint");
+      const cartTotalEl = document.getElementById("cart-total");
+      const cartDrawerMsg = document.getElementById("cart-drawer-msg");
+      const cartJsonField = document.getElementById("cart-json-field");
+      const cartCheckoutForm = document.getElementById("cart-checkout-form");
+      const cartSubscribeForm = document.getElementById("cart-subscribe-form");
+      const cartSubscribePlanId = document.getElementById("cart-subscribe-plan-id");
+      const cartCompleteBtn = document.getElementById("cart-complete-btn");
+      const stickyOpenCart = document.getElementById("sticky-open-cart");
+
+      function loadCart() {
+        try {
+          const raw = sessionStorage.getItem(CART_KEY);
+          if (!raw) return { center_id: PAGE_CENTER_ID, items: [] };
+          const data = JSON.parse(raw);
+          if (data.center_id !== PAGE_CENTER_ID) return { center_id: PAGE_CENTER_ID, items: [] };
+          return { center_id: PAGE_CENTER_ID, items: Array.isArray(data.items) ? data.items : [] };
+        } catch (e) {
+          return { center_id: PAGE_CENTER_ID, items: [] };
+        }
+      }
+      function saveCart(cart) {
+        sessionStorage.setItem(CART_KEY, JSON.stringify(cart));
+        renderCart();
+      }
+      function openCartDrawer() {
+        if (!cartDrawer || !cartBackdrop) return;
+        cartBackdrop.hidden = false;
+        cartBackdrop.classList.add("is-open");
+        cartDrawer.classList.add("is-open");
+        cartDrawer.setAttribute("aria-hidden", "false");
+        cartBackdrop.setAttribute("aria-hidden", "false");
+        if (stickyOpenCart) stickyOpenCart.setAttribute("aria-expanded", "true");
+      }
+      function closeCartDrawer() {
+        if (!cartDrawer || !cartBackdrop) return;
+        cartBackdrop.classList.remove("is-open");
+        cartDrawer.classList.remove("is-open");
+        cartDrawer.setAttribute("aria-hidden", "true");
+        cartBackdrop.setAttribute("aria-hidden", "true");
+        if (stickyOpenCart) stickyOpenCart.setAttribute("aria-expanded", "false");
+        setTimeout(function () { cartBackdrop.hidden = true; }, 220);
+      }
+      function renderCart() {
+        const cart = loadCart();
+        const items = cart.items;
+        const sessions = items.filter(function (x) { return x.type === "session"; });
+        const plans = items.filter(function (x) { return x.type === "plan"; });
+        let total = 0;
+        items.forEach(function (it) {
+          if (it.type === "session") total += parseFloat(it.price_drop_in) || 0;
+          if (it.type === "plan") total += parseFloat(it.price) || 0;
+        });
+        if (cartTotalEl) cartTotalEl.textContent = total.toFixed(0) + " ر.س";
+        if (stickySelection) {
+          if (!items.length) {
+            stickySelection.textContent = "السلة فارغة — أضف جلسات أو خطة";
+          } else {
+            stickySelection.textContent =
+              items.length + " عنصر — المجموع " + total.toFixed(0) + " ر.س";
+          }
+        }
+        if (cartEmptyHint) cartEmptyHint.style.display = items.length ? "none" : "";
+        if (cartLines) {
+          cartLines.innerHTML = "";
+          items.forEach(function (it) {
+            const row = document.createElement("div");
+            row.className = "cart-line";
+            const title = document.createElement("div");
+            if (it.type === "session") {
+              title.innerHTML = "<strong>جلسة:</strong> " + escapeHtml(it.title || "");
+              const meta = document.createElement("div");
+              meta.className = "cart-line__meta";
+              meta.textContent = it.when || "";
+              title.appendChild(meta);
+            } else if (it.type === "plan") {
+              title.innerHTML = "<strong>اشتراك:</strong> " + escapeHtml(it.name || "");
+            }
+            const price = document.createElement("div");
+            price.className = "cart-line__price";
+            if (it.type === "session") price.textContent = (parseFloat(it.price_drop_in) || 0).toFixed(0) + " ر.س";
+            if (it.type === "plan") price.textContent = (parseFloat(it.price) || 0).toFixed(0) + " ر.س";
+            const rm = document.createElement("button");
+            rm.type = "button";
+            rm.className = "cart-line__rm";
+            rm.textContent = "إزالة";
+            rm.addEventListener("click", function () {
+              cart.items = cart.items.filter(function (x) { return x.key !== it.key; });
+              saveCart(cart);
+            });
+            row.appendChild(title);
+            row.appendChild(price);
+            row.appendChild(rm);
+            cartLines.appendChild(row);
+          });
+        }
+        if (cartCompleteBtn) cartCompleteBtn.disabled = items.length === 0;
+      }
+      function escapeHtml(s) {
+        const d = document.createElement("div");
+        d.textContent = s;
+        return d.innerHTML;
+      }
+
+      renderCart();
+
+      document.querySelectorAll(".js-add-session").forEach(function (btn) {
+        btn.addEventListener("click", function () {
+          const sid = parseInt(btn.getAttribute("data-session-id") || "0", 10);
+          if (!sid) return;
+          const cart = loadCart();
+          if (cart.items.some(function (x) { return x.type === "session" && x.session_id === sid; })) {
+            if (cartDrawerMsg) cartDrawerMsg.textContent = "هذه الجلسة مضافة مسبقًا في السلة.";
+            openCartDrawer();
+            return;
+          }
+          cart.items.push({
+            type: "session",
+            session_id: sid,
+            title: btn.getAttribute("data-title") || "",
+            price_drop_in: parseFloat(btn.getAttribute("data-price") || "0"),
+            when: btn.getAttribute("data-when") || "",
+            key: "s-" + sid,
+          });
+          saveCart(cart);
+          if (cartDrawerMsg) cartDrawerMsg.textContent = "";
+          track("add_to_cart", { item_category: "session", session_id: sid });
+          openCartDrawer();
+        });
+      });
+      document.querySelectorAll(".js-add-plan").forEach(function (btn) {
+        btn.addEventListener("click", function () {
+          const pid = parseInt(btn.getAttribute("data-plan-id") || "0", 10);
+          if (!pid) return;
+          const cart = loadCart();
+          cart.items = cart.items.filter(function (x) { return x.type !== "plan"; });
+          cart.items.push({
+            type: "plan",
+            plan_id: pid,
+            name: btn.getAttribute("data-plan-name") || "",
+            price: parseFloat(btn.getAttribute("data-plan-price") || "0"),
+            key: "p-" + pid,
+          });
+          saveCart(cart);
+          if (cartDrawerMsg) cartDrawerMsg.textContent = "";
+          track("add_to_cart", { item_category: "plan", plan_id: pid });
+          openCartDrawer();
+        });
+      });
+
+      if (stickyOpenCart) stickyOpenCart.addEventListener("click", openCartDrawer);
+      if (cartBackdrop) cartBackdrop.addEventListener("click", closeCartDrawer);
+      document.getElementById("cart-drawer-close")?.addEventListener("click", closeCartDrawer);
+      document.addEventListener("keydown", function (ev) {
+        if (ev.key === "Escape") closeCartDrawer();
+      });
+
+      if (cartCompleteBtn) {
+        cartCompleteBtn.addEventListener("click", function () {
+          const cart = loadCart();
+          const sessions = cart.items.filter(function (x) { return x.type === "session"; });
+          const plans = cart.items.filter(function (x) { return x.type === "plan"; });
+          if (!cart.items.length) return;
+          if (cartDrawerMsg) cartDrawerMsg.textContent = "";
+          if (sessions.length && plans.length) {
+            if (cartDrawerMsg) {
+              cartDrawerMsg.textContent =
+                "لا يمكن دمج اشتراك مع جلسات في طلب واحد. أزل أحد النوعين من السلة.";
+            }
+            return;
+          }
+          track("begin_checkout", {
+            session_count: sessions.length,
+            has_plan: plans.length > 0,
+          });
+          if (plans.length) {
+            if (!cartSubscribeForm || !cartSubscribePlanId) return;
+            cartSubscribePlanId.value = String(plans[0].plan_id);
+            cartSubscribeForm.submit();
+            return;
+          }
+          if (!cartCheckoutForm || !cartJsonField) return;
+          const payload = sessions.map(function (x) {
+            return { type: "session", session_id: x.session_id };
+          });
+          cartJsonField.value = JSON.stringify(payload);
+          cartCheckoutForm.submit();
+        });
+      }
 
       if (sessionsRoot) {
         const rows = Array.from(sessionsRoot.querySelectorAll("article.session-row"));
@@ -1132,17 +1490,12 @@
       if (msgStatus === "paid_mock") {
         track("booking_paid_mock", { mode: "mock" });
       }
-
-      document.querySelectorAll(".js-book-btn, .js-plan-btn").forEach(function (btn) {
-        btn.addEventListener("click", function () {
-          const kind = btn.dataset.kind || "";
-          const name = btn.dataset.name || "";
-          const price = btn.dataset.price || "";
-          if (stickySelection) stickySelection.textContent = kind + ": " + name + " - " + price;
-          track("public_cta_click", { kind: kind, name: name, price: price });
-          track("begin_checkout", { item_category: kind, item_name: name, value_text: price });
-        });
-      });
+      if (paymentStatus === "success" || msgStatus === "paid_mock" || msgStatus === "subscribed" || msgStatus === "subscribed_mock") {
+        try {
+          sessionStorage.removeItem(CART_KEY);
+          renderCart();
+        } catch (e) {}
+      }
     })();
   </script>
 </body>

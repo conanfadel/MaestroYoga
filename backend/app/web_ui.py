@@ -60,6 +60,7 @@ templates = Jinja2Templates(directory=str(Path(__file__).resolve().parent.parent
 router = APIRouter(tags=["web"])
 PUBLIC_COOKIE_NAME = "public_access_token"
 MAX_LOCKOUT_SECONDS = int(os.getenv("RATE_LIMIT_MAX_LOCKOUT_SECONDS", "900"))
+MAX_PUBLIC_CART_SESSIONS = int(os.getenv("MAX_PUBLIC_CART_SESSIONS", "8"))
 GA4_MEASUREMENT_ID = os.getenv("GA4_MEASUREMENT_ID", "").strip()
 
 # Admin dashboard pagination tuning.
@@ -901,6 +902,194 @@ def public_book(
 
     return RedirectResponse(
         url=f"/index?center_id={center_id}&msg=paid_mock&booking_id={booking.id}",
+        status_code=303,
+    )
+
+
+@router.post("/public/cart/checkout")
+def public_cart_checkout(
+    request: Request,
+    center_id: int = Form(...),
+    cart_json: str = Form(...),
+    db: Session = Depends(get_db),
+):
+    if _is_ip_blocked(db, request):
+        return RedirectResponse(url=f"/index?center_id={center_id}&msg=ip_blocked", status_code=303)
+    public_user = _current_public_user(request, db)
+    if not public_user:
+        return _public_login_redirect(next_url=f"/index?center_id={center_id}", msg="auth_required")
+    if _is_email_verification_required() and not public_user.email_verified:
+        return RedirectResponse(
+            url=_url_with_params("/public/verify-pending", next=f"/index?center_id={center_id}"),
+            status_code=303,
+        )
+
+    try:
+        raw_items = json.loads(cart_json)
+    except (json.JSONDecodeError, TypeError):
+        return RedirectResponse(url=f"/index?center_id={center_id}&msg=cart_invalid", status_code=303)
+    if not isinstance(raw_items, list) or not raw_items:
+        return RedirectResponse(url=f"/index?center_id={center_id}&msg=cart_empty", status_code=303)
+
+    session_ids: list[int] = []
+    for it in raw_items:
+        if not isinstance(it, dict):
+            return RedirectResponse(url=f"/index?center_id={center_id}&msg=cart_invalid", status_code=303)
+        if it.get("type") != "session":
+            return RedirectResponse(url=f"/index?center_id={center_id}&msg=cart_invalid", status_code=303)
+        sid = it.get("session_id")
+        if isinstance(sid, str) and sid.strip().isdigit():
+            session_ids.append(int(sid.strip()))
+        elif isinstance(sid, int):
+            session_ids.append(sid)
+    seen: set[int] = set()
+    deduped: list[int] = []
+    for sid in session_ids:
+        if sid not in seen:
+            seen.add(sid)
+            deduped.append(sid)
+    session_ids = deduped
+    if not session_ids:
+        return RedirectResponse(url=f"/index?center_id={center_id}&msg=cart_empty", status_code=303)
+    if len(session_ids) > MAX_PUBLIC_CART_SESSIONS:
+        return RedirectResponse(url=f"/index?center_id={center_id}&msg=cart_too_many", status_code=303)
+
+    center = db.get(models.Center, center_id)
+    if not center:
+        raise HTTPException(status_code=404, detail="Center not found")
+
+    client = (
+        db.query(models.Client)
+        .filter(models.Client.center_id == center_id, models.Client.email == public_user.email.lower())
+        .first()
+    )
+    if not client:
+        client = models.Client(
+            center_id=center_id,
+            full_name=public_user.full_name,
+            email=public_user.email.lower(),
+            phone=public_user.phone,
+        )
+        db.add(client)
+        db.flush()
+    else:
+        client.full_name = public_user.full_name
+        if public_user.phone:
+            client.phone = public_user.phone
+
+    bundle: list[tuple[models.Booking, models.Payment, models.YogaSession]] = []
+    for session_id in session_ids:
+        yoga_session = db.get(models.YogaSession, session_id)
+        if not yoga_session or yoga_session.center_id != center_id:
+            return RedirectResponse(url=f"/index?center_id={center_id}&msg=cart_invalid", status_code=303)
+        if spots_available(db, yoga_session) <= 0:
+            return RedirectResponse(url=f"/index?center_id={center_id}&msg=cart_session_full", status_code=303)
+        duplicate = (
+            db.query(models.Booking)
+            .filter(
+                models.Booking.session_id == session_id,
+                models.Booking.client_id == client.id,
+                models.Booking.status.in_(ACTIVE_BOOKING_STATUSES),
+            )
+            .first()
+        )
+        if duplicate:
+            return RedirectResponse(url=f"/index?center_id={center_id}&msg=duplicate", status_code=303)
+        booking = models.Booking(
+            center_id=center_id,
+            session_id=session_id,
+            client_id=client.id,
+            status="pending_payment",
+        )
+        db.add(booking)
+        db.flush()
+        amount = float(yoga_session.price_drop_in)
+        payment_row = models.Payment(
+            center_id=center_id,
+            client_id=client.id,
+            booking_id=booking.id,
+            amount=amount,
+            currency="SAR",
+            payment_method="public_cart_checkout",
+            status="pending",
+        )
+        db.add(payment_row)
+        db.flush()
+        bundle.append((booking, payment_row, yoga_session))
+
+    db.commit()
+
+    provider = get_payment_provider()
+    base = _public_base(request)
+
+    if isinstance(provider, StripePaymentProvider):
+        line_specs = [
+            (
+                float(ys.price_drop_in),
+                f"حجز جلسة — {ys.title}"[:120],
+                f"{center.name} · {_fmt_dt(ys.starts_at)} · {ys.duration_minutes} دقيقة"[:500],
+            )
+            for _, _, ys in bundle
+        ]
+        payment_ids_meta = ",".join(str(p.id) for _, p, _ in bundle)
+        try:
+            provider_result = provider.create_checkout_session_multi_line(
+                currency="sar",
+                line_specs=line_specs,
+                metadata={
+                    "payment_ids": payment_ids_meta,
+                    "center_id": str(center_id),
+                    "client_id": str(client.id),
+                    "cart": "1",
+                },
+                success_url=f"{base}/index?center_id={center_id}&payment=success",
+                cancel_url=f"{base}/index?center_id={center_id}&payment=cancelled",
+            )
+        except Exception as exc:
+            for bk, pay, _ in bundle:
+                bk.status = "cancelled"
+                pay.status = "failed"
+            db.commit()
+            log_security_event(
+                "public_cart_checkout",
+                request,
+                "stripe_error",
+                details={"error": str(exc)[:200], "center_id": center_id},
+            )
+            return RedirectResponse(url=f"/index?center_id={center_id}&msg=stripe_error", status_code=303)
+
+        pref = provider_result.provider_ref
+        checkout_url = provider_result.checkout_url or ""
+        if not pref or not checkout_url:
+            for bk, pay, _ in bundle:
+                bk.status = "cancelled"
+                pay.status = "failed"
+            db.commit()
+            return RedirectResponse(url=f"/index?center_id={center_id}&msg=stripe_no_url", status_code=303)
+        for _, pay, _ in bundle:
+            pay.provider_ref = pref
+        db.commit()
+        return RedirectResponse(url=checkout_url, status_code=303)
+
+    total = sum(float(ys.price_drop_in) for _, _, ys in bundle)
+    provider_result = provider.charge(
+        amount=total,
+        currency="SAR",
+        metadata={"center_id": center_id, "client_id": client.id, "cart": "1"},
+    )
+    pref = provider_result.provider_ref
+    for bk, pay, _ in bundle:
+        pay.provider_ref = pref
+        if provider_result.status == "paid":
+            pay.status = "paid"
+            bk.status = "confirmed"
+        else:
+            pay.status = "failed"
+            bk.status = "cancelled"
+    db.commit()
+    first_bid = bundle[0][0].id if bundle else ""
+    return RedirectResponse(
+        url=f"/index?center_id={center_id}&msg=paid_mock&booking_id={first_bid}",
         status_code=303,
     )
 

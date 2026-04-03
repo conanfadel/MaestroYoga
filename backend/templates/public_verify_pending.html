@@ -47,7 +47,16 @@
       <div class="alert warn">طلبات كثيرة. حاول مجددًا بعد دقائق.</div>
     {% endif %}
     {% if request.query_params.get('msg') == 'mail_failed' %}
-      <div class="alert warn">تعذر إرسال الإيميل الحقيقي حاليًا. تحقق من إعدادات SMTP ثم اضغط "إعادة إرسال".</div>
+      <div class="alert warn">
+        تعذر إرسال رسالة التحقق. راجع لوحة <strong>Render → Environment</strong>:
+        <ul style="margin:8px 0 0;padding-inline-start:1.2rem;line-height:1.55;">
+          <li><code>MAIL_PROVIDER=smtp</code> و<code>SMTP_HOST=smtp.gmail.com</code> و<code>SMTP_PORT=587</code> و<code>SMTP_SECURITY=starttls</code></li>
+          <li><code>SMTP_USER</code> و<code>SMTP_FROM</code> = نفس بريد Gmail</li>
+          <li><code>SMTP_PASSWORD</code> = <strong>كلمة مرور التطبيق</strong> (16 حرفًا بدون مسافات من Google Account → الأمان)</li>
+          <li>بعد الحفظ أعد نشر الخدمة، ثم اضغط «إعادة إرسال» هنا.</li>
+        </ul>
+        في سجلات Render ابحث عن سطر يبدأ بـ <code>[MAILER][CONFIG]</code> أو <code>[MAILER][ERROR]</code> لمعرفة السبب (مثل <code>missing_smtp_password</code>).
+      </div>
     {% endif %}
     {% if request.query_params.get('msg') == 'expired_link' %}
       <div class="alert warn">انتهت صلاحية رابط التأكيد. اضغط "إعادة إرسال رسالة التحقق" للحصول على رابط جديد.</div>

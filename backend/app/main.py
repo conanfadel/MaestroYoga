@@ -622,56 +622,82 @@ async def stripe_webhook(
     if event_type == "checkout.session.completed":
         session_id = event_data.get("id")
         metadata = event_data.get("metadata", {}) or {}
-        payment_id = metadata.get("payment_id")
-        payment = None
-        if payment_id:
+        payment_rows: list[models.Payment] = []
+        pids_raw = metadata.get("payment_ids") or ""
+        if pids_raw:
+            for part in str(pids_raw).split(","):
+                part = part.strip()
+                if part.isdigit():
+                    pr = db.get(models.Payment, int(part))
+                    if pr:
+                        payment_rows.append(pr)
+        if not payment_rows:
+            payment_id = metadata.get("payment_id")
+            if payment_id and str(payment_id).strip().isdigit():
+                pr = db.get(models.Payment, int(str(payment_id).strip()))
+                if pr:
+                    payment_rows.append(pr)
+        if not payment_rows:
+            lone = db.query(models.Payment).filter(models.Payment.provider_ref == session_id).first()
+            if lone:
+                payment_rows.append(lone)
+        subscription_id = metadata.get("subscription_id")
+        subscription = None
+        if subscription_id and str(subscription_id).strip().isdigit():
             try:
-                payment = db.get(models.Payment, int(payment_id))
+                subscription = db.get(models.ClientSubscription, int(str(subscription_id).strip()))
             except (TypeError, ValueError):
-                payment = None
-        if not payment:
-            payment = db.query(models.Payment).filter(models.Payment.provider_ref == session_id).first()
-        if payment:
+                subscription = None
+        for payment in payment_rows:
             payment.status = "paid"
             if payment.booking_id:
                 booking = db.get(models.Booking, payment.booking_id)
                 if booking:
                     booking.status = "confirmed"
-            subscription_id = metadata.get("subscription_id")
-            if subscription_id:
-                try:
-                    subscription = db.get(models.ClientSubscription, int(subscription_id))
-                except (TypeError, ValueError):
-                    subscription = None
-                if subscription:
-                    subscription.status = "active"
+            if subscription and not payment.booking_id:
+                subscription.status = "active"
+        if subscription and not payment_rows:
+            subscription.status = "active"
+        if payment_rows or subscription:
             db.commit()
     elif event_type == "checkout.session.expired":
         session_id = event_data.get("id")
         metadata = event_data.get("metadata", {}) or {}
-        payment_id = metadata.get("payment_id")
-        payment = None
-        if payment_id:
+        payment_rows: list[models.Payment] = []
+        pids_raw = metadata.get("payment_ids") or ""
+        if pids_raw:
+            for part in str(pids_raw).split(","):
+                part = part.strip()
+                if part.isdigit():
+                    pr = db.get(models.Payment, int(part))
+                    if pr:
+                        payment_rows.append(pr)
+        if not payment_rows:
+            payment_id = metadata.get("payment_id")
+            if payment_id and str(payment_id).strip().isdigit():
+                pr = db.get(models.Payment, int(str(payment_id).strip()))
+                if pr:
+                    payment_rows.append(pr)
+        if not payment_rows:
+            lone = db.query(models.Payment).filter(models.Payment.provider_ref == session_id).first()
+            if lone:
+                payment_rows.append(lone)
+        subscription_id = metadata.get("subscription_id")
+        subscription = None
+        if subscription_id and str(subscription_id).strip().isdigit():
             try:
-                payment = db.get(models.Payment, int(payment_id))
+                subscription = db.get(models.ClientSubscription, int(str(subscription_id).strip()))
             except (TypeError, ValueError):
-                payment = None
-        if not payment:
-            payment = db.query(models.Payment).filter(models.Payment.provider_ref == session_id).first()
-        if payment:
+                subscription = None
+        for payment in payment_rows:
             payment.status = "failed"
             if payment.booking_id:
                 booking = db.get(models.Booking, payment.booking_id)
                 if booking and booking.status == "pending_payment":
                     booking.status = "cancelled"
-            subscription_id = metadata.get("subscription_id")
-            if subscription_id:
-                try:
-                    subscription = db.get(models.ClientSubscription, int(subscription_id))
-                except (TypeError, ValueError):
-                    subscription = None
-                if subscription and subscription.status == "pending":
-                    subscription.status = "cancelled"
+        if subscription and subscription.status == "pending":
+            subscription.status = "cancelled"
+        if payment_rows or subscription:
             db.commit()
 
     return {"received": True}
