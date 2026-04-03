@@ -41,6 +41,62 @@ def test_admin_login_create_delete_room(client):
     assert delete_room.headers["location"].startswith("/admin?msg=room_deleted")
 
 
+def test_admin_center_branding_upload_and_tagline(client):
+    login = client.post(
+        "/admin/login",
+        data={"email": "owner@maestroyoga.local", "password": "Admin@12345"},
+        follow_redirects=False,
+    )
+    assert login.status_code == 303
+
+    db = SessionLocal()
+    owner = db.query(models.User).filter(models.User.email == "owner@maestroyoga.local").first()
+    assert owner is not None
+    center_id = owner.center_id
+    db.close()
+
+    png_bytes = b"\x89PNG\r\n\x1a\n" + b"\x00" * 32
+    save = client.post(
+        "/admin/center/branding",
+        data={"brand_tagline": "نص تجريبي للهوية", "scroll_y": "0"},
+        files={"logo": ("mark.png", png_bytes, "image/png")},
+        follow_redirects=False,
+    )
+    assert save.status_code == 303
+    assert "msg=center_branding_updated" in (save.headers.get("location") or "")
+
+    db = SessionLocal()
+    center = db.get(models.Center, center_id)
+    assert center is not None
+    assert center.brand_tagline == "نص تجريبي للهوية"
+    assert center.logo_url and f"center_{center_id}.png" in center.logo_url
+    db.close()
+
+    hero_png = b"\x89PNG\r\n\x1a\n" + b"\x00" * 24
+    hero_save = client.post(
+        "/admin/center/branding",
+        data={"scroll_y": "0"},
+        files={"hero": ("studio.jpg", hero_png, "image/jpeg")},
+        follow_redirects=False,
+    )
+    assert hero_save.status_code == 303
+    assert "msg=center_branding_updated" in (hero_save.headers.get("location") or "")
+    db = SessionLocal()
+    center = db.get(models.Center, center_id)
+    assert center is not None
+    assert center.hero_image_url and f"center_{center_id}_hero.jpg" in center.hero_image_url
+    db.close()
+
+    bad = client.post(
+        "/admin/center/branding",
+        data={"scroll_y": "0"},
+        files={"logo": ("x.exe", b"MZ", "application/octet-stream")},
+        follow_redirects=False,
+    )
+    assert bad.status_code == 303
+    assert "msg=center_branding_bad_file" in (bad.headers.get("location") or "")
+
+
 def test_mobile_compatible_api_flow(client):
     db = SessionLocal()
     ensure_demo_data(db)

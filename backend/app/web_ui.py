@@ -6,7 +6,7 @@ import os
 from pathlib import Path
 from urllib.parse import urlencode, urlsplit
 
-from fastapi import APIRouter, Depends, Form, HTTPException, Request
+from fastapi import APIRouter, Depends, File, Form, HTTPException, Request, UploadFile
 from fastapi.responses import HTMLResponse, RedirectResponse, StreamingResponse
 from fastapi.templating import Jinja2Templates
 from sqlalchemy import and_, case, func, or_
@@ -44,6 +44,7 @@ from .web_shared import (
     _cookie_secure_flag,
     _fmt_dt,
     _is_email_verification_required,
+    _is_strong_public_password,
     _is_truthy_env,
     _normalize_phone_with_country,
     _plan_duration_days,
@@ -127,6 +128,50 @@ ADMIN_MSG_FAQ_INVALID = "faq_invalid"
 ADMIN_MSG_FAQ_NOT_FOUND = "faq_not_found"
 ADMIN_MSG_FAQ_REORDERED = "faq_reordered"
 ADMIN_MSG_FAQ_REORDER_INVALID = "faq_reorder_invalid"
+ADMIN_MSG_CENTER_BRANDING_UPDATED = "center_branding_updated"
+ADMIN_MSG_CENTER_BRANDING_BAD_FILE = "center_branding_bad_file"
+ADMIN_MSG_CENTER_BRANDING_CENTER_MISSING = "center_branding_center_missing"
+
+CENTER_LOGO_UPLOAD_DIR = Path(__file__).resolve().parent.parent / "static" / "uploads" / "centers"
+APP_STATIC_ROOT = Path(__file__).resolve().parent.parent / "static"
+CENTER_LOGO_MAX_BYTES = 2 * 1024 * 1024
+CENTER_LOGO_ALLOWED_EXT = frozenset({"png", "jpg", "jpeg", "webp", "gif"})
+
+
+def _resolved_path_under_static(public_path: str | None) -> Path | None:
+    if not public_path or not isinstance(public_path, str):
+        return None
+    u = public_path.strip()
+    if not u.startswith("/static/"):
+        return None
+    rel = u[len("/static/") :].strip("/")
+    if not rel:
+        return None
+    parts = rel.split("/")
+    if any(p == ".." or p == "" for p in parts):
+        return None
+    base = APP_STATIC_ROOT.resolve()
+    candidate = (base / Path(*parts)).resolve()
+    try:
+        candidate.relative_to(base)
+    except ValueError:
+        return None
+    return candidate
+
+
+def _clear_center_branding_urls_if_files_missing(db: Session, center: models.Center) -> None:
+    changed = False
+    lp = _resolved_path_under_static(center.logo_url)
+    if lp is not None and not lp.is_file():
+        center.logo_url = None
+        changed = True
+    hp = _resolved_path_under_static(center.hero_image_url)
+    if hp is not None and not hp.is_file():
+        center.hero_image_url = None
+        changed = True
+    if changed:
+        db.add(center)
+        db.commit()
 
 ADMIN_FLASH_MESSAGES: dict[str, tuple[str, str]] = {
     ADMIN_MSG_ROOM_CREATED: ("تمت إضافة الغرفة بنجاح.", "info"),
@@ -172,6 +217,9 @@ ADMIN_FLASH_MESSAGES: dict[str, tuple[str, str]] = {
     ADMIN_MSG_FAQ_NOT_FOUND: ("تعذر العثور على السؤال المطلوب.", "warn"),
     ADMIN_MSG_FAQ_REORDERED: ("تم حفظ ترتيب الأسئلة الشائعة بنجاح.", "info"),
     ADMIN_MSG_FAQ_REORDER_INVALID: ("تعذر حفظ ترتيب الأسئلة. تحقق من القائمة ثم أعد المحاولة.", "warn"),
+    ADMIN_MSG_CENTER_BRANDING_UPDATED: ("تم حفظ هوية المركز (الشعار، غلاف الصفحة، التلميح) في الواجهة العامة.", "info"),
+    ADMIN_MSG_CENTER_BRANDING_BAD_FILE: ("إحدى الصور غير مقبولة. استخدم PNG أو JPG أو WebP أو GIF بحجم أقل من 2 ميجابايت لكل ملف.", "warn"),
+    ADMIN_MSG_CENTER_BRANDING_CENTER_MISSING: ("تعذر العثور على بيانات المركز المرتبطة بحسابك.", "warn"),
 }
 
 
@@ -224,6 +272,20 @@ def _active_block_for_ip(db: Session, ip: str) -> models.BlockedIP | None:
 
 def _is_ip_blocked(db: Session, request: Request) -> bool:
     return _active_block_for_ip(db, _client_ip(request)) is not None
+
+
+def _delete_center_logo_files(center_id: int) -> None:
+    if not CENTER_LOGO_UPLOAD_DIR.is_dir():
+        return
+    for path in CENTER_LOGO_UPLOAD_DIR.glob(f"center_{center_id}.*"):
+        path.unlink(missing_ok=True)
+
+
+def _delete_center_hero_files(center_id: int) -> None:
+    if not CENTER_LOGO_UPLOAD_DIR.is_dir():
+        return
+    for path in CENTER_LOGO_UPLOAD_DIR.glob(f"center_{center_id}_hero.*"):
+        path.unlink(missing_ok=True)
 
 
 def _admin_redirect(msg: str | None = None, scroll_y: str | None = None) -> RedirectResponse:
@@ -379,6 +441,8 @@ def public_index(
             center = db.query(models.Center).order_by(models.Center.id.asc()).first()
     if not center:
         raise HTTPException(status_code=404, detail="Center not found")
+
+    _clear_center_branding_urls_if_files_missing(db, center)
 
     sessions = (
         db.query(models.YogaSession)
@@ -668,7 +732,7 @@ def public_register(
     if phone_exists:
         log_security_event("public_register", request, "phone_already_exists", email=email_normalized)
         return RedirectResponse(url="/public/register?msg=phone_exists", status_code=303)
-    if len(password) < 8:
+    if not _is_strong_public_password(password):
         log_security_event("public_register", request, "weak_password", email=email_normalized)
         return RedirectResponse(url="/public/register?msg=weak_password", status_code=303)
 
@@ -1022,7 +1086,7 @@ def public_reset_password(
             url=_url_with_params("/public/reset-password", token=token, msg="rate_limited"),
             status_code=303,
         )
-    if len(password) < 8:
+    if not _is_strong_public_password(password):
         log_security_event("public_reset_password", request, "weak_password")
         return RedirectResponse(
             url=_url_with_params("/public/reset-password", token=token, msg="weak_password"),
@@ -1098,7 +1162,7 @@ def admin_logout():
 def admin_dashboard(
     request: Request,
     msg: str | None = None,
-    room_sort: str = "name",
+    room_sort: str = "id_asc",
     public_user_q: str = "",
     public_user_status: str = "active",
     public_user_verified: str = "all",
@@ -1118,8 +1182,11 @@ def admin_dashboard(
     assert user is not None
     cid = require_user_center_id(user)
     center = db.get(models.Center, cid)
-    room_sort_key = (room_sort or "name").strip().lower()
+    if center:
+        _clear_center_branding_urls_if_files_missing(db, center)
+    room_sort_key = (room_sort or "id_asc").strip().lower()
     room_ordering = {
+        "id_asc": (models.Room.id.asc(),),
         "name": (models.Room.name.asc(), models.Room.id.asc()),
         "newest": (models.Room.id.desc(),),
         "capacity_desc": (models.Room.capacity.desc(), models.Room.name.asc(), models.Room.id.asc()),
@@ -1146,7 +1213,7 @@ def admin_dashboard(
             .all()
         )
     else:
-        room_order_by = room_ordering.get(room_sort_key, room_ordering["name"])
+        room_order_by = room_ordering.get(room_sort_key, room_ordering["id_asc"])
         rooms = (
             db.query(models.Room)
             .filter(models.Room.center_id == cid)
@@ -1657,7 +1724,7 @@ def admin_dashboard(
                 "sort": (
                     room_sort_key
                     if room_sort_key in room_ordering or room_sort_key in {"sessions_desc", "sessions_asc"}
-                    else "name"
+                    else "id_asc"
                 ),
             },
         },
@@ -2383,6 +2450,78 @@ def admin_reorder_faqs(
         row_by_id[faq_id].sort_order = idx
     db.commit()
     return _admin_redirect(ADMIN_MSG_FAQ_REORDERED, scroll_y)
+
+
+@router.post("/admin/center/branding")
+async def admin_center_branding(
+    brand_tagline: str = Form(""),
+    remove_logo: str = Form(""),
+    remove_hero: str = Form(""),
+    logo: UploadFile | None = File(default=None),
+    hero: UploadFile | None = File(default=None),
+    scroll_y: str = Form(default=""),
+    db: Session = Depends(get_db),
+    user: models.User = Depends(require_roles_cookie_or_bearer("center_owner", "center_staff")),
+):
+    cid = require_user_center_id(user)
+    center = db.get(models.Center, cid)
+    if not center:
+        return _admin_redirect(ADMIN_MSG_CENTER_BRANDING_CENTER_MISSING, scroll_y)
+
+    logo_raw = (logo.filename or "").strip() if logo else ""
+    logo_ext: str | None = None
+    logo_bytes: bytes | None = None
+    if logo and logo_raw:
+        ext = logo_raw.rsplit(".", 1)[-1].lower() if "." in logo_raw else ""
+        if ext not in CENTER_LOGO_ALLOWED_EXT:
+            return _admin_redirect(ADMIN_MSG_CENTER_BRANDING_BAD_FILE, scroll_y)
+        body = await logo.read()
+        if not body or len(body) > CENTER_LOGO_MAX_BYTES:
+            return _admin_redirect(ADMIN_MSG_CENTER_BRANDING_BAD_FILE, scroll_y)
+        logo_ext = ext
+        logo_bytes = body
+
+    hero_raw = (hero.filename or "").strip() if hero else ""
+    hero_ext: str | None = None
+    hero_bytes: bytes | None = None
+    if hero and hero_raw:
+        ext = hero_raw.rsplit(".", 1)[-1].lower() if "." in hero_raw else ""
+        if ext not in CENTER_LOGO_ALLOWED_EXT:
+            return _admin_redirect(ADMIN_MSG_CENTER_BRANDING_BAD_FILE, scroll_y)
+        body = await hero.read()
+        if not body or len(body) > CENTER_LOGO_MAX_BYTES:
+            return _admin_redirect(ADMIN_MSG_CENTER_BRANDING_BAD_FILE, scroll_y)
+        hero_ext = ext
+        hero_bytes = body
+
+    tag = brand_tagline.strip()[:500]
+    center.brand_tagline = tag if tag else None
+
+    remove = remove_logo.lower() in {"1", "true", "on", "yes"}
+    remove_h = remove_hero.lower() in {"1", "true", "on", "yes"}
+
+    if logo_ext is not None and logo_bytes is not None:
+        CENTER_LOGO_UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
+        _delete_center_logo_files(cid)
+        dest = CENTER_LOGO_UPLOAD_DIR / f"center_{cid}.{logo_ext}"
+        dest.write_bytes(logo_bytes)
+        center.logo_url = f"/static/uploads/centers/center_{cid}.{logo_ext}"
+    elif remove:
+        _delete_center_logo_files(cid)
+        center.logo_url = None
+
+    if hero_ext is not None and hero_bytes is not None:
+        CENTER_LOGO_UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
+        _delete_center_hero_files(cid)
+        dest = CENTER_LOGO_UPLOAD_DIR / f"center_{cid}_hero.{hero_ext}"
+        dest.write_bytes(hero_bytes)
+        center.hero_image_url = f"/static/uploads/centers/center_{cid}_hero.{hero_ext}"
+    elif remove_h:
+        _delete_center_hero_files(cid)
+        center.hero_image_url = None
+
+    db.commit()
+    return _admin_redirect(ADMIN_MSG_CENTER_BRANDING_UPDATED, scroll_y)
 
 
 @router.post("/public/subscribe")

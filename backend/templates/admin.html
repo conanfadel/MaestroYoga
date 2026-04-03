@@ -4,210 +4,396 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>إدارة الجلسات — Maestro Yoga</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet" />
   <style>
-    * { box-sizing: border-box; }
-    body {
-      font-family: system-ui, sans-serif;
-      background: radial-gradient(circle at top right, #ecfdf5, #f0fdfa 40%, #f8fafc);
-      margin: 0;
-      padding: 20px;
-      color: #1f2937;
+    :root {
+      --gold: #c5a059;
+      --gold-dark: #9a7b3c;
+      --gold-soft: rgba(197, 160, 89, 0.15);
+      --mint: #aaf0d1;
+      --mint-mid: #7dd3ae;
+      --mint-bg: #e8fcf4;
+      --charcoal: #2d3436;
+      --charcoal-muted: #636e72;
+      --white: #ffffff;
+      --page-bg: #fafcfb;
     }
-    .container { max-width: 1200px; margin: 0 auto; }
+    * { box-sizing: border-box; }
+    html {
+      overflow-x: clip;
+    }
+    body {
+      font-family: "Tajawal", system-ui, sans-serif;
+      background:
+        radial-gradient(ellipse 100% 70% at 100% 0%, var(--mint-bg) 0%, transparent 50%),
+        var(--page-bg);
+      margin: 0;
+      padding: 8px clamp(10px, 1.8vw, 28px) 16px;
+      color: var(--charcoal);
+      overflow-x: clip;
+      width: 100%;
+      max-width: 100%;
+    }
+    .container {
+      width: 100%;
+      max-width: 100%;
+      margin: 0;
+    }
     .top {
       display: flex;
       justify-content: space-between;
       align-items: center;
       flex-wrap: wrap;
-      gap: 12px;
-      margin-bottom: 18px;
-      background: linear-gradient(140deg, #065f46, #0d9488 60%, #10b981);
+      gap: 14px;
+      margin-bottom: 14px;
+      background: var(--white);
+      border: 1px solid rgba(197, 160, 89, 0.35);
       border-radius: 18px;
-      padding: 20px;
-      color: #f0fdfa;
-      box-shadow: 0 16px 36px rgba(6, 95, 70, .25);
+      padding: 16px 20px;
+      color: var(--charcoal);
+      box-shadow: 0 18px 44px rgba(45, 52, 54, 0.08);
+      position: relative;
     }
-    h1 { margin: 0; font-size: 1.45rem; }
-    .muted { color: #d1fae5; font-size: 0.95rem; }
+    .top::before {
+      content: "";
+      position: absolute;
+      inset-inline-start: 0;
+      top: 0;
+      bottom: 0;
+      width: 5px;
+      background: linear-gradient(180deg, var(--gold), var(--mint-mid));
+      border-start-start-radius: 20px;
+      border-end-start-radius: 20px;
+    }
+    .top-brand {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 4px;
+    }
+    h1 {
+      margin: 0;
+      font-size: 1.5rem;
+      font-family: "Amiri", "Tajawal", serif;
+      font-weight: 700;
+      color: var(--charcoal);
+    }
+    h1 span { color: var(--gold-dark); }
+    .muted { color: var(--charcoal-muted); font-size: 0.95rem; margin-top: 4px; }
     a.btn {
       display: inline-block;
-      padding: 8px 14px;
-      background: #ecfdf5;
+      padding: 10px 18px;
+      background: linear-gradient(135deg, var(--gold) 0%, #d4b56e 100%);
       border-radius: 999px;
       text-decoration: none;
-      color: #065f46;
-      font-weight: 700;
-      margin-inline-start: 6px;
+      color: #1a1a1a;
+      font-weight: 800;
+      margin-inline-start: 8px;
+      font-size: 0.92rem;
+      box-shadow: 0 4px 14px rgba(197, 160, 89, 0.35);
+      transition: transform 0.15s ease, box-shadow 0.15s ease;
     }
-    .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 10px; margin-bottom: 16px; }
+    a.btn:hover { transform: translateY(-1px); box-shadow: 0 6px 18px rgba(197, 160, 89, 0.4); }
+    a.btn.secondary {
+      background: transparent;
+      color: var(--charcoal);
+      border: 2px solid var(--mint-mid);
+      box-shadow: none;
+    }
+    a.btn.secondary:hover { border-color: var(--gold); }
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(128px, 1fr));
+      gap: 10px;
+      margin-bottom: 14px;
+    }
     .stat {
-      background: #ffffffd9;
-      border: 1px solid #99f6e4;
+      background: var(--white);
+      border: 1px solid rgba(197, 160, 89, 0.22);
       border-radius: 14px;
-      padding: 12px;
+      padding: 11px 12px;
+      box-shadow: 0 6px 20px rgba(45, 52, 54, 0.04);
     }
-    .stat .k { color: #64748b; font-size: .82rem; }
-    .stat .v { color: #065f46; font-size: 1.4rem; font-weight: 800; margin-top: 4px; }
-    .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(290px, 1fr)); gap: 14px; }
+    .stat .k { color: var(--charcoal-muted); font-size: .82rem; font-weight: 600; }
+    .stat .v { color: var(--gold-dark); font-size: 1.45rem; font-weight: 800; margin-top: 6px; }
+    .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 252px), 1fr)); gap: 14px; }
     .card {
-      background: #ffffffd9;
-      border: 1px solid #ccfbf1;
-      border-radius: 14px;
-      padding: 16px;
-      box-shadow: 0 4px 16px rgba(0,0,0,.05);
+      background: var(--white);
+      border: 1px solid rgba(197, 160, 89, 0.22);
+      border-radius: 18px;
+      padding: 18px;
+      box-shadow: 0 10px 28px rgba(45, 52, 54, 0.06);
     }
-    h2 { margin: 0 0 12px; font-size: 1.05rem; color: #134e4a; }
-    label { display: block; margin: 12px 0 6px; font-weight: 600; font-size: 0.9rem; }
-    input, select { width: 100%; padding: 10px 12px; border: 1px solid #99f6e4; border-radius: 10px; background: #fff; }
+    h2 {
+      margin: 0 0 12px;
+      font-size: 1.12rem;
+      font-family: "Amiri", "Tajawal", serif;
+      font-weight: 700;
+      color: var(--charcoal);
+    }
+    label { display: block; margin: 12px 0 6px; font-weight: 700; font-size: 0.9rem; color: var(--charcoal); }
+    input, select, textarea {
+      width: 100%;
+      padding: 10px 12px;
+      border: 2px solid rgba(170, 240, 209, 0.85);
+      border-radius: 12px;
+      background: #fff;
+      font-family: inherit;
+    }
+    textarea { min-height: 88px; resize: vertical; }
+    input:focus, select:focus, textarea:focus {
+      outline: none;
+      border-color: var(--gold);
+      box-shadow: 0 0 0 3px var(--gold-soft);
+    }
     button {
       margin-top: 12px;
-      padding: 10px 16px;
+      padding: 11px 18px;
       border: 0;
-      border-radius: 10px;
-      background: linear-gradient(120deg, #0f766e, #10b981);
-      color: #fff;
-      font-weight: 700;
+      border-radius: 12px;
+      background: linear-gradient(135deg, var(--mint) 0%, #8fe8c4 100%);
+      color: #1a1a1a;
+      font-weight: 800;
       cursor: pointer;
+      font-family: inherit;
+      box-shadow: 0 0 0 2px rgba(197, 160, 89, 0.35) inset;
+      transition: box-shadow 0.15s ease;
     }
-    button.danger { background: #dc2626; }
-    table { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
-    th, td { border-bottom: 1px solid #e5e7eb; padding: 10px 8px; text-align: right; }
-    th { background: #f0fdfa; font-weight: 700; color: #134e4a; }
-    .badge { display: inline-block; padding: 2px 8px; border-radius: 999px; background: #ccfbf1; font-size: 0.8rem; color: #0f766e; }
-    .badge.paid { background: #dcfce7; color: #166534; }
-    .badge.pending { background: #fef9c3; color: #854d0e; }
-    .badge.failed { background: #fee2e2; color: #991b1b; }
+    button:hover { box-shadow: 0 0 0 2px var(--gold) inset, 0 4px 14px rgba(197, 160, 89, 0.2); }
+    button.danger { background: linear-gradient(135deg, #dc2626, #b91c1c); color: #fff; box-shadow: none; }
+    button.danger:hover { box-shadow: 0 4px 14px rgba(220, 38, 38, 0.35); }
+    .table-fluid {
+      width: 100%;
+      max-width: 100%;
+      min-width: 0;
+    }
+    table { width: 100%; max-width: 100%; border-collapse: collapse; font-size: 0.9rem; background: var(--white); border-radius: 12px; overflow: hidden; }
+    th, td { border-bottom: 1px solid #e8ecf0; padding: 9px 8px; text-align: right; overflow-wrap: anywhere; word-wrap: break-word; }
+    th {
+      background: var(--charcoal);
+      color: #f8fafc;
+      font-weight: 800;
+      font-size: 0.88rem;
+    }
+    tr:last-child td { border-bottom: 0; }
+    .badge { display: inline-block; padding: 3px 10px; border-radius: 999px; background: var(--mint-bg); font-size: 0.78rem; font-weight: 700; color: var(--charcoal); border: 1px solid rgba(170, 240, 209, 0.6); }
+    .badge.paid { background: #dcfce7; color: #166534; border-color: #bbf7d0; }
+    .badge.pending { background: #fef9c3; color: #854d0e; border-color: #fde68a; }
+    .badge.failed { background: #fee2e2; color: #991b1b; border-color: #fecaca; }
     .badge.low { background: #dcfce7; color: #166534; }
     .badge.medium { background: #fef3c7; color: #92400e; }
     .badge.high { background: #fee2e2; color: #991b1b; }
-    .small { color: #64748b; font-size: .86rem; }
+    .small { color: var(--charcoal-muted); font-size: .86rem; }
     .soft-link {
       display: inline-block;
-      padding: 4px 10px;
+      padding: 5px 12px;
       border-radius: 999px;
       text-decoration: none;
-      background: #ecfdf5;
-      border: 1px solid #99f6e4;
-      color: #0f766e;
+      background: var(--mint-bg);
+      border: 1px solid rgba(170, 240, 209, 0.9);
+      color: var(--charcoal);
       font-weight: 700;
     }
     .alert {
       margin: 0 0 14px;
-      padding: 10px 12px;
-      border-radius: 10px;
-      border: 1px solid #99f6e4;
-      background: #ecfeff;
-      color: #155e75;
-      font-size: .9rem;
+      padding: 12px 16px;
+      border-radius: 14px;
+      border: 1px solid var(--mint-mid);
+      background: var(--mint-bg);
+      color: var(--charcoal);
+      font-size: .92rem;
     }
     .alert.warn {
       border-color: #fcd34d;
       background: #fffbeb;
       color: #92400e;
     }
-    .inline-form { display: flex; gap: 6px; align-items: center; flex-wrap: nowrap; }
+    .branding-remove-zone {
+      margin-top: 16px;
+      padding: 14px 16px;
+      border-radius: 14px;
+      border: 2px solid rgba(185, 28, 28, 0.4);
+      background: linear-gradient(145deg, #fff5f5 0%, #ffe4e6 55%, #fff 100%);
+      box-shadow: 0 4px 18px rgba(185, 28, 28, 0.08);
+    }
+    .branding-remove-zone__head {
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+    }
+    .branding-remove-zone__checkbox {
+      width: 1.35rem !important;
+      height: 1.35rem !important;
+      min-width: 1.35rem !important;
+      margin-top: 2px;
+      flex-shrink: 0;
+      cursor: pointer;
+      accent-color: #b91c1c;
+      border-radius: 6px;
+    }
+    .branding-remove-zone__title {
+      margin: 0;
+      font-size: 1.02rem;
+      font-weight: 800;
+      color: #991b1b;
+      cursor: pointer;
+      line-height: 1.45;
+      display: block;
+    }
+    .branding-remove-zone__help {
+      margin: 10px 0 0;
+      padding-inline-start: calc(1.35rem + 12px);
+      font-size: 0.88rem;
+      color: #7f1d1d;
+      line-height: 1.55;
+      font-weight: 600;
+    }
+    .branding-split {
+      margin: 20px 0 16px;
+      border: 0;
+      border-top: 1px solid rgba(197, 160, 89, 0.28);
+    }
+    .branding-identity-divider {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      margin: 28px 0 20px;
+    }
+    .branding-identity-divider__line {
+      flex: 1;
+      min-width: 20px;
+      height: 2px;
+      border-radius: 2px;
+      background: linear-gradient(90deg, transparent, var(--mint-mid), var(--gold), var(--mint-mid), transparent);
+      opacity: 0.9;
+    }
+    .branding-identity-divider__label {
+      flex: 0 0 auto;
+      font-size: 0.88rem;
+      font-weight: 800;
+      color: var(--gold-dark);
+      font-family: "Amiri", "Tajawal", serif;
+      white-space: nowrap;
+    }
+    .branding-subhead {
+      margin: 0 0 8px;
+      font-size: 1rem;
+      font-weight: 800;
+      color: var(--charcoal);
+      font-family: "Amiri", "Tajawal", serif;
+    }
+    .inline-form { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
     .inline-form input { min-width: 110px; width: auto; flex: 1 1 auto; }
-    .inline-form button { margin-top: 0; padding: 8px 10px; font-size: .82rem; }
-    .filters { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 8px; margin-bottom: 10px; }
+    .inline-form button { margin-top: 0; padding: 8px 12px; font-size: .82rem; }
+    .filters { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 10px; margin-bottom: 10px; }
     .filters button { margin-top: 0; }
     .mono { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: .78rem; color: #334155; }
     .controls-wrap {
       display: flex;
       gap: 6px;
-      flex-wrap: nowrap;
+      flex-wrap: wrap;
       align-items: center;
-      overflow-x: auto;
-      white-space: nowrap;
+      overflow-x: visible;
     }
     .controls-wrap form { margin: 0; }
     .controls-wrap button {
       margin-top: 0;
       padding: 7px 10px;
       font-size: .8rem;
-      border-radius: 8px;
+      border-radius: 10px;
     }
     .controls-wrap .soft {
-      background: linear-gradient(120deg, #2563eb, #0ea5e9);
+      background: linear-gradient(135deg, var(--charcoal) 0%, #454d50 100%);
+      color: #fff;
+      box-shadow: none;
     }
     .controls-wrap .warn {
       background: linear-gradient(120deg, #d97706, #f59e0b);
       color: #fff;
       border: 0;
+      box-shadow: none;
     }
     .accordion {
-      border: 1px solid #a7f3d0;
-      border-radius: 12px;
-      background: #ffffffcc;
-      margin: 10px 0;
+      border: 1px solid rgba(197, 160, 89, 0.3);
+      border-radius: 16px;
+      background: var(--white);
+      margin: 8px 0;
       overflow: hidden;
+      min-width: 0;
       scroll-margin-top: 14px;
+      box-shadow: 0 8px 24px rgba(45, 52, 54, 0.05);
     }
     .accordion.focused {
-      border-color: #10b981;
-      box-shadow: 0 0 0 3px rgba(16, 185, 129, .18);
+      border-color: var(--gold);
+      box-shadow: 0 0 0 3px var(--gold-soft);
       transition: box-shadow .25s ease, border-color .25s ease;
     }
-    .accordion-body { padding: 12px; display: none; }
+    .accordion-body { padding: 14px; display: none; min-width: 0; }
     .accordion.open .accordion-body { display: block; }
     .drag-handle {
       cursor: grab;
       user-select: none;
-      color: #0f766e;
-      font-weight: 700;
+      color: var(--gold-dark);
+      font-weight: 800;
       letter-spacing: 1px;
     }
     .faq-draggable.dragging { opacity: .45; }
     .section-tabs {
       display: flex;
-      gap: 8px;
-      overflow-x: auto;
-      white-space: nowrap;
-      padding-bottom: 4px;
+      flex-wrap: wrap;
+      gap: 8px 10px;
+      overflow-x: visible;
       margin: 6px 0 12px;
     }
     .section-tab {
       display: inline-flex;
       align-items: center;
       gap: 6px;
-      border: 1px solid #99f6e4;
+      border: 1px solid rgba(170, 240, 209, 0.95);
       border-radius: 999px;
-      background: #ecfdf5;
-      color: #0f766e;
-      font-weight: 700;
+      background: var(--mint-bg);
+      color: var(--charcoal);
+      font-weight: 800;
       font-size: .84rem;
-      padding: 7px 12px;
+      padding: 8px 14px;
       text-decoration: none;
       cursor: pointer;
       flex: 0 0 auto;
+      white-space: nowrap;
+      transition: background 0.15s ease, border-color 0.15s ease;
     }
+    .section-tab:hover { border-color: rgba(197, 160, 89, 0.5); }
     .section-tab.active {
-      background: linear-gradient(120deg, #0f766e, #10b981);
-      color: #fff;
+      background: linear-gradient(135deg, var(--gold) 0%, #d4b56e 100%);
+      color: #1a1a1a;
       border-color: transparent;
+      box-shadow: 0 4px 12px rgba(197, 160, 89, 0.3);
     }
     .plans-shell {
-      border: 1px solid #ccfbf1;
-      border-radius: 14px;
-      background: #f8fffd;
-      padding: 10px;
+      border: 1px solid rgba(197, 160, 89, 0.25);
+      border-radius: 16px;
+      background: linear-gradient(180deg, var(--white) 0%, var(--mint-bg) 100%);
+      padding: 14px;
     }
     .plans-head {
       display: flex;
       justify-content: space-between;
       align-items: center;
       gap: 10px;
-      margin-bottom: 8px;
+      margin-bottom: 10px;
       flex-wrap: wrap;
     }
-    .plans-note { font-size: .82rem; color: #475569; }
+    .plans-note { font-size: .82rem; color: var(--charcoal-muted); }
     .plan-type-badge {
       display: inline-flex;
       align-items: center;
       gap: 5px;
-      padding: 3px 9px;
+      padding: 4px 10px;
       border-radius: 999px;
       font-size: .76rem;
-      font-weight: 700;
+      font-weight: 800;
     }
     .plan-type-icon {
       width: 14px;
@@ -216,20 +402,20 @@
       color: currentColor;
       flex: 0 0 auto;
     }
-    .plan-type-weekly { background: #e0f2fe; color: #075985; }
-    .plan-type-monthly { background: #dcfce7; color: #166534; }
-    .plan-type-yearly { background: #fef3c7; color: #92400e; }
+    .plan-type-weekly { background: var(--mint-bg); color: var(--charcoal); }
+    .plan-type-monthly { background: var(--gold-soft); color: var(--gold-dark); }
+    .plan-type-yearly { background: rgba(197, 160, 89, 0.28); color: var(--charcoal); }
     .plans-cards {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      grid-template-columns: repeat(auto-fit, minmax(min(100%, 240px), 1fr));
       gap: 12px;
     }
     .plan-card {
-      border: 1px solid #bff7ea;
-      border-radius: 12px;
-      background: #ffffff;
-      padding: 12px;
-      box-shadow: 0 3px 10px rgba(2, 132, 199, .08);
+      border: 1px solid rgba(45, 52, 54, 0.1);
+      border-radius: 14px;
+      background: var(--white);
+      padding: 14px;
+      box-shadow: 0 6px 22px rgba(45, 52, 54, 0.06);
       position: relative;
       overflow: hidden;
     }
@@ -240,23 +426,11 @@
       right: 0;
       left: 0;
       height: 4px;
-      background: #14b8a6;
+      background: linear-gradient(90deg, var(--gold), var(--mint-mid));
     }
-    .plan-card.plan-weekly {
-      border-color: #bae6fd;
-      background: linear-gradient(180deg, #f0f9ff 0%, #ffffff 32%);
-    }
-    .plan-card.plan-weekly::before { background: #0ea5e9; }
-    .plan-card.plan-monthly {
-      border-color: #bbf7d0;
-      background: linear-gradient(180deg, #f0fdf4 0%, #ffffff 32%);
-    }
-    .plan-card.plan-monthly::before { background: #22c55e; }
-    .plan-card.plan-yearly {
-      border-color: #fde68a;
-      background: linear-gradient(180deg, #fffbeb 0%, #ffffff 32%);
-    }
-    .plan-card.plan-yearly::before { background: #f59e0b; }
+    .plan-card.plan-weekly { border-color: rgba(125, 211, 174, 0.45); }
+    .plan-card.plan-monthly { border-color: rgba(197, 160, 89, 0.35); }
+    .plan-card.plan-yearly { border-color: rgba(197, 160, 89, 0.5); }
     .plan-card-top {
       display: flex;
       justify-content: space-between;
@@ -266,13 +440,14 @@
     }
     .plan-card-id {
       font-size: .78rem;
-      color: #64748b;
+      color: var(--charcoal-muted);
       margin-bottom: 2px;
     }
     .plan-card h3 {
       margin: 0;
-      font-size: 1rem;
-      color: #134e4a;
+      font-size: 1.05rem;
+      font-family: "Amiri", "Tajawal", serif;
+      color: var(--charcoal);
     }
     .plan-meta {
       display: grid;
@@ -281,21 +456,22 @@
       margin-bottom: 10px;
     }
     .plan-meta-item {
-      background: #f0fdfa;
-      border: 1px solid #ccfbf1;
+      background: var(--mint-bg);
+      border: 1px solid rgba(170, 240, 209, 0.65);
       border-radius: 10px;
-      padding: 7px 9px;
+      padding: 8px 10px;
     }
     .plan-meta-item .k {
       display: block;
       font-size: .75rem;
-      color: #64748b;
+      color: var(--charcoal-muted);
       margin-bottom: 2px;
+      font-weight: 700;
     }
     .plan-meta-item .v {
       font-size: .9rem;
-      color: #0f766e;
-      font-weight: 700;
+      color: var(--charcoal);
+      font-weight: 800;
     }
     .plan-card .plan-name-form {
       display: grid;
@@ -325,13 +501,14 @@
       width: 100%;
     }
     .plan-empty {
-      border: 1px dashed #99f6e4;
-      border-radius: 12px;
-      padding: 14px;
-      color: #0f766e;
-      background: #f0fdfa;
+      border: 1px dashed rgba(197, 160, 89, 0.45);
+      border-radius: 14px;
+      padding: 18px;
+      color: var(--charcoal-muted);
+      background: var(--white);
       text-align: center;
     }
+    table.plans-table th { background: var(--charcoal); color: #f8fafc; }
     @media (max-width: 1200px) {
       .plan-card .plan-details-form { grid-template-columns: 1fr; }
     }
@@ -345,12 +522,12 @@
 <body>
   <div class="container">
     <div class="top">
-      <div>
-        <h1>لوحة تحكم الإدارة | {{ center.name if center else 'المركز' }}</h1>
+      <div class="top-brand">
+        <h1><span>لوحة الإدارة</span> | {{ center.name if center else 'المركز' }}</h1>
         <div class="muted">مرحبًا {{ user.full_name }} · {{ user.email }}</div>
       </div>
       <div>
-        <a class="btn" href="/index">الواجهة العامة</a>
+        <a class="btn secondary" href="/index">الواجهة العامة</a>
         <a class="btn" href="/admin/logout">تسجيل الخروج</a>
       </div>
     </div>
@@ -374,8 +551,8 @@
     </div>
 
     <div class="section-tabs" id="section-tabs">
-      <a class="section-tab" data-target="section-create" href="#section-create">
-        الإضافات السريعة
+      <a class="section-tab" data-target="section-branding" href="#section-branding">
+        هوية المركز
       </a>
       <a class="section-tab" data-target="section-rooms" href="#section-rooms">
         إدارة الغرف
@@ -397,9 +574,72 @@
       </a>
     </div>
 
-    <section id="section-create" class="accordion">
+    <section id="section-branding" class="accordion">
       <div class="accordion-body">
-    <div class="grid">
+        <div class="card">
+          <h2>هوية المركز في الواجهة العامة</h2>
+          <p class="small" style="margin:0 0 14px;">القسم الأول: <strong>صورة الغلاف</strong> بجانب العناوين. القسم الثاني بعد الفاصل: <strong>هوية المركز</strong> (التلميح النصي والشعار).</p>
+
+          <form method="post" action="/admin/center/branding" enctype="multipart/form-data" data-preserve-scroll="1">
+            <h3 class="branding-subhead">صورة الغلاف (أعلى صفحة الحجز)</h3>
+            <p class="small" style="margin:0 0 10px;line-height:1.55;">
+              تظهر بجانب عنوان المركز في الواجهة العامة. يُفضّل <strong>صورة أفقية</strong> بنسبة تقريبية <strong>3∶2</strong> أو <strong>16∶9</strong>، بعرض حوالي <strong>1200–1600 بكسل</strong> (ارتفاع نحو 600–900 بكسل)، بصيغة PNG أو JPG أو WebP أو GIF — حتى <strong>2 ميجابايت</strong> لكل ملف.
+            </p>
+            {% if center and center.hero_image_url %}
+            <p class="small" style="margin-bottom:8px;">معاينة الغلاف الحالي:</p>
+            <div style="margin-bottom:12px;border-radius:12px;overflow:hidden;border:1px solid rgba(197,160,89,0.28);max-height:140px;background:var(--page-bg);">
+              <div style="min-height:100px;background-image:url('{{ center.hero_image_url }}');background-size:cover;background-position:center;"></div>
+            </div>
+            {% endif %}
+            <label for="center_hero_file">رفع صورة غلاف</label>
+            <input id="center_hero_file" name="hero" type="file" accept="image/png,image/jpeg,image/webp,image/gif,.png,.jpg,.jpeg,.webp,.gif" title="أفقي 1200–1600 بكسل تقريباً، حتى 2 ميجابايت" />
+            {% if center and center.hero_image_url %}
+            <div class="branding-remove-zone" role="group" aria-labelledby="remove-hero-label" style="margin-top:14px;">
+              <div class="branding-remove-zone__head">
+                <input type="checkbox" id="remove_hero_chk" class="branding-remove-zone__checkbox" name="remove_hero" value="1" />
+                <label id="remove-hero-label" class="branding-remove-zone__title" for="remove_hero_chk">إزالة صورة الغلاف بالكامل</label>
+              </div>
+              <p class="branding-remove-zone__help">بعد الحفظ يُخفى مربع الغلاف بالكامل في أعلى صفحة الحجز حتى ترفع صورة غلاف جديدة.</p>
+            </div>
+            {% endif %}
+
+            <div class="branding-identity-divider" role="separator" aria-label="فاصل هوية المركز">
+              <span class="branding-identity-divider__line" aria-hidden="true"></span>
+              <span class="branding-identity-divider__label">هوية المركز</span>
+              <span class="branding-identity-divider__line" aria-hidden="true"></span>
+            </div>
+
+            <h3 class="branding-subhead">التلميح والشعار</h3>
+            <label for="brand_tagline">تلميح تحت العنوان (اختياري)</label>
+            <textarea id="brand_tagline" name="brand_tagline" rows="2" maxlength="500" placeholder="مثال: مساحة للتنفس والحركة — يوغا لجميع المستويات في أجواء هادئة" title="نص قصير يظهر كتلميح تحت عنوان الصفحة">{{ center.brand_tagline or '' }}</textarea>
+            {% if center and center.logo_url %}
+            <div class="branding-logo-preview-wrap">
+              <p class="small" style="margin:12px 0 8px;">الشعار الحالي:</p>
+              <div style="margin-bottom:12px;padding:12px;background:var(--page-bg);border-radius:12px;border:1px solid rgba(197,160,89,0.25);">
+                <img src="{{ center.logo_url }}" alt="معاينة الشعار" decoding="async" style="max-height:72px;max-width:100%;object-fit:contain;display:block;" onerror="var w=this.closest('.branding-logo-preview-wrap'); if(w) w.remove();" />
+              </div>
+            </div>
+            {% endif %}
+            <label for="center_logo_file">صورة الشعار (PNG، JPG، WebP، GIF — حتى 2 ميجابايت)</label>
+            <input id="center_logo_file" name="logo" type="file" accept="image/png,image/jpeg,image/webp,image/gif,.png,.jpg,.jpeg,.webp,.gif" />
+            {% if center and center.logo_url %}
+            <div class="branding-remove-zone" role="group" aria-labelledby="remove-logo-label">
+              <div class="branding-remove-zone__head">
+                <input type="checkbox" id="remove_logo_chk" class="branding-remove-zone__checkbox" name="remove_logo" value="1" />
+                <label id="remove-logo-label" class="branding-remove-zone__title" for="remove_logo_chk">إزالة الشعار من الواجهة العامة</label>
+              </div>
+              <p class="branding-remove-zone__help">فعّل هذا الخيار ثم اضغط «حفظ» لحذف الصورة الحالية. لن يظهر أي شعار للزوار حتى ترفع صورة جديدة.</p>
+            </div>
+            {% endif %}
+            <button type="submit">حفظ هوية المركز</button>
+          </form>
+        </div>
+      </div>
+    </section>
+
+    <section id="section-rooms" class="accordion">
+      <div class="accordion-body">
+    <div class="grid" style="margin-bottom:14px;">
       <div class="card">
         <h2>إضافة غرفة</h2>
         <form method="post" action="/admin/rooms" data-preserve-scroll="1">
@@ -461,11 +701,6 @@
         </form>
       </div>
     </div>
-      </div>
-    </section>
-
-    <section id="section-rooms" class="accordion">
-      <div class="accordion-body">
     <div class="card" style="margin-top:0;">
       <h2>إدارة الغرف (تعديل الاسم/السعة/الحذف)</h2>
       <form method="get" action="/admin" class="filters" style="margin-bottom:10px;">
@@ -477,6 +712,7 @@
         <input type="hidden" name="audit_email" value="{{ security_filters.email }}" />
         <input type="hidden" name="audit_ip" value="{{ security_filters.ip }}" />
         <select name="room_sort" aria-label="ترتيب الغرف" onchange="this.form.submit()">
+          <option value="id_asc" {{ 'selected' if room_filters.sort == 'id_asc' else '' }}>حسب الإضافة من الأقدم إلى الأحدث</option>
           <option value="name" {{ 'selected' if room_filters.sort == 'name' else '' }}>ترتيب حسب الاسم</option>
           <option value="newest" {{ 'selected' if room_filters.sort == 'newest' else '' }}>ترتيب حسب الأحدث إضافة</option>
           <option value="capacity_desc" {{ 'selected' if room_filters.sort == 'capacity_desc' else '' }}>السعة من الأعلى إلى الأقل</option>
@@ -494,7 +730,7 @@
           <thead>
             <tr>
               <th><input type="checkbox" id="rooms-select-all" title="تحديد الكل" /></th>
-              <th>#</th>
+              <th title="تسلسل العرض في الجدول">#</th>
               <th>الاسم الحالي</th>
               <th>السعة الحالية</th>
               <th>تعديل الغرفة</th>
@@ -513,7 +749,7 @@
                   class="room-select-checkbox"
                 />
               </td>
-              <td>{{ r.id }}</td>
+              <td>{{ loop.index }}</td>
               <td>{{ r.name }}</td>
               <td>{{ r.capacity }}</td>
               <td>
@@ -667,7 +903,7 @@
         </select>
         <button type="submit">تنفيذ جماعي</button>
       </form>
-      <div style="overflow-x:auto;">
+      <div class="table-fluid">
         <table>
           <thead>
             <tr>
@@ -768,7 +1004,7 @@
       <div class="accordion-body">
     <div class="card" style="margin-top:0;">
       <h2>الجلسات الحالية</h2>
-      <div style="overflow-x:auto;">
+      <div class="table-fluid">
         <table>
           <thead>
             <tr>
@@ -818,7 +1054,7 @@
 
     <div class="card" style="margin-top:14px;">
       <h2>آخر المدفوعات</h2>
-      <div style="overflow-x:auto;">
+      <div class="table-fluid">
         <table>
           <thead>
             <tr>
@@ -884,7 +1120,7 @@
         <button type="submit">حفظ ترتيب السحب</button>
         <span class="small">اسحب الصفوف من عمود السحب ثم احفظ الترتيب.</span>
       </form>
-      <div style="overflow-x:auto;">
+      <div class="table-fluid">
         <table>
           <thead>
             <tr>
@@ -986,7 +1222,7 @@
         <input name="audit_ip" placeholder="IP" value="{{ security_filters.ip }}" />
         <button type="submit">فلترة</button>
       </form>
-      <div style="overflow-x:auto;">
+      <div class="table-fluid">
         <table>
           <thead>
             <tr>
@@ -1028,7 +1264,7 @@
         {% endif %}
       </div>
       <h3 style="margin:14px 0 8px; color:#134e4a;">IP المحظورة حاليًا</h3>
-      <div style="overflow-x:auto;">
+      <div class="table-fluid">
         <table>
           <thead>
             <tr>
@@ -1058,7 +1294,7 @@
         </table>
       </div>
       <h3 style="margin:14px 0 8px; color:#134e4a;">سجل الحظر وفك الحظر</h3>
-      <div style="overflow-x:auto;">
+      <div class="table-fluid">
         <table>
           <thead>
             <tr>

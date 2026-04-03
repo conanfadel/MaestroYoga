@@ -4,35 +4,104 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>تسجيل دخول الإدارة — Maestro Yoga</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet" />
   <style>
-    body { font-family: system-ui, sans-serif; background: radial-gradient(circle at top right, #ecfdf5, #f0fdfa 40%, #f8fafc); margin: 0; padding: 24px; }
-    .card { max-width: 420px; margin: 40px auto; background: #fff; border-radius: 16px; padding: 28px;
-      box-shadow: 0 12px 34px rgba(6,95,70,.18); border: 1px solid #a7f3d0; }
-    .brand {
-      display: inline-block;
-      padding: 5px 10px;
-      border-radius: 999px;
-      background: #ecfdf5;
-      border: 1px solid #a7f3d0;
-      color: #065f46;
-      font-size: .8rem;
-      margin-bottom: 10px;
-      font-weight: 700;
+    :root {
+      --gold: #c5a059;
+      --gold-dark: #9a7b3c;
+      --gold-soft: rgba(197, 160, 89, 0.15);
+      --mint-mid: #7dd3ae;
+      --mint-bg: #e8fcf4;
+      --charcoal: #2d3436;
+      --charcoal-muted: #636e72;
     }
-    h1 { margin: 0 0 8px; font-size: 1.35rem; }
-    p { color: #5c6478; margin: 0 0 20px; }
-    label { display: block; margin: 12px 0 6px; font-weight: 600; }
-    input { width: 100%; padding: 10px 12px; border: 1px solid #d7dbe8; border-radius: 10px; box-sizing: border-box; }
-    button { margin-top: 18px; width: 100%; padding: 12px; border: 0; border-radius: 10px;
-      background: linear-gradient(120deg, #0f766e, #10b981); color: #fff; font-weight: 700; cursor: pointer; }
-    .err { color: #b91c1c; font-size: 0.9rem; margin-bottom: 8px; }
-    a { color: #2563eb; }
+    body {
+      font-family: "Tajawal", system-ui, sans-serif;
+      background:
+        radial-gradient(ellipse 100% 70% at 100% 0%, var(--mint-bg) 0%, transparent 50%),
+        #fafcfb;
+      margin: 0;
+      padding: 24px;
+    }
+    .card {
+      max-width: 440px;
+      margin: 36px auto;
+      background: #fff;
+      border-radius: 20px;
+      padding: 32px 28px;
+      box-shadow: 0 18px 48px rgba(45, 52, 54, 0.1);
+      border: 1px solid rgba(197, 160, 89, 0.3);
+      position: relative;
+    }
+    .card::before {
+      content: "";
+      position: absolute;
+      inset-inline-start: 0;
+      top: 0;
+      bottom: 0;
+      width: 5px;
+      background: linear-gradient(180deg, var(--gold), var(--mint-mid));
+      border-start-start-radius: 20px;
+      border-end-start-radius: 20px;
+    }
+    .login-brand {
+      margin-bottom: 18px;
+    }
+    .brand-text {
+      font-size: 0.78rem;
+      font-weight: 800;
+      color: var(--gold-dark);
+      letter-spacing: 0.02em;
+      margin-bottom: 6px;
+    }
+    h1 {
+      margin: 0 0 8px;
+      font-family: "Amiri", "Tajawal", serif;
+      font-size: 1.45rem;
+      color: var(--charcoal);
+    }
+    p { color: var(--charcoal-muted); margin: 0 0 20px; line-height: 1.55; }
+    label { display: block; margin: 12px 0 6px; font-weight: 700; color: var(--charcoal); }
+    input {
+      width: 100%;
+      padding: 11px 14px;
+      border: 2px solid rgba(170, 240, 209, 0.85);
+      border-radius: 12px;
+      box-sizing: border-box;
+      font-family: inherit;
+    }
+    input:focus {
+      outline: none;
+      border-color: var(--gold);
+      box-shadow: 0 0 0 3px var(--gold-soft);
+    }
+    button {
+      margin-top: 20px;
+      width: 100%;
+      padding: 13px;
+      border: 0;
+      border-radius: 12px;
+      background: linear-gradient(135deg, var(--gold) 0%, #d4b56e 100%);
+      color: #1a1a1a;
+      font-weight: 800;
+      cursor: pointer;
+      font-family: inherit;
+      font-size: 1rem;
+      box-shadow: 0 4px 16px rgba(197, 160, 89, 0.35);
+    }
+    .err { color: #b91c1c; font-size: 0.9rem; margin-bottom: 8px; font-weight: 700; }
+    a { color: var(--gold-dark); font-weight: 700; text-decoration: none; }
+    a:hover { text-decoration: underline; }
   </style>
 </head>
 <body>
   <div class="card">
-    <div class="brand">Maestro Yoga Admin</div>
-    <h1>لوحة الإدارة</h1>
+    <div class="login-brand">
+      <div class="brand-text">Maestro Yoga Admin</div>
+      <h1 style="margin:0;">لوحة الإدارة</h1>
+    </div>
     <p>سجّل دخولك كمسؤول عن المركز</p>
     {% if request.query_params.get('error') == '1' %}
       <div class="err">البريد أو كلمة المرور غير صحيحة.</div>
@@ -47,7 +116,7 @@
       <input id="password" name="password" type="password" required autocomplete="current-password" />
       <button type="submit">دخول</button>
     </form>
-    <p style="margin-top:18px;font-size:0.9rem;"><a href="/index">← العودة للصفحة العامة</a></p>
+    <p style="margin-top:20px;font-size:0.92rem;"><a href="/index">← العودة للصفحة العامة</a></p>
   </div>
 </body>
 </html>

@@ -11,6 +11,9 @@ class Center(Base):
     id = Column(Integer, primary_key=True, index=True)
     name = Column(String, nullable=False, unique=True)
     city = Column(String, nullable=True)
+    logo_url = Column(String, nullable=True)
+    brand_tagline = Column(String, nullable=True)
+    hero_image_url = Column(String, nullable=True)
 
     clients = relationship("Client", back_populates="center")
     plans = relationship("SubscriptionPlan", back_populates="center")

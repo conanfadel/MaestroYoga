@@ -53,6 +53,20 @@ def _normalize_phone_with_country(country_code: str, phone: str) -> str | None:
     return f"{cc}{digits}"
 
 
+def _is_strong_public_password(password: str) -> bool:
+    if len(password) < 8:
+        return False
+    if not any(c.isupper() for c in password):
+        return False
+    if not any(c.islower() for c in password):
+        return False
+    if not any(c.isdigit() for c in password):
+        return False
+    if not any(not c.isalnum() and not c.isspace() for c in password):
+        return False
+    return True
+
+
 def _plan_duration_days(plan_type: str) -> int:
     mapping = {
         "weekly": 7,

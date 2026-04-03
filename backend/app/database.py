@@ -26,6 +26,26 @@ def _public_users_deleted_at_sql(dialect: str) -> str:
     return "ALTER TABLE public_users ADD COLUMN deleted_at DATETIME"
 
 
+LEGACY_DEFAULT_CENTER_HERO_URL = "/static/branding/hero-default.svg"
+
+
+def _cleanup_stale_center_logo_urls_sql(conn) -> None:
+    """Clear DB references to removed default assets (e.g. maestro-logo.png)."""
+    conn.execute(text("UPDATE centers SET logo_url = NULL WHERE logo_url LIKE '%maestro-logo%'"))
+
+
+def _clear_legacy_default_hero_url(conn, insp) -> None:
+    if not insp.has_table("centers"):
+        return
+    cols = {c["name"] for c in insp.get_columns("centers")}
+    if "hero_image_url" not in cols:
+        return
+    conn.execute(
+        text("UPDATE centers SET hero_image_url = NULL WHERE hero_image_url = :u"),
+        {"u": LEGACY_DEFAULT_CENTER_HERO_URL},
+    )
+
+
 def _ensure_performance_indexes(conn, insp) -> None:
     index_specs: list[tuple[str, str, str]] = [
         ("clients", "idx_clients_center_id", "center_id"),
@@ -67,13 +87,27 @@ def migrate_schema() -> None:
         needs_public_user_is_deleted = "is_deleted" not in public_user_cols
         needs_public_user_deleted_at = "deleted_at" not in public_user_cols
 
+    needs_center_logo_url = False
+    needs_center_brand_tagline = False
+    needs_center_hero_image_url = False
+    if insp.has_table("centers"):
+        center_cols = {c["name"] for c in insp.get_columns("centers")}
+        needs_center_logo_url = "logo_url" not in center_cols
+        needs_center_brand_tagline = "brand_tagline" not in center_cols
+        needs_center_hero_image_url = "hero_image_url" not in center_cols
+
     if (
         not needs_payment_booking_id
         and not needs_public_user_phone
         and not needs_public_user_is_deleted
         and not needs_public_user_deleted_at
+        and not needs_center_logo_url
+        and not needs_center_brand_tagline
+        and not needs_center_hero_image_url
     ):
         with engine.begin() as conn:
+            _cleanup_stale_center_logo_urls_sql(conn)
+            _clear_legacy_default_hero_url(conn, insp)
             _ensure_performance_indexes(conn, insp)
         return
     with engine.begin() as conn:
@@ -89,6 +123,14 @@ def migrate_schema() -> None:
                 conn.execute(text("UPDATE public_users SET is_deleted = 0 WHERE is_deleted IS NULL"))
         if needs_public_user_deleted_at:
             conn.execute(text(_public_users_deleted_at_sql(dialect)))
+        if needs_center_logo_url:
+            conn.execute(text("ALTER TABLE centers ADD COLUMN logo_url VARCHAR"))
+        if needs_center_brand_tagline:
+            conn.execute(text("ALTER TABLE centers ADD COLUMN brand_tagline VARCHAR"))
+        if needs_center_hero_image_url:
+            conn.execute(text("ALTER TABLE centers ADD COLUMN hero_image_url VARCHAR"))
+        _cleanup_stale_center_logo_urls_sql(conn)
+        _clear_legacy_default_hero_url(conn, inspect(conn))
         _ensure_performance_indexes(conn, insp)
 
 

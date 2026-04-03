@@ -33,7 +33,7 @@
     <h1>تسجيل مستخدم جديد</h1>
     <p>أنشئ حسابًا موثوقًا لحجز الجلسات وتفعيل الاشتراكات بسهولة.</p>
     {% if request.query_params.get('msg') == 'weak_password' %}
-      <div class="warn">كلمة المرور ضعيفة. الحد الأدنى 8 أحرف.</div>
+      <div class="warn">كلمة المرور غير مطابقة للشروط: 8 أحرف على الأقل، مع حرف كبير وصغير ورقم ورمز.</div>
     {% endif %}
     {% if request.query_params.get('msg') == 'rate_limited' %}
       <div class="warn">محاولات كثيرة من نفس المصدر. حاول لاحقًا.</div>
@@ -54,7 +54,7 @@
       <label>الاسم الكامل</label>
       <input name="full_name" required />
       <label>البريد الإلكتروني</label>
-      <input name="email" type="email" required />
+      <input name="email" type="email" placeholder="اكتب بريدك الإلكتروني" required />
       <label>رقم الجوال</label>
       <div style="display:grid;grid-template-columns:140px 1fr;gap:8px;">
         <select id="country_code" name="country_code" required>
@@ -66,11 +66,13 @@
           <option value="+968">+968 عُمان</option>
           <option value="+20">+20 مصر</option>
         </select>
-        <input id="phone" name="phone" type="tel" inputmode="numeric" placeholder="05XXXXXXXX" required />
+        <input id="phone" name="phone" type="tel" inputmode="numeric" placeholder="5XXXXXXXX" required />
       </div>
       <div id="phone_error" class="field-error"></div>
       <label>كلمة المرور</label>
-      <input name="password" type="password" minlength="8" required />
+      <input id="password" name="password" type="password" minlength="8" placeholder="اكتب كلمة المرور" required autocomplete="new-password" />
+      <p style="margin:4px 0 0;font-size:.82rem;color:#64748b;">8 أحرف على الأقل: حرف كبير، حرف صغير، رقم، ورمز (مثل ! أو #).</p>
+      <div id="password_error" class="field-error"></div>
       <button type="submit">إنشاء الحساب</button>
     </form>
     <div class="links">
@@ -94,25 +96,37 @@
       const phoneInput = document.getElementById("phone");
       const countryCodeInput = document.getElementById("country_code");
       const phoneError = document.getElementById("phone_error");
-      if (!form || !phoneInput || !countryCodeInput || !phoneError) return;
+      const passwordInput = document.getElementById("password");
+      const passwordError = document.getElementById("password_error");
+      if (!form || !phoneInput || !countryCodeInput || !phoneError || !passwordInput || !passwordError) return;
 
       function updatePlaceholder() {
         if (countryCodeInput.value === "+966") {
-          phoneInput.placeholder = "05XXXXXXXX";
+          phoneInput.placeholder = "5XXXXXXXX";
         } else {
-          phoneInput.placeholder = "رقم الجوال بدون مفتاح الدولة";
+          phoneInput.placeholder = "الرقم المحلي بدون صفر في البداية";
         }
       }
+      function normalizePhoneDigits(raw, cc) {
+        let digits = raw.replace(/\D/g, "");
+        while (digits.startsWith("0")) digits = digits.slice(1);
+        if (cc === "+966") {
+          while (digits.startsWith("966")) digits = digits.slice(3);
+          return digits.slice(0, 9);
+        }
+        return digits.slice(0, 12);
+      }
       function validatePhone() {
-        const digits = phoneInput.value.replace(/\D/g, "");
+        const cc = countryCodeInput.value;
+        const digits = normalizePhoneDigits(phoneInput.value, cc);
         if (!digits) {
           phoneError.textContent = "رقم الجوال مطلوب.";
           phoneError.classList.remove("field-ok");
           return false;
         }
-        if (countryCodeInput.value === "+966") {
-          if (!/^05\d{8}$/.test(digits)) {
-            phoneError.textContent = "الرقم السعودي يجب أن يكون بصيغة 05XXXXXXXX";
+        if (cc === "+966") {
+          if (!/^5\d{8}$/.test(digits)) {
+            phoneError.textContent = "أدخل 9 أرقام تبدأ بـ 5 (بدون 0؛ مفتاح +966 محدد أعلاه).";
             phoneError.classList.remove("field-ok");
             return false;
           }
@@ -129,37 +143,63 @@
         phoneError.classList.add("field-ok");
         return true;
       }
+      function isStrongPassword(pw) {
+        if (pw.length < 8) return false;
+        if (!/[A-Z]/.test(pw)) return false;
+        if (!/[a-z]/.test(pw)) return false;
+        if (!/[0-9]/.test(pw)) return false;
+        if (!/[^A-Za-z0-9\s]/.test(pw)) return false;
+        return true;
+      }
+      function validatePassword() {
+        const pw = passwordInput.value;
+        if (!pw) {
+          passwordError.textContent = "";
+          passwordError.classList.remove("field-ok");
+          return false;
+        }
+        if (!isStrongPassword(pw)) {
+          passwordError.textContent = "8 أحرف على الأقل، مع حرف كبير وصغير ورقم ورمز.";
+          passwordError.classList.remove("field-ok");
+          return false;
+        }
+        passwordError.textContent = "";
+        passwordError.classList.add("field-ok");
+        return true;
+      }
       updatePlaceholder();
       validatePhone();
       countryCodeInput.addEventListener("change", function () {
+        phoneInput.value = normalizePhoneDigits(phoneInput.value, countryCodeInput.value);
         updatePlaceholder();
         validatePhone();
       });
 
       phoneInput.addEventListener("input", function () {
-        let value = phoneInput.value.trim();
-        const digits = value.replace(/\D/g, "");
-        if (countryCodeInput.value === "+966") {
-          phoneInput.value = digits.slice(0, 10);
-          validatePhone();
-          return;
-        }
-        phoneInput.value = digits.slice(0, 12);
+        phoneInput.value = normalizePhoneDigits(phoneInput.value, countryCodeInput.value);
         validatePhone();
       });
-      phoneInput.addEventListener("blur", function () {
-        if (countryCodeInput.value !== "+966") return;
-        const v = phoneInput.value.trim();
-        if (/^05\d{8}$/.test(v)) {
-          phoneInput.value = v;
+      phoneInput.addEventListener("blur", validatePhone);
+      passwordInput.addEventListener("input", function () {
+        if (passwordInput.value) validatePassword();
+        else {
+          passwordError.textContent = "";
+          passwordError.classList.remove("field-ok");
         }
-        validatePhone();
       });
+      passwordInput.addEventListener("blur", validatePassword);
       form.addEventListener("submit", function (e) {
+        phoneInput.value = normalizePhoneDigits(phoneInput.value, countryCodeInput.value);
         if (!validatePhone()) {
           e.preventDefault();
           phoneInput.focus();
           track("sign_up_failed", { reason: "client_phone_validation" });
+          return;
+        }
+        if (!validatePassword()) {
+          e.preventDefault();
+          passwordInput.focus();
+          track("sign_up_failed", { reason: "client_password_validation" });
           return;
         }
         track("sign_up_attempt", {});

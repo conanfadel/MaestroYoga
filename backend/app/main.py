@@ -57,6 +57,7 @@ except Exception:  # pragma: no cover - optional in non-venv runtime
         return False
 from fastapi import Depends, FastAPI, Header, HTTPException, Request
 from fastapi.responses import StreamingResponse
+from fastapi.staticfiles import StaticFiles
 from openpyxl import Workbook
 from sqlalchemy import func
 from sqlalchemy.orm import Session
@@ -86,6 +87,9 @@ logger = logging.getLogger(__name__)
 app = FastAPI(title="Maestro Yoga API", version="1.0.0")
 init_db()
 app.include_router(web_ui_router)
+_STATIC_DIR = Path(__file__).resolve().parent.parent / "static"
+if _STATIC_DIR.is_dir():
+    app.mount("/static", StaticFiles(directory=str(_STATIC_DIR)), name="static")
 SEED_DEMO_KEY = os.getenv("SEED_DEMO_KEY", "").strip()
 PUBLIC_BASE_URL = os.getenv("PUBLIC_BASE_URL", "").strip().rstrip("/")
 STRIPE_CHECKOUT_ALLOWED_ORIGINS = [x.strip().rstrip("/") for x in os.getenv("STRIPE_CHECKOUT_ALLOWED_ORIGINS", "").split(",") if x.strip()]
