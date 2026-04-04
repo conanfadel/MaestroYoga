@@ -1172,7 +1172,7 @@
 
     {% if payment == 'success' %}<div class="alert">تم إتمام الدفع بنجاح. تم تأكيد طلبك.</div>{% endif %}
     {% if payment == 'cancelled' %}<div class="alert warn">تم إلغاء عملية الدفع. يمكنك المحاولة مرة أخرى.</div>{% endif %}
-    {% if msg == 'email_verified' %}<div class="alert">تم التحقق من البريد الإلكتروني بنجاح.</div>{% endif %}
+    {% if msg == 'email_verified' %}<div class="alert">تم تأكيد البريد بنجاح. يمكنك الآن إكمال الحجز والدفع.</div>{% endif %}
     {% if msg == 'logged_out' %}<div class="alert">تم تسجيل الخروج بنجاح.</div>{% endif %}
     {% if msg == 'auth_required' %}<div class="alert warn">الرجاء تسجيل الدخول أولًا قبل الحجز أو الاشتراك.</div>{% endif %}
     {% if msg == 'ip_blocked' %}<div class="alert err">تم حظر هذا الـ IP مؤقتًا لأسباب أمنية. حاول لاحقًا أو تواصل مع الإدارة.</div>{% endif %}

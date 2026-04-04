@@ -6,6 +6,7 @@ from backend.app.mailer import validate_mailer_settings
 from backend.app.security import create_public_email_verification_token, hash_password
 from backend.app.web_shared import (
     _mail_fail_reason_query_token,
+    public_center_id_str_from_next,
     public_index_url_from_next,
     public_mail_fail_why_token,
 )
@@ -47,6 +48,7 @@ def test_public_index_url_from_next():
     assert public_index_url_from_next("/index?center_id=3", msg="email_verified") == "/index?center_id=3&msg=email_verified"
     assert public_index_url_from_next("/post?center_id=2&post_id=1") == "/index?center_id=2"
     assert public_index_url_from_next(None) == "/index?center_id=1"
+    assert public_center_id_str_from_next("/index?center_id=5") == "5"
 
 
 def test_public_mail_fail_why_token_maps_resend_sandbox_403():
@@ -74,6 +76,13 @@ def test_validate_mailer_resend_requires_api_key(monkeypatch):
     assert reason2 == "ok"
 
 
+def test_email_confirmed_page_shows_redirect_hint(client):
+    r = client.get("/public/email-confirmed?center_id=1")
+    assert r.status_code == 200
+    assert "تم تأكيد البريد" in r.text
+    assert "/index?center_id=1&amp;msg=email_verified" in r.text or "center_id=1" in r.text
+
+
 def test_verify_email_marks_user_verified(client):
     db = SessionLocal()
     email = f"pytest_verify_{int(time.time())}@example.com"
@@ -95,7 +104,7 @@ def test_verify_email_marks_user_verified(client):
     db.refresh(user)
 
     assert response.status_code == 303
-    assert response.headers["location"] == "/index?center_id=1&msg=email_verified"
+    assert response.headers["location"] == "/public/email-confirmed?center_id=1"
     assert user.email_verified is True
 
     db.delete(user)
