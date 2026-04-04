@@ -2045,10 +2045,13 @@
           e.preventDefault();
           const targetId = tab.dataset.target;
           if (!targetId) return;
-          if (!activateAdminSection(targetId, { focusTab: tab })) return;
+          const section = document.getElementById(targetId);
+          if (!section || !section.classList.contains("accordion")) return;
+          sessionStorage.setItem(ACTIVE_SECTION_KEY, targetId);
           if (window.history && window.history.replaceState) {
             window.history.replaceState(null, "", window.location.pathname + window.location.search + "#" + targetId);
           }
+          window.location.reload();
         });
       });
       window.addEventListener("hashchange", function () {
