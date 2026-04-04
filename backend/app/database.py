@@ -102,12 +102,24 @@ def migrate_schema() -> None:
     needs_center_brand_tagline = False
     needs_center_hero_image_url = False
     needs_center_hero_show_stock_photo = False
+    needs_center_loyalty_bronze = False
+    needs_center_loyalty_silver = False
+    needs_center_loyalty_gold = False
+    needs_center_loyalty_lb = False
+    needs_center_loyalty_ls = False
+    needs_center_loyalty_lg = False
     if insp.has_table("centers"):
         center_cols = {c["name"] for c in insp.get_columns("centers")}
         needs_center_logo_url = "logo_url" not in center_cols
         needs_center_brand_tagline = "brand_tagline" not in center_cols
         needs_center_hero_image_url = "hero_image_url" not in center_cols
         needs_center_hero_show_stock_photo = "hero_show_stock_photo" not in center_cols
+        needs_center_loyalty_bronze = "loyalty_bronze_min" not in center_cols
+        needs_center_loyalty_silver = "loyalty_silver_min" not in center_cols
+        needs_center_loyalty_gold = "loyalty_gold_min" not in center_cols
+        needs_center_loyalty_lb = "loyalty_label_bronze" not in center_cols
+        needs_center_loyalty_ls = "loyalty_label_silver" not in center_cols
+        needs_center_loyalty_lg = "loyalty_label_gold" not in center_cols
 
     if (
         not needs_payment_booking_id
@@ -118,6 +130,12 @@ def migrate_schema() -> None:
         and not needs_center_brand_tagline
         and not needs_center_hero_image_url
         and not needs_center_hero_show_stock_photo
+        and not needs_center_loyalty_bronze
+        and not needs_center_loyalty_silver
+        and not needs_center_loyalty_gold
+        and not needs_center_loyalty_lb
+        and not needs_center_loyalty_ls
+        and not needs_center_loyalty_lg
     ):
         with engine.begin() as conn:
             _cleanup_stale_center_logo_urls_sql(conn)
@@ -151,6 +169,18 @@ def migrate_schema() -> None:
             else:
                 conn.execute(text("ALTER TABLE centers ADD COLUMN hero_show_stock_photo BOOLEAN DEFAULT 1"))
                 conn.execute(text("UPDATE centers SET hero_show_stock_photo = 1 WHERE hero_show_stock_photo IS NULL"))
+        if needs_center_loyalty_bronze:
+            conn.execute(text("ALTER TABLE centers ADD COLUMN loyalty_bronze_min INTEGER"))
+        if needs_center_loyalty_silver:
+            conn.execute(text("ALTER TABLE centers ADD COLUMN loyalty_silver_min INTEGER"))
+        if needs_center_loyalty_gold:
+            conn.execute(text("ALTER TABLE centers ADD COLUMN loyalty_gold_min INTEGER"))
+        if needs_center_loyalty_lb:
+            conn.execute(text("ALTER TABLE centers ADD COLUMN loyalty_label_bronze VARCHAR(64)"))
+        if needs_center_loyalty_ls:
+            conn.execute(text("ALTER TABLE centers ADD COLUMN loyalty_label_silver VARCHAR(64)"))
+        if needs_center_loyalty_lg:
+            conn.execute(text("ALTER TABLE centers ADD COLUMN loyalty_label_gold VARCHAR(64)"))
         _cleanup_stale_center_logo_urls_sql(conn)
         _clear_legacy_default_hero_url(conn, inspect(conn))
         _ensure_performance_indexes(conn, insp)

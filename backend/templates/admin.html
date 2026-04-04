@@ -853,6 +853,47 @@
             <button type="submit">حفظ هوية المركز</button>
           </form>
         </div>
+
+        <div class="card" style="margin-top:16px;">
+          <h2>إعدادات برنامج الولاء</h2>
+          <p class="small" style="margin:0 0 12px;line-height:1.6;">
+            تُحسب الأوسمة من عدد الحجوزات بحالة <strong>مؤكد</strong> في مركزك لكل بريد عميل.
+            اترك أي حقل عتبة <strong>فارغاً</strong> لاستخدام قيمة <strong>الخادم الافتراضية</strong> (متغيرات البيئة <code>LOYALTY_*_MIN_CONFIRMED</code>).
+          </p>
+          {% if loyalty_admin %}
+          <p class="small" style="margin:0 0 14px;padding:10px 12px;background:var(--mint-bg);border-radius:10px;border:1px solid rgba(125,211,174,0.5);line-height:1.55;">
+            <strong>القيم الفعّالة الآن:</strong> برونزي من {{ loyalty_admin.effective.bronze }} جلسة، فضي من {{ loyalty_admin.effective.silver }}، ذهبي من {{ loyalty_admin.effective.gold }}.
+            <span style="display:block;margin-top:6px;color:var(--charcoal-muted);font-size:0.88em;">افتراضي الخادم (عند عدم التخصيص): {{ loyalty_admin.env.bronze }} / {{ loyalty_admin.env.silver }} / {{ loyalty_admin.env.gold }}</span>
+          </p>
+          {% endif %}
+          {% if center %}
+          <form method="post" action="/admin/center/loyalty" data-preserve-scroll="1">
+            <input type="hidden" name="return_section" value="section-branding" />
+            <h3 class="branding-subhead" style="margin-top:0;">عتبات الجلسات المؤكدة</h3>
+            <label for="loyalty_bronze_min">أقل عدد للوسام البرونزي (فارغ = افتراضي الخادم)</label>
+            <input id="loyalty_bronze_min" name="loyalty_bronze_min" type="number" min="0" max="5000" placeholder="مثال: 1"
+              value="{{ center.loyalty_bronze_min if center.loyalty_bronze_min is not none else '' }}" />
+            <label for="loyalty_silver_min">أقل عدد للوسام الفضي (فارغ = افتراضي الخادم)</label>
+            <input id="loyalty_silver_min" name="loyalty_silver_min" type="number" min="0" max="5000" placeholder="مثال: 6"
+              value="{{ center.loyalty_silver_min if center.loyalty_silver_min is not none else '' }}" />
+            <label for="loyalty_gold_min">أقل عدد للوسام الذهبي (فارغ = افتراضي الخادم)</label>
+            <input id="loyalty_gold_min" name="loyalty_gold_min" type="number" min="0" max="5000" placeholder="مثال: 20"
+              value="{{ center.loyalty_gold_min if center.loyalty_gold_min is not none else '' }}" />
+            <h3 class="branding-subhead">أسماء العرض (اختياري)</h3>
+            <p class="small" style="margin:0 0 10px;">تظهر للزائر بدل «برونزي / فضي / ذهبي» عند التعبئة.</p>
+            <label for="loyalty_label_bronze">اسم الوسام البرونزي</label>
+            <input id="loyalty_label_bronze" name="loyalty_label_bronze" type="text" maxlength="64" placeholder="برونزي"
+              value="{{ center.loyalty_label_bronze or '' }}" />
+            <label for="loyalty_label_silver">اسم الوسام الفضي</label>
+            <input id="loyalty_label_silver" name="loyalty_label_silver" type="text" maxlength="64" placeholder="فضي"
+              value="{{ center.loyalty_label_silver or '' }}" />
+            <label for="loyalty_label_gold">اسم الوسام الذهبي</label>
+            <input id="loyalty_label_gold" name="loyalty_label_gold" type="text" maxlength="64" placeholder="ذهبي"
+              value="{{ center.loyalty_label_gold or '' }}" />
+            <button type="submit" style="margin-top:14px;">حفظ إعدادات الولاء</button>
+          </form>
+          {% endif %}
+        </div>
       </div>
     </section>
     {% endif %}

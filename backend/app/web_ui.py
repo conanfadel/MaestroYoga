@@ -20,8 +20,11 @@ from .bootstrap import DEMO_CENTER_NAME, ensure_demo_data, ensure_demo_news_post
 from .database import get_db
 from .loyalty import (
     count_confirmed_sessions_for_public_user,
+    effective_loyalty_thresholds,
     loyalty_confirmed_counts_by_email_lower,
     loyalty_context_for_count,
+    loyalty_thresholds,
+    validate_loyalty_threshold_triple,
 )
 from .mailer import (
     queue_email_verification_email,
@@ -160,6 +163,9 @@ ADMIN_MSG_FAQ_REORDER_INVALID = "faq_reorder_invalid"
 ADMIN_MSG_CENTER_BRANDING_UPDATED = "center_branding_updated"
 ADMIN_MSG_CENTER_BRANDING_BAD_FILE = "center_branding_bad_file"
 ADMIN_MSG_CENTER_BRANDING_CENTER_MISSING = "center_branding_center_missing"
+ADMIN_MSG_CENTER_LOYALTY_SAVED = "center_loyalty_saved"
+ADMIN_MSG_CENTER_LOYALTY_INVALID = "center_loyalty_invalid"
+ADMIN_MSG_CENTER_LOYALTY_BAD_NUMBER = "center_loyalty_bad_number"
 ADMIN_MSG_TRAINER_ADMIN_FORBIDDEN = "trainer_admin_forbidden"
 ADMIN_MSG_SECURITY_OWNER_ONLY = "security_owner_only"
 ADMIN_MSG_CENTER_POST_SAVED = "center_post_saved"
@@ -268,6 +274,9 @@ ADMIN_FLASH_MESSAGES: dict[str, tuple[str, str]] = {
     ADMIN_MSG_CENTER_BRANDING_UPDATED: ("تم حفظ هوية المركز (الشعار، غلاف الصفحة، التلميح) في الواجهة العامة.", "info"),
     ADMIN_MSG_CENTER_BRANDING_BAD_FILE: ("إحدى الصور غير مقبولة. استخدم PNG أو JPG أو WebP أو GIF بحجم أقل من 2 ميجابايت لكل ملف.", "warn"),
     ADMIN_MSG_CENTER_BRANDING_CENTER_MISSING: ("تعذر العثور على بيانات المركز المرتبطة بحسابك.", "warn"),
+    ADMIN_MSG_CENTER_LOYALTY_SAVED: ("تم حفظ إعدادات برنامج الولاء.", "info"),
+    ADMIN_MSG_CENTER_LOYALTY_INVALID: ("إعدادات الولاء غير صالحة. يجب أن تكون عتبة البرونزي أقل من الفضي، والفضي أقل من الذهبي.", "warn"),
+    ADMIN_MSG_CENTER_LOYALTY_BAD_NUMBER: ("أدخل أرقاماً صحيحة فقط لعتبات الجلسات، أو اترك الحقل فارغاً لاستخدام الافتراضي.", "warn"),
     ADMIN_MSG_TRAINER_ADMIN_FORBIDDEN: ("هذا الإجراء غير متاح لدور المدرب. يمكنك إدارة الجلسات من قسم «الجلسات والمدفوعات» فقط.", "warn"),
     ADMIN_MSG_SECURITY_OWNER_ONLY: ("قسم الأمان والتصدير الحساس متاح لمالك المركز فقط.", "warn"),
     ADMIN_MSG_CENTER_POST_SAVED: ("تم حفظ المنشور بنجاح.", "info"),
@@ -688,7 +697,8 @@ def public_index(
     loyalty_ctx: dict = {}
     if public_user:
         loyalty_ctx = loyalty_context_for_count(
-            count_confirmed_sessions_for_public_user(db, center_id, public_user)
+            count_confirmed_sessions_for_public_user(db, center_id, public_user),
+            center=center,
         )
 
     public_posts_teasers = []
@@ -771,7 +781,8 @@ def public_post_detail(
     loyalty_ctx: dict = {}
     if public_user:
         loyalty_ctx = loyalty_context_for_count(
-            count_confirmed_sessions_for_public_user(db, center_id, public_user)
+            count_confirmed_sessions_for_public_user(db, center_id, public_user),
+            center=center,
         )
     return templates.TemplateResponse(
         request,
@@ -1384,8 +1395,10 @@ def public_account_page(request: Request, next: str = "/index?center_id=1", db: 
         center_id_loyalty = int(public_center_id_str_from_next(safe_next))
     except ValueError:
         center_id_loyalty = 1
+    center_loyalty = db.get(models.Center, center_id_loyalty)
     loyalty_ctx = loyalty_context_for_count(
-        count_confirmed_sessions_for_public_user(db, center_id_loyalty, user)
+        count_confirmed_sessions_for_public_user(db, center_id_loyalty, user),
+        center=center_loyalty,
     )
     return templates.TemplateResponse(
         request,
@@ -2283,7 +2296,7 @@ def admin_dashboard(
     public_user_rows = []
     for u in public_users:
         cnt = loyalty_by_email.get((u.email or "").lower(), 0)
-        lt = loyalty_context_for_count(cnt)
+        lt = loyalty_context_for_count(cnt, center=center)
         public_user_rows.append(
             {
                 "id": u.id,
@@ -2585,6 +2598,13 @@ def admin_dashboard(
         else "/admin/export/payments.csv",
     }
 
+    _env_b, _env_s, _env_g = loyalty_thresholds()
+    _eff_b, _eff_s, _eff_g = effective_loyalty_thresholds(center)
+    loyalty_admin = {
+        "env": {"bronze": _env_b, "silver": _env_s, "gold": _env_g},
+        "effective": {"bronze": _eff_b, "silver": _eff_s, "gold": _eff_g},
+    }
+
     return templates.TemplateResponse(
         request,
         "admin.html",
@@ -2673,6 +2693,7 @@ def admin_dashboard(
             "data_export_urls": data_export_urls,
             "payment_date_from_value": pf,
             "payment_date_to_value": pt,
+            "loyalty_admin": loyalty_admin,
             "is_trainer": user.role == "trainer",
             "is_center_owner": user.role == "center_owner",
             "show_security_section": user.role == "center_owner",
@@ -3608,6 +3629,74 @@ def admin_reorder_faqs(
 
 def _truthy_form_flag(value: str) -> bool:
     return (value or "").strip().lower() in {"1", "true", "on", "yes"}
+
+
+def _optional_non_negative_int_form(raw: str) -> int | None:
+    s = (raw or "").strip()
+    if not s:
+        return None
+    try:
+        v = int(s)
+    except ValueError:
+        raise ValueError("nan")
+    if v < 0:
+        raise ValueError("neg")
+    return v
+
+
+@router.post("/admin/center/loyalty")
+def admin_center_loyalty(
+    request: Request,
+    loyalty_bronze_min: str = Form(""),
+    loyalty_silver_min: str = Form(""),
+    loyalty_gold_min: str = Form(""),
+    loyalty_label_bronze: str = Form(""),
+    loyalty_label_silver: str = Form(""),
+    loyalty_label_gold: str = Form(""),
+    scroll_y: str = Form(default=""),
+    return_section: str = Form(""),
+    db: Session = Depends(get_db),
+    user: models.User = Depends(require_roles_cookie_or_bearer("center_owner", "center_staff")),
+):
+    cid = require_user_center_id(user)
+    center = db.get(models.Center, cid)
+    if not center:
+        return _admin_redirect(ADMIN_MSG_CENTER_BRANDING_CENTER_MISSING, scroll_y, return_section)
+    try:
+        pb = _optional_non_negative_int_form(loyalty_bronze_min)
+        ps = _optional_non_negative_int_form(loyalty_silver_min)
+        pg = _optional_non_negative_int_form(loyalty_gold_min)
+    except ValueError:
+        return _admin_redirect(ADMIN_MSG_CENTER_LOYALTY_BAD_NUMBER, scroll_y, return_section)
+
+    prospective = models.Center()
+    prospective.loyalty_bronze_min = pb
+    prospective.loyalty_silver_min = ps
+    prospective.loyalty_gold_min = pg
+    b, s, g = effective_loyalty_thresholds(prospective)
+    err = validate_loyalty_threshold_triple(b, s, g)
+    if err:
+        return _admin_redirect(ADMIN_MSG_CENTER_LOYALTY_INVALID, scroll_y, return_section)
+
+    def _lbl(x: str) -> str | None:
+        t = (x or "").strip()[:64]
+        return t or None
+
+    center.loyalty_bronze_min = pb
+    center.loyalty_silver_min = ps
+    center.loyalty_gold_min = pg
+    center.loyalty_label_bronze = _lbl(loyalty_label_bronze)
+    center.loyalty_label_silver = _lbl(loyalty_label_silver)
+    center.loyalty_label_gold = _lbl(loyalty_label_gold)
+    db.commit()
+    log_security_event(
+        "admin_center_loyalty",
+        request,
+        "success",
+        email=user.email,
+        details={"center_id": cid, "thresholds": [b, s, g]},
+    )
+    return _admin_redirect(ADMIN_MSG_CENTER_LOYALTY_SAVED, scroll_y, return_section)
 
 
 @router.post("/admin/center/branding")

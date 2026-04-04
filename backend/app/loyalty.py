@@ -22,15 +22,33 @@ def _int_env(name: str, default: int) -> int:
 
 
 def loyalty_thresholds() -> tuple[int, int, int]:
-    """(bronze_min, silver_min, gold_min) — كل مستوى يتطلب على الأقل هذا العدد من الجلسات المؤكدة."""
+    """عتبات افتراضية من متغيرات البيئة فقط (بدون إعدادات المركز)."""
     silver = max(2, _int_env("LOYALTY_SILVER_MIN_CONFIRMED", 6))
     gold = max(silver + 1, _int_env("LOYALTY_GOLD_MIN_CONFIRMED", 20))
     bronze = max(1, min(_int_env("LOYALTY_BRONZE_MIN_CONFIRMED", 1), silver - 1))
     return bronze, silver, gold
 
 
-def loyalty_tier_for_confirmed_count(count: int) -> str:
-    bronze_min, silver_min, gold_min = loyalty_thresholds()
+def effective_loyalty_thresholds(center: models.Center | None) -> tuple[int, int, int]:
+    """العتبات الفعلية: تخصيص المركز إن وُجد، وإلا قيم البيئة."""
+    b, s, g = loyalty_thresholds()
+    if not center:
+        return b, s, g
+    if center.loyalty_silver_min is not None:
+        s = max(2, int(center.loyalty_silver_min))
+    if center.loyalty_gold_min is not None:
+        g = max(s + 1, int(center.loyalty_gold_min))
+    if center.loyalty_bronze_min is not None:
+        b = max(1, int(center.loyalty_bronze_min))
+    if b >= s:
+        b = max(1, s - 1)
+    if g <= s:
+        g = s + 1
+    return b, s, g
+
+
+def loyalty_tier_for_confirmed_count(count: int, center: models.Center | None = None) -> str:
+    bronze_min, silver_min, gold_min = effective_loyalty_thresholds(center)
     if count >= gold_min:
         return LOYALTY_TIER_GOLD
     if count >= silver_min:
@@ -40,36 +58,44 @@ def loyalty_tier_for_confirmed_count(count: int) -> str:
     return LOYALTY_TIER_NONE
 
 
-def loyalty_tier_label_ar(tier: str) -> str:
-    return {
+def loyalty_tier_label_ar(tier: str, center: models.Center | None = None) -> str:
+    defaults = {
         LOYALTY_TIER_NONE: "بدون وسام",
         LOYALTY_TIER_BRONZE: "برونزي",
         LOYALTY_TIER_SILVER: "فضي",
         LOYALTY_TIER_GOLD: "ذهبي",
-    }.get(tier, tier)
+    }
+    if center:
+        if tier == LOYALTY_TIER_BRONZE and (center.loyalty_label_bronze or "").strip():
+            return (center.loyalty_label_bronze or "").strip()[:64]
+        if tier == LOYALTY_TIER_SILVER and (center.loyalty_label_silver or "").strip():
+            return (center.loyalty_label_silver or "").strip()[:64]
+        if tier == LOYALTY_TIER_GOLD and (center.loyalty_label_gold or "").strip():
+            return (center.loyalty_label_gold or "").strip()[:64]
+    return defaults.get(tier, tier)
 
 
-def loyalty_context_for_count(count: int) -> dict[str, Any]:
-    bronze_min, silver_min, gold_min = loyalty_thresholds()
-    tier = loyalty_tier_for_confirmed_count(count)
+def loyalty_context_for_count(count: int, center: models.Center | None = None) -> dict[str, Any]:
+    bronze_min, silver_min, gold_min = effective_loyalty_thresholds(center)
+    tier = loyalty_tier_for_confirmed_count(count, center)
     next_need: int | None = None
     next_label = ""
     if tier == LOYALTY_TIER_NONE:
         next_need = bronze_min
-        next_label = loyalty_tier_label_ar(LOYALTY_TIER_BRONZE)
+        next_label = loyalty_tier_label_ar(LOYALTY_TIER_BRONZE, center)
     elif tier == LOYALTY_TIER_BRONZE:
         next_need = silver_min
-        next_label = loyalty_tier_label_ar(LOYALTY_TIER_SILVER)
+        next_label = loyalty_tier_label_ar(LOYALTY_TIER_SILVER, center)
     elif tier == LOYALTY_TIER_SILVER:
         next_need = gold_min
-        next_label = loyalty_tier_label_ar(LOYALTY_TIER_GOLD)
+        next_label = loyalty_tier_label_ar(LOYALTY_TIER_GOLD, center)
     sessions_to_next: int | None = None
     if next_need is not None:
         sessions_to_next = max(0, next_need - count)
     return {
         "loyalty_confirmed_count": count,
         "loyalty_tier": tier,
-        "loyalty_tier_label": loyalty_tier_label_ar(tier),
+        "loyalty_tier_label": loyalty_tier_label_ar(tier, center),
         "loyalty_next_tier_label": next_label,
         "loyalty_sessions_to_next": sessions_to_next,
         "loyalty_thresholds": {"bronze": bronze_min, "silver": silver_min, "gold": gold_min},
@@ -110,3 +136,18 @@ def loyalty_confirmed_counts_by_email_lower(db: Session, center_id: int) -> dict
         if em:
             out[str(em).lower()] = int(c)
     return out
+
+
+def validate_loyalty_threshold_triple(bronze: int, silver: int, gold: int) -> str | None:
+    """None إن كان صالحاً، أو رسالة خطأ قصيرة."""
+    if silver < 2:
+        return "الحد الأدنى للفضي يجب أن يكون 2 على الأقل."
+    if gold <= silver:
+        return "الذهبي يجب أن يتطلب جلسات أكثر من الفضي."
+    if bronze < 1:
+        return "البرونزي يجب أن يبدأ من جلسة واحدة على الأقل."
+    if bronze >= silver:
+        return "البرونزي يجب أن يكون أقل من عتبة الفضي."
+    if gold > 5000 or silver > 5000 or bronze > 5000:
+        return "القيم كبيرة جداً."
+    return None

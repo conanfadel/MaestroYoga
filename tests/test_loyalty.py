@@ -9,9 +9,11 @@ from backend.app.loyalty import (
     LOYALTY_TIER_NONE,
     LOYALTY_TIER_SILVER,
     count_confirmed_sessions_for_public_user,
+    effective_loyalty_thresholds,
     loyalty_confirmed_counts_by_email_lower,
     loyalty_context_for_count,
     loyalty_tier_for_confirmed_count,
+    loyalty_tier_label_ar,
 )
 
 
@@ -25,6 +27,22 @@ def test_loyalty_tier_for_confirmed_count_defaults(monkeypatch):
     assert loyalty_tier_for_confirmed_count(6) == LOYALTY_TIER_SILVER
     assert loyalty_tier_for_confirmed_count(19) == LOYALTY_TIER_SILVER
     assert loyalty_tier_for_confirmed_count(20) == LOYALTY_TIER_GOLD
+
+
+def test_effective_loyalty_thresholds_center_override(monkeypatch):
+    monkeypatch.delenv("LOYALTY_SILVER_MIN_CONFIRMED", raising=False)
+    monkeypatch.delenv("LOYALTY_GOLD_MIN_CONFIRMED", raising=False)
+    c = models.Center()
+    c.loyalty_silver_min = 10
+    c.loyalty_gold_min = 35
+    b, s, g = effective_loyalty_thresholds(c)
+    assert s == 10 and g == 35 and b >= 1 and b < s
+
+
+def test_loyalty_tier_label_custom_on_center():
+    c = models.Center()
+    c.loyalty_label_gold = "نجم ذهبي"
+    assert loyalty_tier_label_ar(LOYALTY_TIER_GOLD, c) == "نجم ذهبي"
 
 
 def test_loyalty_context_gold_has_no_next(monkeypatch):

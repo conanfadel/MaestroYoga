@@ -16,6 +16,13 @@ class Center(Base):
     hero_image_url = Column(String, nullable=True)
     # عند عدم رفع غلاف: True = صورة يوغا افتراضية (ثيم التطبيق)، False = تدرج ألوان فقط
     hero_show_stock_photo = Column(Boolean, nullable=False, default=True)
+    # برنامج الولاء (اختياري): NULL = استخدام عتبات متغيرات البيئة LOYALTY_*_MIN_CONFIRMED
+    loyalty_bronze_min = Column(Integer, nullable=True)
+    loyalty_silver_min = Column(Integer, nullable=True)
+    loyalty_gold_min = Column(Integer, nullable=True)
+    loyalty_label_bronze = Column(String(64), nullable=True)
+    loyalty_label_silver = Column(String(64), nullable=True)
+    loyalty_label_gold = Column(String(64), nullable=True)
 
     clients = relationship("Client", back_populates="center")
     plans = relationship("SubscriptionPlan", back_populates="center")
