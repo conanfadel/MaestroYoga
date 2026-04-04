@@ -429,7 +429,7 @@
       margin: 8px 0;
       overflow: hidden;
       min-width: 0;
-      scroll-margin-top: 14px;
+      scroll-margin-top: 96px;
       box-shadow: 0 8px 24px rgba(45, 52, 54, 0.05);
     }
     .accordion.focused {
@@ -447,12 +447,31 @@
       letter-spacing: 1px;
     }
     .faq-draggable.dragging { opacity: .45; }
+    .section-tabs-sticky {
+      position: sticky;
+      top: 0;
+      z-index: 60;
+      margin: 0 0 12px;
+      padding: 10px 0 12px;
+      background: linear-gradient(180deg, var(--page-bg) 0%, var(--page-bg) 72%, rgba(250, 252, 251, 0.94) 100%);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+    }
+    .section-tabs-sticky .section-tabs {
+      margin: 0;
+      padding: 10px 12px;
+      background: var(--white);
+      border: 1px solid rgba(197, 160, 89, 0.35);
+      border-radius: 16px;
+      box-shadow: 0 10px 30px rgba(45, 52, 54, 0.08);
+    }
     .section-tabs {
       display: flex;
       flex-wrap: wrap;
       gap: 8px 10px;
-      overflow-x: visible;
+      overflow-x: auto;
       margin: 6px 0 12px;
+      scrollbar-width: thin;
     }
     .section-tab {
       display: inline-flex;
@@ -700,42 +719,44 @@
       <div class="stat"><div class="k">محذوفون (Soft)</div><div class="v">{{ dashboard.public_users_deleted_count }}</div></div>
     </div>
 
-    <div class="section-tabs" id="section-tabs">
+    <div class="section-tabs-sticky" id="section-tabs-sticky">
+    <div class="section-tabs" id="section-tabs" role="tablist" aria-label="أقسام لوحة الإدارة">
       {% if not is_trainer %}
-      <a class="section-tab" data-target="section-branding" href="#section-branding">
+      <a class="section-tab" role="tab" data-target="section-branding" href="#section-branding" id="tab-section-branding">
         هوية المركز
       </a>
-      <a class="section-tab" data-target="section-rooms" href="#section-rooms">
+      <a class="section-tab" role="tab" data-target="section-rooms" href="#section-rooms" id="tab-section-rooms">
         إدارة الغرف
       </a>
-      <a class="section-tab" data-target="section-plans" href="#section-plans">
+      <a class="section-tab" role="tab" data-target="section-plans" href="#section-plans" id="tab-section-plans">
         إدارة خطط الاشتراك
       </a>
-      <a class="section-tab" data-target="section-public-users" href="#section-public-users">
+      <a class="section-tab" role="tab" data-target="section-public-users" href="#section-public-users" id="tab-section-public-users">
         إدارة مستخدمي الجمهور
       </a>
-      <a class="section-tab" data-target="section-center-posts" href="#section-center-posts">
+      <a class="section-tab" role="tab" data-target="section-center-posts" href="#section-center-posts" id="tab-section-center-posts">
         أخبار ومنشورات المركز
       </a>
       {% endif %}
       {% if is_trainer %}
-      <a class="section-tab" data-target="section-rooms" href="#section-rooms">
+      <a class="section-tab" role="tab" data-target="section-rooms" href="#section-rooms" id="tab-section-rooms-trainer">
         نشر جلسة جديدة
       </a>
       {% endif %}
-      <a class="section-tab" data-target="section-sessions" href="#section-sessions">
+      <a class="section-tab" role="tab" data-target="section-sessions" href="#section-sessions" id="tab-section-sessions">
         إدارة الجلسات والمدفوعات
       </a>
       {% if not is_trainer %}
-      <a class="section-tab" data-target="section-faq" href="#section-faq">
+      <a class="section-tab" role="tab" data-target="section-faq" href="#section-faq" id="tab-section-faq">
         إدارة الأسئلة الشائعة
       </a>
       {% endif %}
       {% if show_security_section %}
-      <a class="section-tab" data-target="section-security" href="#section-security">
+      <a class="section-tab" role="tab" data-target="section-security" href="#section-security" id="tab-section-security">
         مركز الأمان والمخاطر
       </a>
       {% endif %}
+    </div>
     </div>
 
     {% if not is_trainer %}
@@ -1992,31 +2013,48 @@
         tabs.forEach(function (tab) {
           const isActive = openSection && tab.dataset.target === openSection.id;
           tab.classList.toggle("active", !!isActive);
-          if (isActive) {
-            tab.setAttribute("aria-current", "page");
-          } else {
-            tab.removeAttribute("aria-current");
-          }
+          tab.setAttribute("aria-selected", isActive ? "true" : "false");
         });
         if (openSection && openSection.id) {
           sessionStorage.setItem(ACTIVE_SECTION_KEY, openSection.id);
         }
       }
+
+      function activateAdminSection(targetId, options) {
+        options = options || {};
+        const fromHash = !!options.fromHash;
+        const focusTab = options.focusTab;
+        const section = document.getElementById(targetId);
+        if (!section || !section.classList.contains("accordion")) return false;
+        openAccordion(section);
+        highlightSection(section);
+        section.scrollIntoView({ behavior: prefersReducedMotion ? "auto" : "smooth", block: "start" });
+        refreshActiveTab();
+        if (!fromHash && focusTab) {
+          requestAnimationFrame(function () {
+            try {
+              focusTab.focus({ preventScroll: true });
+            } catch (err) {}
+          });
+        }
+        return true;
+      }
+
       tabs.forEach(function (tab) {
         tab.addEventListener("click", function (e) {
           e.preventDefault();
           const targetId = tab.dataset.target;
-          const section = document.getElementById(targetId);
-          if (!section) return;
-          openAccordion(section);
-          highlightSection(section);
-          section.scrollIntoView({ behavior: prefersReducedMotion ? "auto" : "smooth", block: "start" });
-          refreshActiveTab();
-          if (targetId && window.history && window.history.replaceState) {
-            const url = window.location.pathname + window.location.search + "#" + targetId;
-            window.history.replaceState(null, "", url);
+          if (!targetId) return;
+          if (!activateAdminSection(targetId, { focusTab: tab })) return;
+          if (window.history && window.history.replaceState) {
+            window.history.replaceState(null, "", window.location.pathname + window.location.search + "#" + targetId);
           }
         });
+      });
+      window.addEventListener("hashchange", function () {
+        var id = (window.location.hash || "").replace(/^#/, "");
+        if (!id) return;
+        activateAdminSection(id, { fromHash: true });
       });
       refreshActiveTab();
 

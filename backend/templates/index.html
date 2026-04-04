@@ -167,6 +167,40 @@
     }
     .hero-actions, .toplinks, .hero-meta { display: flex; gap: 10px; flex-wrap: wrap; }
     .hero-actions { margin-top: 14px; }
+    .public-user-menu { position: relative; display: inline-block; max-width: 100%; }
+    .public-user-menu__trigger { max-width: min(100%, 260px); text-align: inherit; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .public-user-menu__panel {
+      display: none;
+      position: absolute;
+      inset-inline-start: 0;
+      top: calc(100% + 8px);
+      min-width: min(100vw - 32px, 300px);
+      max-width: min(100vw - 24px, 320px);
+      padding: 14px 16px;
+      background: var(--white);
+      border: 1px solid rgba(197, 160, 89, 0.4);
+      border-radius: 14px;
+      box-shadow: 0 16px 40px rgba(45, 52, 54, 0.14);
+      z-index: 40;
+    }
+    .public-user-menu.is-open .public-user-menu__panel { display: block; }
+    .public-user-menu__panel h3 {
+      margin: 0 0 10px;
+      font-size: 1rem;
+      font-weight: 800;
+      color: var(--charcoal);
+    }
+    .public-user-menu__row {
+      display: grid;
+      gap: 2px;
+      margin-bottom: 10px;
+      font-size: 0.88rem;
+      line-height: 1.45;
+    }
+    .public-user-menu__row .k { color: var(--charcoal-muted); font-weight: 600; font-size: 0.78rem; }
+    .public-user-menu__row .v { word-break: break-word; font-weight: 700; }
+    .public-user-menu__actions { display: flex; flex-direction: column; gap: 8px; margin-top: 12px; padding-top: 12px; border-top: 1px solid rgba(45, 52, 54, 0.08); }
+    .public-user-menu__actions a { text-align: center; }
     .btn {
       border: 0;
       border-radius: 999px;
@@ -909,10 +943,49 @@
         </div>
         <div class="toplinks" style="margin-top:10px;">
           {% if public_user %}
-            <a class="btn ghost" href="/public/verify-pending?next=/index?center_id={{ center_id }}">
-              {{ public_user.full_name }}{% if not public_user.email_verified %} (غير موثق){% endif %}
-            </a>
-            <a class="btn primary" href="/public/logout">خروج</a>
+            <div class="public-user-menu" id="public-user-menu">
+              <button
+                type="button"
+                class="btn ghost public-user-menu__trigger"
+                id="public-user-menu-trigger"
+                aria-expanded="false"
+                aria-controls="public-user-menu-panel"
+                aria-haspopup="true"
+              >
+                {{ public_user.full_name }}{% if not public_user.email_verified %} (غير موثق){% endif %}
+              </button>
+              <div
+                class="public-user-menu__panel"
+                id="public-user-menu-panel"
+                role="region"
+                aria-label="معلومات حسابك"
+                aria-hidden="true"
+              >
+                <h3>حسابك</h3>
+                <div class="public-user-menu__row">
+                  <span class="k">الاسم</span>
+                  <span class="v">{{ public_user.full_name }}</span>
+                </div>
+                <div class="public-user-menu__row">
+                  <span class="k">البريد</span>
+                  <span class="v">{{ public_user.email }}</span>
+                </div>
+                {% if public_user.phone %}
+                <div class="public-user-menu__row">
+                  <span class="k">الجوال</span>
+                  <span class="v">{{ public_user.phone }}</span>
+                </div>
+                {% endif %}
+                <div class="public-user-menu__row">
+                  <span class="k">حالة التحقق</span>
+                  <span class="v">{% if public_user.email_verified %}موثّق{% else %}بانتظار تأكيد البريد{% endif %}</span>
+                </div>
+                <div class="public-user-menu__actions">
+                  <a class="btn ghost" href="/public/verify-pending?next=/index?center_id={{ center_id }}">تأكيد البريد / الإعدادات</a>
+                  <a class="btn primary" href="/public/logout">تسجيل الخروج</a>
+                </div>
+              </div>
+            </div>
           {% else %}
             <a class="btn primary" href="/public/login?next=/index?center_id={{ center_id }}">دخول المستخدم</a>
             <a class="btn ghost" href="/public/register?next={{ ('/index?center_id=' ~ center_id|string)|urlencode }}">تسجيل جديد</a>
@@ -1212,6 +1285,31 @@
 
   <script>
     (function () {
+      const publicUserMenu = document.getElementById("public-user-menu");
+      const publicUserMenuBtn = document.getElementById("public-user-menu-trigger");
+      const publicUserMenuPanel = document.getElementById("public-user-menu-panel");
+      if (publicUserMenu && publicUserMenuBtn && publicUserMenuPanel) {
+        function setPublicUserMenuOpen(open) {
+          publicUserMenu.classList.toggle("is-open", open);
+          publicUserMenuBtn.setAttribute("aria-expanded", open ? "true" : "false");
+          publicUserMenuPanel.setAttribute("aria-hidden", open ? "false" : "true");
+        }
+        publicUserMenuBtn.addEventListener("click", function (e) {
+          e.preventDefault();
+          e.stopPropagation();
+          setPublicUserMenuOpen(!publicUserMenu.classList.contains("is-open"));
+        });
+        publicUserMenu.addEventListener("click", function (e) {
+          e.stopPropagation();
+        });
+        document.addEventListener("click", function () {
+          setPublicUserMenuOpen(false);
+        });
+        document.addEventListener("keydown", function (e) {
+          if (e.key === "Escape") setPublicUserMenuOpen(false);
+        });
+      }
+
       const sessionsRoot = document.getElementById("sessions-cards");
       const search = document.getElementById("session-search");
       const level = document.getElementById("session-level");
