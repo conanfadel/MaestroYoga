@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>إعدادات الحساب — Maestro Yoga</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet" />
+  {% if analytics_enabled and ga4_measurement_id %}
+  <script async src="https://www.googletagmanager.com/gtag/js?id={{ ga4_measurement_id }}"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){ dataLayer.push(arguments); }
+    gtag("js", new Date());
+    gtag("config", "{{ ga4_measurement_id }}", { send_page_view: true });
+  </script>
+  {% endif %}
+  <style>
+    :root {
+      --mint-bg: #e8fcf4;
+      --mint-mid: #7dd3ae;
+      --charcoal: #2d3436;
+      --charcoal-muted: #636e72;
+      --gold: #c5a059;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: "Tajawal", system-ui, sans-serif;
+      color: var(--charcoal);
+      background:
+        radial-gradient(ellipse 100% 80% at 100% 0%, var(--mint-bg) 0%, transparent 55%),
+        #fafcfb;
+      padding: 28px 16px 40px;
+    }
+    .shell {
+      width: 80%;
+      max-width: 520px;
+      margin: 0 auto;
+    }
+    @media (max-width: 640px) {
+      .shell { width: 94%; }
+    }
+    .card {
+      background: #fff;
+      border: 1px solid rgba(197, 160, 89, 0.35);
+      border-radius: 18px;
+      padding: 26px 24px 28px;
+      box-shadow: 0 20px 48px rgba(45, 52, 54, 0.1);
+    }
+    h1 {
+      margin: 0 0 6px;
+      font-size: 1.35rem;
+      color: #0f766e;
+      font-weight: 800;
+    }
+    .sub { margin: 0 0 20px; color: var(--charcoal-muted); font-size: 0.95rem; line-height: 1.55; }
+    label { display: block; margin: 14px 0 6px; font-weight: 700; font-size: 0.92rem; }
+    input, select {
+      width: 100%;
+      padding: 11px 12px;
+      border: 1px solid rgba(125, 211, 174, 0.85);
+      border-radius: 12px;
+      font-family: inherit;
+      font-size: 1rem;
+    }
+    input:disabled, .readonly {
+      background: #f1f5f9;
+      color: var(--charcoal-muted);
+    }
+    .phone-row { display: grid; grid-template-columns: 140px 1fr; gap: 10px; }
+    @media (max-width: 480px) {
+      .phone-row { grid-template-columns: 1fr; }
+    }
+    button[type="submit"] {
+      width: 100%;
+      margin-top: 22px;
+      padding: 12px;
+      border: 0;
+      border-radius: 999px;
+      background: linear-gradient(120deg, #0f766e, #10b981);
+      color: #fff;
+      font-weight: 800;
+      font-size: 1rem;
+      cursor: pointer;
+      font-family: inherit;
+    }
+    .alert {
+      margin-bottom: 14px;
+      padding: 12px 14px;
+      border-radius: 12px;
+      font-size: 0.92rem;
+      line-height: 1.5;
+    }
+    .alert.ok { border: 1px solid #99f6e4; background: #ecfeff; color: #155e75; }
+    .alert.warn { border: 1px solid #fde68a; background: #fffbeb; color: #92400e; }
+    .links { margin-top: 18px; font-size: 0.9rem; line-height: 1.8; }
+    .links a { color: #0f766e; font-weight: 700; text-decoration: none; }
+    .hint { font-size: 0.82rem; color: var(--charcoal-muted); margin-top: 6px; }
+  </style>
+</head>
+<body>
+  <div class="shell">
+    <div class="card">
+      <h1>إعدادات الحساب</h1>
+      <p class="sub">عدّل اسمك ورقم جوالك. البريد الإلكتروني ثابت لأنه مرتبط بالتحقق والحجوزات.</p>
+
+      {% if request.query_params.get('msg') == 'saved' %}
+        <div class="alert ok">تم حفظ التعديلات بنجاح.</div>
+      {% endif %}
+      {% if request.query_params.get('msg') == 'required_fields' %}
+        <div class="alert warn">يرجى تعبئة الاسم ورقم الجوال.</div>
+      {% endif %}
+      {% if request.query_params.get('msg') == 'invalid_phone' %}
+        <div class="alert warn">رقم الجوال غير صحيح بالنسبة لمفتاح الدولة المختار.</div>
+      {% endif %}
+      {% if request.query_params.get('msg') == 'phone_exists' %}
+        <div class="alert warn">رقم الجوال مستخدم من حساب آخر.</div>
+      {% endif %}
+
+      <form method="post" action="/public/account">
+        <input type="hidden" name="next" value="{{ next }}" />
+        <label for="full_name">الاسم الكامل</label>
+        <input id="full_name" name="full_name" value="{{ user.full_name }}" required autocomplete="name" />
+
+        <label for="email">البريد الإلكتروني</label>
+        <input id="email" type="email" value="{{ user.email }}" disabled class="readonly" />
+        <p class="hint">لتغيير البريد يُرجى التواصل مع المركز.</p>
+
+        <label>رقم الجوال</label>
+        <div class="phone-row">
+          <select id="country_code" name="country_code" required>
+            <option value="+966" {% if country_code == '+966' %}selected{% endif %}>+966 السعودية</option>
+            <option value="+971" {% if country_code == '+971' %}selected{% endif %}>+971 الإمارات</option>
+            <option value="+965" {% if country_code == '+965' %}selected{% endif %}>+965 الكويت</option>
+            <option value="+973" {% if country_code == '+973' %}selected{% endif %}>+973 البحرين</option>
+            <option value="+974" {% if country_code == '+974' %}selected{% endif %}>+974 قطر</option>
+            <option value="+968" {% if country_code == '+968' %}selected{% endif %}>+968 عُمان</option>
+            <option value="+20" {% if country_code == '+20' %}selected{% endif %}>+20 مصر</option>
+          </select>
+          <input id="phone" name="phone" type="tel" inputmode="numeric" value="{{ phone_local }}" placeholder="5XXXXXXXX" required autocomplete="tel-national" />
+        </div>
+
+        <button type="submit">حفظ التعديلات</button>
+      </form>
+
+      <div class="links">
+        <a href="{{ next }}">← العودة للموقع</a><br />
+        {% if not user.email_verified %}
+          <a href="/public/verify-pending?next={{ next|urlencode }}">تأكيد البريد الإلكتروني</a><br />
+        {% endif %}
+        <a href="/public/forgot-password">نسيت كلمة المرور؟</a><br />
+        <a href="/public/logout">تسجيل الخروج</a>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

@@ -1342,6 +1342,102 @@ def public_logout():
     return response
 
 
+def _public_account_phone_prefill(user: models.PublicUser) -> tuple[str, str]:
+    """(country_code, local_digits) for account form; default +966 if unknown."""
+    raw = (user.phone or "").strip()
+    if not raw:
+        return "+966", ""
+    for prefix in ("+966", "+971", "+965", "+973", "+974", "+968", "+20"):
+        if raw.startswith(prefix):
+            return prefix, raw[len(prefix) :].lstrip()
+    digits = "".join(ch for ch in raw if ch.isdigit())
+    return "+966", digits
+
+
+@router.get("/public/account", response_class=HTMLResponse)
+def public_account_page(request: Request, next: str = "/index?center_id=1", db: Session = Depends(get_db)):
+    safe_next = _sanitize_next_url(request.query_params.get("next") or next)
+    user = _current_public_user(request, db)
+    if not user:
+        return _public_login_redirect(next_url=safe_next)
+    cc, phone_local = _public_account_phone_prefill(user)
+    return templates.TemplateResponse(
+        request,
+        "public_account.html",
+        {
+            "next": safe_next,
+            "user": user,
+            "country_code": cc,
+            "phone_local": phone_local,
+            **_analytics_context("public_account"),
+        },
+    )
+
+
+@router.post("/public/account")
+def public_account_update(
+    request: Request,
+    full_name: str = Form(...),
+    country_code: str = Form(...),
+    phone: str = Form(...),
+    next: str = Form("/index?center_id=1"),
+    db: Session = Depends(get_db),
+):
+    safe_next = _sanitize_next_url(next)
+    if _is_ip_blocked(db, request):
+        return _public_login_redirect(next_url=safe_next, msg="ip_blocked")
+    user = _current_public_user(request, db)
+    if not user:
+        return _public_login_redirect(next_url=safe_next)
+    full_name_n = full_name.strip()
+    if not full_name_n or not phone.strip() or not country_code.strip():
+        return RedirectResponse(
+            url=_url_with_params("/public/account", msg="required_fields", next=safe_next),
+            status_code=303,
+        )
+    phone_n = _normalize_phone_with_country(country_code, phone)
+    if phone_n is None:
+        return RedirectResponse(
+            url=_url_with_params("/public/account", msg="invalid_phone", next=safe_next),
+            status_code=303,
+        )
+    other = (
+        db.query(models.PublicUser)
+        .filter(
+            models.PublicUser.phone == phone_n,
+            models.PublicUser.is_deleted.is_(False),
+            models.PublicUser.id != user.id,
+        )
+        .first()
+    )
+    if other:
+        log_security_event(
+            "public_account_update",
+            request,
+            "phone_conflict",
+            email=user.email,
+            details={"public_user_id": user.id},
+        )
+        return RedirectResponse(
+            url=_url_with_params("/public/account", msg="phone_exists", next=safe_next),
+            status_code=303,
+        )
+    user.full_name = full_name_n
+    user.phone = phone_n
+    db.commit()
+    log_security_event(
+        "public_account_update",
+        request,
+        "success",
+        email=user.email,
+        details={"public_user_id": user.id},
+    )
+    return RedirectResponse(
+        url=_url_with_params("/public/account", msg="saved", next=safe_next),
+        status_code=303,
+    )
+
+
 @router.get("/public/verify-pending", response_class=HTMLResponse)
 def public_verify_pending(request: Request, next: str = "/index?center_id=1", db: Session = Depends(get_db)):
     safe_next = _sanitize_next_url(next)

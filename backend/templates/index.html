@@ -53,19 +53,23 @@
     body {
       margin: 0;
       padding-block: 22px;
-      padding-inline-start: 12px;
-      padding-inline-end: clamp(16px, 4vw, 48px);
+      padding-inline: max(12px, (100% - 80vw) / 2);
       font-family: "Tajawal", system-ui, sans-serif;
       color: var(--charcoal);
       background:
         radial-gradient(ellipse 120% 80% at 100% 0%, var(--mint-bg) 0%, transparent 55%),
         var(--page-bg);
     }
+    @media (max-width: 720px) {
+      body { padding-inline: max(10px, 3vw); }
+    }
     .container {
       width: 100%;
-      max-width: min(1820px, 100%);
-      margin-inline-start: 0;
-      margin-inline-end: auto;
+      max-width: min(1680px, 80vw);
+      margin-inline: auto;
+    }
+    @media (max-width: 720px) {
+      .container { max-width: 100%; }
     }
     .skip-link {
       position: absolute; inset-inline-start: -9999px; top: 0;
@@ -201,8 +205,8 @@
       position: fixed;
       box-sizing: border-box;
       width: min(100vw - 24px, 340px);
-      max-height: min(85vh, 480px);
-      overflow: auto;
+      max-height: none;
+      overflow: visible;
       padding: 0;
       background: var(--white);
       border: 1px solid rgba(197, 160, 89, 0.38);
@@ -1144,7 +1148,10 @@
                     </div>
                   </div>
                   <div class="public-user-menu__actions">
-                    <a class="btn ghost" href="/public/verify-pending?next=/index?center_id={{ center_id }}">تأكيد البريد / الإعدادات</a>
+                    <a class="btn ghost" href="/public/account?next={{ ('/index?center_id=' ~ center_id|string)|urlencode }}">الإعدادات</a>
+                    {% if not public_user.email_verified %}
+                    <a class="btn ghost" href="/public/verify-pending?next={{ ('/index?center_id=' ~ center_id|string)|urlencode }}">تأكيد البريد</a>
+                    {% endif %}
                     <a class="btn primary" href="/public/logout">تسجيل الخروج</a>
                   </div>
                 </div>
@@ -1468,19 +1475,32 @@
           var r = publicUserMenuBtn.getBoundingClientRect();
           var vw = window.innerWidth;
           var vh = window.innerHeight;
-          var w = Math.min(340, vw - 24);
+          var edgePad = 12;
           var gap = 8;
+          var w = Math.min(340, vw - edgePad * 2);
           publicUserMenuPanel.style.width = w + "px";
-          publicUserMenuPanel.style.maxHeight = Math.min(480, vh - r.bottom - gap - 16) + "px";
-          publicUserMenuPanel.style.top = r.bottom + gap + "px";
+          publicUserMenuPanel.style.maxHeight = "none";
+          publicUserMenuPanel.style.overflow = "visible";
           var isRTL = document.documentElement.getAttribute("dir") === "rtl";
           if (isRTL) {
-            publicUserMenuPanel.style.right = Math.max(12, vw - r.right) + "px";
+            publicUserMenuPanel.style.right = Math.max(edgePad, vw - r.right) + "px";
             publicUserMenuPanel.style.left = "auto";
           } else {
-            publicUserMenuPanel.style.left = Math.max(12, r.left) + "px";
+            publicUserMenuPanel.style.left = Math.max(edgePad, r.left) + "px";
             publicUserMenuPanel.style.right = "auto";
           }
+          var ph = publicUserMenuPanel.offsetHeight;
+          var spaceBelow = vh - r.bottom - gap - edgePad;
+          var spaceAbove = r.top - gap - edgePad;
+          var top;
+          if (ph <= spaceBelow || spaceBelow >= spaceAbove) {
+            top = r.bottom + gap;
+          } else {
+            top = r.top - ph - gap;
+          }
+          if (top + ph + edgePad > vh) top = Math.max(edgePad, vh - ph - edgePad);
+          if (top < edgePad) top = edgePad;
+          publicUserMenuPanel.style.top = top + "px";
         }
         function setPublicUserMenuOpen(open) {
           publicUserMenu.classList.toggle("is-open", open);

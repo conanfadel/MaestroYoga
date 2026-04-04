@@ -30,16 +30,22 @@
         radial-gradient(ellipse 100% 70% at 100% 0%, var(--mint-bg) 0%, transparent 50%),
         var(--page-bg);
       margin: 0;
-      padding: 8px clamp(10px, 1.8vw, 28px) 16px;
+      padding: 8px max(10px, (100% - 80vw) / 2) 20px;
       color: var(--charcoal);
       overflow-x: clip;
       width: 100%;
       max-width: 100%;
     }
+    @media (max-width: 720px) {
+      body { padding-inline: max(10px, 3vw); }
+    }
     .container {
       width: 100%;
-      max-width: 100%;
-      margin: 0;
+      max-width: min(1680px, 80vw);
+      margin-inline: auto;
+    }
+    @media (max-width: 720px) {
+      .container { max-width: 100%; }
     }
     .top {
       display: flex;

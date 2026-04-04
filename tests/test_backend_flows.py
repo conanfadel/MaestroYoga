@@ -15,6 +15,52 @@ from backend.app.web_shared import (
 )
 
 
+def test_public_account_redirects_when_not_logged_in(client):
+    r = client.get("/public/account?next=/index?center_id=1", follow_redirects=False)
+    assert r.status_code == 303
+    assert r.headers["location"].startswith("/public/login?")
+
+
+def test_public_account_updates_name_and_phone(client):
+    db = SessionLocal()
+    email = f"pytest_acct_{int(time.time())}@example.com"
+    user = models.PublicUser(
+        full_name="Before Name",
+        email=email,
+        phone="+966500000099",
+        password_hash=hash_password("Admin@12345"),
+        email_verified=True,
+        is_active=True,
+        is_deleted=False,
+    )
+    db.add(user)
+    db.commit()
+    db.refresh(user)
+    client.post(
+        "/public/login",
+        data={"email": email, "password": "Admin@12345", "next": "/index?center_id=1"},
+        follow_redirects=False,
+    )
+    r2 = client.post(
+        "/public/account",
+        data={
+            "full_name": "After Name",
+            "country_code": "+966",
+            "phone": "501112233",
+            "next": "/index?center_id=1",
+        },
+        follow_redirects=False,
+    )
+    assert r2.status_code == 303
+    assert "msg=saved" in r2.headers["location"]
+    db.refresh(user)
+    assert user.full_name == "After Name"
+    assert user.phone == "+966501112233"
+    db.delete(user)
+    db.commit()
+    db.close()
+
+
 def test_verify_email_redirects_invalid_token(client):
     response = client.get("/public/verify-email?token=bad&next=/index?center_id=1", follow_redirects=False)
     assert response.status_code == 303
