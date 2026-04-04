@@ -30,9 +30,7 @@
     <p>أرسلنا رابط التحقق إلى: <strong>{{ user.email }}</strong></p>
     <p>بعد التحقق، يمكنك إكمال الحجز والدفع بشكل طبيعي.</p>
     <p class="alert" style="font-size:.86rem;line-height:1.55;">
-      <strong>لم يصل البريد؟</strong> تحقق من «العروض/Spam». في الإنتاج تأكد من
-      <strong>PUBLIC_BASE_URL</strong> (عنوان الموقع الكامل بـ https) ومن إعدادات الإرسال في لوحة الاستضافة:
-      على <strong>Render</strong> يُفضّل <strong>Resend</strong> (<code>MAIL_PROVIDER=resend</code>) لأن SMTP المباشر غالبًا لا يعمل هناك.
+      <strong>لم يصل البريد؟</strong> انتظر دقيقتين ثم راجع مجلد «غير المرغوب فيه» أو «العروض الترويجية» (Spam) في بريدك.
     </p>
 
     {% if request.query_params.get('msg') == 'registered' %}
