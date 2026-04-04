@@ -4,6 +4,8 @@ from datetime import datetime
 from backend.app import models
 from backend.app.database import SessionLocal
 from backend.app.loyalty import (
+    DEFAULT_LOYALTY_REWARD_BRONZE,
+    LOYALTY_REWARD_MAX_LEN,
     LOYALTY_TIER_BRONZE,
     LOYALTY_TIER_GOLD,
     LOYALTY_TIER_NONE,
@@ -13,6 +15,8 @@ from backend.app.loyalty import (
     effective_loyalty_thresholds,
     loyalty_confirmed_counts_by_email_lower,
     loyalty_context_for_count,
+    loyalty_program_table_rows,
+    loyalty_reward_text,
     loyalty_tier_for_confirmed_count,
     loyalty_tier_label_ar,
 )
@@ -61,6 +65,33 @@ def test_loyalty_tier_label_custom_on_center():
     c = models.Center()
     c.loyalty_label_gold = "نجم ذهبي"
     assert loyalty_tier_label_ar(LOYALTY_TIER_GOLD, c) == "نجم ذهبي"
+
+
+def test_loyalty_reward_text_default_and_override():
+    assert loyalty_reward_text(None, "bronze") == DEFAULT_LOYALTY_REWARD_BRONZE
+    c = models.Center()
+    c.loyalty_reward_bronze = "خصم 10٪ على الجلسة القادمة"
+    assert loyalty_reward_text(c, "bronze") == "خصم 10٪ على الجلسة القادمة"
+    long_txt = "x" * (LOYALTY_REWARD_MAX_LEN + 50)
+    c.loyalty_reward_silver = long_txt
+    assert len(loyalty_reward_text(c, "silver")) == LOYALTY_REWARD_MAX_LEN
+
+
+def test_loyalty_program_table_rows_structure(monkeypatch):
+    monkeypatch.delenv("LOYALTY_BRONZE_MIN_CONFIRMED", raising=False)
+    monkeypatch.delenv("LOYALTY_SILVER_MIN_CONFIRMED", raising=False)
+    monkeypatch.delenv("LOYALTY_GOLD_MIN_CONFIRMED", raising=False)
+    rows = loyalty_program_table_rows(None)
+    assert len(rows) == 3
+    assert {r["tier_key"] for r in rows} == {"bronze", "silver", "gold"}
+    assert all("medal" in r and "label" in r and "range_label" in r and "reward" in r and "row_class" in r for r in rows)
+    c = models.Center()
+    c.loyalty_bronze_min = 2
+    c.loyalty_silver_min = 5
+    c.loyalty_gold_min = 10
+    rows2 = loyalty_program_table_rows(c)
+    assert rows2[0]["range_label"].startswith("من 2")
+    assert "10 جلسة" in rows2[2]["range_label"]
 
 
 def test_loyalty_context_gold_has_no_next(monkeypatch):

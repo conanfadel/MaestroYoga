@@ -19,10 +19,12 @@ from .booking_utils import ACTIVE_BOOKING_STATUSES, spots_available
 from .bootstrap import DEMO_CENTER_NAME, ensure_demo_data, ensure_demo_news_posts
 from .database import get_db
 from .loyalty import (
+    LOYALTY_REWARD_MAX_LEN,
     count_confirmed_sessions_for_public_user,
     effective_loyalty_thresholds,
     loyalty_confirmed_counts_by_email_lower,
     loyalty_context_for_count,
+    loyalty_program_table_rows,
     loyalty_thresholds,
     validate_loyalty_threshold_triple,
 )
@@ -750,6 +752,7 @@ def public_index(
             "faq_items": faq_items,
             "pinned_public_post": pinned_public_post,
             "public_posts_teasers": public_posts_teasers,
+            "loyalty_program_rows": loyalty_program_table_rows(center),
             **loyalty_ctx,
             **_analytics_context("index", center_id=str(center_id)),
         },
@@ -1408,6 +1411,7 @@ def public_account_page(request: Request, next: str = "/index?center_id=1", db: 
             "user": user,
             "country_code": cc,
             "phone_local": phone_local,
+            "loyalty_program_rows": loyalty_program_table_rows(center_loyalty),
             **loyalty_ctx,
             **_analytics_context("public_account"),
         },
@@ -3653,6 +3657,9 @@ def admin_center_loyalty(
     loyalty_label_bronze: str = Form(""),
     loyalty_label_silver: str = Form(""),
     loyalty_label_gold: str = Form(""),
+    loyalty_reward_bronze: str = Form(""),
+    loyalty_reward_silver: str = Form(""),
+    loyalty_reward_gold: str = Form(""),
     scroll_y: str = Form(default=""),
     return_section: str = Form(""),
     db: Session = Depends(get_db),
@@ -3682,12 +3689,19 @@ def admin_center_loyalty(
         t = (x or "").strip()[:64]
         return t or None
 
+    def _reward(x: str) -> str | None:
+        t = (x or "").strip()[:LOYALTY_REWARD_MAX_LEN]
+        return t or None
+
     center.loyalty_bronze_min = pb
     center.loyalty_silver_min = ps
     center.loyalty_gold_min = pg
     center.loyalty_label_bronze = _lbl(loyalty_label_bronze)
     center.loyalty_label_silver = _lbl(loyalty_label_silver)
     center.loyalty_label_gold = _lbl(loyalty_label_gold)
+    center.loyalty_reward_bronze = _reward(loyalty_reward_bronze)
+    center.loyalty_reward_silver = _reward(loyalty_reward_silver)
+    center.loyalty_reward_gold = _reward(loyalty_reward_gold)
     db.commit()
     log_security_event(
         "admin_center_loyalty",

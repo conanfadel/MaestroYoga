@@ -907,6 +907,16 @@
             <label for="loyalty_label_gold">اسم الوسام الذهبي</label>
             <input id="loyalty_label_gold" name="loyalty_label_gold" type="text" maxlength="64" placeholder="ذهبي"
               value="{{ center.loyalty_label_gold or '' }}" />
+            <h3 class="branding-subhead">مكافآت ومزايا كل مستوى (اختياري)</h3>
+            <p class="small" style="margin:0 0 10px;line-height:1.55;">
+              تُعرض في <strong>صفحة الجمهور</strong> و<strong>إعدادات الحساب</strong> ضمن جدول برنامج الولاء. اترك الحقل فارغاً لاستخدام النصوص الافتراضية المقترحة (حد أقصى 800 حرف لكل مستوى).
+            </p>
+            <label for="loyalty_reward_bronze">نص مكافآت الوسام البرونزي</label>
+            <textarea id="loyalty_reward_bronze" name="loyalty_reward_bronze" rows="3" maxlength="800" placeholder="مثال: شارة ولاء في الحساب، إشعار بالعروض…">{{ center.loyalty_reward_bronze or '' }}</textarea>
+            <label for="loyalty_reward_silver">نص مكافآت الوسام الفضي</label>
+            <textarea id="loyalty_reward_silver" name="loyalty_reward_silver" rows="3" maxlength="800" placeholder="مثال: أولوية في الحجز المبكر، خصومات الحملات…">{{ center.loyalty_reward_silver or '' }}</textarea>
+            <label for="loyalty_reward_gold">نص مكافآت الوسام الذهبي</label>
+            <textarea id="loyalty_reward_gold" name="loyalty_reward_gold" rows="3" maxlength="800" placeholder="مثال: جلسات أو خصومات استثنائية، دعوات للفعاليات الحصرية…">{{ center.loyalty_reward_gold or '' }}</textarea>
             <button type="submit" style="margin-top:14px;">حفظ إعدادات الولاء</button>
           </form>
           <script>

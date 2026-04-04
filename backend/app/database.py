@@ -108,6 +108,9 @@ def migrate_schema() -> None:
     needs_center_loyalty_lb = False
     needs_center_loyalty_ls = False
     needs_center_loyalty_lg = False
+    needs_center_loyalty_rb = False
+    needs_center_loyalty_rs = False
+    needs_center_loyalty_rg = False
     if insp.has_table("centers"):
         center_cols = {c["name"] for c in insp.get_columns("centers")}
         needs_center_logo_url = "logo_url" not in center_cols
@@ -120,6 +123,9 @@ def migrate_schema() -> None:
         needs_center_loyalty_lb = "loyalty_label_bronze" not in center_cols
         needs_center_loyalty_ls = "loyalty_label_silver" not in center_cols
         needs_center_loyalty_lg = "loyalty_label_gold" not in center_cols
+        needs_center_loyalty_rb = "loyalty_reward_bronze" not in center_cols
+        needs_center_loyalty_rs = "loyalty_reward_silver" not in center_cols
+        needs_center_loyalty_rg = "loyalty_reward_gold" not in center_cols
 
     if (
         not needs_payment_booking_id
@@ -136,6 +142,9 @@ def migrate_schema() -> None:
         and not needs_center_loyalty_lb
         and not needs_center_loyalty_ls
         and not needs_center_loyalty_lg
+        and not needs_center_loyalty_rb
+        and not needs_center_loyalty_rs
+        and not needs_center_loyalty_rg
     ):
         with engine.begin() as conn:
             _cleanup_stale_center_logo_urls_sql(conn)
@@ -181,6 +190,12 @@ def migrate_schema() -> None:
             conn.execute(text("ALTER TABLE centers ADD COLUMN loyalty_label_silver VARCHAR(64)"))
         if needs_center_loyalty_lg:
             conn.execute(text("ALTER TABLE centers ADD COLUMN loyalty_label_gold VARCHAR(64)"))
+        if needs_center_loyalty_rb:
+            conn.execute(text("ALTER TABLE centers ADD COLUMN loyalty_reward_bronze TEXT"))
+        if needs_center_loyalty_rs:
+            conn.execute(text("ALTER TABLE centers ADD COLUMN loyalty_reward_silver TEXT"))
+        if needs_center_loyalty_rg:
+            conn.execute(text("ALTER TABLE centers ADD COLUMN loyalty_reward_gold TEXT"))
         _cleanup_stale_center_logo_urls_sql(conn)
         _clear_legacy_default_hero_url(conn, inspect(conn))
         _ensure_performance_indexes(conn, insp)

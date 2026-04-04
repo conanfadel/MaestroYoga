@@ -362,6 +362,57 @@
       box-shadow: 0 4px 16px rgba(45, 52, 54, 0.04);
     }
     .step b { color: var(--gold-dark); }
+    .loyalty-program {
+      margin-bottom: 22px;
+      padding: 22px 24px;
+      background: var(--white);
+      border: 1px solid rgba(197, 160, 89, 0.32);
+      border-radius: 20px;
+      box-shadow: 0 14px 40px rgba(45, 52, 54, 0.07);
+    }
+    .loyalty-program h2 {
+      margin: 0 0 8px;
+      font-family: "Amiri", "Tajawal", serif;
+      font-size: 1.45rem;
+      color: var(--charcoal);
+    }
+    .loyalty-program__lead {
+      margin: 0 0 16px;
+      color: var(--charcoal-muted);
+      font-size: 0.95rem;
+      line-height: 1.65;
+    }
+    .loyalty-program__table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+    .loyalty-program table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.9rem;
+      min-width: 280px;
+    }
+    .loyalty-program th,
+    .loyalty-program td {
+      padding: 12px 14px;
+      text-align: start;
+      border-bottom: 1px solid rgba(45, 52, 54, 0.08);
+      vertical-align: top;
+    }
+    .loyalty-program th {
+      background: linear-gradient(180deg, rgba(232, 252, 244, 0.95), rgba(255, 255, 255, 0.9));
+      font-weight: 800;
+      color: var(--charcoal);
+      font-size: 0.82rem;
+    }
+    .loyalty-program__medal { font-size: 1.35rem; line-height: 1; width: 2.2rem; }
+    .loyalty-program__tier { font-weight: 800; color: var(--charcoal); }
+    .loyalty-program__range { color: var(--charcoal-muted); font-weight: 600; white-space: nowrap; }
+    .loyalty-program__reward { line-height: 1.55; color: var(--charcoal); }
+    .loyalty-program__row--bronze td:first-child { box-shadow: inset 4px 0 0 #cd7f32; }
+    .loyalty-program__row--silver td:first-child { box-shadow: inset 4px 0 0 #94a3b8; }
+    .loyalty-program__row--gold td:first-child { box-shadow: inset 4px 0 0 #ca8a04; }
+    @media (max-width: 640px) {
+      .loyalty-program th:nth-child(3),
+      .loyalty-program td:nth-child(3) { min-width: 160px; }
+    }
     .grid-two {
       display: grid;
       grid-template-columns: minmax(0, 2.1fr) minmax(260px, 1fr);
@@ -1213,6 +1264,35 @@
       <div class="step"><b>2)</b> سجّل الدخول وفعّل بريدك الإلكتروني.</div>
       <div class="step"><b>3)</b> راجع السلة وأكمل الطلب منها.</div>
     </div>
+
+    <section id="loyalty-rewards-section" class="loyalty-program" aria-label="برنامج المكافآت والولاء">
+      <h2>برنامج المكافآت والولاء</h2>
+      <p class="loyalty-program__lead">
+        اجمع <strong>جلساتاً مؤكدة</strong> في هذا المركز (بعد إتمام الحجز والدفع) لتنتقل بين مستويات الأوسمة والمكافآت. يحدّد المركز نصوص المكافآت من لوحة الإدارة.
+      </p>
+      <div class="loyalty-program__table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th scope="col">وسام</th>
+              <th scope="col">المستوى</th>
+              <th scope="col">عدد الجلسات المؤكدة</th>
+              <th scope="col">مكافآت ومزايا مقترحة</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for row in loyalty_program_rows %}
+            <tr class="{{ row.row_class }}">
+              <td class="loyalty-program__medal" role="img" aria-hidden="true">{{ row.medal }}</td>
+              <td class="loyalty-program__tier">{{ row.label }}</td>
+              <td class="loyalty-program__range">{{ row.range_label }}</td>
+              <td class="loyalty-program__reward">{{ row.reward }}</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </section>
 
     {% if payment == 'success' %}<div class="alert">تم إتمام الدفع بنجاح. تم تأكيد طلبك.</div>{% endif %}
     {% if payment == 'cancelled' %}<div class="alert warn">تم إلغاء عملية الدفع. يمكنك المحاولة مرة أخرى.</div>{% endif %}

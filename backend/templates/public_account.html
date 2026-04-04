@@ -99,6 +99,53 @@
     .links { margin-top: 18px; font-size: 0.9rem; line-height: 1.8; }
     .links a { color: #0f766e; font-weight: 700; text-decoration: none; }
     .hint { font-size: 0.82rem; color: var(--charcoal-muted); margin-top: 6px; }
+    .loyalty-program-mini {
+      margin-bottom: 18px;
+      padding: 14px 14px 16px;
+      border-radius: 14px;
+      border: 1px solid rgba(197, 160, 89, 0.35);
+      background: #fff;
+      box-shadow: 0 8px 24px rgba(45, 52, 54, 0.06);
+    }
+    .loyalty-program-mini h2 {
+      margin: 0 0 8px;
+      font-size: 0.95rem;
+      font-weight: 800;
+      color: #0f766e;
+    }
+    .loyalty-program-mini__lead {
+      margin: 0 0 10px;
+      font-size: 0.8rem;
+      color: var(--charcoal-muted);
+      line-height: 1.55;
+    }
+    .loyalty-program-mini__wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+    .loyalty-program-mini table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.78rem;
+      min-width: 260px;
+    }
+    .loyalty-program-mini th,
+    .loyalty-program-mini td {
+      padding: 8px 9px;
+      text-align: start;
+      border-bottom: 1px solid rgba(45, 52, 54, 0.08);
+      vertical-align: top;
+    }
+    .loyalty-program-mini th {
+      background: rgba(232, 252, 244, 0.85);
+      font-weight: 800;
+      color: var(--charcoal);
+      font-size: 0.72rem;
+    }
+    .loyalty-program-mini__medal { font-size: 1.1rem; line-height: 1; width: 1.8rem; }
+    .loyalty-program-mini__tier { font-weight: 800; color: var(--charcoal); }
+    .loyalty-program-mini__range { color: var(--charcoal-muted); font-weight: 600; white-space: nowrap; }
+    .loyalty-program-mini__reward { line-height: 1.45; color: var(--charcoal); }
+    .loyalty-program-mini tr.loyalty-program__row--bronze td:first-child { box-shadow: inset 3px 0 0 #cd7f32; }
+    .loyalty-program-mini tr.loyalty-program__row--silver td:first-child { box-shadow: inset 3px 0 0 #94a3b8; }
+    .loyalty-program-mini tr.loyalty-program__row--gold td:first-child { box-shadow: inset 3px 0 0 #ca8a04; }
   </style>
 </head>
 <body>
@@ -128,6 +175,34 @@
         {% endif %}
         <p style="margin:10px 0 0;font-size:0.8rem;color:#94a3b8;">العتبات الحالية (مع التسلسل برونزي ثم فضي +1 ثم ذهبي +1): برونزي من {{ loyalty_thresholds.bronze }}، فضي من {{ loyalty_thresholds.silver }}، ذهبي من {{ loyalty_thresholds.gold }}. يضبطها المدير من لوحة الإدارة → تبويب «برنامج الولاء» (★).</p>
       </div>
+
+      <section class="loyalty-program-mini" aria-label="جدول أوسمة الولاء والمكافآت">
+        <h2>أوسمة الولاء والمكافآت (هذا المركز)</h2>
+        <p class="loyalty-program-mini__lead">نفس الجدول يظهر في الصفحة العامة للمركز. يخصّص المدير نصوص المكافآت من لوحة الإدارة.</p>
+        <div class="loyalty-program-mini__wrap">
+          <table>
+            <thead>
+              <tr>
+                <th scope="col">وسام</th>
+                <th scope="col">المستوى</th>
+                <th scope="col">الجلسات المؤكدة</th>
+                <th scope="col">المكافآت</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for row in loyalty_program_rows %}
+              <tr class="{{ row.row_class }}">
+                <td class="loyalty-program-mini__medal" role="img" aria-hidden="true">{{ row.medal }}</td>
+                <td class="loyalty-program-mini__tier">{{ row.label }}</td>
+                <td class="loyalty-program-mini__range">{{ row.range_label }}</td>
+                <td class="loyalty-program-mini__reward">{{ row.reward }}</td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </section>
+
       <style>
         .tier-tag { display:inline-block;margin-inline-start:6px;padding:4px 10px;border-radius:999px;font-size:0.78rem;font-weight:800; }
         .tier-tag--bronze { background:linear-gradient(135deg,#cd7f32,#8b5a2b);color:#fff; }

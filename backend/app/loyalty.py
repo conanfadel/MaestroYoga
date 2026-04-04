@@ -13,6 +13,19 @@ LOYALTY_TIER_BRONZE = "bronze"
 LOYALTY_TIER_SILVER = "silver"
 LOYALTY_TIER_GOLD = "gold"
 
+LOYALTY_REWARD_MAX_LEN = 800
+
+# اقتراحات افتراضية تظهر للزائر حتى يخصّص المسؤول النصوص من لوحة الإدارة
+DEFAULT_LOYALTY_REWARD_BRONZE = (
+    "وسام «بداية المسيرة» — شارة ولاء في حسابك، وإشعارات بالعروض والفعاليات المناسبة للأعضاء النشطين."
+)
+DEFAULT_LOYALTY_REWARD_SILVER = (
+    "وسام «التزام ملحوظ» — أولوية في فترات الحجز المبكرة عند إعلانها، ومزايا خصم أو هدايا عند حملات المركز الخاصة."
+)
+DEFAULT_LOYALTY_REWARD_GOLD = (
+    "وسام «نجم المركز» — أعلى مستوى: جلسات أو خصومات استثنائية وفق سياسة المركز، ودعوات للفعاليات الحصرية."
+)
+
 
 def _int_env(name: str, default: int) -> int:
     try:
@@ -140,6 +153,60 @@ def loyalty_confirmed_counts_by_email_lower(db: Session, center_id: int) -> dict
         if em:
             out[str(em).lower()] = int(c)
     return out
+
+
+def loyalty_reward_text(center: models.Center | None, tier_key: str) -> str:
+    """tier_key: bronze | silver | gold"""
+    defaults = {
+        "bronze": DEFAULT_LOYALTY_REWARD_BRONZE,
+        "silver": DEFAULT_LOYALTY_REWARD_SILVER,
+        "gold": DEFAULT_LOYALTY_REWARD_GOLD,
+    }
+    base = defaults.get(tier_key, "")
+    if not center:
+        return base
+    raw = {
+        "bronze": center.loyalty_reward_bronze,
+        "silver": center.loyalty_reward_silver,
+        "gold": center.loyalty_reward_gold,
+    }.get(tier_key)
+    if raw and str(raw).strip():
+        return str(raw).strip()[:LOYALTY_REWARD_MAX_LEN]
+    return base
+
+
+def loyalty_program_table_rows(center: models.Center | None) -> list[dict[str, Any]]:
+    """صفوف جدول برنامج المكافآت للواجهة العامة."""
+    b, s, g = effective_loyalty_thresholds(center)
+    bronze_hi = s - 1
+    silver_hi = g - 1
+    rows: list[dict[str, Any]] = [
+        {
+            "tier_key": "bronze",
+            "medal": "🥉",
+            "label": loyalty_tier_label_ar(LOYALTY_TIER_BRONZE, center),
+            "range_label": f"من {b} إلى {bronze_hi} جلسة مؤكدة" if bronze_hi >= b else f"من {b} جلسة",
+            "reward": loyalty_reward_text(center, "bronze"),
+            "row_class": "loyalty-program__row--bronze",
+        },
+        {
+            "tier_key": "silver",
+            "medal": "🥈",
+            "label": loyalty_tier_label_ar(LOYALTY_TIER_SILVER, center),
+            "range_label": f"من {s} إلى {silver_hi} جلسة مؤكدة" if silver_hi >= s else f"من {s} جلسة",
+            "reward": loyalty_reward_text(center, "silver"),
+            "row_class": "loyalty-program__row--silver",
+        },
+        {
+            "tier_key": "gold",
+            "medal": "🥇",
+            "label": loyalty_tier_label_ar(LOYALTY_TIER_GOLD, center),
+            "range_label": f"{g} جلسة مؤكدة فأكثر",
+            "reward": loyalty_reward_text(center, "gold"),
+            "row_class": "loyalty-program__row--gold",
+        },
+    ]
+    return rows
 
 
 def validate_loyalty_threshold_triple(bronze: int, silver: int, gold: int) -> str | None:

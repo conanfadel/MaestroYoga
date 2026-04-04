@@ -23,6 +23,9 @@ class Center(Base):
     loyalty_label_bronze = Column(String(64), nullable=True)
     loyalty_label_silver = Column(String(64), nullable=True)
     loyalty_label_gold = Column(String(64), nullable=True)
+    loyalty_reward_bronze = Column(Text, nullable=True)
+    loyalty_reward_silver = Column(Text, nullable=True)
+    loyalty_reward_gold = Column(Text, nullable=True)
 
     clients = relationship("Client", back_populates="center")
     plans = relationship("SubscriptionPlan", back_populates="center")
