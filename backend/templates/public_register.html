@@ -48,7 +48,7 @@
       <div class="warn">رقم الجوال مستخدم مسبقًا.</div>
     {% endif %}
     {% if request.query_params.get('msg') == 'mail_failed' %}
-      <div class="warn">تم إنشاء الحساب، لكن تعذر إرسال رابط التحقق الفعلي. صحّح SMTP ثم سجّل الدخول واضغط إعادة إرسال.</div>
+      <div class="warn">تم إنشاء الحساب، لكن تعذر إرسال رابط التحقق. على Render استخدم <strong>Resend</strong> (<code>MAIL_PROVIDER=resend</code> و<code>RESEND_API_KEY</code>) أو صحّح SMTP على خادمك؛ ثم سجّل الدخول وأعد الإرسال من صفحة التحقق.</div>
     {% endif %}
     <form id="register-form" method="post" action="/public/register">
       <input type="hidden" name="next" value="{{ next }}" />
