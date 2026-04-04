@@ -23,6 +23,13 @@ def test_reset_password_redirects_invalid_token(client):
     assert "msg=invalid_reset_link" in location
 
 
+def test_reset_password_page_without_token_shows_hint(client):
+    response = client.get("/public/reset-password", follow_redirects=False)
+    assert response.status_code == 200
+    body = response.text
+    assert "الرابط غير مكتمل" in body or "طلب رابط" in body
+
+
 def test_verify_email_marks_user_verified(client):
     db = SessionLocal()
     email = f"pytest_verify_{int(time.time())}@example.com"

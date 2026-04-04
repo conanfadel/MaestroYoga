@@ -1501,11 +1501,24 @@ def public_forgot_password(
 
 
 @router.get("/public/reset-password", response_class=HTMLResponse)
-def public_reset_password_page(request: Request, token: str):
+def public_reset_password_page(request: Request, token: str | None = None):
+    raw = (token or "").strip()
+    token_valid = False
+    if raw:
+        try:
+            decode_public_password_reset_token(raw)
+            token_valid = True
+        except HTTPException:
+            token_valid = False
     return templates.TemplateResponse(
         request,
         "public_reset_password.html",
-        {"token": token, **_analytics_context("public_reset_password")},
+        {
+            "token": raw if token_valid else "",
+            "reset_token_missing": not raw,
+            "reset_token_invalid": bool(raw) and not token_valid,
+            **_analytics_context("public_reset_password"),
+        },
     )
 
 

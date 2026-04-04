@@ -52,6 +52,9 @@
     {% if request.query_params.get('msg') == 'password_reset_success' %}
       <div class="warn">تم تحديث كلمة المرور. يمكنك تسجيل الدخول الآن.</div>
     {% endif %}
+    {% if request.query_params.get('msg') == 'invalid_reset_link' %}
+      <div class="err">رابط إعادة التعيين غير صالح أو انتهت صلاحيته. اطلب رابطًا جديدًا من «نسيت كلمة المرور».</div>
+    {% endif %}
     <form method="post" action="/public/login">
       <input type="hidden" name="next" value="{{ request.query_params.get('next', next) }}" />
       <label>البريد الإلكتروني</label>
@@ -76,7 +79,7 @@
       }
       const msg = {{ request.query_params.get('msg', '')|tojson }};
       track("page_view_public_login", { page_name: {{ analytics_page_name|tojson }} });
-      if (msg === "invalid_credentials" || msg === "inactive" || msg === "rate_limited" || msg === "ip_blocked") {
+      if (msg === "invalid_credentials" || msg === "inactive" || msg === "rate_limited" || msg === "ip_blocked" || msg === "invalid_reset_link") {
         track("login_failed", { reason: msg });
       }
       if (msg === "password_reset_success") {

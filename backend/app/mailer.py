@@ -326,11 +326,20 @@ def send_email_verification_email(to_email: str, verification_url: str, full_nam
 def send_password_reset_email(to_email: str, reset_url: str, full_name: str = "") -> tuple[bool, str]:
     app_name = os.getenv("APP_NAME", "Maestro Yoga")
     recipient_name = full_name.strip() or "there"
+    try:
+        reset_mins = max(5, int(os.getenv("PUBLIC_PASSWORD_RESET_EXPIRES_MINUTES", "30")))
+    except ValueError:
+        reset_mins = 30
+    foot_note = (
+        f"صلاحية الرابط نحو {reset_mins} دقيقة. إذا انتهت المدة اطلب رابطًا جديدًا من صفحة «نسيت كلمة المرور»."
+    )
     subject = f"{app_name} - إعادة تعيين كلمة المرور"
     body = (
         f"استلمنا طلبًا لإعادة تعيين كلمة المرور لحسابك في {app_name}.\n\n"
         f"افتح الرابط التالي للمتابعة:\n{reset_url}\n\n"
-        "إذا لم تطلب ذلك، يمكنك تجاهل هذه الرسالة."
+        f"{foot_note}\n\n"
+        "إذا لم تطلب ذلك، يمكنك تجاهل هذه الرسالة.\n\n"
+        "إذا تعذر الضغط على الرابط، انسخه بالكامل والصقه في المتصفح."
     )
     html_body = _brand_email_html(
         app_name=app_name,
@@ -339,6 +348,7 @@ def send_password_reset_email(to_email: str, reset_url: str, full_name: str = ""
         intro="استلمنا طلبًا لإعادة تعيين كلمة المرور. استخدم الزر التالي للمتابعة بشكل آمن.",
         cta_label="إعادة تعيين كلمة المرور",
         cta_url=reset_url,
+        foot_note=foot_note,
     )
     return _send_mail(to_email, subject, body, html_body=html_body)
 
@@ -363,11 +373,8 @@ def queue_password_reset_email(to_email: str, reset_url: str, full_name: str = "
     if not ok:
         print(f"[MAILER][CONFIG] password_reset blocked: {reason}")
         return False, reason
-    if _mailer_delivery_mode() == "sync":
-        sent_ok, sent_reason = send_password_reset_email(to_email, reset_url, full_name)
-        if not sent_ok:
-            print(f"[MAILER][ERROR] password_reset send failed: {sent_reason}")
-        return sent_ok, sent_reason
-    fut = _MAILER_EXECUTOR.submit(send_password_reset_email, to_email, reset_url, full_name)
-    fut.add_done_callback(lambda done: _log_mail_future("password_reset", done))
-    return True, "queued"
+    # دائمًا متزامن: حتى لا يُعرض «تم الإرسال» ثم يفشل الإرسال في الخلفية دون إبلاغ المستخدم.
+    sent_ok, sent_reason = send_password_reset_email(to_email, reset_url, full_name)
+    if not sent_ok:
+        print(f"[MAILER][ERROR] password_reset send failed: {sent_reason}")
+    return sent_ok, sent_reason
