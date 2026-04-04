@@ -18,6 +18,11 @@ from . import models
 from .booking_utils import ACTIVE_BOOKING_STATUSES, spots_available
 from .bootstrap import DEMO_CENTER_NAME, ensure_demo_data, ensure_demo_news_posts
 from .database import get_db
+from .loyalty import (
+    count_confirmed_sessions_for_public_user,
+    loyalty_confirmed_counts_by_email_lower,
+    loyalty_context_for_count,
+)
 from .mailer import (
     queue_email_verification_email,
     queue_password_reset_email,
@@ -54,6 +59,7 @@ from .web_shared import (
     _plan_duration_days,
     _public_base,
     _sanitize_next_url,
+    public_center_id_str_from_next,
     public_index_url_from_next,
     public_mail_fail_why_token,
     _url_with_params,
@@ -679,6 +685,12 @@ def public_index(
             "cover_image_url": pinned_post.cover_image_url,
             "detail_url": _url_with_params("/post", center_id=str(center_id), post_id=str(pinned_post.id)),
         }
+    loyalty_ctx: dict = {}
+    if public_user:
+        loyalty_ctx = loyalty_context_for_count(
+            count_confirmed_sessions_for_public_user(db, center_id, public_user)
+        )
+
     public_posts_teasers = []
     for p in recent_posts_q:
         if pinned_post and p.id == pinned_post.id:
@@ -728,6 +740,7 @@ def public_index(
             "faq_items": faq_items,
             "pinned_public_post": pinned_public_post,
             "public_posts_teasers": public_posts_teasers,
+            **loyalty_ctx,
             **_analytics_context("index", center_id=str(center_id)),
         },
     )
@@ -755,6 +768,11 @@ def public_post_detail(
     )
     gallery = [{"id": i.id, "url": i.image_url} for i in imgs]
     public_user = _current_public_user(request, db)
+    loyalty_ctx: dict = {}
+    if public_user:
+        loyalty_ctx = loyalty_context_for_count(
+            count_confirmed_sessions_for_public_user(db, center_id, public_user)
+        )
     return templates.TemplateResponse(
         request,
         "post_detail.html",
@@ -762,6 +780,7 @@ def public_post_detail(
             "center": center,
             "center_id": center_id,
             "public_user": public_user,
+            **loyalty_ctx,
             "post": {
                 "id": post.id,
                 "title": post.title,
@@ -1361,6 +1380,13 @@ def public_account_page(request: Request, next: str = "/index?center_id=1", db: 
     if not user:
         return _public_login_redirect(next_url=safe_next)
     cc, phone_local = _public_account_phone_prefill(user)
+    try:
+        center_id_loyalty = int(public_center_id_str_from_next(safe_next))
+    except ValueError:
+        center_id_loyalty = 1
+    loyalty_ctx = loyalty_context_for_count(
+        count_confirmed_sessions_for_public_user(db, center_id_loyalty, user)
+    )
     return templates.TemplateResponse(
         request,
         "public_account.html",
@@ -1369,6 +1395,7 @@ def public_account_page(request: Request, next: str = "/index?center_id=1", db: 
             "user": user,
             "country_code": cc,
             "phone_local": phone_local,
+            **loyalty_ctx,
             **_analytics_context("public_account"),
         },
     )
@@ -2252,20 +2279,27 @@ def admin_dashboard(
                 "paid_at_display": _fmt_dt(pay.paid_at),
             }
         )
-    public_user_rows = [
-        {
-            "id": u.id,
-            "full_name": u.full_name,
-            "email": u.email,
-            "phone": u.phone or "-",
-            "is_active": u.is_active,
-            "email_verified": u.email_verified,
-            "is_deleted": bool(u.is_deleted),
-            "deleted_at_display": _fmt_dt(u.deleted_at),
-            "created_at_display": _fmt_dt(u.created_at),
-        }
-        for u in public_users
-    ]
+    loyalty_by_email = loyalty_confirmed_counts_by_email_lower(db, cid)
+    public_user_rows = []
+    for u in public_users:
+        cnt = loyalty_by_email.get((u.email or "").lower(), 0)
+        lt = loyalty_context_for_count(cnt)
+        public_user_rows.append(
+            {
+                "id": u.id,
+                "full_name": u.full_name,
+                "email": u.email,
+                "phone": u.phone or "-",
+                "is_active": u.is_active,
+                "email_verified": u.email_verified,
+                "is_deleted": bool(u.is_deleted),
+                "deleted_at_display": _fmt_dt(u.deleted_at),
+                "created_at_display": _fmt_dt(u.created_at),
+                "loyalty_confirmed_count": cnt,
+                "loyalty_tier": lt["loyalty_tier"],
+                "loyalty_tier_label": lt["loyalty_tier_label"],
+            }
+        )
     faq_rows = [
         {
             "id": f.id,

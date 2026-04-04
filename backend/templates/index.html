@@ -256,6 +256,22 @@
       border: 1px solid rgba(255, 255, 255, 0.35);
     }
     .public-user-menu__badge.is-verified { background: rgba(16, 185, 129, 0.35); }
+    .loyalty-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      margin-top: 8px;
+      padding: 5px 11px;
+      border-radius: 999px;
+      font-size: 0.72rem;
+      font-weight: 800;
+      border: 1px solid rgba(255, 255, 255, 0.45);
+      background: rgba(255, 255, 255, 0.2);
+    }
+    .loyalty-badge--bronze { background: linear-gradient(135deg, rgba(180, 120, 70, 0.95), rgba(139, 90, 43, 0.9)); border-color: rgba(255, 200, 140, 0.5); }
+    .loyalty-badge--silver { background: linear-gradient(135deg, rgba(200, 210, 220, 0.95), rgba(148, 160, 175, 0.92)); border-color: rgba(255, 255, 255, 0.55); color: #1e293b; text-shadow: none; }
+    .loyalty-badge--gold { background: linear-gradient(135deg, rgba(255, 215, 120, 0.98), rgba(212, 168, 75, 0.95)); border-color: rgba(255, 240, 200, 0.6); color: #422006; text-shadow: none; }
+    .loyalty-badge__dot { width: 7px; height: 7px; border-radius: 50%; background: currentColor; opacity: 0.85; }
     .public-user-menu__panel-body { padding: 14px 18px 18px; }
     .public-user-menu__row {
       display: flex;
@@ -1106,9 +1122,30 @@
                     {% else %}
                     <span class="public-user-menu__badge">بانتظار تأكيد البريد</span>
                     {% endif %}
+                    {% if loyalty_tier == 'bronze' %}
+                    <span class="loyalty-badge loyalty-badge--bronze" title="برنامج الولاء"><span class="loyalty-badge__dot" aria-hidden="true"></span> وسام برونزي</span>
+                    {% elif loyalty_tier == 'silver' %}
+                    <span class="loyalty-badge loyalty-badge--silver" title="برنامج الولاء"><span class="loyalty-badge__dot" aria-hidden="true"></span> وسام فضي</span>
+                    {% elif loyalty_tier == 'gold' %}
+                    <span class="loyalty-badge loyalty-badge--gold" title="برنامج الولاء"><span class="loyalty-badge__dot" aria-hidden="true"></span> وسام ذهبي</span>
+                    {% endif %}
                   </div>
                 </div>
                 <div class="public-user-menu__panel-body">
+                  <div class="public-user-menu__row">
+                    <div class="public-user-menu__row-icon" aria-hidden="true">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/><path d="M8 7h8"/><path d="M8 11h8"/></svg>
+                    </div>
+                    <div class="public-user-menu__row-text">
+                      <span class="k">الولاء</span>
+                      <span class="v">{{ loyalty_confirmed_count }} جلسة مؤكدة في هذا المركز</span>
+                      {% if loyalty_sessions_to_next is not none and loyalty_sessions_to_next > 0 %}
+                      <span class="muted" style="display:block;font-size:0.78rem;margin-top:4px;font-weight:600;">متبقٍ {{ loyalty_sessions_to_next }} جلسة للوصول إلى «{{ loyalty_next_tier_label }}»</span>
+                      {% elif loyalty_tier == 'gold' %}
+                      <span class="muted" style="display:block;font-size:0.78rem;margin-top:4px;font-weight:600;">أعلى مستوى ولاء — شكراً لثقتك</span>
+                      {% endif %}
+                    </div>
+                  </div>
                   <div class="public-user-menu__row">
                     <div class="public-user-menu__row-icon" aria-hidden="true">
                       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>

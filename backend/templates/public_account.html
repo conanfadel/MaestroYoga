@@ -107,6 +107,35 @@
       <h1>إعدادات الحساب</h1>
       <p class="sub">عدّل اسمك ورقم جوالك. البريد الإلكتروني ثابت لأنه مرتبط بالتحقق والحجوزات.</p>
 
+      <div class="loyalty-card" style="margin-bottom:20px;padding:14px 16px;border-radius:14px;border:1px solid rgba(125,211,174,0.65);background:linear-gradient(145deg,#f0fdf4,#fff);">
+        <p style="margin:0 0 6px;font-weight:800;color:#0f766e;font-size:1rem;">برنامج الولاء (حسب الجلسات المؤكدة في المركز)</p>
+        <p style="margin:0 0 8px;font-size:0.92rem;color:#475569;line-height:1.55;">
+          لديك <strong>{{ loyalty_confirmed_count }}</strong> جلسة بحالة «مؤكد».
+          {% if loyalty_tier == 'gold' %}
+            <span class="tier-tag tier-tag--gold">وسام ذهبي</span>
+          {% elif loyalty_tier == 'silver' %}
+            <span class="tier-tag tier-tag--silver">وسام فضي</span>
+          {% elif loyalty_tier == 'bronze' %}
+            <span class="tier-tag tier-tag--bronze">وسام برونزي</span>
+          {% else %}
+            <span class="tier-tag tier-tag--none">لم يبدأ الوسام بعد</span>
+          {% endif %}
+        </p>
+        {% if loyalty_sessions_to_next is not none and loyalty_sessions_to_next > 0 %}
+        <p style="margin:0;font-size:0.88rem;color:#64748b;">احجز وأكمل الدفع لـ <strong>{{ loyalty_sessions_to_next }}</strong> جلسة أخرى للترقية إلى «{{ loyalty_next_tier_label }}».</p>
+        {% elif loyalty_tier == 'gold' %}
+        <p style="margin:0;font-size:0.88rem;color:#64748b;">أعلى مستوى ولاء — شكراً لالتزامك.</p>
+        {% endif %}
+        <p style="margin:10px 0 0;font-size:0.8rem;color:#94a3b8;">العتبات (قابلة للضبط من الخادم): برونزي من {{ loyalty_thresholds.bronze }} جلسة، فضي من {{ loyalty_thresholds.silver }}، ذهبي من {{ loyalty_thresholds.gold }}.</p>
+      </div>
+      <style>
+        .tier-tag { display:inline-block;margin-inline-start:6px;padding:4px 10px;border-radius:999px;font-size:0.78rem;font-weight:800; }
+        .tier-tag--bronze { background:linear-gradient(135deg,#cd7f32,#8b5a2b);color:#fff; }
+        .tier-tag--silver { background:linear-gradient(135deg,#e2e8f0,#94a3b8);color:#1e293b; }
+        .tier-tag--gold { background:linear-gradient(135deg,#fcd34d,#ca8a04);color:#422006; }
+        .tier-tag--none { background:#f1f5f9;color:#64748b; }
+      </style>
+
       {% if request.query_params.get('msg') == 'saved' %}
         <div class="alert ok">تم حفظ التعديلات بنجاح.</div>
       {% endif %}
