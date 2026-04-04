@@ -52,6 +52,7 @@ from .web_shared import (
     _plan_duration_days,
     _public_base,
     _sanitize_next_url,
+    _mail_fail_reason_query_token,
     _url_with_params,
 )
 
@@ -1222,8 +1223,13 @@ def public_register(
     token = create_public_access_token(user.id)
     if _is_email_verification_required():
         next_msg = "registered" if queued else "mail_failed"
+        vp_params: dict[str, str] = {"msg": next_msg, "next": safe_next}
+        if not queued:
+            why = _mail_fail_reason_query_token(mail_info)
+            if why:
+                vp_params["why"] = why
         response = RedirectResponse(
-            url=_url_with_params("/public/verify-pending", msg=next_msg, next=safe_next),
+            url=_url_with_params("/public/verify-pending", **vp_params),
             status_code=303,
         )
     else:
@@ -1378,8 +1384,12 @@ def public_resend_verification(
             email=user.email,
             details={"mail_error": mail_info[:200]},
         )
+        why = _mail_fail_reason_query_token(mail_info)
+        vp = {"msg": "mail_failed", "next": safe_next}
+        if why:
+            vp["why"] = why
         return RedirectResponse(
-            url=_url_with_params("/public/verify-pending", msg="mail_failed", next=safe_next),
+            url=_url_with_params("/public/verify-pending", **vp),
             status_code=303,
         )
     log_security_event(

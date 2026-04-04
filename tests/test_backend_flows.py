@@ -4,6 +4,7 @@ from backend.app import models
 from backend.app.database import SessionLocal
 from backend.app.mailer import validate_mailer_settings
 from backend.app.security import create_public_email_verification_token, hash_password
+from backend.app.web_shared import _mail_fail_reason_query_token
 
 
 def test_verify_email_redirects_invalid_token(client):
@@ -29,6 +30,13 @@ def test_reset_password_page_without_token_shows_hint(client):
     assert response.status_code == 200
     body = response.text
     assert "الرابط غير مكتمل" in body or "طلب رابط" in body
+
+
+def test_mail_fail_reason_query_token_sanitizes():
+    assert _mail_fail_reason_query_token("missing_resend_api_key") == "missing_resend_api_key"
+    assert _mail_fail_reason_query_token("") == ""
+    assert _mail_fail_reason_query_token("bad;drop") == ""
+    assert _mail_fail_reason_query_token("123x") == ""
 
 
 def test_validate_mailer_resend_requires_api_key(monkeypatch):

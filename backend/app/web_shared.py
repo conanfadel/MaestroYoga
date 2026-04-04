@@ -1,4 +1,5 @@
 import os
+import re
 from datetime import datetime
 from urllib.parse import urlencode, urlsplit
 
@@ -81,6 +82,14 @@ def _fmt_dt(value: datetime | None) -> str:
     if not value:
         return "-"
     return value.strftime("%Y-%m-%d %H:%M")
+
+
+def _mail_fail_reason_query_token(raw: str | None) -> str:
+    """يُمرَّر في query عند فشل الإرسال؛ فقط رموز داخلية آمنة (بدون مسافات أو حقن)."""
+    s = (raw or "").strip().lower()
+    if re.fullmatch(r"[a-z][a-z0-9_]{0,62}", s):
+        return s
+    return ""
 
 
 def _url_with_params(path: str, **params: str) -> str:

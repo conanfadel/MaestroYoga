@@ -30,8 +30,9 @@
     <p>أرسلنا رابط التحقق إلى: <strong>{{ user.email }}</strong></p>
     <p>بعد التحقق، يمكنك إكمال الحجز والدفع بشكل طبيعي.</p>
     <p class="alert" style="font-size:.86rem;line-height:1.55;">
-      <strong>لم يصل البريد؟</strong> تحقق من مجلد «العروض/Spam». في الإنتاج يجب ضبط
-      <strong>SMTP_*</strong> و<strong>PUBLIC_BASE_URL</strong> (رابط الموقع الحقيقي مع https) حتى يعمل رابط التأكيد من الجهاز والبريد.
+      <strong>لم يصل البريد؟</strong> تحقق من «العروض/Spam». في الإنتاج تأكد من
+      <strong>PUBLIC_BASE_URL</strong> (عنوان الموقع الكامل بـ https) ومن إعدادات الإرسال في لوحة الاستضافة:
+      على <strong>Render</strong> يُفضّل <strong>Resend</strong> (<code>MAIL_PROVIDER=resend</code>) لأن SMTP المباشر غالبًا لا يعمل هناك.
     </p>
 
     {% if request.query_params.get('msg') == 'registered' %}
@@ -48,14 +49,39 @@
     {% endif %}
     {% if request.query_params.get('msg') == 'mail_failed' %}
       <div class="alert warn">
-        تعذر إرسال رسالة التحقق. راجع لوحة <strong>Render → Environment</strong>:
-        <ul style="margin:8px 0 0;padding-inline-start:1.2rem;line-height:1.55;">
+        {% set why = request.query_params.get('why', '') %}
+        {% if why == 'missing_resend_api_key' %}
+          <p style="margin:0 0 14px;padding:12px 14px;background:#fff7ed;border-radius:10px;border:1px solid #fdba74;line-height:1.6;">
+            <strong>السبب الحالي (كما في السجلات):</strong> وضعتَ <code>MAIL_PROVIDER=resend</code> لكن <code>RESEND_API_KEY</code> غير معرّف في Render أو فارغ.
+            أضف المفتاح من <a href="https://resend.com/api-keys" target="_blank" rel="noopener">لوحة مفاتيح Resend</a> (يبدأ بـ <code>re_</code>)، ثم <strong>Save</strong> و<strong>Manual Deploy</strong>، ثم اضغط «إعادة إرسال» أدناه.
+          </p>
+        {% elif why == 'missing_resend_from' or why == 'invalid_resend_api_key_placeholder' %}
+          <p style="margin:0 0 14px;padding:12px 14px;background:#fff7ed;border-radius:10px;border:1px solid #fdba74;line-height:1.6;">
+            <strong>السبب:</strong> إعدادات Resend ناقصة (<code>{{ why }}</code>). عيّن <code>RESEND_FROM</code> (مثل <code>onboarding@resend.dev</code>) أو صحّح مفتاح API في Environment.
+          </p>
+        {% elif why == 'missing_smtp_password' or why == 'invalid_smtp_password_placeholder' or why == 'missing_smtp_host' or why == 'missing_smtp_user' %}
+          <p style="margin:0 0 14px;padding:12px 14px;background:#fff7ed;border-radius:10px;border:1px solid #fdba74;line-height:1.6;">
+            <strong>السبب:</strong> إعداد SMTP ناقص (<code>{{ why }}</code>). على Render غالبًا لا يعمل Gmail SMTP؛ الأفضل التحويل إلى <code>MAIL_PROVIDER=resend</code> و<code>RESEND_API_KEY</code>.
+          </p>
+        {% endif %}
+        <strong>تعذر إرسال رسالة التحقق.</strong> راجع لوحة <strong>Render → Environment</strong> ثم أعد نشر الخدمة واضغط «إعادة إرسال» هنا.
+        <p style="margin:10px 0 6px;font-weight:700;color:#92400e;">الموصى به على Render (يعمل عبر HTTPS، بدون SMTP):</p>
+        <ul style="margin:0 0 10px;padding-inline-start:1.2rem;line-height:1.55;">
+          <li><code>MAIL_PROVIDER=resend</code></li>
+          <li><code>RESEND_API_KEY</code> = مفتاحك من <a href="https://resend.com/api-keys" target="_blank" rel="noopener">resend.com/api-keys</a> (يبدأ عادة بـ <code>re_</code>)</li>
+          <li><code>RESEND_FROM=onboarding@resend.dev</code> أو بريد نطاق مُفعّل في Resend</li>
+          <li><code>SMTP_FROM</code> = نفس قيمة <code>RESEND_FROM</code> (اختياري؛ مفيد لنص «الدعم» في القوالب)</li>
+        </ul>
+        <p style="margin:10px 0 6px;font-weight:700;color:#92400e;">بديل على خادمك الخاص أو محليًا (Gmail عبر SMTP):</p>
+        <ul style="margin:0 0 10px;padding-inline-start:1.2rem;line-height:1.55;">
           <li><code>MAIL_PROVIDER=smtp</code> و<code>SMTP_HOST=smtp.gmail.com</code> و<code>SMTP_PORT=587</code> و<code>SMTP_SECURITY=starttls</code></li>
           <li><code>SMTP_USER</code> و<code>SMTP_FROM</code> = نفس بريد Gmail</li>
-          <li><code>SMTP_PASSWORD</code> = <strong>كلمة مرور التطبيق</strong> (16 حرفًا بدون مسافات من Google Account → الأمان)</li>
-          <li>بعد الحفظ أعد نشر الخدمة، ثم اضغط «إعادة إرسال» هنا.</li>
+          <li><code>SMTP_PASSWORD</code> = <strong>كلمة مرور التطبيق</strong> (16 حرفًا بدون مسافات: Google Account → الأمان)</li>
         </ul>
-        في سجلات Render ابحث عن سطر يبدأ بـ <code>[MAILER][CONFIG]</code> أو <code>[MAILER][ERROR]</code> لمعرفة السبب (مثل <code>missing_smtp_password</code>).
+        <p style="margin:8px 0 0;font-size:.86rem;line-height:1.55;">
+          في سجلات Render ابحث عن <code>[MAILER][CONFIG]</code> أو <code>[MAILER][ERROR]</code> أو <code>[MAILER][HINT]</code>
+          (مثل <code>missing_resend_api_key</code>، <code>missing_smtp_password</code>، أو فشل اتصال SMTP).
+        </p>
       </div>
     {% endif %}
     {% if request.query_params.get('msg') == 'expired_link' %}
