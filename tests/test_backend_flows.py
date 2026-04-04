@@ -4,7 +4,11 @@ from backend.app import models
 from backend.app.database import SessionLocal
 from backend.app.mailer import validate_mailer_settings
 from backend.app.security import create_public_email_verification_token, hash_password
-from backend.app.web_shared import _mail_fail_reason_query_token, public_mail_fail_why_token
+from backend.app.web_shared import (
+    _mail_fail_reason_query_token,
+    public_index_url_from_next,
+    public_mail_fail_why_token,
+)
 
 
 def test_verify_email_redirects_invalid_token(client):
@@ -37,6 +41,12 @@ def test_mail_fail_reason_query_token_sanitizes():
     assert _mail_fail_reason_query_token("") == ""
     assert _mail_fail_reason_query_token("bad;drop") == ""
     assert _mail_fail_reason_query_token("123x") == ""
+
+
+def test_public_index_url_from_next():
+    assert public_index_url_from_next("/index?center_id=3", msg="email_verified") == "/index?center_id=3&msg=email_verified"
+    assert public_index_url_from_next("/post?center_id=2&post_id=1") == "/index?center_id=2"
+    assert public_index_url_from_next(None) == "/index?center_id=1"
 
 
 def test_public_mail_fail_why_token_maps_resend_sandbox_403():

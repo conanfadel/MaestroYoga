@@ -1,7 +1,7 @@
 import os
 import re
 from datetime import datetime
-from urllib.parse import urlencode, urlsplit
+from urllib.parse import parse_qs, urlencode, urlsplit
 
 from fastapi import Request
 
@@ -108,6 +108,27 @@ def _url_with_params(path: str, **params: str) -> str:
     if not clean:
         return path
     return f"{path}?{urlencode(clean)}"
+
+
+def public_index_url_from_next(
+    next_url: str | None,
+    *,
+    msg: str | None = None,
+    fallback: str = "/index?center_id=1",
+) -> str:
+    """رابط الواجهة العامة /index مع center_id مأخوذ من next (بعد التحقق من البريد أو زيارة verify-pending وهو موثّق)."""
+    safe = _sanitize_next_url(next_url, fallback=fallback)
+    parsed = urlsplit(safe)
+    qs = parse_qs(parsed.query, keep_blank_values=True)
+    cid = "1"
+    if "center_id" in qs and qs["center_id"]:
+        try:
+            cid = str(int(qs["center_id"][0]))
+        except (ValueError, IndexError):
+            pass
+    if msg:
+        return _url_with_params("/index", center_id=cid, msg=msg)
+    return _url_with_params("/index", center_id=cid)
 
 
 def _is_truthy_env(value: str | None) -> bool:

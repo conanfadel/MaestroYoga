@@ -52,6 +52,7 @@ from .web_shared import (
     _plan_duration_days,
     _public_base,
     _sanitize_next_url,
+    public_index_url_from_next,
     public_mail_fail_why_token,
     _url_with_params,
 )
@@ -1323,9 +1324,9 @@ def public_verify_pending(request: Request, next: str = "/index?center_id=1", db
     if not user:
         return _public_login_redirect(next_url=safe_next)
     if not _is_email_verification_required():
-        return RedirectResponse(url=safe_next, status_code=303)
+        return RedirectResponse(url=public_index_url_from_next(safe_next), status_code=303)
     if user.email_verified:
-        return RedirectResponse(url=safe_next, status_code=303)
+        return RedirectResponse(url=public_index_url_from_next(safe_next), status_code=303)
     show_dev_verify_link = _is_truthy_env(os.getenv("SHOW_DEV_VERIFY_LINK"))
     dev_verify_url = _build_verify_url(request, user, next_url=safe_next) if show_dev_verify_link else ""
     return templates.TemplateResponse(
@@ -1441,8 +1442,10 @@ def public_verify_email(
         user.email_verified = True
         db.commit()
     session_token = create_public_access_token(user.id)
-    separator = "&" if "?" in safe_next else "?"
-    response = RedirectResponse(url=f"{safe_next}{separator}msg=email_verified", status_code=303)
+    response = RedirectResponse(
+        url=public_index_url_from_next(safe_next, msg="email_verified"),
+        status_code=303,
+    )
     response.set_cookie(
         key=PUBLIC_COOKIE_NAME,
         value=session_token,
