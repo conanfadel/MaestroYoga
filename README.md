@@ -73,6 +73,17 @@ powershell -ExecutionPolicy Bypass -File scripts/bootstrap_env.ps1
 - `scripts/backup_postgres.sh`
 - `scripts/restore_postgres.sh`
 - `docs/render_to_hetzner_migration_checklist.md`
+- `render.yaml` — تعريف **PostgreSQL** عبر [Render Blueprint](https://docs.render.com/docs/infrastructure-as-code) (بيانات دائمة؛ عكس SQLite على قرص الحاوية المؤقت).
+
+### Render: إنشاء Postgres وربط التطبيق
+
+1. ادفع `render.yaml` إلى Git، ثم في Render: **Blueprints → New Blueprint Instance** واختر المستودع؛ سيُنشأ قاعدة **`maestro-postgres`**.
+2. افتح **Web Service** الخاص بالتطبيق → **Environment**:
+   - أزل أو استبدل `DATABASE_URL=sqlite:///...`
+   - أضف **`DATABASE_URL`** = **Internal Database URL** من صفحة قاعدة `maestro-postgres` (قسم *Connect*).
+3. **Save** ثم **Manual Deploy**. عند أول تشغيل يُنشئ التطبيق الجداول تلقائياً (`init_db`).
+
+بديل يدوي بدون Blueprint: **Dashboard → New → PostgreSQL**، ثم نفس خطوة نسخ Internal URL إلى `DATABASE_URL`.
 
 خطوة مقترحة الآن:
 

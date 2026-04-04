@@ -1,0 +1,21 @@
+# Render Blueprint — PostgreSQL دائم لـ Maestro Yoga
+#
+# لا يمكن إنشاء قاعدة من Cursor داخل حسابك؛ بعد دفع هذا الملف إلى Git:
+#   Render Dashboard → Blueprints → New Blueprint Instance → اختر المستودع والفرع.
+# سيُنشأ Postgres باسم «maestro-postgres».
+#
+# ثم اربط التطبيق:
+#   Web Service (MaestroYoga) → Environment → ربط قاعدة أو أضف:
+#   DATABASE_URL = Internal Database URL من صفحة قاعدة maestro-postgres
+#   (غالباً يبدأ بـ postgresql:// — يعمل مع SQLAlchemy + psycopg2-binary)
+#
+# ملاحظات:
+#   - خطة free لـ Postgres على Render محدودة وقد تنتهي بعد فترة — راجع التسعير.
+#   - حساب Render عادة يسمح بقاعدة free واحدة فقط.
+#   - احذف أو علّق DATABASE_URL=sqlite من Environment حتى لا يتجاوز ربط Postgres.
+
+databases:
+  - name: maestro-postgres
+    plan: free
+    databaseName: maestro_yoga
+    user: maestro
