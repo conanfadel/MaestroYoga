@@ -2,6 +2,7 @@ import time
 
 from backend.app import models
 from backend.app.database import SessionLocal
+from backend.app.mailer import validate_mailer_settings
 from backend.app.security import create_public_email_verification_token, hash_password
 
 
@@ -28,6 +29,21 @@ def test_reset_password_page_without_token_shows_hint(client):
     assert response.status_code == 200
     body = response.text
     assert "الرابط غير مكتمل" in body or "طلب رابط" in body
+
+
+def test_validate_mailer_resend_requires_api_key(monkeypatch):
+    monkeypatch.setenv("MAIL_PROVIDER", "resend")
+    monkeypatch.delenv("RESEND_API_KEY", raising=False)
+    monkeypatch.delenv("RESEND_FROM", raising=False)
+    monkeypatch.delenv("SMTP_FROM", raising=False)
+    ok, reason = validate_mailer_settings()
+    assert ok is False
+    assert reason == "missing_resend_api_key"
+    monkeypatch.setenv("RESEND_API_KEY", "re_test_key")
+    monkeypatch.setenv("RESEND_FROM", "onboarding@resend.dev")
+    ok2, reason2 = validate_mailer_settings()
+    assert ok2 is True
+    assert reason2 == "ok"
 
 
 def test_verify_email_marks_user_verified(client):

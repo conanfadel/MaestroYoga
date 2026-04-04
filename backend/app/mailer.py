@@ -46,6 +46,7 @@ def _looks_like_placeholder(value: str) -> bool:
         "PUT_YOUR_GMAIL_APP_PASSWORD_HERE",
         "CHANGE_ME",
         "YOUR_APP_PASSWORD",
+        "RE_PLACEHOLDER",
     }
 
 
@@ -57,14 +58,16 @@ def _parse_smtp_port(value: str) -> int:
 
 
 def _build_smtp_attempts(smtp_host: str, smtp_port: int, smtp_security: str) -> list[tuple[str, int]]:
-    # Start with user-configured mode/port, then try pragmatic Gmail fallback.
-    attempts: list[tuple[str, int]] = [(smtp_security, smtp_port)]
+    # لـ Gmail: جرّب 587 + STARTTLS أولًا (أكثر توافقًا؛ بعض الاستضافات تحجب 465 فقط).
+    attempts: list[tuple[str, int]] = []
     host = smtp_host.strip().lower()
     if host in {"smtp.gmail.com", "smtp.googlemail.com"}:
-        if (smtp_security, smtp_port) != ("starttls", 587):
-            attempts.append(("starttls", 587))
+        attempts.append(("starttls", 587))
+        attempts.append((smtp_security, smtp_port))
         if (smtp_security, smtp_port) != ("ssl", 465):
             attempts.append(("ssl", 465))
+    else:
+        attempts.append((smtp_security, smtp_port))
 
     deduped: list[tuple[str, int]] = []
     seen: set[tuple[str, int]] = set()
@@ -143,6 +146,55 @@ def _send_via_http_relay(
         return False, f"relay_error:{exc}"
 
 
+def _send_via_resend(
+    *,
+    to_email: str,
+    subject: str,
+    body: str,
+    html_body: str | None,
+) -> tuple[bool, str]:
+    """إرسال عبر Resend API (HTTPS :443) — مناسب لـ Render حيث غالبًا يُحجب SMTP الصادر."""
+    api_key = os.getenv("RESEND_API_KEY", "").strip()
+    from_addr = os.getenv("RESEND_FROM", os.getenv("SMTP_FROM", "")).strip()
+    if not api_key:
+        return False, "missing_resend_api_key"
+    if _looks_like_placeholder(api_key):
+        return False, "invalid_resend_api_key_placeholder"
+    if not from_addr:
+        return False, "missing_resend_from"
+    payload: dict[str, object] = {
+        "from": from_addr,
+        "to": [to_email],
+        "subject": subject,
+        "text": body,
+    }
+    if html_body:
+        payload["html"] = html_body
+    data = json.dumps(payload).encode("utf-8")
+    req = urllib.request.Request(
+        "https://api.resend.com/emails",
+        data=data,
+        method="POST",
+        headers={
+            "Authorization": f"Bearer {api_key}",
+            "Content-Type": "application/json",
+            "User-Agent": "MaestroYoga-Mailer/1.0",
+        },
+    )
+    try:
+        with urllib.request.urlopen(req, timeout=25) as response:
+            status = int(getattr(response, "status", 200))
+            raw = (response.read() or b"").decode("utf-8", errors="ignore").strip()
+            if 200 <= status < 300:
+                return True, "ok"
+            return False, f"resend_http_{status}:{raw[:300]}"
+    except urllib.error.HTTPError as exc:
+        err_body = exc.read().decode("utf-8", errors="ignore").strip()
+        return False, f"resend_http_{exc.code}:{err_body[:300]}"
+    except Exception as exc:
+        return False, f"resend_error:{exc}"
+
+
 def _brand_email_html(
     *,
     app_name: str,
@@ -194,16 +246,19 @@ def _send_mail(to_email: str, subject: str, body: str, html_body: str | None = N
     mail_provider = os.getenv("MAIL_PROVIDER", "smtp").strip().lower()
     smtp_security = _smtp_transport_mode()
 
-    if not smtp_host:
-        return False, "missing_smtp_host"
-    if _looks_like_placeholder(smtp_password):
-        return False, "invalid_smtp_password_placeholder"
-    if not smtp_user:
-        return False, "missing_smtp_user"
-
     try:
         if mail_provider in {"http_relay", "apps_script"}:
             return _send_via_http_relay(to_email=to_email, subject=subject, body=body, html_body=html_body)
+
+        if mail_provider == "resend":
+            return _send_via_resend(to_email=to_email, subject=subject, body=body, html_body=html_body)
+
+        if not smtp_host:
+            return False, "missing_smtp_host"
+        if _looks_like_placeholder(smtp_password):
+            return False, "invalid_smtp_password_placeholder"
+        if not smtp_user:
+            return False, "missing_smtp_user"
 
         if mail_provider == "pywhatkit":
             if pywhatkit is None:
@@ -256,7 +311,12 @@ def _send_mail(to_email: str, subject: str, body: str, html_body: str | None = N
                 last_error = f"mode={mode} port={port} error={exc}"
         raise RuntimeError(last_error)
     except Exception as exc:
+        err_text = str(exc).lower()
         print(f"[MAILER][ERROR] Failed to send email to {to_email}: {exc}")
+        if "unreachable" in err_text or "network is unreachable" in err_text or "[errno 101]" in err_text:
+            print(
+                "[MAILER][HINT] منصات مثل Render غالبًا تحجب SMTP. عيّن MAIL_PROVIDER=resend وRESEND_API_KEY (HTTPS)."
+            )
         return False, str(exc)
 
 
@@ -276,6 +336,17 @@ def validate_mailer_settings() -> tuple[bool, str]:
             return False, "missing_mail_relay_url"
         if _looks_like_placeholder(os.getenv("MAIL_RELAY_TOKEN", "").strip()):
             return False, "invalid_mail_relay_token_placeholder"
+        return True, "ok"
+
+    if mail_provider == "resend":
+        key = os.getenv("RESEND_API_KEY", "").strip()
+        if not key:
+            return False, "missing_resend_api_key"
+        if _looks_like_placeholder(key):
+            return False, "invalid_resend_api_key_placeholder"
+        from_addr = os.getenv("RESEND_FROM", os.getenv("SMTP_FROM", "")).strip()
+        if not from_addr:
+            return False, "missing_resend_from"
         return True, "ok"
 
     smtp_host = os.getenv("SMTP_HOST", "").strip()
