@@ -522,6 +522,45 @@
       border-color: transparent;
       box-shadow: 0 4px 12px rgba(197, 160, 89, 0.3);
     }
+    .section-tab-cluster {
+      position: relative;
+      flex: 0 0 auto;
+    }
+    .section-tab--cluster-toggle {
+      font: inherit;
+      font-weight: 800;
+      font-size: 0.84rem;
+    }
+    .section-tab-cluster__dropdown {
+      position: absolute;
+      inset-inline-start: 0;
+      top: calc(100% + 8px);
+      min-width: min(300px, 92vw);
+      padding: 10px;
+      display: none;
+      flex-direction: column;
+      gap: 8px;
+      background: var(--white);
+      border: 1px solid rgba(197, 160, 89, 0.45);
+      border-radius: 14px;
+      box-shadow: 0 16px 44px rgba(45, 52, 54, 0.14);
+      z-index: 85;
+    }
+    .section-tab-cluster.is-open .section-tab-cluster__dropdown {
+      display: flex;
+    }
+    .section-tab-cluster--active > .section-tab--cluster-toggle {
+      border-color: rgba(197, 160, 89, 0.65);
+      box-shadow: 0 0 0 2px rgba(197, 160, 89, 0.2);
+    }
+    .section-tab--subitem {
+      width: 100%;
+      justify-content: flex-start;
+      text-align: start;
+      border-radius: 12px;
+      font-size: 0.82rem;
+      padding: 10px 14px;
+    }
     .plans-shell {
       border: 1px solid rgba(197, 160, 89, 0.25);
       border-radius: 16px;
@@ -745,47 +784,63 @@
     </div>
 
     <div class="section-tabs-sticky" id="section-tabs-sticky">
-    <div class="section-tabs" id="section-tabs" role="tablist" aria-label="أقسام لوحة الإدارة">
+    <nav class="section-tabs" id="section-tabs" aria-label="أقسام لوحة الإدارة">
       {% if not is_trainer %}
-      <a class="section-tab" role="tab" data-target="section-branding" href="#section-branding" id="tab-section-branding">
-        هوية المركز
-      </a>
-      <a class="section-tab" role="tab" data-target="section-loyalty" href="#section-loyalty" id="tab-section-loyalty" title="برنامج الولاء">
-        <span class="section-tab__icon" aria-hidden="true">★</span>
-        برنامج الولاء
-      </a>
-      <a class="section-tab" role="tab" data-target="section-rooms" href="#section-rooms" id="tab-section-rooms">
-        إدارة الغرف
-      </a>
-      <a class="section-tab" role="tab" data-target="section-plans" href="#section-plans" id="tab-section-plans">
-        إدارة خطط الاشتراك
-      </a>
-      <a class="section-tab" role="tab" data-target="section-public-users" href="#section-public-users" id="tab-section-public-users">
-        إدارة مستخدمي الجمهور
-      </a>
-      <a class="section-tab" role="tab" data-target="section-center-posts" href="#section-center-posts" id="tab-section-center-posts">
-        أخبار ومنشورات المركز
-      </a>
+      <div class="section-tab-cluster" data-tab-cluster>
+        <button type="button" class="section-tab section-tab--cluster-toggle" id="admin-cluster-site-btn" aria-expanded="false" aria-controls="admin-cluster-site-panel" aria-haspopup="true">
+          <span class="section-tab__icon" aria-hidden="true">🌐</span>
+          الموقع والمحتوى
+        </button>
+        <div class="section-tab-cluster__dropdown" id="admin-cluster-site-panel" role="group" aria-label="الموقع والمحتوى">
+          <a class="section-tab section-tab--subitem" data-target="section-branding" href="#section-branding" id="tab-section-branding">هوية المركز والغلاف</a>
+          <a class="section-tab section-tab--subitem" data-target="section-center-posts" href="#section-center-posts" id="tab-section-center-posts">أخبار ومنشورات</a>
+          <a class="section-tab section-tab--subitem" data-target="section-faq" href="#section-faq" id="tab-section-faq">الأسئلة الشائعة</a>
+        </div>
+      </div>
+      <div class="section-tab-cluster" data-tab-cluster>
+        <button type="button" class="section-tab section-tab--cluster-toggle" id="admin-cluster-ops-btn" aria-expanded="false" aria-controls="admin-cluster-ops-panel" aria-haspopup="true">
+          <span class="section-tab__icon" aria-hidden="true">📅</span>
+          التشغيل والمواعيد
+        </button>
+        <div class="section-tab-cluster__dropdown" id="admin-cluster-ops-panel" role="group" aria-label="التشغيل والمواعيد">
+          <a class="section-tab section-tab--subitem" data-target="section-rooms" href="#section-rooms" id="tab-section-rooms">الغرف والسعة</a>
+          <a class="section-tab section-tab--subitem" data-target="section-plans" href="#section-plans" id="tab-section-plans">خطط الاشتراك</a>
+          <a class="section-tab section-tab--subitem" data-target="section-sessions" href="#section-sessions" id="tab-section-sessions">الجلسات والمدفوعات</a>
+        </div>
+      </div>
+      <div class="section-tab-cluster" data-tab-cluster>
+        <button type="button" class="section-tab section-tab--cluster-toggle" id="admin-cluster-clients-btn" aria-expanded="false" aria-controls="admin-cluster-clients-panel" aria-haspopup="true">
+          <span class="section-tab__icon" aria-hidden="true">👥</span>
+          العملاء والولاء
+        </button>
+        <div class="section-tab-cluster__dropdown" id="admin-cluster-clients-panel" role="group" aria-label="العملاء والولاء">
+          <a class="section-tab section-tab--subitem" data-target="section-loyalty" href="#section-loyalty" id="tab-section-loyalty" title="برنامج الولاء">
+            <span class="section-tab__icon" aria-hidden="true">★</span>
+            برنامج الولاء
+          </a>
+          <a class="section-tab section-tab--subitem" data-target="section-public-users" href="#section-public-users" id="tab-section-public-users">مستخدمو الجمهور</a>
+        </div>
+      </div>
       {% endif %}
       {% if is_trainer %}
-      <a class="section-tab" role="tab" data-target="section-rooms" href="#section-rooms" id="tab-section-rooms-trainer">
-        نشر جلسة جديدة
-      </a>
-      {% endif %}
-      <a class="section-tab" role="tab" data-target="section-sessions" href="#section-sessions" id="tab-section-sessions">
-        إدارة الجلسات والمدفوعات
-      </a>
-      {% if not is_trainer %}
-      <a class="section-tab" role="tab" data-target="section-faq" href="#section-faq" id="tab-section-faq">
-        إدارة الأسئلة الشائعة
-      </a>
+      <div class="section-tab-cluster" data-tab-cluster>
+        <button type="button" class="section-tab section-tab--cluster-toggle" id="admin-cluster-trainer-btn" aria-expanded="false" aria-controls="admin-cluster-trainer-panel" aria-haspopup="true">
+          <span class="section-tab__icon" aria-hidden="true">🗓️</span>
+          الجلسات والغرف
+        </button>
+        <div class="section-tab-cluster__dropdown" id="admin-cluster-trainer-panel" role="group" aria-label="الجلسات والغرف">
+          <a class="section-tab section-tab--subitem" data-target="section-rooms" href="#section-rooms" id="tab-section-rooms-trainer">الغرف ونشر الجلسات</a>
+          <a class="section-tab section-tab--subitem" data-target="section-sessions" href="#section-sessions" id="tab-section-sessions">الجلسات والمدفوعات</a>
+        </div>
+      </div>
       {% endif %}
       {% if show_security_section %}
-      <a class="section-tab" role="tab" data-target="section-security" href="#section-security" id="tab-section-security">
-        مركز الأمان والمخاطر
+      <a class="section-tab" data-target="section-security" href="#section-security" id="tab-section-security">
+        <span class="section-tab__icon" aria-hidden="true">🛡️</span>
+        الأمان والمخاطر
       </a>
       {% endif %}
-    </div>
+    </nav>
     </div>
 
     {% if not is_trainer %}
@@ -2160,12 +2215,46 @@
       }
 
       const tabs = Array.from(document.querySelectorAll(".section-tab[data-target]"));
+      function closeAllTabClusters() {
+        document.querySelectorAll("[data-tab-cluster].is-open").forEach(function (c) {
+          c.classList.remove("is-open");
+          var b = c.querySelector(".section-tab--cluster-toggle");
+          if (b) b.setAttribute("aria-expanded", "false");
+        });
+      }
+      document.querySelectorAll("[data-tab-cluster]").forEach(function (cluster) {
+        var btn = cluster.querySelector(".section-tab--cluster-toggle");
+        var panel = cluster.querySelector(".section-tab-cluster__dropdown");
+        if (!btn || !panel) return;
+        btn.addEventListener("click", function (e) {
+          e.preventDefault();
+          e.stopPropagation();
+          var willOpen = !cluster.classList.contains("is-open");
+          closeAllTabClusters();
+          if (willOpen) {
+            cluster.classList.add("is-open");
+            btn.setAttribute("aria-expanded", "true");
+          }
+        });
+        cluster.addEventListener("click", function (e) { e.stopPropagation(); });
+      });
+      document.addEventListener("click", function () { closeAllTabClusters(); });
+      document.addEventListener("keydown", function (e) {
+        if (e.key === "Escape") closeAllTabClusters();
+      });
+
       function refreshActiveTab() {
         const openSection = currentOpenSection || accordions.find(function (d) { return d.classList.contains("open"); });
+        document.querySelectorAll("[data-tab-cluster]").forEach(function (c) {
+          c.classList.remove("section-tab-cluster--active");
+        });
         tabs.forEach(function (tab) {
           const isActive = openSection && tab.dataset.target === openSection.id;
           tab.classList.toggle("active", !!isActive);
-          tab.setAttribute("aria-selected", isActive ? "true" : "false");
+          if (isActive) {
+            var cl = tab.closest("[data-tab-cluster]");
+            if (cl) cl.classList.add("section-tab-cluster--active");
+          }
         });
         if (openSection && openSection.id) {
           sessionStorage.setItem(ACTIVE_SECTION_KEY, openSection.id);
