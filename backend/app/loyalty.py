@@ -23,28 +23,32 @@ def _int_env(name: str, default: int) -> int:
 
 def loyalty_thresholds() -> tuple[int, int, int]:
     """عتبات افتراضية من متغيرات البيئة فقط (بدون إعدادات المركز)."""
-    silver = max(2, _int_env("LOYALTY_SILVER_MIN_CONFIRMED", 6))
-    gold = max(silver + 1, _int_env("LOYALTY_GOLD_MIN_CONFIRMED", 20))
-    bronze = max(1, min(_int_env("LOYALTY_BRONZE_MIN_CONFIRMED", 1), silver - 1))
-    return bronze, silver, gold
+    b = max(1, _int_env("LOYALTY_BRONZE_MIN_CONFIRMED", 1))
+    s = max(2, _int_env("LOYALTY_SILVER_MIN_CONFIRMED", 6))
+    g = max(_int_env("LOYALTY_GOLD_MIN_CONFIRMED", 20), s + 1)
+    return apply_loyalty_cascade(b, s, g)
+
+
+def apply_loyalty_cascade(bronze: int, silver: int, gold: int) -> tuple[int, int, int]:
+    """يضمن: فضي ≥ برونزي + 1، ذهبي ≥ فضي + 1 (متسلسل دون تداخل)."""
+    b = max(1, int(bronze))
+    s = max(int(silver), b + 1)
+    g = max(int(gold), s + 1)
+    return b, s, g
 
 
 def effective_loyalty_thresholds(center: models.Center | None) -> tuple[int, int, int]:
-    """العتبات الفعلية: تخصيص المركز إن وُجد، وإلا قيم البيئة."""
+    """العتبات الفعلية: تخصيص المركز إن وُجد، ثم تطبيق التسلسل برونزي → فضي → ذهبي."""
     b, s, g = loyalty_thresholds()
     if not center:
         return b, s, g
+    if center.loyalty_bronze_min is not None:
+        b = max(1, int(center.loyalty_bronze_min))
     if center.loyalty_silver_min is not None:
         s = max(2, int(center.loyalty_silver_min))
     if center.loyalty_gold_min is not None:
-        g = max(s + 1, int(center.loyalty_gold_min))
-    if center.loyalty_bronze_min is not None:
-        b = max(1, int(center.loyalty_bronze_min))
-    if b >= s:
-        b = max(1, s - 1)
-    if g <= s:
-        g = s + 1
-    return b, s, g
+        g = int(center.loyalty_gold_min)
+    return apply_loyalty_cascade(b, s, g)
 
 
 def loyalty_tier_for_confirmed_count(count: int, center: models.Center | None = None) -> str:
@@ -139,15 +143,9 @@ def loyalty_confirmed_counts_by_email_lower(db: Session, center_id: int) -> dict
 
 
 def validate_loyalty_threshold_triple(bronze: int, silver: int, gold: int) -> str | None:
-    """None إن كان صالحاً، أو رسالة خطأ قصيرة."""
-    if silver < 2:
-        return "الحد الأدنى للفضي يجب أن يكون 2 على الأقل."
-    if gold <= silver:
-        return "الذهبي يجب أن يتطلب جلسات أكثر من الفضي."
+    """يُستدعى بعد apply_loyalty_cascade — حدود عليا فقط."""
     if bronze < 1:
         return "البرونزي يجب أن يبدأ من جلسة واحدة على الأقل."
-    if bronze >= silver:
-        return "البرونزي يجب أن يكون أقل من عتبة الفضي."
     if gold > 5000 or silver > 5000 or bronze > 5000:
         return "القيم كبيرة جداً."
     return None

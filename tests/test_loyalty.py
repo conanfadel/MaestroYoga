@@ -8,6 +8,7 @@ from backend.app.loyalty import (
     LOYALTY_TIER_GOLD,
     LOYALTY_TIER_NONE,
     LOYALTY_TIER_SILVER,
+    apply_loyalty_cascade,
     count_confirmed_sessions_for_public_user,
     effective_loyalty_thresholds,
     loyalty_confirmed_counts_by_email_lower,
@@ -27,6 +28,23 @@ def test_loyalty_tier_for_confirmed_count_defaults(monkeypatch):
     assert loyalty_tier_for_confirmed_count(6) == LOYALTY_TIER_SILVER
     assert loyalty_tier_for_confirmed_count(19) == LOYALTY_TIER_SILVER
     assert loyalty_tier_for_confirmed_count(20) == LOYALTY_TIER_GOLD
+
+
+def test_apply_loyalty_cascade_bumps_silver_and_gold():
+    b, s, g = apply_loyalty_cascade(6, 6, 10)
+    assert b == 6 and s == 7 and g == 10
+    b2, s2, g2 = apply_loyalty_cascade(6, 8, 8)
+    assert b2 == 6 and s2 == 8 and g2 == 9
+
+
+def test_effective_loyalty_bronze_only_bumps_silver(monkeypatch):
+    monkeypatch.delenv("LOYALTY_BRONZE_MIN_CONFIRMED", raising=False)
+    monkeypatch.delenv("LOYALTY_SILVER_MIN_CONFIRMED", raising=False)
+    monkeypatch.delenv("LOYALTY_GOLD_MIN_CONFIRMED", raising=False)
+    c = models.Center()
+    c.loyalty_bronze_min = 6
+    b, s, g = effective_loyalty_thresholds(c)
+    assert b == 6 and s == 7
 
 
 def test_effective_loyalty_thresholds_center_override(monkeypatch):

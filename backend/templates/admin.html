@@ -109,6 +109,13 @@
       box-shadow: none;
     }
     a.btn.secondary:hover { border-color: var(--gold); }
+    .section-tab__icon {
+      display: inline-block;
+      margin-inline-end: 6px;
+      opacity: 0.92;
+      font-size: 0.95em;
+      vertical-align: middle;
+    }
     button.secondary {
       background: transparent;
       color: var(--charcoal);
@@ -743,6 +750,10 @@
       <a class="section-tab" role="tab" data-target="section-branding" href="#section-branding" id="tab-section-branding">
         هوية المركز
       </a>
+      <a class="section-tab" role="tab" data-target="section-loyalty" href="#section-loyalty" id="tab-section-loyalty" title="برنامج الولاء">
+        <span class="section-tab__icon" aria-hidden="true">★</span>
+        برنامج الولاء
+      </a>
       <a class="section-tab" role="tab" data-target="section-rooms" href="#section-rooms" id="tab-section-rooms">
         إدارة الغرف
       </a>
@@ -853,32 +864,38 @@
             <button type="submit">حفظ هوية المركز</button>
           </form>
         </div>
+      </div>
+    </section>
 
-        <div class="card" style="margin-top:16px;">
-          <h2>إعدادات برنامج الولاء</h2>
-          <p class="small" style="margin:0 0 12px;line-height:1.6;">
-            تُحسب الأوسمة من عدد الحجوزات بحالة <strong>مؤكد</strong> في مركزك لكل بريد عميل.
-            اترك أي حقل عتبة <strong>فارغاً</strong> لاستخدام قيمة <strong>الخادم الافتراضية</strong> (متغيرات البيئة <code>LOYALTY_*_MIN_CONFIRMED</code>).
+    <section id="section-loyalty" class="accordion">
+      <div class="accordion-body">
+        <div class="card">
+          <h2>برنامج الولاء</h2>
+          <p class="small" style="margin:0 0 12px;line-height:1.65;">
+            تُحسب الأوسمة من عدد الحجوزات بحالة <strong>مؤكد</strong> لكل بريد عميل في مركزك.
+            <strong>التسلسل:</strong> عتبة الفضي تكون دائماً على الأقل <strong>برونزي + 1</strong> جلسة، والذهبي على الأقل <strong>فضي + 1</strong> (يُطبّق تلقائياً عند الحفظ والعرض).
+            اترك حقل العتبة <strong>فارغاً</strong> لاستخدام <strong>افتراضي الخادم</strong> (<code>LOYALTY_*_MIN_CONFIRMED</code>).
           </p>
           {% if loyalty_admin %}
           <p class="small" style="margin:0 0 14px;padding:10px 12px;background:var(--mint-bg);border-radius:10px;border:1px solid rgba(125,211,174,0.5);line-height:1.55;">
-            <strong>القيم الفعّالة الآن:</strong> برونزي من {{ loyalty_admin.effective.bronze }} جلسة، فضي من {{ loyalty_admin.effective.silver }}، ذهبي من {{ loyalty_admin.effective.gold }}.
-            <span style="display:block;margin-top:6px;color:var(--charcoal-muted);font-size:0.88em;">افتراضي الخادم (عند عدم التخصيص): {{ loyalty_admin.env.bronze }} / {{ loyalty_admin.env.silver }} / {{ loyalty_admin.env.gold }}</span>
+            <strong>القيم الفعّالة الآن (بعد التسلسل):</strong> برونزي من {{ loyalty_admin.effective.bronze }} جلسة، فضي من {{ loyalty_admin.effective.silver }}، ذهبي من {{ loyalty_admin.effective.gold }}.
+            <span style="display:block;margin-top:6px;color:var(--charcoal-muted);font-size:0.88em;">مرجع افتراضي الخادم: {{ loyalty_admin.env.bronze }} / {{ loyalty_admin.env.silver }} / {{ loyalty_admin.env.gold }}</span>
           </p>
           {% endif %}
           {% if center %}
-          <form method="post" action="/admin/center/loyalty" data-preserve-scroll="1">
-            <input type="hidden" name="return_section" value="section-branding" />
+          <form id="admin-loyalty-form" method="post" action="/admin/center/loyalty" data-preserve-scroll="1">
+            <input type="hidden" name="return_section" value="section-loyalty" />
             <h3 class="branding-subhead" style="margin-top:0;">عتبات الجلسات المؤكدة</h3>
-            <label for="loyalty_bronze_min">أقل عدد للوسام البرونزي (فارغ = افتراضي الخادم)</label>
-            <input id="loyalty_bronze_min" name="loyalty_bronze_min" type="number" min="0" max="5000" placeholder="مثال: 1"
+            <label for="loyalty_bronze_min">أقل عدد جلسات للوسام البرونزي</label>
+            <input id="loyalty_bronze_min" name="loyalty_bronze_min" type="number" min="1" max="5000" placeholder="فارغ = خادم"
               value="{{ center.loyalty_bronze_min if center.loyalty_bronze_min is not none else '' }}" />
-            <label for="loyalty_silver_min">أقل عدد للوسام الفضي (فارغ = افتراضي الخادم)</label>
-            <input id="loyalty_silver_min" name="loyalty_silver_min" type="number" min="0" max="5000" placeholder="مثال: 6"
+            <label for="loyalty_silver_min">أقل عدد جلسات للوسام الفضي (لا يقل عن برونزي + 1)</label>
+            <input id="loyalty_silver_min" name="loyalty_silver_min" type="number" min="2" max="5000" placeholder="فارغ = خادم"
               value="{{ center.loyalty_silver_min if center.loyalty_silver_min is not none else '' }}" />
-            <label for="loyalty_gold_min">أقل عدد للوسام الذهبي (فارغ = افتراضي الخادم)</label>
-            <input id="loyalty_gold_min" name="loyalty_gold_min" type="number" min="0" max="5000" placeholder="مثال: 20"
+            <label for="loyalty_gold_min">أقل عدد جلسات للوسام الذهبي (لا يقل عن فضي + 1)</label>
+            <input id="loyalty_gold_min" name="loyalty_gold_min" type="number" min="3" max="5000" placeholder="فارغ = خادم"
               value="{{ center.loyalty_gold_min if center.loyalty_gold_min is not none else '' }}" />
+            <p id="loyalty-cascade-hint" class="small" style="margin:10px 0 0;padding:8px 10px;background:#f8fafc;border-radius:8px;color:var(--charcoal-muted);line-height:1.5;"></p>
             <h3 class="branding-subhead">أسماء العرض (اختياري)</h3>
             <p class="small" style="margin:0 0 10px;">تظهر للزائر بدل «برونزي / فضي / ذهبي» عند التعبئة.</p>
             <label for="loyalty_label_bronze">اسم الوسام البرونزي</label>
@@ -892,6 +909,68 @@
               value="{{ center.loyalty_label_gold or '' }}" />
             <button type="submit" style="margin-top:14px;">حفظ إعدادات الولاء</button>
           </form>
+          <script>
+            (function () {
+              var bEl = document.getElementById("loyalty_bronze_min");
+              var sEl = document.getElementById("loyalty_silver_min");
+              var gEl = document.getElementById("loyalty_gold_min");
+              var hint = document.getElementById("loyalty-cascade-hint");
+              function num(el) {
+                if (!el) return null;
+                var t = String(el.value || "").trim();
+                if (!t) return null;
+                var n = parseInt(t, 10);
+                return isNaN(n) ? null : n;
+              }
+              function sync() {
+                var bv = num(bEl);
+                var sv = num(sEl);
+                var gv = num(gEl);
+                var smin = bv != null ? bv + 1 : 2;
+                var effS = sv != null ? Math.max(sv, smin) : null;
+                var gmin = effS != null ? effS + 1 : 3;
+                var effG = gv != null ? Math.max(gv, gmin) : null;
+                if (sEl) {
+                  sEl.min = String(Math.max(2, smin));
+                  if (bv != null && sv != null && sv < bv + 1) {
+                    sEl.value = String(bv + 1);
+                    effS = bv + 1;
+                    gmin = effS + 1;
+                  }
+                }
+                if (gEl) {
+                  var gMinVal = effS != null ? effS + 1 : bv != null ? bv + 2 : 3;
+                  gEl.min = String(Math.max(3, gMinVal));
+                  if (gv != null && gv < gMinVal) {
+                    gEl.value = String(gMinVal);
+                  }
+                }
+                if (hint) {
+                  var parts = [];
+                  if (bv != null) {
+                    parts.push("مثال التسلسل: برونزي من " + bv + " → فضي يبدأ من " + (bv + 1) + " على الأقل");
+                    if (effS != null) parts.push("→ ذهبي من " + (effS + 1) + " على الأقل");
+                  } else {
+                    parts.push("عند تعيين البرونزي، يُضبط الحد الأدنى للفضي تلقائياً إلى (برونزي + 1).");
+                  }
+                  hint.textContent = parts.join(" ");
+                }
+              }
+              if (bEl) {
+                bEl.addEventListener("input", sync);
+                bEl.addEventListener("change", sync);
+              }
+              if (sEl) {
+                sEl.addEventListener("input", sync);
+                sEl.addEventListener("change", sync);
+              }
+              if (gEl) {
+                gEl.addEventListener("input", sync);
+                gEl.addEventListener("change", sync);
+              }
+              sync();
+            })();
+          </script>
           {% endif %}
         </div>
       </div>
