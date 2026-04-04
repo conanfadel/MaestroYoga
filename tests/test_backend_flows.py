@@ -76,11 +76,35 @@ def test_validate_mailer_resend_requires_api_key(monkeypatch):
     assert reason2 == "ok"
 
 
-def test_email_confirmed_page_shows_redirect_hint(client):
-    r = client.get("/public/email-confirmed?center_id=1")
-    assert r.status_code == 200
-    assert "تم تأكيد البريد" in r.text
-    assert "/index?center_id=1&amp;msg=email_verified" in r.text or "center_id=1" in r.text
+def test_verify_email_then_verify_pending_shows_success_and_index_link(client):
+    db = SessionLocal()
+    email = f"pytest_vp_ok_{int(time.time())}@example.com"
+    user = models.PublicUser(
+        full_name="Pytest VP",
+        email=email,
+        phone="+966500000011",
+        password_hash=hash_password("Admin@12345"),
+        email_verified=False,
+        is_active=True,
+        is_deleted=False,
+    )
+    db.add(user)
+    db.commit()
+    db.refresh(user)
+    token = create_public_email_verification_token(user.id, user.email)
+    r1 = client.get(f"/public/verify-email?token={token}&next=/index?center_id=1", follow_redirects=False)
+    assert r1.status_code == 303
+    loc = r1.headers["location"]
+    assert "/public/verify-pending" in loc
+    assert "msg=email_verified" in loc
+    assert "next=" in loc
+    r2 = client.get(loc, follow_redirects=False)
+    assert r2.status_code == 200
+    assert "تم تأكيد البريد" in r2.text
+    assert "center_id=1" in r2.text and "msg=email_verified" in r2.text
+    db.delete(user)
+    db.commit()
+    db.close()
 
 
 def test_verify_email_marks_user_verified(client):
@@ -104,7 +128,10 @@ def test_verify_email_marks_user_verified(client):
     db.refresh(user)
 
     assert response.status_code == 303
-    assert response.headers["location"] == "/public/email-confirmed?center_id=1"
+    loc = response.headers["location"]
+    assert loc.startswith("/public/verify-pending?")
+    assert "msg=email_verified" in loc
+    assert "next=%2Findex%3Fcenter_id%3D1" in loc or "next=" in loc
     assert user.email_verified is True
 
     db.delete(user)

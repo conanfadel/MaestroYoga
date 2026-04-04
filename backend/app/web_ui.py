@@ -52,7 +52,6 @@ from .web_shared import (
     _plan_duration_days,
     _public_base,
     _sanitize_next_url,
-    public_center_id_str_from_next,
     public_index_url_from_next,
     public_mail_fail_why_token,
     _url_with_params,
@@ -1324,6 +1323,25 @@ def public_verify_pending(request: Request, next: str = "/index?center_id=1", db
     user = _current_public_user(request, db)
     if not user:
         return _public_login_redirect(next_url=safe_next)
+    msg_param = (request.query_params.get("msg") or "").strip()
+    if msg_param == "email_verified" and user.email_verified:
+        index_url = public_index_url_from_next(safe_next, msg="email_verified")
+        fn = (user.full_name or "").strip().split()
+        user_first_name = fn[0] if fn else ""
+        return templates.TemplateResponse(
+            request,
+            "public_verify_pending.html",
+            {
+                "next": safe_next,
+                "user": user,
+                "show_dev_verify_link": False,
+                "dev_verify_url": "",
+                "show_email_verified_success": True,
+                "index_url": index_url,
+                "user_first_name": user_first_name,
+                **_analytics_context("public_verify_pending"),
+            },
+        )
     if not _is_email_verification_required():
         return RedirectResponse(url=public_index_url_from_next(safe_next), status_code=303)
     if user.email_verified:
@@ -1338,6 +1356,7 @@ def public_verify_pending(request: Request, next: str = "/index?center_id=1", db
             "user": user,
             "show_dev_verify_link": show_dev_verify_link,
             "dev_verify_url": dev_verify_url,
+            "show_email_verified_success": False,
             **_analytics_context("public_verify_pending"),
         },
     )
@@ -1443,9 +1462,8 @@ def public_verify_email(
         user.email_verified = True
         db.commit()
     session_token = create_public_access_token(user.id)
-    cid = public_center_id_str_from_next(safe_next)
     response = RedirectResponse(
-        url=_url_with_params("/public/email-confirmed", center_id=cid),
+        url=_url_with_params("/public/verify-pending", msg="email_verified", next=safe_next),
         status_code=303,
     )
     response.set_cookie(
@@ -1464,27 +1482,6 @@ def public_verify_email(
         details={"public_user_id": user.id},
     )
     return response
-
-
-@router.get("/public/email-confirmed", response_class=HTMLResponse)
-def public_email_confirmed(
-    request: Request,
-    center_id: int = 1,
-    db: Session = Depends(get_db),
-):
-    """صفحة وسيطة بعد نجاح رابط التحقق: رسالة ثم تحويل تلقائي إلى الواجهة الرئيسية."""
-    index_url = _url_with_params("/index", center_id=str(center_id), msg="email_verified")
-    public_user = _current_public_user(request, db)
-    return templates.TemplateResponse(
-        request,
-        "public_email_confirmed.html",
-        {
-            "center_id": center_id,
-            "index_url": index_url,
-            "user_first_name": (public_user.full_name or "").strip().split()[0] if public_user else "",
-            **_analytics_context("public_email_confirmed", center_id=str(center_id)),
-        },
-    )
 
 
 @router.get("/public/forgot-password", response_class=HTMLResponse)

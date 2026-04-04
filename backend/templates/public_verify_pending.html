@@ -3,7 +3,10 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>تأكيد البريد الإلكتروني — Maestro Yoga</title>
+  {% if show_email_verified_success %}
+  <meta http-equiv="refresh" content="3;url={{ index_url }}" />
+  {% endif %}
+  <title>{% if show_email_verified_success %}تم تأكيد البريد{% else %}تأكيد البريد الإلكتروني{% endif %} — Maestro Yoga</title>
   {% if analytics_enabled and ga4_measurement_id %}
   <script async src="https://www.googletagmanager.com/gtag/js?id={{ ga4_measurement_id }}"></script>
   <script>
@@ -14,7 +17,7 @@
   </script>
   {% endif %}
   <style>
-    body { font-family: system-ui, sans-serif; background: radial-gradient(circle at top right, #ecfdf5, #f0fdfa 40%, #f8fafc); margin: 0; padding: 24px; }
+    body { font-family: system-ui, sans-serif; background: radial-gradient(circle at top right, #ecfdf5, #f0fdfa 40%, #f8fafc); margin: 0; padding: 24px; min-height: 100vh; box-sizing: border-box; }
     .card { max-width: 520px; margin: 30px auto; background: #fff; border: 1px solid #a7f3d0; border-radius: 16px; padding: 24px; box-shadow: 0 12px 32px rgba(6,95,70,.14); }
     h1 { margin: 0 0 10px; font-size: 1.35rem; color: #065f46; }
     p { margin: 0 0 12px; color: #475569; }
@@ -22,10 +25,43 @@
     .alert.warn { border-color: #fde68a; background: #fffbeb; color: #92400e; }
     button { width: 100%; margin-top: 8px; padding: 11px; border: 0; border-radius: 10px; background: linear-gradient(120deg, #0f766e, #10b981); color: #fff; font-weight: 700; cursor: pointer; }
     a { color: #0f766e; text-decoration: none; font-weight: 700; }
+    .success-panel { text-align: center; padding: 8px 0 4px; }
+    .success-icon { display: inline-flex; align-items: center; justify-content: center; width: 56px; height: 56px; border-radius: 50%; background: linear-gradient(135deg, #10b981, #059669); color: #fff; font-size: 1.75rem; margin-bottom: 14px; }
+    a.btn-main { display: inline-block; margin-top: 10px; padding: 12px 22px; border-radius: 999px; background: linear-gradient(120deg, #0f766e, #10b981); color: #fff !important; font-weight: 700; text-decoration: none; }
+    .hint { font-size: 0.88rem; color: #64748b; margin-top: 16px; }
   </style>
 </head>
 <body>
   <div class="card">
+    {% if show_email_verified_success %}
+    <div class="success-panel">
+      <div class="success-icon" aria-hidden="true">✓</div>
+      <h1>تم تأكيد البريد</h1>
+      <p>
+        {% if user_first_name %}
+          أهلًا {{ user_first_name }}، تم تفعيل بريدك بنجاح.
+        {% else %}
+          تم تفعيل بريدك بنجاح.
+        {% endif %}
+      </p>
+      <p>ستنتقل تلقائيًا إلى الصفحة الرئيسية خلال ثوانٍ.</p>
+      <a class="btn-main" href="{{ index_url }}">الانتقال إلى الصفحة الرئيسية الآن</a>
+      <p class="hint">إذا لم يحدث التحويل، اضغط الزر أعلاه.</p>
+    </div>
+    <script>
+      (function () {
+        var url = {{ index_url|tojson }};
+        function track(name, payload) {
+          window.dataLayer = window.dataLayer || [];
+          window.dataLayer.push({ event: name, ...payload });
+          if (typeof window.gtag === "function") window.gtag("event", name, payload || {});
+        }
+        track("page_view_verify_pending", { page_name: {{ analytics_page_name|tojson }}, step: "email_verified" });
+        track("email_verification_completed", {});
+        window.setTimeout(function () { window.location.replace(url); }, 2000);
+      })();
+    </script>
+    {% else %}
     <h1>تحقق البريد الإلكتروني</h1>
     <p>أرسلنا رابط التحقق إلى: <strong>{{ user.email }}</strong></p>
     <p>بعد التحقق، يمكنك إكمال الحجز والدفع بشكل طبيعي.</p>
@@ -117,28 +153,29 @@
       <a href="{{ request.query_params.get('next', next) }}">العودة للواجهة العامة</a> ·
       <a href="/public/logout">تسجيل الخروج</a>
     </p>
+    <script>
+      (function () {
+        function track(eventName, payload) {
+          window.dataLayer = window.dataLayer || [];
+          window.dataLayer.push({ event: eventName, ...payload });
+          if (typeof window.gtag === "function") window.gtag("event", eventName, payload || {});
+        }
+        const msg = {{ request.query_params.get('msg', '')|tojson }};
+        track("page_view_verify_pending", { page_name: {{ analytics_page_name|tojson }} });
+        if (msg === "registered") track("sign_up_completed", {});
+        if (msg === "resent") track("email_verification_resent", {});
+        if (msg === "resend_too_soon" || msg === "rate_limited" || msg === "mail_failed" || msg === "expired_link" || msg === "invalid_link") {
+          track("email_verification_resend_failed", { reason: msg });
+        }
+        const form = document.querySelector("form[action='/public/resend-verification']");
+        if (form) {
+          form.addEventListener("submit", function () {
+            track("email_verification_resend_attempt", {});
+          });
+        }
+      })();
+    </script>
+    {% endif %}
   </div>
-  <script>
-    (function () {
-      function track(eventName, payload) {
-        window.dataLayer = window.dataLayer || [];
-        window.dataLayer.push({ event: eventName, ...payload });
-        if (typeof window.gtag === "function") window.gtag("event", eventName, payload || {});
-      }
-      const msg = {{ request.query_params.get('msg', '')|tojson }};
-      track("page_view_verify_pending", { page_name: {{ analytics_page_name|tojson }} });
-      if (msg === "registered") track("sign_up_completed", {});
-      if (msg === "resent") track("email_verification_resent", {});
-      if (msg === "resend_too_soon" || msg === "rate_limited" || msg === "mail_failed" || msg === "expired_link" || msg === "invalid_link") {
-        track("email_verification_resend_failed", { reason: msg });
-      }
-      const form = document.querySelector("form[action='/public/resend-verification']");
-      if (form) {
-        form.addEventListener("submit", function () {
-          track("email_verification_resend_attempt", {});
-        });
-      }
-    })();
-  </script>
 </body>
 </html>
