@@ -92,6 +92,17 @@ def _mail_fail_reason_query_token(raw: str | None) -> str:
     return ""
 
 
+def public_mail_fail_why_token(raw: str | None) -> str:
+    """يُشتقّ من رسالة فشل الإرسال الطويلة رمزًا آمناً لـ query (?why=) يُعرَض للمستخدم."""
+    s = (raw or "").strip()
+    low = s.lower()
+    if "resend_http_403" in low and (
+        "testing emails" in low or "verify a domain" in low or "validation_error" in low
+    ):
+        return "resend_sandbox_domain"
+    return _mail_fail_reason_query_token(s)
+
+
 def _url_with_params(path: str, **params: str) -> str:
     clean = {k: v for k, v in params.items() if v is not None and v != ""}
     if not clean:

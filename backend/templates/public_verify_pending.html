@@ -55,6 +55,14 @@
             <strong>السبب الحالي (كما في السجلات):</strong> وضعتَ <code>MAIL_PROVIDER=resend</code> لكن <code>RESEND_API_KEY</code> غير معرّف في Render أو فارغ.
             أضف المفتاح من <a href="https://resend.com/api-keys" target="_blank" rel="noopener">لوحة مفاتيح Resend</a> (يبدأ بـ <code>re_</code>)، ثم <strong>Save</strong> و<strong>Manual Deploy</strong>، ثم اضغط «إعادة إرسال» أدناه.
           </p>
+        {% elif why == 'resend_sandbox_domain' %}
+          <p style="margin:0 0 14px;padding:12px 14px;background:#fff7ed;border-radius:10px;border:1px solid #fdba74;line-height:1.6;">
+            <strong>قيود حساب Resend (اختبار):</strong> مع <code>onboarding@resend.dev</code> لا يُسمح بإرسال رسائل التحقق إلا إلى <strong>بريد مالك حساب Resend</strong> (كما في رسالة الخطأ من المنصة).
+            للسماح لأي مستخدم بالتسجيل: أضف نطاقك في
+            <a href="https://resend.com/domains" target="_blank" rel="noopener">resend.com/domains</a>
+            ثم عيّن في Render: <code>RESEND_FROM</code> و<code>SMTP_FROM</code> إلى بريد من ذلك النطاق (مثل <code>hello@yourdomain.com</code>)، ثم أعد النشر.
+            <span style="display:block;margin-top:10px;font-size:0.92em;color:#78350f;">للتجربة الداخلية فقط يمكن تعطيل التحقق: <code>PUBLIC_REQUIRE_EMAIL_VERIFICATION=0</code> — لا تستخدمه مع جمهور حقيقي.</span>
+          </p>
         {% elif why == 'missing_resend_from' or why == 'invalid_resend_api_key_placeholder' %}
           <p style="margin:0 0 14px;padding:12px 14px;background:#fff7ed;border-radius:10px;border:1px solid #fdba74;line-height:1.6;">
             <strong>السبب:</strong> إعدادات Resend ناقصة (<code>{{ why }}</code>). عيّن <code>RESEND_FROM</code> (مثل <code>onboarding@resend.dev</code>) أو صحّح مفتاح API في Environment.

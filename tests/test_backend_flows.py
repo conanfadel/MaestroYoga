@@ -4,7 +4,7 @@ from backend.app import models
 from backend.app.database import SessionLocal
 from backend.app.mailer import validate_mailer_settings
 from backend.app.security import create_public_email_verification_token, hash_password
-from backend.app.web_shared import _mail_fail_reason_query_token
+from backend.app.web_shared import _mail_fail_reason_query_token, public_mail_fail_why_token
 
 
 def test_verify_email_redirects_invalid_token(client):
@@ -37,6 +37,16 @@ def test_mail_fail_reason_query_token_sanitizes():
     assert _mail_fail_reason_query_token("") == ""
     assert _mail_fail_reason_query_token("bad;drop") == ""
     assert _mail_fail_reason_query_token("123x") == ""
+
+
+def test_public_mail_fail_why_token_maps_resend_sandbox_403():
+    raw = (
+        'resend_http_403:{"statusCode":403,"name":"validation_error",'
+        '"message":"You can only send testing emails to your own email address. '
+        'To send emails to other recipients, please verify a domain"}'
+    )
+    assert public_mail_fail_why_token(raw) == "resend_sandbox_domain"
+    assert public_mail_fail_why_token("missing_resend_api_key") == "missing_resend_api_key"
 
 
 def test_validate_mailer_resend_requires_api_key(monkeypatch):

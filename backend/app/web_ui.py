@@ -52,7 +52,7 @@ from .web_shared import (
     _plan_duration_days,
     _public_base,
     _sanitize_next_url,
-    _mail_fail_reason_query_token,
+    public_mail_fail_why_token,
     _url_with_params,
 )
 
@@ -1225,7 +1225,7 @@ def public_register(
         next_msg = "registered" if queued else "mail_failed"
         vp_params: dict[str, str] = {"msg": next_msg, "next": safe_next}
         if not queued:
-            why = _mail_fail_reason_query_token(mail_info)
+            why = public_mail_fail_why_token(mail_info)
             if why:
                 vp_params["why"] = why
         response = RedirectResponse(
@@ -1384,7 +1384,7 @@ def public_resend_verification(
             email=user.email,
             details={"mail_error": mail_info[:200]},
         )
-        why = _mail_fail_reason_query_token(mail_info)
+        why = public_mail_fail_why_token(mail_info)
         vp = {"msg": "mail_failed", "next": safe_next}
         if why:
             vp["why"] = why
@@ -1506,7 +1506,14 @@ def public_forgot_password(
     log_security_event("public_forgot_password", request, "accepted", email=email_normalized)
     # Keep response neutral, but surface delivery issue when sending fails for an existing account.
     if user and user.is_active and not mail_sent:
-        return RedirectResponse(url="/public/forgot-password?msg=mail_failed", status_code=303)
+        why = public_mail_fail_why_token(mail_info)
+        fp = {"msg": "mail_failed"}
+        if why:
+            fp["why"] = why
+        return RedirectResponse(
+            url=_url_with_params("/public/forgot-password", **fp),
+            status_code=303,
+        )
     return RedirectResponse(url="/public/forgot-password?msg=sent", status_code=303)
 
 

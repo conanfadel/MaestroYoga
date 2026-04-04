@@ -146,6 +146,21 @@ def _send_via_http_relay(
         return False, f"relay_error:{exc}"
 
 
+def _maybe_log_resend_sandbox_restriction(reason: str) -> None:
+    low = reason.lower()
+    if "resend_http_403" not in low:
+        return
+    if not (
+        "testing emails" in low or "verify a domain" in low or "validation_error" in low
+    ):
+        return
+    print(
+        "[MAILER][HINT] Resend (وضع اختبار): الإرسال مسموح فقط إلى بريد مالك حساب Resend. "
+        "للإنتاج: تحقّق من نطاقك في https://resend.com/domains واستخدم RESEND_FROM (وSMTP_FROM) ببريد من ذلك النطاق. "
+        "للتجربة فقط (غير آمن للإنتاج): PUBLIC_REQUIRE_EMAIL_VERIFICATION=0 يعطّل طلب تأكيد البريد."
+    )
+
+
 def _send_via_resend(
     *,
     to_email: str,
@@ -187,10 +202,14 @@ def _send_via_resend(
             raw = (response.read() or b"").decode("utf-8", errors="ignore").strip()
             if 200 <= status < 300:
                 return True, "ok"
-            return False, f"resend_http_{status}:{raw[:300]}"
+            reason = f"resend_http_{status}:{raw[:300]}"
+            _maybe_log_resend_sandbox_restriction(reason)
+            return False, reason
     except urllib.error.HTTPError as exc:
         err_body = exc.read().decode("utf-8", errors="ignore").strip()
-        return False, f"resend_http_{exc.code}:{err_body[:300]}"
+        reason = f"resend_http_{exc.code}:{err_body[:300]}"
+        _maybe_log_resend_sandbox_restriction(reason)
+        return False, reason
     except Exception as exc:
         return False, f"resend_error:{exc}"
 
