@@ -100,6 +100,12 @@ def root():
     return {"app": "Maestro Yoga", "status": "running"}
 
 
+@app.get("/health")
+def health():
+    """مسار خفيف لفحص الصحة على Render وغيره (بدون اتصال بقاعدة البيانات)."""
+    return {"status": "ok"}
+
+
 def _payments_query(db: Session, center_id: int, client_id: int | None = None, status: str | None = None):
     query = db.query(models.Payment).filter(models.Payment.center_id == center_id)
     if client_id is not None:

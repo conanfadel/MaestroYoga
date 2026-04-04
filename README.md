@@ -85,6 +85,14 @@ powershell -ExecutionPolicy Bypass -File scripts/bootstrap_env.ps1
 
 بديل يدوي بدون Blueprint: **Dashboard → New → PostgreSQL**، ثم نفس خطوة نسخ Internal URL إلى `DATABASE_URL`.
 
+#### إن ظهر «Deploy failed / Timed out» رغم ظهور Uvicorn في السجلات
+
+- في **Web Service → Settings → Health Checks**: اضبط **Health Check Path** على **`/health`** (أو `/`).
+- تأكد أن **Start Command** يستخدم **`$PORT`**، مثال:  
+  `python -m uvicorn backend.app.main:app --host 0.0.0.0 --port $PORT`  
+  ([توثيق المنفذ](https://render.com/docs/web-services#port-binding)).
+- راجع [Troubleshooting deploys](https://render.com/docs/troubleshooting-deploys).
+
 خطوة مقترحة الآن:
 
 1) على التطوير المحلي/Render استمر باستخدام `render.env` أو `.env` حسب الحاجة.  
