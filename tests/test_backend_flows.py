@@ -218,3 +218,11 @@ def test_verify_email_marks_user_verified(client):
     db.delete(user)
     db.commit()
     db.close()
+
+
+def test_public_news_list_page_ok(client):
+    r = client.get("/news?center_id=1")
+    assert r.status_code == 200
+    assert "text/html" in r.headers.get("content-type", "")
+    body = r.text
+    assert "أخبار وإعلانات" in body or "لا توجد أخبار" in body

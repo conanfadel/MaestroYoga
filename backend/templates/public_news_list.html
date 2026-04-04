@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>أخبار وإعلانات {{ center.name }} | Maestro Yoga</title>
+  <meta name="description" content="جميع الأخبار والإعلانات والنشاطات المنشورة في {{ center.name }}." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet" />
+  {% if analytics_enabled and ga4_measurement_id %}
+  <script async src="https://www.googletagmanager.com/gtag/js?id={{ ga4_measurement_id }}"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){ dataLayer.push(arguments); }
+    gtag("js", new Date());
+    gtag("config", "{{ ga4_measurement_id }}", { send_page_view: true });
+  </script>
+  {% endif %}
+  <style>
+    :root {
+      --gold: #c5a059;
+      --gold-dark: #9a7b3c;
+      --mint-bg: #e8fcf4;
+      --mint-mid: #7dd3ae;
+      --charcoal: #2d3436;
+      --charcoal-muted: #636e72;
+      --white: #ffffff;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      padding: 22px clamp(14px, 4vw, 40px) 48px;
+      font-family: "Tajawal", system-ui, sans-serif;
+      color: var(--charcoal);
+      background:
+        radial-gradient(ellipse 100% 70% at 100% 0%, var(--mint-bg) 0%, transparent 50%),
+        #fafcfb;
+    }
+    .wrap { max-width: 720px; margin: 0 auto; }
+    .back {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 18px;
+      font-weight: 800;
+      font-size: 0.9rem;
+      color: var(--gold-dark);
+      text-decoration: none;
+      padding: 8px 14px;
+      border-radius: 999px;
+      border: 2px solid rgba(125, 211, 174, 0.65);
+      background: var(--white);
+    }
+    .back:hover { border-color: var(--gold); }
+    h1 {
+      margin: 0 0 8px;
+      font-family: "Amiri", "Tajawal", serif;
+      font-size: 1.55rem;
+      color: var(--charcoal);
+    }
+    .sub {
+      margin: 0 0 22px;
+      color: var(--charcoal-muted);
+      line-height: 1.6;
+      font-size: 0.95rem;
+    }
+    .news-list { display: flex; flex-direction: column; gap: 14px; }
+    .news-card {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) minmax(100px, 140px);
+      gap: 14px;
+      padding: 16px 18px;
+      background: var(--white);
+      border-radius: 16px;
+      border: 1px solid rgba(197, 160, 89, 0.3);
+      text-decoration: none;
+      color: inherit;
+      box-shadow: 0 8px 26px rgba(45, 52, 54, 0.06);
+      transition: transform 0.15s ease, box-shadow 0.15s ease;
+    }
+    .news-card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 12px 34px rgba(45, 52, 54, 0.09);
+    }
+    .news-card__badge {
+      display: inline-block;
+      font-size: 0.72rem;
+      font-weight: 800;
+      color: var(--gold-dark);
+      background: rgba(197, 160, 89, 0.14);
+      padding: 4px 10px;
+      border-radius: 999px;
+      margin-bottom: 8px;
+    }
+    .news-card__badge.is-pinned { background: rgba(16, 185, 129, 0.18); color: #047857; }
+    .news-card__title {
+      margin: 0 0 8px;
+      font-size: 1.08rem;
+      font-weight: 800;
+      line-height: 1.35;
+    }
+    .news-card__summary {
+      margin: 0;
+      font-size: 0.88rem;
+      color: var(--charcoal-muted);
+      line-height: 1.55;
+    }
+    .news-card__foot {
+      margin-top: 10px;
+      font-size: 0.78rem;
+      font-weight: 700;
+      color: var(--mint-mid);
+    }
+    .news-card__media {
+      border-radius: 12px;
+      overflow: hidden;
+      border: 1px solid rgba(197, 160, 89, 0.22);
+      min-height: 88px;
+      background: linear-gradient(135deg, rgba(170, 240, 209, 0.35), rgba(255, 255, 255, 0.9));
+    }
+    .news-card__media img {
+      width: 100%;
+      height: 100%;
+      min-height: 88px;
+      object-fit: cover;
+      display: block;
+    }
+    .empty {
+      padding: 28px 20px;
+      text-align: center;
+      color: var(--charcoal-muted);
+      background: var(--white);
+      border-radius: 16px;
+      border: 1px dashed rgba(125, 211, 174, 0.6);
+    }
+    @media (max-width: 560px) {
+      .news-card { grid-template-columns: 1fr; }
+      .news-card__media { max-height: 160px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <a class="back" href="{{ index_url }}">← العودة لصفحة الحجز</a>
+    <h1>أخبار وإعلانات {{ center.name }}</h1>
+    <p class="sub">قائمة بكل المنشورات المنشورة. اضغط على أي عنصر لقراءة التفاصيل كاملة.</p>
+
+    {% if news_rows %}
+    <div class="news-list">
+      {% for row in news_rows %}
+      <a class="news-card" href="{{ row.detail_url }}">
+        <div>
+          <span class="news-card__badge{% if row.is_pinned %} is-pinned{% endif %}">
+            {% if row.is_pinned %}مثبّت · {% endif %}{{ row.type_label }}
+          </span>
+          <h2 class="news-card__title">{{ row.title }}</h2>
+          {% if row.summary %}
+          <p class="news-card__summary">{{ row.summary }}</p>
+          {% endif %}
+          {% if row.published_at_display %}
+          <div class="news-card__foot">{{ row.published_at_display }}</div>
+          {% endif %}
+        </div>
+        <div class="news-card__media">
+          {% if row.cover_image_url %}
+          <img src="{{ row.cover_image_url }}" alt="" decoding="async" loading="lazy" />
+          {% endif %}
+        </div>
+      </a>
+      {% endfor %}
+    </div>
+    {% else %}
+    <p class="empty">لا توجد أخبار أو إعلانات منشورة حاليًا.</p>
+    {% endif %}
+  </div>
+</body>
+</html>

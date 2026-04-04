@@ -592,6 +592,15 @@ def _soft_delete_public_user(row: models.PublicUser) -> tuple[str, str]:
     return original_email, original_phone
 
 
+def _preview_text(text: str | None, max_len: int = 100) -> str:
+    t = (text or "").strip()
+    if not t:
+        return ""
+    if len(t) <= max_len:
+        return t
+    return t[: max_len - 1].rstrip() + "…"
+
+
 @router.get("/index", response_class=HTMLResponse)
 def public_index(
     request: Request,
@@ -678,21 +687,32 @@ def public_index(
         .order_by(nullslast(models.CenterPost.published_at.desc()), models.CenterPost.id.desc())
         .first()
     )
+    total_published_posts = (
+        db.query(func.count(models.CenterPost.id))
+        .filter(
+            models.CenterPost.center_id == center_id,
+            models.CenterPost.is_published.is_(True),
+        )
+        .scalar()
+        or 0
+    )
     recent_posts_q = (
         db.query(models.CenterPost)
         .filter(models.CenterPost.center_id == center_id, models.CenterPost.is_published.is_(True))
         .order_by(nullslast(models.CenterPost.published_at.desc()), models.CenterPost.id.desc())
-        .limit(8)
+        .limit(24)
         .all()
     )
     pinned_public_post = None
     if pinned_post:
+        sum_full = (pinned_post.summary or "").strip()
         pinned_public_post = {
             "id": pinned_post.id,
             "title": pinned_post.title,
             "post_type": pinned_post.post_type,
             "type_label": CENTER_POST_TYPE_LABELS.get(pinned_post.post_type, pinned_post.post_type),
-            "summary": (pinned_post.summary or "").strip(),
+            "summary": sum_full,
+            "summary_short": _preview_text(sum_full, 100),
             "cover_image_url": pinned_post.cover_image_url,
             "detail_url": _url_with_params("/post", center_id=str(center_id), post_id=str(pinned_post.id)),
         }
@@ -703,24 +723,47 @@ def public_index(
             center=center,
         )
 
-    public_posts_teasers = []
+    public_posts_teasers: list[dict] = []
+    news_ticker_items: list[dict[str, str]] = []
+    if pinned_post:
+        news_ticker_items.append(
+            {
+                "title": (pinned_post.title or "").strip(),
+                "type_label": CENTER_POST_TYPE_LABELS.get(pinned_post.post_type, pinned_post.post_type),
+            }
+        )
     for p in recent_posts_q:
         if pinned_post and p.id == pinned_post.id:
             continue
-        public_posts_teasers.append(
-            {
-                "id": p.id,
-                "title": p.title,
-                "post_type": p.post_type,
-                "type_label": CENTER_POST_TYPE_LABELS.get(p.post_type, p.post_type),
-                "summary": (p.summary or "").strip(),
-                "cover_image_url": p.cover_image_url,
-                "published_at_display": _fmt_dt(p.published_at) if p.published_at else "",
-                "detail_url": _url_with_params("/post", center_id=str(center_id), post_id=str(p.id)),
-            }
-        )
-        if len(public_posts_teasers) >= 6:
+        if len(public_posts_teasers) < 3:
+            sum_full = (p.summary or "").strip()
+            public_posts_teasers.append(
+                {
+                    "id": p.id,
+                    "title": p.title,
+                    "post_type": p.post_type,
+                    "type_label": CENTER_POST_TYPE_LABELS.get(p.post_type, p.post_type),
+                    "summary": _preview_text(sum_full, 120),
+                    "cover_image_url": p.cover_image_url,
+                    "published_at_display": _fmt_dt(p.published_at) if p.published_at else "",
+                    "detail_url": _url_with_params("/post", center_id=str(center_id), post_id=str(p.id)),
+                }
+            )
+        if len(news_ticker_items) < 14:
+            tl = (p.title or "").strip()
+            if tl:
+                news_ticker_items.append(
+                    {
+                        "title": tl,
+                        "type_label": CENTER_POST_TYPE_LABELS.get(p.post_type, p.post_type),
+                    }
+                )
+        if len(public_posts_teasers) >= 3 and len(news_ticker_items) >= 14:
             break
+
+    num_news_on_index = (1 if pinned_public_post else 0) + len(public_posts_teasers)
+    public_news_has_more = total_published_posts > num_news_on_index
+    public_news_list_url = _url_with_params("/news", center_id=str(center_id))
     plan_labels = {
         "weekly": "أسبوعي",
         "monthly": "شهري",
@@ -752,9 +795,69 @@ def public_index(
             "faq_items": faq_items,
             "pinned_public_post": pinned_public_post,
             "public_posts_teasers": public_posts_teasers,
+            "news_ticker_items": news_ticker_items,
+            "public_news_has_more": public_news_has_more,
+            "public_news_list_url": public_news_list_url,
             "loyalty_program_rows": loyalty_program_table_rows(center),
             **loyalty_ctx,
             **_analytics_context("index", center_id=str(center_id)),
+        },
+    )
+
+
+@router.get("/news", response_class=HTMLResponse)
+def public_news_list(
+    request: Request,
+    center_id: int = 1,
+    db: Session = Depends(get_db),
+):
+    center = db.get(models.Center, center_id)
+    if not center:
+        ensure_demo_data(db)
+        center = db.get(models.Center, center_id)
+        if not center:
+            center = db.query(models.Center).order_by(models.Center.id.asc()).first()
+    if not center:
+        raise HTTPException(status_code=404, detail="Center not found")
+    if center.name == DEMO_CENTER_NAME:
+        ensure_demo_news_posts(db, center.id)
+    _clear_center_branding_urls_if_files_missing(db, center)
+    posts = (
+        db.query(models.CenterPost)
+        .filter(
+            models.CenterPost.center_id == center_id,
+            models.CenterPost.is_published.is_(True),
+        )
+        .order_by(
+            models.CenterPost.is_pinned.desc(),
+            nullslast(models.CenterPost.published_at.desc()),
+            models.CenterPost.id.desc(),
+        )
+        .all()
+    )
+    news_rows = []
+    for p in posts:
+        sum_full = (p.summary or "").strip()
+        news_rows.append(
+            {
+                "title": p.title,
+                "type_label": CENTER_POST_TYPE_LABELS.get(p.post_type, p.post_type),
+                "summary": _preview_text(sum_full, 180),
+                "published_at_display": _fmt_dt(p.published_at) if p.published_at else "",
+                "detail_url": _url_with_params("/post", center_id=str(center_id), post_id=str(p.id)),
+                "cover_image_url": p.cover_image_url,
+                "is_pinned": bool(p.is_pinned),
+            }
+        )
+    return templates.TemplateResponse(
+        request,
+        "public_news_list.html",
+        {
+            "center": center,
+            "center_id": center_id,
+            "news_rows": news_rows,
+            "index_url": _url_with_params("/index", center_id=str(center_id)),
+            **_analytics_context("public_news_list", center_id=str(center_id)),
         },
     )
 

@@ -1103,6 +1103,193 @@
       font-weight: 700;
       color: var(--mint-mid);
     }
+    .news-ticker-bar {
+      display: flex;
+      align-items: stretch;
+      flex-wrap: wrap;
+      gap: 10px 14px;
+      margin-bottom: 16px;
+      padding: 10px 14px;
+      background: linear-gradient(95deg, rgba(232, 252, 244, 0.95) 0%, #fff 55%);
+      border: 1px solid rgba(125, 211, 174, 0.55);
+      border-radius: 16px;
+      box-shadow: 0 6px 22px rgba(45, 52, 54, 0.04);
+    }
+    .news-ticker-bar__all {
+      flex-shrink: 0;
+      align-self: center;
+      font-weight: 800;
+      font-size: 0.82rem;
+      color: var(--gold-dark);
+      text-decoration: none;
+      white-space: nowrap;
+      padding: 7px 14px;
+      border-radius: 999px;
+      border: 2px solid rgba(197, 160, 89, 0.45);
+      background: var(--white);
+    }
+    .news-ticker-bar__all:hover, .news-ticker-bar__all:focus-visible {
+      border-color: var(--mint-mid);
+      outline: none;
+      box-shadow: 0 0 0 3px rgba(125, 211, 174, 0.35);
+    }
+    .news-ticker-bar__label {
+      flex-shrink: 0;
+      align-self: center;
+      font-size: 0.72rem;
+      font-weight: 800;
+      color: var(--charcoal-muted);
+      letter-spacing: 0.03em;
+    }
+    .news-ticker {
+      flex: 1;
+      min-width: 180px;
+      overflow: hidden;
+      mask-image: linear-gradient(to left, transparent, #000 12px, #000 calc(100% - 12px), transparent);
+      -webkit-mask-image: linear-gradient(to left, transparent, #000 12px, #000 calc(100% - 12px), transparent);
+    }
+    .news-ticker__track {
+      display: flex;
+      width: max-content;
+      animation: news-ticker-marquee 50s linear infinite;
+    }
+    .news-ticker:hover .news-ticker__track { animation-play-state: paused; }
+    .news-ticker__group {
+      display: flex;
+      align-items: center;
+      gap: 1.75rem;
+      padding-inline-end: 1.75rem;
+      flex-shrink: 0;
+    }
+    .news-ticker__item {
+      display: inline-flex;
+      align-items: baseline;
+      gap: 0.35rem;
+      font-size: 0.86rem;
+      font-weight: 600;
+      color: var(--charcoal);
+      white-space: nowrap;
+    }
+    .news-ticker__type {
+      font-size: 0.68rem;
+      font-weight: 800;
+      color: var(--gold-dark);
+    }
+    @keyframes news-ticker-marquee {
+      from { transform: translateX(0); }
+      to { transform: translateX(-50%); }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      .news-ticker { mask-image: none; -webkit-mask-image: none; }
+      .news-ticker__track {
+        animation: none;
+        flex-wrap: wrap;
+        width: auto;
+        max-width: 100%;
+        gap: 0.5rem 1.1rem;
+      }
+      .news-ticker__group {
+        flex-wrap: wrap;
+        width: 100%;
+        padding: 0;
+        gap: 0.5rem 1.1rem;
+      }
+      .news-ticker__item { white-space: normal; }
+    }
+    .center-news-details {
+      margin-bottom: 22px;
+      border-radius: 18px;
+      border: 1px solid rgba(197, 160, 89, 0.32);
+      background: linear-gradient(165deg, #ffffff 0%, var(--mint-bg) 40%, #ffffff 100%);
+      box-shadow: 0 10px 32px rgba(45, 52, 54, 0.05);
+      overflow: hidden;
+    }
+    .center-news-summary {
+      cursor: pointer;
+      list-style: none;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px 14px;
+      padding: 14px 18px;
+      font-family: "Amiri", "Tajawal", serif;
+      font-weight: 700;
+      font-size: 1.12rem;
+      color: var(--charcoal);
+      background: rgba(255, 255, 255, 0.72);
+    }
+    .center-news-summary::-webkit-details-marker { display: none; }
+    .center-news-summary::after {
+      content: "▼";
+      font-size: 0.62rem;
+      color: var(--gold-dark);
+      transition: transform 0.2s ease;
+    }
+    .center-news-details[open] .center-news-summary::after {
+      transform: rotate(-180deg);
+    }
+    .center-news-summary__hint {
+      font-size: 0.76rem;
+      font-weight: 700;
+      color: var(--charcoal-muted);
+      font-family: "Tajawal", system-ui, sans-serif;
+    }
+    .center-news-inner {
+      padding: 0 18px 18px;
+    }
+    .center-news-lead--compact {
+      margin: 0 0 14px;
+      font-size: 0.88rem;
+      line-height: 1.55;
+    }
+    .center-news-lead--compact a {
+      font-weight: 800;
+      color: var(--gold-dark);
+    }
+    .center-news-more {
+      margin: 14px 0 0;
+      text-align: center;
+    }
+    .post-pin.post-pin--compact {
+      padding: 14px 16px;
+      margin-bottom: 14px;
+      grid-template-columns: minmax(0, 1fr) minmax(100px, 200px);
+      gap: 14px;
+    }
+    .post-pin--compact .post-pin__title {
+      font-size: 1.08rem;
+      margin-bottom: 6px;
+    }
+    .post-pin--compact .post-pin__summary {
+      font-size: 0.88rem;
+      line-height: 1.5;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+    .post-pin--compact .post-pin__cta { margin-top: 10px; font-size: 0.85rem; }
+    .post-pin--compact .post-pin__media { min-height: 88px; max-height: 112px; }
+    .post-pin--compact .post-pin__media img { min-height: 88px; max-height: 112px; object-fit: cover; }
+    .post-teaser-strip-wrap { margin-top: 2px; }
+    .post-teaser-strip {
+      display: flex;
+      gap: 14px;
+      overflow-x: auto;
+      padding: 4px 2px 12px;
+      scroll-snap-type: x mandatory;
+      -webkit-overflow-scrolling: touch;
+    }
+    .post-teaser--strip {
+      flex: 0 0 min(300px, 86vw);
+      scroll-snap-align: start;
+      max-width: 300px;
+    }
+    .post-teaser--strip .post-teaser__img { height: 100px; }
+    .post-teaser--strip .post-teaser__img img { height: 100px; }
+    .post-teaser--strip .post-teaser__title { font-size: 0.98rem; }
+    .post-teaser--strip .post-teaser__summary { font-size: 0.84rem; -webkit-line-clamp: 2; display: -webkit-box; -webkit-box-orient: vertical; overflow: hidden; }
     @media (max-width: 980px) {
       .hero { grid-template-columns: 1fr; }
       .grid-two { grid-template-columns: 1fr; }
@@ -1259,6 +1446,27 @@
       ></div>
     </header>
 
+    {% if news_ticker_items %}
+    <div class="news-ticker-bar" role="region" aria-label="عناوين أخبار سريعة">
+      <span class="news-ticker-bar__label">آخر الأخبار</span>
+      <div class="news-ticker" aria-hidden="true">
+        <div class="news-ticker__track">
+          <div class="news-ticker__group">
+            {% for it in news_ticker_items %}
+            <span class="news-ticker__item"><span class="news-ticker__type">{{ it.type_label }}</span> {{ it.title }}</span>
+            {% endfor %}
+          </div>
+          <div class="news-ticker__group" aria-hidden="true">
+            {% for it in news_ticker_items %}
+            <span class="news-ticker__item"><span class="news-ticker__type">{{ it.type_label }}</span> {{ it.title }}</span>
+            {% endfor %}
+          </div>
+        </div>
+      </div>
+      <a class="news-ticker-bar__all" href="{{ public_news_list_url }}">جميع الأخبار</a>
+    </div>
+    {% endif %}
+
     <div class="steps" aria-label="خطوات الدفع">
       <div class="step"><b>1)</b> اختر الجلسة أو الخطة المناسبة.</div>
       <div class="step"><b>2)</b> سجّل الدخول وفعّل بريدك الإلكتروني.</div>
@@ -1311,53 +1519,6 @@
     {% if msg == 'cart_invalid' %}<div class="alert err">تعذر قراءة السلة. أعد تحميل الصفحة وحاول مرة أخرى.</div>{% endif %}
     {% if msg == 'cart_too_many' %}<div class="alert warn">تجاوزت السلة الحد المسموح للجلسات في طلب واحد.</div>{% endif %}
     {% if msg == 'cart_session_full' %}<div class="alert err">إحدى الجلسات في السلة لم تعد متاحة. حدّث السلة وحاول مرة أخرى.</div>{% endif %}
-
-    {% if pinned_public_post or public_posts_teasers %}
-    <section id="center-news-section" class="center-news" aria-label="أخبار ونشاطات المركز">
-      <h2>ما الجديد في المركز</h2>
-      <p class="center-news-lead">أخبار، إعلانات، رحلات، مسابقات وتقارير — اطلع على التفاصيل والصور.</p>
-      {% if pinned_public_post %}
-      <a class="post-pin" href="{{ pinned_public_post.detail_url }}">
-        <div>
-          <span class="post-pin__badge">مثبّت · {{ pinned_public_post.type_label }}</span>
-          <h3 class="post-pin__title">{{ pinned_public_post.title }}</h3>
-          {% if pinned_public_post.summary %}
-          <p class="post-pin__summary">{{ pinned_public_post.summary }}</p>
-          {% endif %}
-          <div class="post-pin__cta">اقرأ التفاصيل ←</div>
-        </div>
-        <div class="post-pin__media">
-          {% if pinned_public_post.cover_image_url %}
-          <img src="{{ pinned_public_post.cover_image_url }}" alt="" decoding="async" loading="lazy" />
-          {% endif %}
-        </div>
-      </a>
-      {% endif %}
-      {% if public_posts_teasers %}
-      <div class="post-teaser-grid">
-        {% for t in public_posts_teasers %}
-        <a class="post-teaser" href="{{ t.detail_url }}">
-          <div class="post-teaser__img">
-            {% if t.cover_image_url %}
-            <img src="{{ t.cover_image_url }}" alt="" decoding="async" loading="lazy" />
-            {% endif %}
-          </div>
-          <div class="post-teaser__body">
-            <div class="post-teaser__type">{{ t.type_label }}</div>
-            <h3 class="post-teaser__title">{{ t.title }}</h3>
-            {% if t.summary %}
-            <p class="post-teaser__summary">{{ t.summary }}</p>
-            {% endif %}
-            {% if t.published_at_display %}
-            <div class="post-teaser__foot">{{ t.published_at_display }}</div>
-            {% endif %}
-          </div>
-        </a>
-        {% endfor %}
-      </div>
-      {% endif %}
-    </section>
-    {% endif %}
 
     <main id="main-content" class="grid-two">
       <section id="sessions-section" class="card sessions-panel" aria-label="قائمة الجلسات">
@@ -1533,6 +1694,68 @@
         </section>
       </aside>
     </main>
+
+    {% if pinned_public_post or public_posts_teasers %}
+    <details id="center-news-section" class="center-news-details">
+      <summary class="center-news-summary">
+        <span class="center-news-summary__title">ما الجديد في المركز</span>
+        <span class="center-news-summary__hint">اضغط للتوسيع · الجلسات والخطط أعلى الصفحة</span>
+      </summary>
+      <div class="center-news-inner">
+        <p class="center-news-lead center-news-lead--compact">
+          معاينة مختصرة لآخر المنشورات. التفاصيل الكاملة داخل كل خبر أو من
+          <a href="{{ public_news_list_url }}">صفحة جميع الأخبار</a>.
+        </p>
+        {% if pinned_public_post %}
+        <a class="post-pin post-pin--compact" href="{{ pinned_public_post.detail_url }}">
+          <div>
+            <span class="post-pin__badge">مثبّت · {{ pinned_public_post.type_label }}</span>
+            <h3 class="post-pin__title">{{ pinned_public_post.title }}</h3>
+            {% if pinned_public_post.summary_short %}
+            <p class="post-pin__summary">{{ pinned_public_post.summary_short }}</p>
+            {% endif %}
+            <div class="post-pin__cta">اقرأ التفاصيل ←</div>
+          </div>
+          <div class="post-pin__media">
+            {% if pinned_public_post.cover_image_url %}
+            <img src="{{ pinned_public_post.cover_image_url }}" alt="" decoding="async" loading="lazy" />
+            {% endif %}
+          </div>
+        </a>
+        {% endif %}
+        {% if public_posts_teasers %}
+        <div class="post-teaser-strip-wrap">
+          <div class="post-teaser-strip">
+            {% for t in public_posts_teasers %}
+            <a class="post-teaser post-teaser--strip" href="{{ t.detail_url }}">
+              <div class="post-teaser__img">
+                {% if t.cover_image_url %}
+                <img src="{{ t.cover_image_url }}" alt="" decoding="async" loading="lazy" />
+                {% endif %}
+              </div>
+              <div class="post-teaser__body">
+                <div class="post-teaser__type">{{ t.type_label }}</div>
+                <h3 class="post-teaser__title">{{ t.title }}</h3>
+                {% if t.summary %}
+                <p class="post-teaser__summary">{{ t.summary }}</p>
+                {% endif %}
+                {% if t.published_at_display %}
+                <div class="post-teaser__foot">{{ t.published_at_display }}</div>
+                {% endif %}
+              </div>
+            </a>
+            {% endfor %}
+          </div>
+        </div>
+        {% endif %}
+        {% if public_news_has_more %}
+        <p class="center-news-more">
+          <a class="btn ghost" href="{{ public_news_list_url }}">عرض كل الأخبار والمنشورات</a>
+        </p>
+        {% endif %}
+      </div>
+    </details>
+    {% endif %}
 
     <div class="sticky-booking" id="sticky-booking" aria-live="polite">
       <div>
