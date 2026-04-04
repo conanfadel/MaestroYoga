@@ -481,6 +481,8 @@
       background: linear-gradient(180deg, var(--page-bg) 0%, var(--page-bg) 72%, rgba(250, 252, 251, 0.94) 100%);
       backdrop-filter: blur(10px);
       -webkit-backdrop-filter: blur(10px);
+      /* لا تقص القوائم المنسدلة (position:absolute) — overflow:auto كان يفرض شريط تمرير ويقص المحتوى */
+      overflow: visible;
     }
     .section-tabs-sticky .section-tabs {
       margin: 0;
@@ -489,14 +491,14 @@
       border: 1px solid rgba(197, 160, 89, 0.35);
       border-radius: 16px;
       box-shadow: 0 10px 30px rgba(45, 52, 54, 0.08);
+      overflow: visible;
     }
     .section-tabs {
       display: flex;
       flex-wrap: wrap;
       gap: 8px 10px;
-      overflow-x: auto;
+      overflow: visible;
       margin: 6px 0 12px;
-      scrollbar-width: thin;
     }
     .section-tab {
       display: inline-flex;
@@ -525,6 +527,7 @@
     .section-tab-cluster {
       position: relative;
       flex: 0 0 auto;
+      overflow: visible;
     }
     .section-tab--cluster-toggle {
       font: inherit;
@@ -534,17 +537,25 @@
     .section-tab-cluster__dropdown {
       position: absolute;
       inset-inline-start: 0;
-      top: calc(100% + 8px);
-      min-width: min(300px, 92vw);
-      padding: 10px;
+      top: calc(100% + 6px);
+      min-width: min(280px, calc(100vw - 24px));
+      width: max-content;
+      max-width: min(340px, calc(100vw - 24px));
+      padding: 12px 12px 14px;
       display: none;
       flex-direction: column;
-      gap: 8px;
+      flex-wrap: nowrap;
+      gap: 6px;
       background: var(--white);
-      border: 1px solid rgba(197, 160, 89, 0.45);
+      border: 1px solid rgba(197, 160, 89, 0.4);
       border-radius: 14px;
-      box-shadow: 0 16px 44px rgba(45, 52, 54, 0.14);
-      z-index: 85;
+      border-top: 3px solid var(--gold);
+      box-shadow: 0 20px 48px rgba(45, 52, 54, 0.16);
+      z-index: 200;
+      overflow: visible;
+      overflow-x: visible;
+      overflow-y: visible;
+      max-height: none;
     }
     .section-tab-cluster.is-open .section-tab-cluster__dropdown {
       display: flex;
@@ -553,13 +564,21 @@
       border-color: rgba(197, 160, 89, 0.65);
       box-shadow: 0 0 0 2px rgba(197, 160, 89, 0.2);
     }
+    .section-tab-cluster.is-open > .section-tab--cluster-toggle {
+      border-color: var(--gold);
+      position: relative;
+      z-index: 201;
+    }
     .section-tab--subitem {
+      flex: 0 0 auto;
       width: 100%;
       justify-content: flex-start;
       text-align: start;
       border-radius: 12px;
       font-size: 0.82rem;
       padding: 10px 14px;
+      white-space: normal;
+      overflow: visible;
     }
     .plans-shell {
       border: 1px solid rgba(197, 160, 89, 0.25);
