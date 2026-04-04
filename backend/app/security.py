@@ -20,6 +20,7 @@ JWT_EXPIRES_MINUTES = int(os.getenv("JWT_EXPIRES_MINUTES", "120"))
 PUBLIC_JWT_SECRET = os.getenv("PUBLIC_JWT_SECRET", JWT_SECRET)
 PUBLIC_SESSION_EXPIRES_MINUTES = int(os.getenv("PUBLIC_SESSION_EXPIRES_MINUTES", "10080"))  # 7 days
 PUBLIC_EMAIL_VERIFY_EXPIRES_MINUTES = int(os.getenv("PUBLIC_EMAIL_VERIFY_EXPIRES_MINUTES", "30"))
+PUBLIC_EMAIL_VERIFY_FLASH_EXPIRES_MINUTES = int(os.getenv("PUBLIC_EMAIL_VERIFY_FLASH_EXPIRES_MINUTES", "30"))
 PUBLIC_PASSWORD_RESET_EXPIRES_MINUTES = int(os.getenv("PUBLIC_PASSWORD_RESET_EXPIRES_MINUTES", "30"))
 APP_ENV = os.getenv("APP_ENV", "development").strip().lower()
 _INSECURE_SECRET_VALUES = {
@@ -139,6 +140,30 @@ def decode_public_email_verification_token(token: str) -> dict:
     except JWTError:
         raise invalid
     if payload.get("purpose") != "public_email_verification":
+        raise invalid
+    return payload
+
+
+def create_public_email_verify_flash_token(public_user_id: int, email: str) -> str:
+    """Short-lived token appended after verify-email so verify-pending can show success even if Set-Cookie is dropped (e.g. in-app browsers)."""
+    mins = max(5, PUBLIC_EMAIL_VERIFY_FLASH_EXPIRES_MINUTES)
+    expire = datetime.now(timezone.utc) + timedelta(minutes=mins)
+    payload = {
+        "sub": str(public_user_id),
+        "email": email.lower(),
+        "purpose": "public_email_verify_flash",
+        "exp": expire,
+    }
+    return jwt.encode(payload, PUBLIC_JWT_SECRET, algorithm=JWT_ALGORITHM)
+
+
+def decode_public_email_verify_flash_token(token: str) -> dict:
+    invalid = HTTPException(status_code=400, detail="Invalid or expired verify confirmation")
+    try:
+        payload = jwt.decode(token, PUBLIC_JWT_SECRET, algorithms=[JWT_ALGORITHM])
+    except JWTError:
+        raise invalid
+    if payload.get("purpose") != "public_email_verify_flash":
         raise invalid
     return payload
 

@@ -31,8 +31,10 @@ from .security import (
     create_access_token,
     create_public_access_token,
     create_public_email_verification_token,
+    create_public_email_verify_flash_token,
     create_public_password_reset_token,
     decode_public_email_verification_token,
+    decode_public_email_verify_flash_token,
     decode_public_password_reset_token,
     get_public_user_from_token_string,
     get_user_from_token_string,
@@ -277,6 +279,29 @@ def _current_public_user(request: Request, db: Session) -> models.PublicUser | N
         return get_public_user_from_token_string(token, db)
     except HTTPException:
         return None
+
+
+def _public_user_from_verify_flash_token(db: Session, vk: str) -> models.PublicUser | None:
+    vk_value = (vk or "").strip()
+    if not vk_value:
+        return None
+    try:
+        payload = decode_public_email_verify_flash_token(vk_value)
+    except HTTPException:
+        return None
+    try:
+        user_id = int(payload.get("sub"))
+    except (TypeError, ValueError):
+        return None
+    email = str(payload.get("email", "")).lower().strip()
+    user = db.get(models.PublicUser, user_id)
+    if not user or user.is_deleted or not user.is_active:
+        return None
+    if user.email.lower() != email:
+        return None
+    if not user.email_verified:
+        return None
+    return user
 
 
 def _build_verify_url(request: Request, user: models.PublicUser, next_url: str = "/index?center_id=1") -> str:
@@ -1320,28 +1345,46 @@ def public_logout():
 @router.get("/public/verify-pending", response_class=HTMLResponse)
 def public_verify_pending(request: Request, next: str = "/index?center_id=1", db: Session = Depends(get_db)):
     safe_next = _sanitize_next_url(next)
+    msg_param = (request.query_params.get("msg") or "").strip()
+    vk_param = (request.query_params.get("vk") or "").strip()
+    flash_user = _public_user_from_verify_flash_token(db, vk_param) if msg_param == "email_verified" else None
     user = _current_public_user(request, db)
+    if msg_param == "email_verified":
+        target: models.PublicUser | None = None
+        if flash_user:
+            target = flash_user
+        elif user and user.email_verified:
+            target = user
+        if target:
+            index_url = public_index_url_from_next(safe_next, msg="email_verified")
+            fn = (target.full_name or "").strip().split()
+            user_first_name = fn[0] if fn else ""
+            response = templates.TemplateResponse(
+                request,
+                "public_verify_pending.html",
+                {
+                    "next": safe_next,
+                    "user": target,
+                    "show_dev_verify_link": False,
+                    "dev_verify_url": "",
+                    "show_email_verified_success": True,
+                    "index_url": index_url,
+                    "user_first_name": user_first_name,
+                    **_analytics_context("public_verify_pending"),
+                },
+            )
+            if (not user) or user.id != target.id:
+                response.set_cookie(
+                    key=PUBLIC_COOKIE_NAME,
+                    value=create_public_access_token(target.id),
+                    httponly=True,
+                    samesite="lax",
+                    secure=_cookie_secure_flag(request),
+                    max_age=60 * 60 * 24 * 7,
+                )
+            return response
     if not user:
         return _public_login_redirect(next_url=safe_next)
-    msg_param = (request.query_params.get("msg") or "").strip()
-    if msg_param == "email_verified" and user.email_verified:
-        index_url = public_index_url_from_next(safe_next, msg="email_verified")
-        fn = (user.full_name or "").strip().split()
-        user_first_name = fn[0] if fn else ""
-        return templates.TemplateResponse(
-            request,
-            "public_verify_pending.html",
-            {
-                "next": safe_next,
-                "user": user,
-                "show_dev_verify_link": False,
-                "dev_verify_url": "",
-                "show_email_verified_success": True,
-                "index_url": index_url,
-                "user_first_name": user_first_name,
-                **_analytics_context("public_verify_pending"),
-            },
-        )
     if not _is_email_verification_required():
         return RedirectResponse(url=public_index_url_from_next(safe_next), status_code=303)
     if user.email_verified:
@@ -1462,8 +1505,9 @@ def public_verify_email(
         user.email_verified = True
         db.commit()
     session_token = create_public_access_token(user.id)
+    flash_token = create_public_email_verify_flash_token(user.id, user.email)
     response = RedirectResponse(
-        url=_url_with_params("/public/verify-pending", msg="email_verified", next=safe_next),
+        url=_url_with_params("/public/verify-pending", msg="email_verified", next=safe_next, vk=flash_token),
         status_code=303,
     )
     response.set_cookie(

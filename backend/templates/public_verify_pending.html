@@ -3,10 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  {% if show_email_verified_success %}
-  <meta http-equiv="refresh" content="3;url={{ index_url }}" />
-  {% endif %}
-  <title>{% if show_email_verified_success %}تم تأكيد البريد{% else %}تأكيد البريد الإلكتروني{% endif %} — Maestro Yoga</title>
+  <title>{% if show_email_verified_success %}تم تفعيل حسابك{% else %}تأكيد البريد الإلكتروني{% endif %} — Maestro Yoga</title>
   {% if analytics_enabled and ga4_measurement_id %}
   <script async src="https://www.googletagmanager.com/gtag/js?id={{ ga4_measurement_id }}"></script>
   <script>
@@ -27,7 +24,8 @@
     a { color: #0f766e; text-decoration: none; font-weight: 700; }
     .success-panel { text-align: center; padding: 8px 0 4px; }
     .success-icon { display: inline-flex; align-items: center; justify-content: center; width: 56px; height: 56px; border-radius: 50%; background: linear-gradient(135deg, #10b981, #059669); color: #fff; font-size: 1.75rem; margin-bottom: 14px; }
-    a.btn-main { display: inline-block; margin-top: 10px; padding: 12px 22px; border-radius: 999px; background: linear-gradient(120deg, #0f766e, #10b981); color: #fff !important; font-weight: 700; text-decoration: none; }
+    a.btn-main { display: inline-flex; align-items: center; justify-content: center; gap: 10px; margin-top: 14px; padding: 14px 24px; border-radius: 999px; background: linear-gradient(120deg, #0f766e, #10b981); color: #fff !important; font-weight: 700; text-decoration: none; }
+    a.btn-main svg { flex-shrink: 0; }
     .hint { font-size: 0.88rem; color: #64748b; margin-top: 16px; }
   </style>
 </head>
@@ -36,21 +34,23 @@
     {% if show_email_verified_success %}
     <div class="success-panel">
       <div class="success-icon" aria-hidden="true">✓</div>
-      <h1>تم تأكيد البريد</h1>
+      <h1>تم تفعيل حسابك</h1>
       <p>
         {% if user_first_name %}
-          أهلًا {{ user_first_name }}، تم تفعيل بريدك بنجاح.
+          أهلًا {{ user_first_name }}، تم تفعيل حسابك وتأكيد بريدك بنجاح.
         {% else %}
-          تم تفعيل بريدك بنجاح.
+          تم تفعيل حسابك وتأكيد بريدك بنجاح.
         {% endif %}
       </p>
-      <p>ستنتقل تلقائيًا إلى الصفحة الرئيسية خلال ثوانٍ.</p>
-      <a class="btn-main" href="{{ index_url }}">الانتقال إلى الصفحة الرئيسية الآن</a>
-      <p class="hint">إذا لم يحدث التحويل، اضغط الزر أعلاه.</p>
+      <p>اضغط على أيقونة الواجهة الرئيسية أدناه للانتقال إلى الموقع.</p>
+      <a class="btn-main" href="{{ index_url }}" aria-label="الانتقال إلى الواجهة الرئيسية">
+        <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+        الواجهة الرئيسية
+      </a>
+      <p class="hint">بعد الدخول يمكنك إكمال الحجز والاستفادة من خدمات المركز.</p>
     </div>
     <script>
       (function () {
-        var url = {{ index_url|tojson }};
         function track(name, payload) {
           window.dataLayer = window.dataLayer || [];
           window.dataLayer.push({ event: name, ...payload });
@@ -58,7 +58,6 @@
         }
         track("page_view_verify_pending", { page_name: {{ analytics_page_name|tojson }}, step: "email_verified" });
         track("email_verification_completed", {});
-        window.setTimeout(function () { window.location.replace(url); }, 2000);
       })();
     </script>
     {% else %}

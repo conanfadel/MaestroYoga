@@ -1,7 +1,10 @@
 import time
 
+from fastapi.testclient import TestClient
+
 from backend.app import models
 from backend.app.database import SessionLocal
+from backend.app.main import app
 from backend.app.mailer import validate_mailer_settings
 from backend.app.security import create_public_email_verification_token, hash_password
 from backend.app.web_shared import (
@@ -97,11 +100,43 @@ def test_verify_email_then_verify_pending_shows_success_and_index_link(client):
     loc = r1.headers["location"]
     assert "/public/verify-pending" in loc
     assert "msg=email_verified" in loc
+    assert "vk=" in loc
     assert "next=" in loc
     r2 = client.get(loc, follow_redirects=False)
     assert r2.status_code == 200
-    assert "تم تأكيد البريد" in r2.text
+    assert "تم تفعيل حسابك" in r2.text
     assert "center_id=1" in r2.text and "msg=email_verified" in r2.text
+    db.delete(user)
+    db.commit()
+    db.close()
+
+
+def test_verify_pending_success_shows_without_session_cookie_using_vk(client):
+    """Opening the post-verify URL in a fresh browser (no cookie) must not send users to login."""
+    db = SessionLocal()
+    email = f"pytest_vp_vk_{int(time.time())}@example.com"
+    user = models.PublicUser(
+        full_name="Pytest VK",
+        email=email,
+        phone="+966500000012",
+        password_hash=hash_password("Admin@12345"),
+        email_verified=False,
+        is_active=True,
+        is_deleted=False,
+    )
+    db.add(user)
+    db.commit()
+    db.refresh(user)
+    token = create_public_email_verification_token(user.id, user.email)
+    r1 = client.get(f"/public/verify-email?token={token}&next=/index?center_id=1", follow_redirects=False)
+    assert r1.status_code == 303
+    loc = r1.headers["location"]
+    assert "vk=" in loc
+    fresh = TestClient(app)
+    r2 = fresh.get(loc, follow_redirects=False)
+    assert r2.status_code == 200
+    assert "تم تفعيل حسابك" in r2.text
+    assert "الواجهة الرئيسية" in r2.text
     db.delete(user)
     db.commit()
     db.close()
