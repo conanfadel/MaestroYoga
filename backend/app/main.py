@@ -108,7 +108,7 @@ async def _app_lifespan(app: FastAPI):
     yield
 
 
-app = FastAPI(title="Maestro Yoga API", version="1.0", lifespan=_app_lifespan)
+app = FastAPI(title="Maestro Yoga API", version="1.0.0", lifespan=_app_lifespan)
 
 api_router = APIRouter(tags=["api"])
 
