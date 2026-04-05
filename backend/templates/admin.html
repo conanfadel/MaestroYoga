@@ -110,10 +110,16 @@
     }
     a.btn.secondary:hover { border-color: var(--gold); }
     .section-tab__icon {
-      display: inline-block;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
       margin-inline-end: 6px;
       opacity: 0.92;
-      font-size: 0.95em;
+      width: 1.35em;
+      height: 1.35em;
+      font-size: 1.05em;
+      line-height: 1;
       vertical-align: middle;
     }
     button.secondary {
@@ -510,6 +516,7 @@
       color: var(--charcoal);
       font-weight: 800;
       font-size: .84rem;
+      line-height: 1.25;
       padding: 8px 14px;
       text-decoration: none;
       cursor: pointer;
@@ -823,8 +830,8 @@
         </button>
         <div class="section-tab-cluster__dropdown" id="admin-cluster-ops-panel" role="group" aria-label="التشغيل والمواعيد">
           <a class="section-tab section-tab--subitem" data-target="section-rooms" href="#section-rooms" id="tab-section-rooms">الغرف والسعة</a>
-          <a class="section-tab section-tab--subitem" data-target="section-plans" href="#section-plans" id="tab-section-plans">خطط الاشتراك</a>
           <a class="section-tab section-tab--subitem" data-target="section-sessions" href="#section-sessions" id="tab-section-sessions">الجلسات والمدفوعات</a>
+          <a class="section-tab section-tab--subitem" data-target="section-plans" href="#section-plans" id="tab-section-plans">خطط الاشتراك</a>
         </div>
       </div>
       <div class="section-tab-cluster" data-tab-cluster>
