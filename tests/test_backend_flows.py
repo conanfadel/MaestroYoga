@@ -17,7 +17,7 @@ from backend.app.web_shared import (
 
 
 def test_public_account_redirects_when_not_logged_in(client):
-    r = client.get("/public/account?next=/index?center_id=1", follow_redirects=False)
+    r = client.get(f"/public/account?next={PUBLIC_INDEX_DEFAULT_PATH}", follow_redirects=False)
     assert r.status_code == 303
     assert r.headers["location"].startswith("/public/login?")
 
@@ -39,7 +39,7 @@ def test_public_account_updates_name_and_phone(client):
     db.refresh(user)
     client.post(
         "/public/login",
-        data={"email": email, "password": "Admin@12345", "next": "/index?center_id=1"},
+        data={"email": email, "password": "Admin@12345", "next": PUBLIC_INDEX_DEFAULT_PATH},
         follow_redirects=False,
     )
     r2 = client.post(
@@ -48,7 +48,7 @@ def test_public_account_updates_name_and_phone(client):
             "full_name": "After Name",
             "country_code": "+966",
             "phone": "501112233",
-            "next": "/index?center_id=1",
+            "next": PUBLIC_INDEX_DEFAULT_PATH,
         },
         follow_redirects=False,
     )
@@ -63,7 +63,9 @@ def test_public_account_updates_name_and_phone(client):
 
 
 def test_verify_email_redirects_invalid_token(client):
-    response = client.get("/public/verify-email?token=bad&next=/index?center_id=1", follow_redirects=False)
+    response = client.get(
+        f"/public/verify-email?token=bad&next={PUBLIC_INDEX_DEFAULT_PATH}", follow_redirects=False
+    )
     assert response.status_code == 303
     assert response.headers["location"].startswith("/public/verify-pending")
 
@@ -142,7 +144,7 @@ def test_verify_email_then_verify_pending_shows_success_and_index_link(client):
     db.commit()
     db.refresh(user)
     token = create_public_email_verification_token(user.id, user.email)
-    r1 = client.get(f"/public/verify-email?token={token}&next=/index?center_id=1", follow_redirects=False)
+    r1 = client.get(f"/public/verify-email?token={token}&next={PUBLIC_INDEX_DEFAULT_PATH}", follow_redirects=False)
     assert r1.status_code == 303
     loc = r1.headers["location"]
     assert "/public/verify-pending" in loc
@@ -175,7 +177,7 @@ def test_verify_pending_success_shows_without_session_cookie_using_vk(client):
     db.commit()
     db.refresh(user)
     token = create_public_email_verification_token(user.id, user.email)
-    r1 = client.get(f"/public/verify-email?token={token}&next=/index?center_id=1", follow_redirects=False)
+    r1 = client.get(f"/public/verify-email?token={token}&next={PUBLIC_INDEX_DEFAULT_PATH}", follow_redirects=False)
     assert r1.status_code == 303
     loc = r1.headers["location"]
     assert "vk=" in loc
@@ -206,7 +208,9 @@ def test_verify_email_marks_user_verified(client):
     db.refresh(user)
     token = create_public_email_verification_token(user.id, user.email)
 
-    response = client.get(f"/public/verify-email?token={token}&next=/index?center_id=1", follow_redirects=False)
+    response = client.get(
+        f"/public/verify-email?token={token}&next={PUBLIC_INDEX_DEFAULT_PATH}", follow_redirects=False
+    )
     db.refresh(user)
 
     assert response.status_code == 303

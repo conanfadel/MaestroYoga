@@ -88,6 +88,21 @@ class StripePaymentProvider(BasePaymentProvider):
             raise RuntimeError("STRIPE_SECRET_KEY is not configured")
         stripe.api_key = secret_key
 
+    @staticmethod
+    def _stripe_checkout_locale_kw() -> dict[str, Any]:
+        locale = os.getenv("STRIPE_CHECKOUT_LOCALE", "auto").strip() or "auto"
+        if locale.lower() == "auto":
+            return {}
+        return {"locale": locale}
+
+    @staticmethod
+    def _stripe_product_data(name: str, description: str = "") -> dict[str, Any]:
+        product_data: dict[str, Any] = {"name": (name or "Maestro Yoga")[:120]}
+        desc = (description or "").strip()
+        if desc:
+            product_data["description"] = desc[:500]
+        return product_data
+
     def charge(self, amount: float, currency: str, metadata: dict) -> PaymentResult:
         # Stripe production flow should use checkout-session endpoint.
         return PaymentResult(provider_ref=f"stripe_manual_{uuid4().hex[:10]}", status="pending")
@@ -107,11 +122,7 @@ class StripePaymentProvider(BasePaymentProvider):
         Checkout بالبطاقة (SAR). لحساب Stripe مسجّل في السعودية تُقبل بطاقات **مدى**
         ضمن نموذج البطاقة نفسه — راجع توثيق Stripe لمادا.
         """
-        locale = os.getenv("STRIPE_CHECKOUT_LOCALE", "auto").strip() or "auto"
-        product_data: dict[str, Any] = {"name": (line_item_name or "Maestro Yoga")[:120]}
-        desc = (line_item_description or "").strip()
-        if desc:
-            product_data["description"] = desc[:500]
+        product_data = self._stripe_product_data(line_item_name, line_item_description)
 
         create_kwargs: dict[str, Any] = {
             "mode": "payment",
@@ -129,8 +140,7 @@ class StripePaymentProvider(BasePaymentProvider):
             ],
             "metadata": metadata,
         }
-        if locale.lower() != "auto":
-            create_kwargs["locale"] = locale
+        create_kwargs.update(self._stripe_checkout_locale_kw())
 
         session = stripe.checkout.Session.create(**create_kwargs)
         return PaymentResult(provider_ref=session.id, status="pending", checkout_url=session.url)
@@ -145,13 +155,9 @@ class StripePaymentProvider(BasePaymentProvider):
     ) -> PaymentResult:
         if not line_specs:
             raise ValueError("line_specs required")
-        locale = os.getenv("STRIPE_CHECKOUT_LOCALE", "auto").strip() or "auto"
         line_items: list[dict[str, Any]] = []
         for amount, name, description in line_specs:
-            product_data: dict[str, Any] = {"name": (name or "Maestro Yoga")[:120]}
-            desc = (description or "").strip()
-            if desc:
-                product_data["description"] = desc[:500]
+            product_data = self._stripe_product_data(name, description)
             line_items.append(
                 {
                     "price_data": {
@@ -169,8 +175,7 @@ class StripePaymentProvider(BasePaymentProvider):
             "line_items": line_items,
             "metadata": metadata,
         }
-        if locale.lower() != "auto":
-            create_kwargs["locale"] = locale
+        create_kwargs.update(self._stripe_checkout_locale_kw())
         session = stripe.checkout.Session.create(**create_kwargs)
         return PaymentResult(provider_ref=session.id, status="pending", checkout_url=session.url)
 

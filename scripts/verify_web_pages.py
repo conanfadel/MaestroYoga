@@ -1,14 +1,24 @@
 import http.cookiejar
 import os
+import sys
 import urllib.parse
 import urllib.request
+from pathlib import Path
+
+PROJECT_ROOT = Path(__file__).resolve().parents[1]
+if str(PROJECT_ROOT) not in sys.path:
+    sys.path.insert(0, str(PROJECT_ROOT))
+
+from backend.app.web_shared import PUBLIC_INDEX_DEFAULT_PATH
 
 BASE = os.getenv("BASE_URL", "http://127.0.0.1:8000").rstrip("/")
 
 
 def main() -> None:
     print("root", urllib.request.urlopen(f"{BASE}/", timeout=5).status)
-    index_html = urllib.request.urlopen(f"{BASE}/index?center_id=1", timeout=5).read().decode("utf-8")
+    index_html = urllib.request.urlopen(f"{BASE}{PUBLIC_INDEX_DEFAULT_PATH}", timeout=5).read().decode(
+        "utf-8"
+    )
     print("index_ok", "الجلسات المتاحة" in index_html)
     print("admin_login_get", urllib.request.urlopen(f"{BASE}/admin/login", timeout=5).status)
 

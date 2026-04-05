@@ -12,13 +12,16 @@ from backend.app import models
 from backend.app.database import SessionLocal
 from backend.app.main import app
 from backend.app.security import create_public_email_verification_token, hash_password
+from backend.app.web_shared import PUBLIC_INDEX_DEFAULT_PATH
 
 
 def main() -> None:
     client = TestClient(app)
 
     # 1) Invalid verification link should redirect safely.
-    verify_bad = client.get("/public/verify-email?token=bad&next=/index?center_id=1", follow_redirects=False)
+    verify_bad = client.get(
+        f"/public/verify-email?token=bad&next={PUBLIC_INDEX_DEFAULT_PATH}", follow_redirects=False
+    )
     print("verify_bad", verify_bad.status_code, verify_bad.headers.get("location"))
 
     # 2) Invalid reset token should redirect to login (no raw traceback for users).
@@ -45,7 +48,9 @@ def main() -> None:
     db.commit()
     db.refresh(user)
     token = create_public_email_verification_token(user.id, user.email)
-    verify_ok = client.get(f"/public/verify-email?token={token}&next=/index?center_id=1", follow_redirects=False)
+    verify_ok = client.get(
+        f"/public/verify-email?token={token}&next={PUBLIC_INDEX_DEFAULT_PATH}", follow_redirects=False
+    )
     db.refresh(user)
     print("verify_ok", verify_ok.status_code, verify_ok.headers.get("location"), "verified", user.email_verified)
     db.delete(user)

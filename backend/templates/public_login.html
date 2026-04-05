@@ -67,7 +67,7 @@
       {% set reg_next = request.query_params.get('next') or next %}
       ليس لديك حساب؟ <a href="/public/register?next={{ reg_next|urlencode }}">تسجيل جديد</a><br/>
       <a href="/public/forgot-password">نسيت كلمة المرور؟</a><br/>
-      <a href="/index?center_id=1">العودة للواجهة العامة</a>
+      <a href="{{ PUBLIC_INDEX_DEFAULT_PATH }}">العودة للواجهة العامة</a>
     </div>
   </div>
   <script>

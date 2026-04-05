@@ -76,6 +76,7 @@ from .web_shared import (
 )
 
 templates = Jinja2Templates(directory=str(Path(__file__).resolve().parent.parent / "templates"))
+templates.env.globals["PUBLIC_INDEX_DEFAULT_PATH"] = PUBLIC_INDEX_DEFAULT_PATH
 
 router = APIRouter(tags=["web"])
 PUBLIC_COOKIE_NAME = "public_access_token"
@@ -3091,6 +3092,11 @@ def _admin_user_for_data_export(
     return user, None
 
 
+def _utf8_bom_csv_content(output: io.StringIO) -> str:
+    """BOM لعرض UTF-8 بشكل صحيح في Excel."""
+    return "\ufeff" + output.getvalue()
+
+
 @router.get("/admin/export/clients.csv")
 def export_clients_csv(request: Request, db: Session = Depends(get_db)):
     user, redirect = _admin_user_for_data_export(request, db)
@@ -3117,7 +3123,7 @@ def export_clients_csv(request: Request, db: Session = Depends(get_db)):
                 c.created_at.isoformat() if c.created_at else "",
             ]
         )
-    content = "\ufeff" + output.getvalue()
+    content = _utf8_bom_csv_content(output)
     output.close()
     fn = f"clients_center_{cid}_{utcnow_naive().strftime('%Y%m%d_%H%M%S')}.csv"
     return StreamingResponse(
@@ -3172,7 +3178,7 @@ def export_bookings_csv(request: Request, db: Session = Depends(get_db)):
                 cl.email,
             ]
         )
-    content = "\ufeff" + output.getvalue()
+    content = _utf8_bom_csv_content(output)
     output.close()
     fn = f"bookings_center_{cid}_{utcnow_naive().strftime('%Y%m%d_%H%M%S')}.csv"
     return StreamingResponse(
@@ -3227,7 +3233,7 @@ def export_payments_csv(
                 p.booking_id or "",
             ]
         )
-    content = "\ufeff" + output.getvalue()
+    content = _utf8_bom_csv_content(output)
     output.close()
     fn = f"payments_center_{cid}_{utcnow_naive().strftime('%Y%m%d_%H%M%S')}.csv"
     return StreamingResponse(
