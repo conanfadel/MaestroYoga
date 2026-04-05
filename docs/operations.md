@@ -33,7 +33,12 @@
 
 ## السكربتات
 
-- `scripts/healthcheck_prod.sh`: يفحص `/` و`/admin/login` والصفحة العامة؛ يمكن توسيعه ليشمل `/health/ready` بعد ضبط `BASE_URL`.
+- `scripts/healthcheck_prod.sh`: يفحص `/` و`/admin/login` و`/health/ready` والصفحة العامة بعد ضبط `BASE_URL`.
+- `scripts/verify_production_readiness.py`: يتحقق من `/health`، `/health/ready`، `/api/v1/health`، `/api/v1/meta` ورؤوس `X-API-Version` / `X-App-Version` (يتطلب `httpx`). مثال: `BASE_URL=https://your-host py scripts/verify_production_readiness.py`
+
+## أول خطوات تطبيق أندرويد
+
+- ملخص عملي: [`android-first-steps.md`](android-first-steps.md).
 
 ## CI
 

@@ -4,7 +4,7 @@
 
 ## ما الذي يتضمنه هذا الإصدار
 
-- **تشغيل وإنتاج وجوال**: راجع [`docs/operations.md`](docs/operations.md) — صيانة (`MAINTENANCE_MODE`)، CORS، جاهزية قاعدة البيانات (`/health/ready`)، **`/api/v1/*`** كنسخة موحّدة من الـ REST، **`GET /api/v1/meta`**، ورؤوس **`X-Request-ID`** / **`X-App-Version`** / **`X-API-Version`**.
+- **تشغيل وإنتاج وجوال**: راجع [`docs/operations.md`](docs/operations.md) — صيانة (`MAINTENANCE_MODE`)، CORS، جاهزية قاعدة البيانات (`/health/ready`)، **`/api/v1/*`**، **`GET /api/v1/meta`**، ورؤوس التتبع. **`docs/android-first-steps.md`** — خطوات أولى لأندرويد؛ **`scripts/verify_production_readiness.py`** — فحص الخادم بعد النشر (`BASE_URL=...`).
 - **Backend API** باستخدام `FastAPI` مع دعم `SQLite` و`PostgreSQL` عبر متغيرات البيئة.
 - **نظام متعدد المراكز** عبر `center_id`.
 - **Auth + Roles** باستخدام JWT:
