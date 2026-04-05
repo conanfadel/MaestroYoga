@@ -1,0 +1,158 @@
+{# يظهر على الهواتف (عرض ≤600px) في الوضع العمودي فقط #}
+<div id="mobile-landscape-hint" class="mobile-landscape-hint" hidden role="status" aria-live="polite" aria-atomic="true">
+  <div class="mobile-landscape-hint__inner">
+    <p class="mobile-landscape-hint__text">للاستمتاع بتجربة أفضل، استخدم الوضع الأفقي.</p>
+    <button type="button" class="mobile-landscape-hint__close" aria-label="إغلاق">×</button>
+  </div>
+</div>
+<style>
+  .mobile-landscape-hint {
+    position: fixed;
+    z-index: 950;
+    inset-inline: max(10px, env(safe-area-inset-left, 0px)) max(10px, env(safe-area-inset-right, 0px));
+    bottom: max(12px, env(safe-area-inset-bottom, 0px) + 8px);
+    max-width: min(100% - 20px, 420px);
+    margin-inline: auto;
+    padding: 10px 12px;
+    border-radius: 14px;
+    background: linear-gradient(135deg, #134e4a 0%, #0f766e 55%, #115e59 100%);
+    color: #f8fafc;
+    box-shadow: 0 12px 40px rgba(15, 23, 42, 0.35), 0 0 0 1px rgba(255, 255, 255, 0.12) inset;
+    font-family: "Tajawal", system-ui, sans-serif;
+    font-size: 0.88rem;
+    font-weight: 700;
+    line-height: 1.45;
+    transform: translateY(120%);
+    opacity: 0;
+    transition: transform 0.35s ease, opacity 0.35s ease;
+    pointer-events: none;
+  }
+  .mobile-landscape-hint.is-visible {
+    transform: translateY(0);
+    opacity: 1;
+    pointer-events: auto;
+  }
+  .mobile-landscape-hint__inner {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+  }
+  .mobile-landscape-hint__text {
+    margin: 0;
+    flex: 1;
+    min-width: 0;
+  }
+  .mobile-landscape-hint__close {
+    flex-shrink: 0;
+    width: 32px;
+    height: 32px;
+    margin: -4px -4px -4px 0;
+    border: none;
+    border-radius: 10px;
+    background: rgba(255, 255, 255, 0.18);
+    color: #fff;
+    font-size: 1.35rem;
+    line-height: 1;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: inherit;
+  }
+  .mobile-landscape-hint__close:active {
+    background: rgba(255, 255, 255, 0.28);
+  }
+</style>
+<script>
+(function () {
+  var el = document.getElementById("mobile-landscape-hint");
+  if (!el) return;
+  var closeBtn = el.querySelector(".mobile-landscape-hint__close");
+  var hideTimer = null;
+  var dismissTimer = null;
+  var STORAGE_KEY = "landscapeHintDismissed";
+
+  function wasDismissed() {
+    try {
+      return sessionStorage.getItem(STORAGE_KEY) === "1";
+    } catch (e) {
+      return false;
+    }
+  }
+
+  function markDismissed() {
+    try {
+      sessionStorage.setItem(STORAGE_KEY, "1");
+    } catch (e) {}
+  }
+
+  function isPhonePortrait() {
+    if (window.matchMedia("(pointer: fine)").matches && window.matchMedia("(min-width: 900px)").matches) {
+      return false;
+    }
+    var w = window.innerWidth;
+    var h = window.innerHeight;
+    if (w > 600) return false;
+    return h >= w;
+  }
+
+  function hideVisual(rememberDismiss) {
+    el.classList.remove("is-visible");
+    if (hideTimer) {
+      clearTimeout(hideTimer);
+      hideTimer = null;
+    }
+    if (dismissTimer) {
+      clearTimeout(dismissTimer);
+      dismissTimer = null;
+    }
+    hideTimer = setTimeout(function () {
+      el.hidden = true;
+      hideTimer = null;
+    }, 400);
+    if (rememberDismiss) {
+      markDismissed();
+    }
+  }
+
+  function show() {
+    if (wasDismissed() || !isPhonePortrait()) return;
+    el.hidden = false;
+    requestAnimationFrame(function () {
+      el.classList.add("is-visible");
+    });
+    if (dismissTimer) clearTimeout(dismissTimer);
+    dismissTimer = setTimeout(function () {
+      dismissTimer = null;
+      hideVisual(false);
+    }, 30000);
+  }
+
+  function sync() {
+    if (!isPhonePortrait()) {
+      if (!el.hidden || el.classList.contains("is-visible")) {
+        hideVisual(false);
+      }
+      return;
+    }
+    if (wasDismissed()) return;
+    if (el.classList.contains("is-visible")) return;
+    show();
+  }
+
+  window.addEventListener("resize", sync);
+  window.addEventListener("orientationchange", function () {
+    setTimeout(sync, 100);
+  });
+
+  if (!wasDismissed() && isPhonePortrait()) {
+    show();
+  }
+
+  if (closeBtn) {
+    closeBtn.addEventListener("click", function () {
+      hideVisual(true);
+    });
+  }
+})();
+</script>
