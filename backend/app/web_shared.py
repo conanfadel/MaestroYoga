@@ -84,6 +84,26 @@ def _fmt_dt(value: datetime | None) -> str:
     return value.strftime("%Y-%m-%d %H:%M")
 
 
+# أسماء أيام الأسبوع (Python weekday: الاثنين=0 … الأحد=6)
+_AR_WEEKDAY_NAMES: tuple[str, ...] = (
+    "الاثنين",
+    "الثلاثاء",
+    "الأربعاء",
+    "الخميس",
+    "الجمعة",
+    "السبت",
+    "الأحد",
+)
+
+
+def _fmt_dt_weekday_ar(value: datetime | None) -> str:
+    """تاريخ ووقت مع اسم يوم الأسبوع بالعربية (للواجهة العامة)."""
+    if not value:
+        return "-"
+    day = _AR_WEEKDAY_NAMES[value.weekday()]
+    return f"{day}، {value.strftime('%Y-%m-%d %H:%M')}"
+
+
 def _mail_fail_reason_query_token(raw: str | None) -> str:
     """يُمرَّر في query عند فشل الإرسال؛ فقط رموز داخلية آمنة (بدون مسافات أو حقن)."""
     s = (raw or "").strip().lower()

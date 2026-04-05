@@ -60,6 +60,7 @@ from .time_utils import utcnow_naive
 from .web_shared import (
     _cookie_secure_flag,
     _fmt_dt,
+    _fmt_dt_weekday_ar,
     _is_email_verification_required,
     _is_strong_public_password,
     _is_truthy_env,
@@ -684,7 +685,7 @@ def public_index(
                 "level": s.level,
                 "level_label": level_labels.get(s.level, s.level),
                 "starts_at": s.starts_at,
-                "starts_at_display": _fmt_dt(s.starts_at),
+                "starts_at_display": _fmt_dt_weekday_ar(s.starts_at),
                 "duration_minutes": s.duration_minutes,
                 "price_drop_in": s.price_drop_in,
                 "room_name": room.name if room else "-",
