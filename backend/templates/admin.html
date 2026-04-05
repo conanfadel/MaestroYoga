@@ -109,28 +109,75 @@
       box-shadow: none;
     }
     a.btn.secondary:hover { border-color: var(--gold); }
+    /* أيقونات التبويب: حجم ثابت بالبكسل + تصحيح بصري لكل شكل (لا تعتمد على emoji) */
     .section-tab__icon {
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
+      --tab-icon-px: 18px;
+      display: inline-grid;
+      place-items: center;
+      place-content: center;
       flex-shrink: 0;
       margin-inline-end: 6px;
-      opacity: 0.92;
-      width: 1.125rem;
-      height: 1.125rem;
-      min-width: 1.125rem;
-      min-height: 1.125rem;
-      font-size: 1rem;
-      line-height: 1;
-      vertical-align: middle;
+      width: var(--tab-icon-px);
+      height: var(--tab-icon-px);
+      min-width: var(--tab-icon-px);
+      min-height: var(--tab-icon-px);
+      flex: 0 0 var(--tab-icon-px);
+      line-height: 0;
       overflow: hidden;
       color: inherit;
+      vertical-align: middle;
     }
     .section-tab__icon svg {
-      width: 100%;
-      height: 100%;
+      width: var(--tab-icon-px) !important;
+      height: var(--tab-icon-px) !important;
+      min-width: var(--tab-icon-px);
+      min-height: var(--tab-icon-px);
       display: block;
       flex-shrink: 0;
+      stroke: currentColor;
+      fill: none;
+      stroke-width: 1.5;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+      vector-effect: non-scaling-stroke;
+      transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.3s ease;
+    }
+    .section-tab:not(.active) .section-tab__icon svg {
+      opacity: 0.9;
+    }
+    .section-tab.active .section-tab__icon svg {
+      opacity: 1;
+    }
+    /* الدرع يملأ الـ viewBox أكثر من باقي الرموز — تصغير بصري ليتوازن مع الكرة والتقويم */
+    .section-tab__icon--shield svg {
+      transform: scale(0.76);
+      transform-origin: center center;
+    }
+    .section-tab.active .section-tab__icon--shield svg {
+      transform: scale(0.8);
+    }
+    /* أيقونة المجموعتين أوسع قليلاً في الـ viewBox */
+    .section-tab__icon--users svg {
+      transform: scale(0.88);
+      transform-origin: center center;
+    }
+    .section-tab.active .section-tab__icon--users svg {
+      transform: scale(0.92);
+    }
+    .section-tab__icon--star svg {
+      fill: currentColor;
+      stroke: none !important;
+      vector-effect: unset;
+    }
+    @media (prefers-reduced-motion: reduce) {
+      .section-tab,
+      .section-tabs-sticky .section-tabs,
+      .section-tab-cluster--active > .section-tab--cluster-toggle,
+      .accordion,
+      .accordion.focused,
+      .section-tab__icon svg {
+        transition-duration: 0.01ms !important;
+      }
     }
     button.secondary {
       background: transparent;
@@ -472,11 +519,12 @@
       min-width: 0;
       scroll-margin-top: 96px;
       box-shadow: 0 8px 24px rgba(45, 52, 54, 0.05);
+      transition: border-color 0.45s ease, box-shadow 0.45s ease;
     }
     .accordion.focused {
       border-color: var(--gold);
-      box-shadow: 0 0 0 3px var(--gold-soft);
-      transition: box-shadow .25s ease, border-color .25s ease;
+      box-shadow: 0 0 0 3px var(--gold-soft), 0 10px 28px rgba(197, 160, 89, 0.12);
+      transition: box-shadow 0.45s cubic-bezier(0.4, 0, 0.2, 1), border-color 0.45s ease;
     }
     .accordion-body { padding: 14px; display: none; min-width: 0; }
     .accordion.open .accordion-body { display: block; }
@@ -508,6 +556,16 @@
       border-radius: 16px;
       box-shadow: 0 10px 30px rgba(45, 52, 54, 0.08);
       overflow: visible;
+      transition:
+        border-color 0.45s cubic-bezier(0.4, 0, 0.2, 1),
+        box-shadow 0.45s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    .section-tabs-sticky .section-tabs.section-tabs--has-active {
+      border-color: rgba(197, 160, 89, 0.72);
+      box-shadow:
+        0 10px 30px rgba(45, 52, 54, 0.08),
+        0 0 0 2px rgba(197, 160, 89, 0.28),
+        inset 0 1px 0 rgba(255, 255, 255, 0.85);
     }
     .section-tabs {
       display: flex;
@@ -541,14 +599,18 @@
       flex: 0 0 auto;
       white-space: nowrap;
       min-height: 2.5rem;
-      transition: background 0.15s ease, border-color 0.15s ease;
+      transition:
+        background 0.4s cubic-bezier(0.4, 0, 0.2, 1),
+        border-color 0.4s cubic-bezier(0.4, 0, 0.2, 1),
+        box-shadow 0.4s cubic-bezier(0.4, 0, 0.2, 1),
+        color 0.35s ease;
     }
     .section-tab:hover { border-color: rgba(197, 160, 89, 0.5); }
     .section-tab.active {
       background: linear-gradient(135deg, var(--gold) 0%, #d4b56e 100%);
       color: #1a1a1a;
-      border-color: transparent;
-      box-shadow: 0 4px 12px rgba(197, 160, 89, 0.3);
+      border-color: rgba(197, 160, 89, 0.55);
+      box-shadow: 0 4px 14px rgba(197, 160, 89, 0.38);
     }
     .section-tab-cluster {
       position: relative;
@@ -589,9 +651,14 @@
     .section-tab-cluster--active > .section-tab--cluster-toggle {
       border-color: rgba(197, 160, 89, 0.65);
       box-shadow: 0 0 0 2px rgba(197, 160, 89, 0.2);
+      transition:
+        border-color 0.4s cubic-bezier(0.4, 0, 0.2, 1),
+        box-shadow 0.4s cubic-bezier(0.4, 0, 0.2, 1),
+        background 0.4s cubic-bezier(0.4, 0, 0.2, 1);
     }
     .section-tab-cluster.is-open > .section-tab--cluster-toggle {
       border-color: var(--gold);
+      box-shadow: 0 0 0 2px rgba(197, 160, 89, 0.35);
       position: relative;
       z-index: 201;
     }
@@ -833,7 +900,7 @@
       {% if not is_trainer %}
       <div class="section-tab-cluster" data-tab-cluster>
         <button type="button" class="section-tab section-tab--cluster-toggle" id="admin-cluster-site-btn" aria-expanded="false" aria-controls="admin-cluster-site-panel" aria-haspopup="true">
-          <span class="section-tab__icon" aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M2 12h20"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg></span>
+          <span class="section-tab__icon" aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M2 12h20"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg></span>
           الموقع والمحتوى
         </button>
         <div class="section-tab-cluster__dropdown" id="admin-cluster-site-panel" role="group" aria-label="الموقع والمحتوى">
@@ -844,7 +911,7 @@
       </div>
       <div class="section-tab-cluster" data-tab-cluster>
         <button type="button" class="section-tab section-tab--cluster-toggle" id="admin-cluster-ops-btn" aria-expanded="false" aria-controls="admin-cluster-ops-panel" aria-haspopup="true">
-          <span class="section-tab__icon" aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg></span>
+          <span class="section-tab__icon" aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" aria-hidden="true"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg></span>
           التشغيل والمواعيد
         </button>
         <div class="section-tab-cluster__dropdown" id="admin-cluster-ops-panel" role="group" aria-label="التشغيل والمواعيد">
@@ -855,12 +922,12 @@
       </div>
       <div class="section-tab-cluster" data-tab-cluster>
         <button type="button" class="section-tab section-tab--cluster-toggle" id="admin-cluster-clients-btn" aria-expanded="false" aria-controls="admin-cluster-clients-panel" aria-haspopup="true">
-          <span class="section-tab__icon" aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></span>
+          <span class="section-tab__icon section-tab__icon--users" aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></span>
           العملاء والولاء
         </button>
         <div class="section-tab-cluster__dropdown" id="admin-cluster-clients-panel" role="group" aria-label="العملاء والولاء">
           <a class="section-tab section-tab--subitem" data-target="section-loyalty" href="#section-loyalty" id="tab-section-loyalty" title="برنامج الولاء">
-            <span class="section-tab__icon" aria-hidden="true">★</span>
+            <span class="section-tab__icon section-tab__icon--star" aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg></span>
             برنامج الولاء
           </a>
           <a class="section-tab section-tab--subitem" data-target="section-public-users" href="#section-public-users" id="tab-section-public-users">مستخدمو الجمهور</a>
@@ -870,7 +937,7 @@
       {% if is_trainer %}
       <div class="section-tab-cluster" data-tab-cluster>
         <button type="button" class="section-tab section-tab--cluster-toggle" id="admin-cluster-trainer-btn" aria-expanded="false" aria-controls="admin-cluster-trainer-panel" aria-haspopup="true">
-          <span class="section-tab__icon" aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg></span>
+          <span class="section-tab__icon" aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" aria-hidden="true"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg></span>
           الجلسات والغرف
         </button>
         <div class="section-tab-cluster__dropdown" id="admin-cluster-trainer-panel" role="group" aria-label="الجلسات والغرف">
@@ -881,7 +948,7 @@
       {% endif %}
       {% if show_security_section %}
       <a class="section-tab" data-target="section-security" href="#section-security" id="tab-section-security">
-        <span class="section-tab__icon" aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></span>
+        <span class="section-tab__icon section-tab__icon--shield" aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></span>
         الأمان والمخاطر
       </a>
       {% endif %}
@@ -2303,6 +2370,13 @@
         });
         if (openSection && openSection.id) {
           sessionStorage.setItem(ACTIVE_SECTION_KEY, openSection.id);
+        }
+        var navTabs = document.getElementById("section-tabs");
+        if (navTabs) {
+          navTabs.classList.toggle(
+            "section-tabs--has-active",
+            !!document.querySelector("#section-tabs .section-tab.active")
+          );
         }
       }
 
