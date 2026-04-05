@@ -534,8 +534,14 @@
       z-index: 1;
       pointer-events: none;
     }
-    .loyalty-program__details { margin: 0; }
-    .loyalty-program__summary {
+    .loyalty-program__details,
+    .sessions-panel__details,
+    .plans-panel__details {
+      margin: 0;
+    }
+    .loyalty-program__summary,
+    .sessions-panel__summary,
+    .plans-panel__summary {
       list-style: none;
       display: flex;
       align-items: center;
@@ -552,33 +558,63 @@
       box-sizing: border-box;
       text-align: start;
     }
-    .loyalty-program__summary::-webkit-details-marker { display: none; }
-    .loyalty-program__summary:focus {
+    .sessions-panel__summary {
+      padding: 12px 16px 12px 22px;
+      padding-inline-end: 14px;
+    }
+    .plans-panel__summary {
+      padding: 12px 16px 12px 26px;
+      padding-inline-end: 14px;
+    }
+    .loyalty-program__summary::-webkit-details-marker,
+    .sessions-panel__summary::-webkit-details-marker,
+    .plans-panel__summary::-webkit-details-marker {
+      display: none;
+    }
+    .loyalty-program__summary:focus,
+    .sessions-panel__summary:focus,
+    .plans-panel__summary:focus {
       outline: 2px solid rgba(15, 118, 110, 0.45);
       outline-offset: 2px;
     }
-    .loyalty-program__summary-inner {
+    .loyalty-program__summary-inner,
+    .sessions-panel__summary-inner,
+    .plans-panel__summary-inner {
       display: flex;
       flex-direction: column;
       gap: 2px;
       min-width: 0;
       flex: 1;
     }
-    .loyalty-program__summary-title {
+    .loyalty-program__summary-title,
+    .sessions-panel__summary-title,
+    .plans-panel__summary-title {
       font-family: "Amiri", "Tajawal", serif;
       font-size: clamp(0.88rem, 1.8vw + 0.35rem, 1.15rem);
       font-weight: 700;
       color: var(--charcoal);
       line-height: 1.2;
     }
-    .loyalty-program__summary-hint {
+    .sessions-panel__summary-title {
+      font-size: clamp(0.95rem, 2vw + 0.4rem, 1.35rem);
+      letter-spacing: -0.03em;
+    }
+    .plans-panel__summary-title {
+      font-size: clamp(0.95rem, 1.9vw + 0.45rem, 1.3rem);
+      letter-spacing: -0.02em;
+    }
+    .loyalty-program__summary-hint,
+    .sessions-panel__summary-hint,
+    .plans-panel__summary-hint {
       margin: 0;
       font-size: 0.65rem;
       font-weight: 700;
       color: var(--charcoal-muted);
       line-height: 1.35;
     }
-    .loyalty-program__chev {
+    .loyalty-program__chev,
+    .sessions-panel__chev,
+    .plans-panel__chev {
       flex-shrink: 0;
       width: 22px;
       height: 22px;
@@ -589,7 +625,11 @@
       justify-content: center;
       transition: transform 0.22s ease;
     }
-    .loyalty-program__chev::after {
+    .plans-panel__chev {
+      background: rgba(197, 160, 89, 0.18);
+    }
+    .loyalty-program__chev::after,
+    .sessions-panel__chev::after {
       content: "";
       width: 7px;
       height: 7px;
@@ -598,16 +638,41 @@
       transform: rotate(-45deg);
       margin-top: -3px;
     }
-    .loyalty-program__details[open] .loyalty-program__chev {
+    .plans-panel__chev::after {
+      content: "";
+      width: 7px;
+      height: 7px;
+      border-inline-end: 2px solid var(--gold-dark);
+      border-block-end: 2px solid var(--gold-dark);
+      transform: rotate(-45deg);
+      margin-top: -3px;
+    }
+    .loyalty-program__details[open] .loyalty-program__chev,
+    .sessions-panel__details[open] .sessions-panel__chev,
+    .plans-panel__details[open] .plans-panel__chev {
       transform: rotate(180deg);
     }
     @media (min-width: 981px) {
-      .loyalty-program__summary-hint { display: none; }
+      .loyalty-program__summary-hint,
+      .sessions-panel__summary-hint,
+      .plans-panel__summary-hint {
+        display: none;
+      }
     }
     .loyalty-program__expandable {
       padding: 0 12px 12px;
       padding-inline-start: 18px;
       border-top: 1px solid rgba(197, 160, 89, 0.15);
+    }
+    .sessions-panel__expandable {
+      padding: 0 18px 18px;
+      padding-inline-start: 22px;
+      border-top: 1px solid rgba(125, 211, 174, 0.35);
+    }
+    .plans-panel__expandable {
+      padding: 0 18px 20px;
+      padding-inline-start: 26px;
+      border-top: 1px solid rgba(197, 160, 89, 0.22);
     }
     .loyalty-program__header { margin-bottom: 6px; }
     .loyalty-program__eyebrow {
@@ -844,8 +909,8 @@
     }
     #sessions-section.sessions-panel {
       position: relative;
-      padding: 18px 18px 20px;
-      padding-inline-start: 22px;
+      padding: 0;
+      padding-inline-start: 0;
       border: 1px solid rgba(197, 160, 89, 0.32);
       box-shadow: var(--shadow-soft), 0 16px 44px rgba(15, 118, 110, 0.06);
       background: linear-gradient(168deg, #ffffff 0%, rgba(232, 252, 244, 0.55) 42%, #ffffff 100%);
@@ -856,27 +921,21 @@
       content: "";
       position: absolute;
       inset-inline-start: 0;
-      top: 12px;
-      bottom: 12px;
+      top: 8px;
+      bottom: 8px;
       width: 4px;
+      z-index: 1;
+      pointer-events: none;
       border-radius: 999px;
       background: linear-gradient(180deg, #0f766e 0%, var(--gold) 50%, var(--mint-mid) 100%);
     }
-    .sessions-panel__head { margin-bottom: 0; }
+    .sessions-panel__head { margin-bottom: 12px; }
     .sessions-eyebrow {
       margin: 0 0 5px;
       font-size: 0.65rem;
       font-weight: 800;
       letter-spacing: 0.08em;
       color: #0f766e;
-    }
-    #sessions-section .sessions-panel__head h2 {
-      font-size: clamp(1.05rem, 2.2vw + 0.45rem, 1.45rem);
-      margin: 0 0 6px;
-      letter-spacing: -0.03em;
-      line-height: 1.2;
-      font-family: "Amiri", "Tajawal", serif;
-      color: var(--charcoal);
     }
     #sessions-section .sessions-lead {
       margin: 0 0 14px;
@@ -1100,8 +1159,8 @@
     }
     #plans-section.plans-panel {
       position: relative;
-      padding: 22px 22px 24px;
-      padding-inline-start: 26px;
+      padding: 0;
+      padding-inline-start: 0;
       border: 1px solid rgba(197, 160, 89, 0.3);
       background: linear-gradient(165deg, #ffffff 0%, #fffef8 45%, rgba(232, 252, 244, 0.35) 100%);
       box-shadow: var(--shadow-soft), 0 18px 48px rgba(197, 160, 89, 0.09);
@@ -1110,9 +1169,11 @@
       content: "";
       position: absolute;
       inset-inline-start: 0;
-      top: 14px;
-      bottom: 14px;
+      top: 8px;
+      bottom: 8px;
       width: 5px;
+      z-index: 1;
+      pointer-events: none;
       border-radius: 999px;
       background: linear-gradient(180deg, var(--gold) 0%, #d4a84b 40%, #0f766e 100%);
     }
@@ -1123,14 +1184,6 @@
       font-weight: 800;
       letter-spacing: 0.08em;
       color: var(--gold-dark);
-    }
-    #plans-section .plans-panel__head h2 {
-      margin: 0 0 8px;
-      font-size: clamp(1.1rem, 2vw + 0.6rem, 1.35rem);
-      font-family: "Amiri", "Tajawal", serif;
-      letter-spacing: -0.02em;
-      line-height: 1.3;
-      color: var(--charcoal);
     }
     .plans-panel__lead {
       margin: 0;
@@ -1920,17 +1973,19 @@
       body { padding-block: 14px; }
       .post-pin { grid-template-columns: 1fr; }
       .steps { grid-template-columns: 1fr; }
-      #sessions-section.sessions-panel { padding: 16px 16px 18px; padding-inline-start: 20px; }
+      #sessions-section .sessions-panel__summary { padding: 10px 14px 10px 20px; padding-inline-end: 12px; }
+      #sessions-section .sessions-panel__expandable { padding: 0 14px 16px; padding-inline-start: 20px; }
       .post-pin.post-pin--compact { grid-template-columns: 1fr; }
     }
     @media (max-width: 480px) {
-      #sessions-section.sessions-panel { padding: 16px 12px 18px; padding-inline-start: 18px; }
+      #sessions-section .sessions-panel__summary { padding: 10px 12px 10px 18px; padding-inline-end: 10px; }
+      #sessions-section .sessions-panel__expandable { padding: 0 12px 16px; padding-inline-start: 18px; }
       #sessions-section.sessions-panel::before { top: 12px; bottom: 12px; width: 4px; }
       .sessions-filters { padding: 14px; margin-bottom: 14px; }
     }
     @media (max-width: 640px) {
       .sessions-eyebrow { font-size: 0.62rem; margin-bottom: 4px; }
-      #sessions-section .sessions-panel__head h2 { margin-bottom: 5px; font-size: 0.95rem; }
+      #sessions-section .sessions-panel__summary-title { font-size: 0.95rem; }
       #sessions-section .sessions-lead {
         font-size: 0.8rem;
         margin-bottom: 12px;
@@ -1983,13 +2038,10 @@
         border-radius: 10px;
       }
       .sessions-empty { padding: 18px 12px; font-size: 0.85rem; }
-      #plans-section.plans-panel {
-        padding: 16px 14px 18px;
-        padding-inline-start: 20px;
-      }
+      #plans-section .plans-panel__summary { padding: 8px 12px 8px 20px; padding-inline-end: 12px; }
+      #plans-section .plans-panel__expandable { padding: 0 12px 14px; padding-inline-start: 20px; }
       #plans-section.plans-panel::before { width: 4px; top: 12px; bottom: 12px; }
       .plans-eyebrow { font-size: 0.65rem; }
-      #plans-section .plans-panel__head h2 { margin-bottom: 6px; }
       .plans-panel__lead { font-size: 0.8rem; line-height: 1.5; }
       .plans-shell { padding: 10px; border-radius: 14px; }
       .plans-cards { gap: 10px; }
@@ -2053,17 +2105,13 @@
         font-size: 0.76rem;
         max-width: min(100%, 200px);
       }
-      #sessions-section.sessions-panel {
-        padding: 10px 10px 12px;
-        padding-inline-start: 14px;
-        border-radius: 14px;
-        margin-bottom: 0;
-      }
+      #sessions-section.sessions-panel { border-radius: 14px; margin-bottom: 0; }
+      #sessions-section .sessions-panel__summary { padding: 8px 10px 8px 14px; padding-inline-end: 8px; }
+      #sessions-section .sessions-panel__expandable { padding: 0 10px 10px; padding-inline-start: 14px; }
       #sessions-section.sessions-panel::before { top: 8px; bottom: 8px; width: 3px; }
       .sessions-eyebrow { font-size: 0.6rem; margin-bottom: 4px; }
-      #sessions-section .sessions-panel__head h2 {
+      #sessions-section .sessions-panel__summary-title {
         font-size: 0.88rem;
-        margin-bottom: 4px;
       }
       #sessions-section .sessions-lead {
         font-size: 0.75rem;
@@ -2103,6 +2151,9 @@
       .loyalty-program__eyebrow { font-size: 0.46rem; }
       .loyalty-program__lead { font-size: 0.58rem; }
       .loyalty-tier-card__reward-v { font-size: 0.62rem; }
+      #plans-section .plans-panel__summary { padding: 8px 10px 8px 18px; padding-inline-end: 8px; }
+      #plans-section .plans-panel__expandable { padding: 0 10px 12px; padding-inline-start: 18px; }
+      #plans-section .plans-panel__summary-title { font-size: 0.82rem; }
       .sessions-cards { gap: 8px; }
       .session-card__bar { padding: 8px 10px; font-size: 0.8rem; }
       .session-card__body { padding: 10px; gap: 8px; }
@@ -2345,13 +2396,31 @@
     </section>
     <script>
       (function () {
-        var det = document.getElementById("loyalty-program-details");
-        if (!det) return;
-        if (window.location.hash === "#loyalty-rewards-section") {
-          det.open = true;
-        } else {
-          det.open = window.matchMedia("(min-width: 981px)").matches;
+        function initPanel(detailId, hash) {
+          var det = document.getElementById(detailId);
+          if (!det) return;
+          if (window.location.hash === hash) {
+            det.open = true;
+          } else {
+            det.open = window.matchMedia("(min-width: 981px)").matches;
+          }
         }
+        initPanel("loyalty-program-details", "#loyalty-rewards-section");
+        initPanel("sessions-section-details", "#sessions-section");
+        initPanel("plans-section-details", "#plans-section");
+        window.addEventListener("hashchange", function () {
+          var h = window.location.hash;
+          var map = {
+            "#loyalty-rewards-section": "loyalty-program-details",
+            "#sessions-section": "sessions-section-details",
+            "#plans-section": "plans-section-details"
+          };
+          var id = map[h];
+          if (id) {
+            var el = document.getElementById(id);
+            if (el) el.open = true;
+          }
+        });
       })();
     </script>
 
@@ -2383,9 +2452,17 @@
     <main id="main-content" class="grid-two">
       <div class="grid-two__cell grid-two__cell--sessions">
       <section id="sessions-section" class="card sessions-panel" aria-label="قائمة الجلسات">
+        <details class="sessions-panel__details" id="sessions-section-details">
+          <summary class="sessions-panel__summary">
+            <span class="sessions-panel__summary-inner">
+              <span class="sessions-eyebrow">حجز فوري</span>
+              <span class="sessions-panel__summary-title">الجلسات المتاحة للحجز الفوري</span>
+              <span class="sessions-panel__summary-hint">اضغط لعرض التصفية وقائمة الجلسات</span>
+            </span>
+            <span class="sessions-panel__chev" aria-hidden="true"></span>
+          </summary>
+          <div class="sessions-panel__expandable">
         <header class="sessions-panel__head">
-          <p class="sessions-eyebrow">حجز فوري</p>
-          <h2>الجلسات المتاحة للحجز الفوري</h2>
           <p class="sessions-lead">صفِّ الجلسات حسب الوقت والسعر والمستوى، ثم أضِف ما تريد إلى السلة واكمل الطلب منها بعد تسجيل الدخول.</p>
         </header>
         <div class="sessions-filters">
@@ -2480,14 +2557,24 @@
               <p class="sessions-empty" role="status">لا توجد جلسات متاحة حاليًا.</p>
               {% endfor %}
         </div>
+          </div>
+        </details>
       </section>
       </div>
 
       <div class="grid-two__cell grid-two__cell--plans">
         <section id="plans-section" class="card plans-panel" aria-label="مقارنة الخطط">
+          <details class="plans-panel__details" id="plans-section-details">
+            <summary class="plans-panel__summary">
+              <span class="plans-panel__summary-inner">
+                <span class="plans-eyebrow">خطط الاشتراك</span>
+                <span class="plans-panel__summary-title">مقارنة الاشتراكات (أسبوعي / شهري / سنوي)</span>
+                <span class="plans-panel__summary-hint">اضغط لعرض الخطط والأسعار</span>
+              </span>
+              <span class="plans-panel__chev" aria-hidden="true"></span>
+            </summary>
+            <div class="plans-panel__expandable">
           <header class="plans-panel__head">
-            <p class="plans-eyebrow">خطط الاشتراك</p>
-            <h2>مقارنة الاشتراكات (أسبوعي / شهري / سنوي)</h2>
             <p class="plans-panel__lead">قارن المدة والسعر وحد الجلسات، ثم أضف الخطة المناسبة إلى السلة.</p>
           </header>
           <div class="plans-shell">
@@ -2544,6 +2631,8 @@
               {% endfor %}
             </div>
           </div>
+            </div>
+          </details>
         </section>
       </div>
 
