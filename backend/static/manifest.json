@@ -1,5 +1,6 @@
 {
   "name": "Maestro Yoga",
+  "version": "1.0",
   "short_name": "Maestro Yoga",
   "description": "حجز جلسات اليوغا والاشتراكات والدفع الإلكتروني",
   "start_url": "/index?center_id=1",
