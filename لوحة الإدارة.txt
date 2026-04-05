@@ -5,3 +5,22 @@
 
 البريد: owner@maestroyoga.local
 كلمة المرور: Admin@12345
+
+
+
+ في android/
+Retrofit + Gson + OkHttp يستدعي GET /api/v1/meta عند فتح التطبيق.
+رؤوس تلقائية: X-App-Version (من versionName)، X-Request-ID (UUID)، Accept: application/json.
+عنوان الخادم من MAESTRO_API_BASE_URL في android/local.properties (انظر local.properties.example)، أو القيمة الافتراضية في app/build.gradle.kts للتجربة.
+شبكة آمنة: HTTPS في الإنتاج؛ للمحاكي مع خادم محلي استخدم http://10.0.2.2:8000 (مذكور في الملفات).
+android/README.md: فتح المشروع في Android Studio، بناء APK، وخطوات لاحقة (تسجيل دخول، تخزين آمن للرمز، أيقونات المتجر).
+ماذا تفعل أنت الآن
+ثبّت Android Studio وافتح المجلد android/.
+عند أول فتح، Studio يولّد Gradle Wrapper (gradlew) ويحمّل Gradle إن لزم.
+أنشئ local.properties وضع فيه مثلاً:
+sdk.dir=C\:\\Users\\...\\AppData\\Local\\Android\\Sdk
+MAESTRO_API_BASE_URL=https://خادمك-أو-http://10.0.2.2:8000
+Run على محاكي أو جهاز — يجب أن تظهر بيانات /api/v1/meta في الشاشة أو رسالة خطأ واضحة إن العنوان خاطئ.
+الخطوة المنطقية بعدها: إضافة شاشة تسجيل دخول تستدعي POST /api/v1/auth/login وحفظ الـ token — يمكن تنفيذها لاحقاً إذا رغبت.
+
+
