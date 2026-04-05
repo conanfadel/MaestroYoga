@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Maestro Yoga</string>
+    <string name="status_loading">جاري الاتصال بالخادم…</string>
+    <string name="btn_retry">إعادة المحاولة</string>
+    <string name="hint_api">تأكد من MAESTRO_API_BASE_URL في local.properties (مثال: https://api.example.com بدون شرطة أخيرة)</string>
+</resources>

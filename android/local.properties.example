@@ -1,0 +1,7 @@
+# انسخ هذا الملف إلى local.properties وعدّل العنوان (بدون مسار في النهاية، أو معه — السكربت يضبط الشرطة).
+# مثال محاكي يربط localhost على الجهاز:
+# MAESTRO_API_BASE_URL=http://10.0.2.2:8000
+# إنتاج:
+# MAESTRO_API_BASE_URL=https://api.yourdomain.com
+
+MAESTRO_API_BASE_URL=https://CHANGE_ME_YOUR_PRODUCTION_HOST
