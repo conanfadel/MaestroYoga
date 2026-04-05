@@ -1,0 +1,4 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="Maestro Yoga">
+  <rect width="512" height="512" rx="96" fill="#c5a059"/>
+  <path fill="#fafcfb" d="M256 120c-48 0-88 40-88 88v32h176v-32c0-48-40-88-88-88zm-72 152v224h64V280h16v216h64V280h16v216h64V272H184z"/>
+</svg>

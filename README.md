@@ -4,6 +4,7 @@
 
 ## ما الذي يتضمنه هذا الإصدار
 
+- **تشغيل وإنتاج وجوال**: راجع [`docs/operations.md`](docs/operations.md) — صيانة (`MAINTENANCE_MODE`)، CORS للويب، جاهزية قاعدة البيانات (`/health/ready`)، و`X-Request-ID` لتتبع الطلبات من تطبيق أندرويد لاحقاً.
 - **Backend API** باستخدام `FastAPI` مع دعم `SQLite` و`PostgreSQL` عبر متغيرات البيئة.
 - **نظام متعدد المراكز** عبر `center_id`.
 - **Auth + Roles** باستخدام JWT:

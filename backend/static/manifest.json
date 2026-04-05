@@ -1,0 +1,21 @@
+{
+  "name": "Maestro Yoga",
+  "short_name": "Maestro Yoga",
+  "description": "حجز جلسات اليوغا والاشتراكات والدفع الإلكتروني",
+  "start_url": "/index?center_id=1",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "natural",
+  "background_color": "#fafcfb",
+  "theme_color": "#c5a059",
+  "lang": "ar",
+  "dir": "rtl",
+  "icons": [
+    {
+      "src": "/static/icons/pwa-icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

@@ -4,7 +4,13 @@
 {% set hero_show_stock_preload = (not center.hero_image_url) and (center.hero_show_stock_photo | default(true)) %}
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#c5a059" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+  <link rel="manifest" href="/static/manifest.json" />
+  <link rel="apple-touch-icon" href="/static/icons/pwa-icon.svg" />
   <title>حجز الجلسات | {{ center.name }} | Maestro Yoga</title>
   <meta name="description" content="احجز جلسات اليوغا أو اشترك في باقات أسبوعية وشهرية وسنوية مع دفع آمن وسريع." />
   <meta property="og:title" content="Maestro Yoga - {{ center.name }}" />
@@ -52,8 +58,8 @@
     html:focus-within { scroll-behavior: smooth; }
     body {
       margin: 0;
-      padding-block: 22px;
-      padding-inline: max(12px, (100% - 80vw) / 2);
+      padding-block: max(22px, env(safe-area-inset-top, 0px)) max(22px, env(safe-area-inset-bottom, 0px));
+      padding-inline: max(12px, (100% - 80vw) / 2, env(safe-area-inset-left, 0px), env(safe-area-inset-right, 0px));
       font-family: "Tajawal", system-ui, sans-serif;
       color: var(--charcoal);
       background:

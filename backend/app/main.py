@@ -1,5 +1,6 @@
 import csv
 import io
+from contextlib import asynccontextmanager
 from datetime import datetime, timezone
 from io import BytesIO
 import logging
@@ -59,7 +60,7 @@ from fastapi import Depends, FastAPI, Header, HTTPException, Request
 from fastapi.responses import StreamingResponse
 from fastapi.staticfiles import StaticFiles
 from openpyxl import Workbook
-from sqlalchemy import func
+from sqlalchemy import func, text
 from sqlalchemy.orm import Session
 
 try:
@@ -68,6 +69,7 @@ try:
     from .bootstrap import DEMO_OWNER_EMAIL, DEMO_OWNER_PASSWORD, ensure_demo_data
     from .checkout_finalize import finalize_checkout_failed, finalize_checkout_paid
     from .database import get_db, init_db
+    from .middleware import MaintenanceMiddleware, RequestIDMiddleware, attach_cors
     from .payments import (
         MoyasarPaymentProvider,
         StripePaymentProvider,
@@ -83,6 +85,7 @@ except ImportError:
     from backend.app.bootstrap import DEMO_OWNER_EMAIL, DEMO_OWNER_PASSWORD, ensure_demo_data
     from backend.app.checkout_finalize import finalize_checkout_failed, finalize_checkout_paid
     from backend.app.database import get_db, init_db
+    from backend.app.middleware import MaintenanceMiddleware, RequestIDMiddleware, attach_cors
     from backend.app.payments import (
         MoyasarPaymentProvider,
         StripePaymentProvider,
@@ -96,8 +99,22 @@ except ImportError:
 load_dotenv()
 logger = logging.getLogger(__name__)
 
-app = FastAPI(title="Maestro Yoga API", version="1.0.0")
+
+@asynccontextmanager
+async def _app_lifespan(app: FastAPI):
+    lvl_name = os.getenv("LOG_LEVEL", "INFO").upper()
+    lvl = getattr(logging, lvl_name, logging.INFO)
+    logging.getLogger("maestro.request").setLevel(lvl)
+    yield
+
+
+app = FastAPI(title="Maestro Yoga API", version="1.0.0", lifespan=_app_lifespan)
+
 init_db()
+app.add_middleware(RequestIDMiddleware)
+app.add_middleware(MaintenanceMiddleware)
+_cors_origins = [x.strip() for x in os.getenv("CORS_ORIGINS", "").split(",") if x.strip()]
+attach_cors(app, _cors_origins)
 app.include_router(web_ui_router)
 _STATIC_DIR = Path(__file__).resolve().parent.parent / "static"
 if _STATIC_DIR.is_dir():
@@ -116,6 +133,17 @@ def root():
 def health():
     """مسار خفيف لفحص الصحة على Render وغيره (بدون اتصال بقاعدة البيانات)."""
     return {"status": "ok"}
+
+
+@app.get("/health/ready")
+def health_ready(db: Session = Depends(get_db)):
+    """جاهزية الخدمة مع التحقق من قاعدة البيانات (مناسب بعد النشر أو للموازن)."""
+    try:
+        db.execute(text("SELECT 1"))
+        return {"status": "ready", "database": "ok"}
+    except Exception as exc:
+        logger.warning("health_ready database check failed: %s", exc)
+        raise HTTPException(status_code=503, detail="database_unavailable") from exc
 
 
 def _payments_query(db: Session, center_id: int, client_id: int | None = None, status: str | None = None):
