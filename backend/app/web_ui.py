@@ -2878,7 +2878,7 @@ def admin_dashboard(
     if public_users_unverified_count:
         admin_insights.append(
             {
-                "label": f"مستخدمو جمهور غير موثّقين (عام): {public_users_unverified_count}",
+                "label": f"مستخدمون غير موثّقين (عام): {public_users_unverified_count}",
                 "href": f"{dash_home}#section-public-users",
                 "kind": "info",
             }
