@@ -510,15 +510,15 @@
       box-shadow: 0 2px 8px rgba(15, 118, 110, 0.12);
     }
     .step b { color: var(--gold-dark); font-weight: 800; }
-    /* —— برنامج الولاء (أولوية التصميم) —— */
+    /* —— برنامج الولاء: قابل للطي لتوفير المساحة —— */
     .loyalty-program {
       position: relative;
-      margin-bottom: 16px;
-      padding: 12px 12px 14px;
-      padding-inline-start: 18px;
+      margin-bottom: 12px;
+      padding: 0;
+      padding-inline-start: 0;
       background: linear-gradient(155deg, #ffffff 0%, rgba(232, 252, 244, 0.65) 42%, #fffef9 100%);
       border: 1px solid rgba(197, 160, 89, 0.38);
-      border-radius: 18px;
+      border-radius: 16px;
       box-shadow: var(--shadow-soft), var(--shadow-gold);
       overflow: hidden;
     }
@@ -526,29 +526,97 @@
       content: "";
       position: absolute;
       inset-inline-start: 0;
-      top: 10px;
-      bottom: 10px;
+      top: 8px;
+      bottom: 8px;
       width: 4px;
       border-radius: 999px;
       background: linear-gradient(180deg, #0f766e, var(--gold), var(--mint-mid));
+      z-index: 1;
+      pointer-events: none;
     }
-    .loyalty-program__header { margin-bottom: 8px; }
+    .loyalty-program__details { margin: 0; }
+    .loyalty-program__summary {
+      list-style: none;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      padding: 10px 12px 10px 18px;
+      padding-inline-end: 14px;
+      cursor: pointer;
+      font-family: inherit;
+      color: inherit;
+      background: transparent;
+      border: none;
+      width: 100%;
+      box-sizing: border-box;
+      text-align: start;
+    }
+    .loyalty-program__summary::-webkit-details-marker { display: none; }
+    .loyalty-program__summary:focus {
+      outline: 2px solid rgba(15, 118, 110, 0.45);
+      outline-offset: 2px;
+    }
+    .loyalty-program__summary-inner {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      min-width: 0;
+      flex: 1;
+    }
+    .loyalty-program__summary-title {
+      font-family: "Amiri", "Tajawal", serif;
+      font-size: clamp(0.88rem, 1.8vw + 0.35rem, 1.15rem);
+      font-weight: 700;
+      color: var(--charcoal);
+      line-height: 1.2;
+    }
+    .loyalty-program__summary-hint {
+      margin: 0;
+      font-size: 0.65rem;
+      font-weight: 700;
+      color: var(--charcoal-muted);
+      line-height: 1.35;
+    }
+    .loyalty-program__chev {
+      flex-shrink: 0;
+      width: 22px;
+      height: 22px;
+      border-radius: 8px;
+      background: rgba(15, 118, 110, 0.1);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: transform 0.22s ease;
+    }
+    .loyalty-program__chev::after {
+      content: "";
+      width: 7px;
+      height: 7px;
+      border-inline-end: 2px solid #0f766e;
+      border-block-end: 2px solid #0f766e;
+      transform: rotate(-45deg);
+      margin-top: -3px;
+    }
+    .loyalty-program__details[open] .loyalty-program__chev {
+      transform: rotate(180deg);
+    }
+    @media (min-width: 981px) {
+      .loyalty-program__summary-hint { display: none; }
+    }
+    .loyalty-program__expandable {
+      padding: 0 12px 12px;
+      padding-inline-start: 18px;
+      border-top: 1px solid rgba(197, 160, 89, 0.15);
+    }
+    .loyalty-program__header { margin-bottom: 6px; }
     .loyalty-program__eyebrow {
       margin: 0 0 3px;
-      font-size: 0.6rem;
+      font-size: 0.58rem;
       font-weight: 800;
       letter-spacing: 0.06em;
       color: #0f766e;
       opacity: 0.92;
-    }
-    .loyalty-program__header h2 {
-      margin: 0 0 4px;
-      font-family: "Amiri", "Tajawal", serif;
-      font-size: clamp(0.95rem, 2vw + 0.4rem, 1.28rem);
-      font-weight: 700;
-      color: var(--charcoal);
-      letter-spacing: -0.02em;
-      line-height: 1.22;
     }
     .loyalty-program__lead {
       margin: 0;
@@ -693,12 +761,15 @@
       color: var(--charcoal);
     }
     @media (max-width: 720px) {
-      .loyalty-program { padding: 9px 8px 10px; padding-inline-start: 14px; border-radius: 12px; }
+      .loyalty-program { border-radius: 12px; }
       .loyalty-program::before { width: 3px; top: 6px; bottom: 6px; }
-      .loyalty-program__header { margin-bottom: 6px; }
-      .loyalty-program__eyebrow { font-size: 0.52rem; margin-bottom: 2px; }
-      .loyalty-program__header h2 { font-size: 0.82rem; }
-      .loyalty-program__lead { font-size: 0.68rem; line-height: 1.4; }
+      .loyalty-program__summary { padding: 8px 10px 8px 14px; padding-inline-end: 10px; }
+      .loyalty-program__summary-title { font-size: 0.88rem; }
+      .loyalty-program__summary-hint { font-size: 0.58rem; }
+      .loyalty-program__expandable { padding: 0 8px 9px; padding-inline-start: 14px; }
+      .loyalty-program__header { margin-bottom: 5px; }
+      .loyalty-program__eyebrow { font-size: 0.5rem; margin-bottom: 2px; }
+      .loyalty-program__lead { font-size: 0.65rem; line-height: 1.38; }
       .loyalty-program__table-wrap { display: none; }
       .loyalty-program__cards { display: grid; gap: 6px; }
       .loyalty-tier-card { padding: 8px 8px 7px; border-radius: 10px; }
@@ -2024,14 +2095,13 @@
         border-radius: 14px;
       }
       .step::before { top: 12px; inset-inline-start: 12px; width: 26px; height: 26px; font-size: 0.78rem; }
-      .loyalty-program {
-        margin-bottom: 10px;
-        padding: 7px 6px 8px;
-        padding-inline-start: 11px;
-      }
-      .loyalty-program__eyebrow { font-size: 0.48rem; }
-      .loyalty-program__header h2 { font-size: 0.76rem; }
-      .loyalty-program__lead { font-size: 0.62rem; }
+      .loyalty-program { margin-bottom: 8px; }
+      .loyalty-program__summary { padding: 6px 8px 6px 11px; padding-inline-end: 8px; }
+      .loyalty-program__summary-title { font-size: 0.78rem; }
+      .loyalty-program__summary-hint { font-size: 0.52rem; }
+      .loyalty-program__expandable { padding: 0 6px 7px; padding-inline-start: 11px; }
+      .loyalty-program__eyebrow { font-size: 0.46rem; }
+      .loyalty-program__lead { font-size: 0.58rem; }
       .loyalty-tier-card__reward-v { font-size: 0.62rem; }
       .sessions-cards { gap: 8px; }
       .session-card__bar { padding: 8px 10px; font-size: 0.8rem; }
@@ -2216,53 +2286,74 @@
     </div>
 
     <section id="loyalty-rewards-section" class="loyalty-program" aria-label="برنامج المكافآت والولاء">
-      <header class="loyalty-program__header">
-        <p class="loyalty-program__eyebrow">مكافآت مع كل جلسة</p>
-        <h2>برنامج المكافآت والولاء</h2>
-        <p class="loyalty-program__lead">
-          اجمع <strong>جلساتاً مؤكدة</strong> في هذا المركز (بعد إتمام الحجز والدفع) لتنتقل بين مستويات الأوسمة والمكافآت. يحدّد المركز نصوص المكافآت من لوحة الإدارة.
-        </p>
-      </header>
-      <div class="loyalty-program__table-wrap">
-        <table class="loyalty-data-table">
-          <thead>
-            <tr>
-              <th scope="col">وسام</th>
-              <th scope="col">المستوى</th>
-              <th scope="col">عدد الجلسات المؤكدة</th>
-              <th scope="col">مكافآت ومزايا مقترحة</th>
-            </tr>
-          </thead>
-          <tbody>
+      <details class="loyalty-program__details" id="loyalty-program-details">
+        <summary class="loyalty-program__summary">
+          <span class="loyalty-program__summary-inner">
+            <span class="loyalty-program__eyebrow">مكافآت مع كل جلسة</span>
+            <span class="loyalty-program__summary-title">برنامج المكافآت والولاء</span>
+            <span class="loyalty-program__summary-hint">اضغط لعرض المستويات والجدول</span>
+          </span>
+          <span class="loyalty-program__chev" aria-hidden="true"></span>
+        </summary>
+        <div class="loyalty-program__expandable">
+          <header class="loyalty-program__header">
+            <p class="loyalty-program__lead">
+              اجمع <strong>جلساتاً مؤكدة</strong> في هذا المركز (بعد إتمام الحجز والدفع) لتنتقل بين مستويات الأوسمة والمكافآت. يحدّد المركز نصوص المكافآت من لوحة الإدارة.
+            </p>
+          </header>
+          <div class="loyalty-program__table-wrap">
+            <table class="loyalty-data-table">
+              <thead>
+                <tr>
+                  <th scope="col">وسام</th>
+                  <th scope="col">المستوى</th>
+                  <th scope="col">عدد الجلسات المؤكدة</th>
+                  <th scope="col">مكافآت ومزايا مقترحة</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for row in loyalty_program_rows %}
+                <tr class="{{ row.row_class }}">
+                  <td class="loyalty-program__medal" role="img" aria-hidden="true">{{ row.medal }}</td>
+                  <td class="loyalty-program__tier">{{ row.label }}</td>
+                  <td class="loyalty-program__range">{{ row.range_label }}</td>
+                  <td class="loyalty-program__reward">{{ row.reward }}</td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+          <div class="loyalty-program__cards" aria-label="مستويات الولاء">
             {% for row in loyalty_program_rows %}
-            <tr class="{{ row.row_class }}">
-              <td class="loyalty-program__medal" role="img" aria-hidden="true">{{ row.medal }}</td>
-              <td class="loyalty-program__tier">{{ row.label }}</td>
-              <td class="loyalty-program__range">{{ row.range_label }}</td>
-              <td class="loyalty-program__reward">{{ row.reward }}</td>
-            </tr>
+            <article class="loyalty-tier-card loyalty-tier-card--{{ row.tier_key }}">
+              <div class="loyalty-tier-card__top">
+                <span class="loyalty-tier-card__medal" aria-hidden="true">{{ row.medal }}</span>
+                <div class="loyalty-tier-card__titles">
+                  <span class="loyalty-tier-card__label">{{ row.label }}</span>
+                  <span class="loyalty-tier-card__range">{{ row.range_label }}</span>
+                </div>
+              </div>
+              <div class="loyalty-tier-card__body">
+                <span class="loyalty-tier-card__reward-k">المكافآت والمزايا المقترحة</span>
+                <p class="loyalty-tier-card__reward-v">{{ row.reward }}</p>
+              </div>
+            </article>
             {% endfor %}
-          </tbody>
-        </table>
-      </div>
-      <div class="loyalty-program__cards" aria-label="مستويات الولاء">
-        {% for row in loyalty_program_rows %}
-        <article class="loyalty-tier-card loyalty-tier-card--{{ row.tier_key }}">
-          <div class="loyalty-tier-card__top">
-            <span class="loyalty-tier-card__medal" aria-hidden="true">{{ row.medal }}</span>
-            <div class="loyalty-tier-card__titles">
-              <span class="loyalty-tier-card__label">{{ row.label }}</span>
-              <span class="loyalty-tier-card__range">{{ row.range_label }}</span>
-            </div>
           </div>
-          <div class="loyalty-tier-card__body">
-            <span class="loyalty-tier-card__reward-k">المكافآت والمزايا المقترحة</span>
-            <p class="loyalty-tier-card__reward-v">{{ row.reward }}</p>
-          </div>
-        </article>
-        {% endfor %}
-      </div>
+        </div>
+      </details>
     </section>
+    <script>
+      (function () {
+        var det = document.getElementById("loyalty-program-details");
+        if (!det) return;
+        if (window.location.hash === "#loyalty-rewards-section") {
+          det.open = true;
+        } else {
+          det.open = window.matchMedia("(min-width: 981px)").matches;
+        }
+      })();
+    </script>
 
     {% if payment == 'success' %}<div class="alert">تم إتمام الدفع بنجاح. تم تأكيد طلبك.</div>{% endif %}
     {% if payment == 'cancelled' %}<div class="alert warn">تم إلغاء عملية الدفع. يمكنك المحاولة مرة أخرى.</div>{% endif %}
