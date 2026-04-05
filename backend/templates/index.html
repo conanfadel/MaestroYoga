@@ -55,7 +55,10 @@
       --page-bg: #fafcfb;
     }
     * { box-sizing: border-box; }
-    html:focus-within { scroll-behavior: smooth; }
+    html {
+      overflow-x: clip;
+      scroll-behavior: smooth;
+    }
     body {
       margin: 0;
       padding-block: max(22px, env(safe-area-inset-top, 0px)) max(22px, env(safe-area-inset-bottom, 0px));
@@ -124,7 +127,7 @@
     .hero h1 {
       margin: 0 0 6px;
       font-family: "Amiri", "Tajawal", serif;
-      font-size: 2rem;
+      font-size: clamp(1.35rem, 4.2vw + 0.6rem, 2rem);
       font-weight: 700;
       color: var(--charcoal);
       line-height: 1.25;
@@ -1537,12 +1540,19 @@
     .post-teaser--strip .post-teaser__title { font-size: 0.98rem; }
     .post-teaser--strip .post-teaser__summary { font-size: 0.84rem; -webkit-line-clamp: 2; display: -webkit-box; -webkit-box-orient: vertical; overflow: hidden; }
     @media (max-width: 980px) {
-      .hero { grid-template-columns: 1fr; }
+      .hero { grid-template-columns: 1fr; padding: 18px 16px; }
       .grid-two { grid-template-columns: 1fr; }
       .sessions-filters-grid { grid-template-columns: 1fr; }
       .plan-meta { grid-template-columns: 1fr; }
       body { padding-block: 14px; }
       .post-pin { grid-template-columns: 1fr; }
+      .steps { grid-template-columns: 1fr; }
+      #sessions-section.sessions-panel { padding: 22px 18px; }
+      .post-pin.post-pin--compact { grid-template-columns: 1fr; }
+    }
+    @media (max-width: 480px) {
+      #sessions-section.sessions-panel { padding: 18px 14px; }
+      .sessions-filters { padding: 16px; }
     }
   </style>
 </head>

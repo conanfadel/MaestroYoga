@@ -35,9 +35,10 @@
       --page-bg: #fafcfb;
     }
     * { box-sizing: border-box; }
+    html { overflow-x: clip; }
     body {
       margin: 0;
-      padding: 22px clamp(14px, 4vw, 48px) 40px;
+      padding: max(18px, env(safe-area-inset-top, 0px)) clamp(12px, 4vw, 48px) max(28px, env(safe-area-inset-bottom, 0px));
       font-family: "Tajawal", system-ui, sans-serif;
       color: var(--charcoal);
       background:
