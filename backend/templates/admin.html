@@ -160,6 +160,142 @@
     .section-tab-cluster.is-open > .section-tab--cluster-toggle .section-tab__icon {
       color: var(--gold);
     }
+    /* قسم الأمان: تخطيط وبطاقات فرعية */
+    .security-layout {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+    .security-block {
+      background: var(--white);
+      border: 1px solid rgba(197, 160, 89, 0.22);
+      border-radius: 16px;
+      padding: 16px 18px;
+      box-shadow: 0 6px 18px rgba(45, 52, 54, 0.04);
+      scroll-margin-top: 108px;
+    }
+    .security-block__head {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin: 0 0 14px;
+      padding-bottom: 12px;
+      border-bottom: 1px solid rgba(197, 160, 89, 0.2);
+    }
+    .security-block__icon {
+      flex-shrink: 0;
+      width: 22px;
+      height: 22px;
+      display: grid;
+      place-items: center;
+      color: var(--gold-dark);
+    }
+    .security-block__icon svg {
+      width: 20px;
+      height: 20px;
+      stroke: currentColor;
+      fill: none;
+      stroke-width: 1.5;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+    .security-block__head h3 {
+      margin: 0;
+      font-size: 1.02rem;
+      font-weight: 800;
+      color: var(--charcoal);
+      font-family: "Amiri", "Tajawal", serif;
+    }
+    .security-kpi-row {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(168px, 1fr));
+      gap: 12px;
+      margin-bottom: 14px;
+    }
+    .security-kpi {
+      background: linear-gradient(145deg, var(--mint-bg) 0%, #f0fdf8 100%);
+      border: 1px solid rgba(170, 240, 209, 0.65);
+      border-radius: 14px;
+      padding: 14px 16px;
+      text-align: center;
+    }
+    .security-kpi .k {
+      font-size: 0.84rem;
+      color: var(--charcoal-muted);
+      font-weight: 700;
+      margin-bottom: 6px;
+    }
+    .security-kpi .v {
+      font-size: 1.45rem;
+      font-weight: 800;
+      color: var(--charcoal);
+      line-height: 1.2;
+    }
+    .security-suspicious-list {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .security-ip-card {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 10px 12px;
+      padding: 12px 14px;
+      background: #fffbeb;
+      border: 1px solid rgba(252, 211, 77, 0.85);
+      border-radius: 12px;
+    }
+    .security-ip-card .badge {
+      margin: 0;
+    }
+    .security-ip-card form {
+      display: inline-flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      align-items: center;
+      margin: 0;
+    }
+    .security-ip-card form select {
+      width: auto;
+      min-width: 76px;
+      padding: 6px 8px;
+    }
+    .security-ip-card form button {
+      margin-top: 0;
+      padding: 6px 12px;
+      font-size: 0.82rem;
+    }
+    .security-tools-row {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 14px;
+      align-items: start;
+    }
+    .security-tools-box {
+      padding: 12px 14px;
+      border-radius: 12px;
+      border: 1px solid rgba(197, 160, 89, 0.2);
+      background: rgba(197, 160, 89, 0.06);
+    }
+    .security-tools-box h4 {
+      margin: 0 0 10px;
+      font-size: 0.92rem;
+      font-weight: 800;
+      color: var(--charcoal);
+    }
+    .security-tools-box .filters {
+      margin-bottom: 0;
+    }
+    .security-empty-hint {
+      margin: 0;
+      padding: 10px 12px;
+      border-radius: 10px;
+      background: var(--mint-bg);
+      border: 1px dashed rgba(170, 240, 209, 0.9);
+      color: var(--charcoal-muted);
+      font-size: 0.88rem;
+    }
     /* أيقونة المجموعتين أوسع قليلاً في الـ viewBox */
     .section-tab__icon--users svg {
       transform: scale(0.88);
@@ -962,10 +1098,34 @@
       </div>
       {% endif %}
       {% if show_security_section %}
-      <a class="section-tab" data-target="section-security" href="#section-security" id="tab-section-security">
-        <span class="section-tab__icon section-tab__icon--shield" aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" aria-hidden="true"><g transform="translate(12,12) scale(0.48) translate(-12,-12)"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></g></svg></span>
-        الأمان والمخاطر
-      </a>
+      <div class="section-tab-cluster" data-tab-cluster id="admin-cluster-security-cluster">
+        <button type="button" class="section-tab section-tab--cluster-toggle" id="admin-cluster-security-btn" aria-expanded="false" aria-controls="admin-cluster-security-panel" aria-haspopup="true">
+          <span class="section-tab__icon section-tab__icon--shield" aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" aria-hidden="true"><g transform="translate(12,12) scale(0.48) translate(-12,-12)"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></g></svg></span>
+          الأمان والمخاطر
+        </button>
+        <div class="section-tab-cluster__dropdown" id="admin-cluster-security-panel" role="group" aria-label="الأمان والمخاطر">
+          <a class="section-tab section-tab--subitem section-tab--security-link" data-target="section-security" data-scroll-anchor="sec-security-overview" data-security-sub="overview" href="#section-security" id="tab-sec-overview">
+            <span class="section-tab__icon" aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg></span>
+            نظرة عامة والمخاطر
+          </a>
+          <a class="section-tab section-tab--subitem section-tab--security-link" data-target="section-security" data-scroll-anchor="sec-security-admin" data-security-sub="admin" href="#section-security" id="tab-sec-admin">
+            <span class="section-tab__icon" aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></span>
+            دخول لوحة الإدارة
+          </a>
+          <a class="section-tab section-tab--subitem section-tab--security-link" data-target="section-security" data-scroll-anchor="sec-security-audit" data-security-sub="audit" href="#section-security" id="tab-sec-audit">
+            <span class="section-tab__icon" aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><line x1="10" y1="9" x2="8" y2="9"/></svg></span>
+            سجل التدقيق والفلترة
+          </a>
+          <a class="section-tab section-tab--subitem section-tab--security-link" data-target="section-security" data-scroll-anchor="sec-security-blocked" data-security-sub="blocked" href="#section-security" id="tab-sec-blocked">
+            <span class="section-tab__icon" aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 9.9-1"/></svg></span>
+            العناوين المحظورة
+          </a>
+          <a class="section-tab section-tab--subitem section-tab--security-link" data-target="section-security" data-scroll-anchor="sec-security-history" data-security-sub="history" href="#section-security" id="tab-sec-history">
+            <span class="section-tab__icon" aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></span>
+            سجل الحظر والإلغاء
+          </a>
+        </div>
+      </div>
       {% endif %}
     </nav>
     </div>
@@ -1922,183 +2082,237 @@
     {% if show_security_section %}
     <section id="section-security" class="accordion">
       <div class="accordion-body">
-    <div class="card" style="margin-top:0;">
-      <h2>سجل الأمان والتدقيق</h2>
-      <p class="small" style="margin: 0 0 8px;">
-        محاولات دخول فاشلة خلال آخر 24 ساعة: <strong>{{ security_summary.failed_logins_24h }}</strong>
-        {% if security_summary.suspicious_ips %}
-          · IPات مشبوهة:
-          {% for item in security_summary.suspicious_ips %}
-            <span class="badge {{ item.risk_level }}">{{ item.ip }} ({{ item.hits }}) · {{ item.risk_level|upper }}</span>
-            <form method="post" action="/admin/security/ip-block" data-preserve-scroll="1" style="display:inline-flex;gap:4px;align-items:center;">
-              <input type="hidden" name="ip" value="{{ item.ip }}" />
-              <select name="minutes" style="width:auto;min-width:72px;padding:4px 6px;">
-                <option value="15">15د</option>
-                <option value="60" selected>60د</option>
-                <option value="180">180د</option>
-                <option value="1440">24س</option>
-              </select>
-              <input type="hidden" name="reason" value="auto_suspicious_ip" />
-              <button type="submit" class="danger" style="margin-top:0;padding:4px 8px;">حظر</button>
-            </form>
-          {% endfor %}
-        {% endif %}
-      </p>
-      <h3 style="margin:14px 0 8px;font-size:1rem;">دخول لوحة الإدارة (أحدث 20 سجلًا)</h3>
-      <div class="table-fluid" style="margin-bottom:14px;">
-        <table>
-          <thead>
-            <tr>
-              <th>الوقت</th>
-              <th>الحالة</th>
-              <th>البريد</th>
-              <th>IP</th>
-            </tr>
-          </thead>
-          <tbody>
-            {% for al in admin_login_audit_rows %}
-            <tr>
-              <td>{{ al.created_at_display }}</td>
-              <td><span class="badge">{{ al.status }}</span></td>
-              <td>{{ al.email }}</td>
-              <td>{{ al.ip }}</td>
-            </tr>
-            {% else %}
-            <tr><td colspan="4">لا توجد سجلات دخول للإدارة بعد.</td></tr>
-            {% endfor %}
-          </tbody>
-        </table>
-      </div>
-      <p style="margin: 0 0 10px;">
-        <a class="btn" href="{{ security_export_url }}">تصدير CSV لسجل الأمان (الفلتر الحالي)</a>
-      </p>
-      <form method="post" action="/admin/security/ip-block" data-preserve-scroll="1" class="filters" style="margin-bottom:10px;">
-        <input name="ip" placeholder="IP للحظر اليدوي" required />
-        <select name="minutes">
-          <option value="15">15 دقيقة</option>
-          <option value="60" selected>60 دقيقة</option>
-          <option value="180">180 دقيقة</option>
-          <option value="1440">24 ساعة</option>
-        </select>
-        <input name="reason" placeholder="السبب (اختياري)" value="manual_block" />
-        <button type="submit" class="danger">حظر يدوي</button>
-      </form>
-      <form method="get" action="/admin" class="filters">
-        <input type="hidden" name="public_user_page" value="{{ public_user_pagination.page }}" />
-        <input type="hidden" name="audit_page" value="1" />
-        <input type="hidden" name="sessions_page" value="{{ sessions_pagination.page }}" />
-        <input type="hidden" name="payments_page" value="{{ payments_pagination.page }}" />
-        <input name="audit_event_type" placeholder="نوع الحدث" value="{{ security_filters.event_type }}" />
-        <input name="audit_status" placeholder="الحالة" value="{{ security_filters.status }}" />
-        <input name="audit_email" placeholder="البريد" value="{{ security_filters.email }}" />
-        <input name="audit_ip" placeholder="IP" value="{{ security_filters.ip }}" />
-        <button type="submit">فلترة</button>
-      </form>
-      <div class="table-fluid">
-        <table>
-          <thead>
-            <tr>
-              <th>#</th>
-              <th>الوقت</th>
-              <th>الحدث</th>
-              <th>الحالة</th>
-              <th>البريد</th>
-              <th>IP</th>
-              <th>المسار</th>
-              <th>التفاصيل</th>
-            </tr>
-          </thead>
-          <tbody>
-            {% for ev in security_events %}
-            <tr>
-              <td>{{ ev.id }}</td>
-              <td>{{ ev.created_at_display }}</td>
-              <td>{{ ev.event_type }}</td>
-              <td><span class="badge">{{ ev.status }}</span></td>
-              <td>{{ ev.email }}</td>
-              <td>{{ ev.ip }}</td>
-              <td>{{ ev.path }}</td>
-              <td><span class="mono">{{ ev.details }}</span></td>
-            </tr>
-            {% else %}
-            <tr><td colspan="8">لا توجد سجلات أمنية مطابقة في هذه الصفحة.</td></tr>
-            {% endfor %}
-          </tbody>
-        </table>
-      </div>
-      <div class="small" style="margin-top:8px;display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
-        <span>الصفحة {{ security_pagination.page }} من {{ security_pagination.total_pages }} (إجمالي: {{ security_pagination.total }})</span>
-        {% if security_pagination.has_prev %}
-          <a class="soft-link" data-preserve-scroll-link="1" href="{{ security_pagination.prev_url }}">السابق</a>
-        {% endif %}
-        {% if security_pagination.has_next %}
-          <a class="soft-link" data-preserve-scroll-link="1" href="{{ security_pagination.next_url }}">التالي</a>
-        {% endif %}
-      </div>
-      <h3 style="margin:14px 0 8px; color:#134e4a;">IP المحظورة حاليًا</h3>
-      <div class="table-fluid">
-        <table>
-          <thead>
-            <tr>
-              <th>IP</th>
-              <th>السبب</th>
-              <th>محظور حتى</th>
-              <th>إجراء</th>
-            </tr>
-          </thead>
-          <tbody>
-            {% for b in security_summary.blocked_ips %}
-            <tr>
-              <td>{{ b.ip }}</td>
-              <td>{{ b.reason }}</td>
-              <td>{{ b.blocked_until }}</td>
-              <td>
-                <form method="post" action="/admin/security/ip-unblock" data-preserve-scroll="1">
-                  <input type="hidden" name="ip" value="{{ b.ip }}" />
-                  <button type="submit">فك الحظر</button>
-                </form>
-              </td>
-            </tr>
-            {% else %}
-            <tr><td colspan="4">لا توجد IP محظورة حاليًا.</td></tr>
-            {% endfor %}
-          </tbody>
-        </table>
-      </div>
-      <h3 style="margin:14px 0 8px; color:#134e4a;">سجل الحظر وفك الحظر</h3>
-      <div class="table-fluid">
-        <table>
-          <thead>
-            <tr>
-              <th>#</th>
-              <th>الوقت</th>
-              <th>العملية</th>
-              <th>الحالة</th>
-              <th>مدير النظام</th>
-              <th>IP الهدف</th>
-              <th>المدة (د)</th>
-              <th>السبب</th>
-            </tr>
-          </thead>
-          <tbody>
-            {% for h in block_history %}
-            <tr>
-              <td>{{ h.id }}</td>
-              <td>{{ h.created_at_display }}</td>
-              <td>{{ h.event_type }}</td>
-              <td><span class="badge">{{ h.status }}</span></td>
-              <td>{{ h.admin_email }}</td>
-              <td>{{ h.target_ip }}</td>
-              <td>{{ h.minutes }}</td>
-              <td>{{ h.reason }}</td>
-            </tr>
-            {% else %}
-            <tr><td colspan="8">لا يوجد سجل حظر بعد.</td></tr>
-            {% endfor %}
-          </tbody>
-        </table>
-      </div>
-    </div>
+        <div class="card" style="margin-top:0;">
+          <h2 style="margin-bottom:6px;">الأمان والتدقيق</h2>
+          <p class="small" style="margin:0 0 18px;">مؤشرات المخاطر، سجلات الدخول، التدقيق، وحظر العناوين — مرتبة في أقسام واضحة.</p>
+
+          <div class="security-layout">
+
+            <div id="sec-security-overview" class="security-block">
+              <div class="security-block__head">
+                <span class="security-block__icon" aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg></span>
+                <h3>نظرة عامة والمخاطر</h3>
+              </div>
+              <div class="security-kpi-row">
+                <div class="security-kpi">
+                  <div class="k">محاولات دخول فاشلة (24 ساعة)</div>
+                  <div class="v">{{ security_summary.failed_logins_24h }}</div>
+                </div>
+              </div>
+              {% if security_summary.suspicious_ips %}
+              <p class="small" style="margin:0 0 10px;font-weight:700;color:var(--charcoal);">عناوين مشبوهة (مرتبطة بعدة فشل)</p>
+              <div class="security-suspicious-list">
+                {% for item in security_summary.suspicious_ips %}
+                <div class="security-ip-card">
+                  <span class="badge {{ item.risk_level }}">{{ item.ip }} · {{ item.hits }} ضربة · {{ item.risk_level|upper }}</span>
+                  <form method="post" action="/admin/security/ip-block" data-preserve-scroll="1">
+                    <input type="hidden" name="ip" value="{{ item.ip }}" />
+                    <select name="minutes" aria-label="مدة الحظر">
+                      <option value="15">15 دقيقة</option>
+                      <option value="60" selected>60 دقيقة</option>
+                      <option value="180">180 دقيقة</option>
+                      <option value="1440">24 ساعة</option>
+                    </select>
+                    <input type="hidden" name="reason" value="auto_suspicious_ip" />
+                    <button type="submit" class="danger">حظر</button>
+                  </form>
+                </div>
+                {% endfor %}
+              </div>
+              {% else %}
+              <p class="security-empty-hint">لا توجد عناوين مشبوهة حسب العتبة الحالية (5+ فشل خلال 24 ساعة).</p>
+              {% endif %}
+            </div>
+
+            <div id="sec-security-admin" class="security-block">
+              <div class="security-block__head">
+                <span class="security-block__icon" aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></span>
+                <h3>دخول لوحة الإدارة</h3>
+              </div>
+              <p class="small" style="margin:0 0 12px;">أحدث 20 محاولة دخول إلى لوحة الإدارة.</p>
+              <div class="table-fluid">
+                <table>
+                  <thead>
+                    <tr>
+                      <th>الوقت</th>
+                      <th>الحالة</th>
+                      <th>البريد</th>
+                      <th>IP</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {% for al in admin_login_audit_rows %}
+                    <tr>
+                      <td>{{ al.created_at_display }}</td>
+                      <td><span class="badge">{{ al.status }}</span></td>
+                      <td>{{ al.email }}</td>
+                      <td>{{ al.ip }}</td>
+                    </tr>
+                    {% else %}
+                    <tr><td colspan="4">لا توجد سجلات دخول للإدارة بعد.</td></tr>
+                    {% endfor %}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <div id="sec-security-audit" class="security-block">
+              <div class="security-block__head">
+                <span class="security-block__icon" aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><line x1="10" y1="9" x2="8" y2="9"/></svg></span>
+                <h3>سجل التدقيق</h3>
+              </div>
+              <div class="security-tools-row">
+                <div class="security-tools-box">
+                  <h4>تصدير وتقرير</h4>
+                  <a class="btn" href="{{ security_export_url }}" style="margin-inline-start:0;">تصدير CSV (الفلتر الحالي)</a>
+                </div>
+                <div class="security-tools-box">
+                  <h4>حظر يدوي لعنوان</h4>
+                  <form method="post" action="/admin/security/ip-block" data-preserve-scroll="1" class="filters" style="margin-bottom:0;">
+                    <input name="ip" placeholder="عنوان IP" required aria-label="عنوان IP للحظر" />
+                    <select name="minutes" aria-label="مدة الحظر">
+                      <option value="15">15 دقيقة</option>
+                      <option value="60" selected>60 دقيقة</option>
+                      <option value="180">180 دقيقة</option>
+                      <option value="1440">24 ساعة</option>
+                    </select>
+                    <input name="reason" placeholder="السبب (اختياري)" value="manual_block" />
+                    <button type="submit" class="danger">حظر</button>
+                  </form>
+                </div>
+              </div>
+              <h4 style="margin:18px 0 10px;font-size:0.95rem;">فلترة السجل</h4>
+              <form method="get" action="/admin" class="filters">
+                <input type="hidden" name="public_user_page" value="{{ public_user_pagination.page }}" />
+                <input type="hidden" name="audit_page" value="1" />
+                <input type="hidden" name="sessions_page" value="{{ sessions_pagination.page }}" />
+                <input type="hidden" name="payments_page" value="{{ payments_pagination.page }}" />
+                <input name="audit_event_type" placeholder="نوع الحدث" value="{{ security_filters.event_type }}" />
+                <input name="audit_status" placeholder="الحالة" value="{{ security_filters.status }}" />
+                <input name="audit_email" placeholder="البريد" value="{{ security_filters.email }}" />
+                <input name="audit_ip" placeholder="IP" value="{{ security_filters.ip }}" />
+                <button type="submit">تطبيق الفلتر</button>
+              </form>
+              <div class="table-fluid" style="margin-top:12px;">
+                <table>
+                  <thead>
+                    <tr>
+                      <th>#</th>
+                      <th>الوقت</th>
+                      <th>الحدث</th>
+                      <th>الحالة</th>
+                      <th>البريد</th>
+                      <th>IP</th>
+                      <th>المسار</th>
+                      <th>التفاصيل</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {% for ev in security_events %}
+                    <tr>
+                      <td>{{ ev.id }}</td>
+                      <td>{{ ev.created_at_display }}</td>
+                      <td>{{ ev.event_type }}</td>
+                      <td><span class="badge">{{ ev.status }}</span></td>
+                      <td>{{ ev.email }}</td>
+                      <td>{{ ev.ip }}</td>
+                      <td>{{ ev.path }}</td>
+                      <td><span class="mono">{{ ev.details }}</span></td>
+                    </tr>
+                    {% else %}
+                    <tr><td colspan="8">لا توجد سجلات أمنية مطابقة في هذه الصفحة.</td></tr>
+                    {% endfor %}
+                  </tbody>
+                </table>
+              </div>
+              <div class="small" style="margin-top:10px;display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
+                <span>الصفحة {{ security_pagination.page }} من {{ security_pagination.total_pages }} (إجمالي: {{ security_pagination.total }})</span>
+                {% if security_pagination.has_prev %}
+                  <a class="soft-link" data-preserve-scroll-link="1" href="{{ security_pagination.prev_url }}">السابق</a>
+                {% endif %}
+                {% if security_pagination.has_next %}
+                  <a class="soft-link" data-preserve-scroll-link="1" href="{{ security_pagination.next_url }}">التالي</a>
+                {% endif %}
+              </div>
+            </div>
+
+            <div id="sec-security-blocked" class="security-block">
+              <div class="security-block__head">
+                <span class="security-block__icon" aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 9.9-1"/></svg></span>
+                <h3>العناوين المحظورة حاليًا</h3>
+              </div>
+              <div class="table-fluid">
+                <table>
+                  <thead>
+                    <tr>
+                      <th>IP</th>
+                      <th>السبب</th>
+                      <th>محظور حتى</th>
+                      <th>إجراء</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {% for b in security_summary.blocked_ips %}
+                    <tr>
+                      <td>{{ b.ip }}</td>
+                      <td>{{ b.reason }}</td>
+                      <td>{{ b.blocked_until }}</td>
+                      <td>
+                        <form method="post" action="/admin/security/ip-unblock" data-preserve-scroll="1">
+                          <input type="hidden" name="ip" value="{{ b.ip }}" />
+                          <button type="submit">فك الحظر</button>
+                        </form>
+                      </td>
+                    </tr>
+                    {% else %}
+                    <tr><td colspan="4">لا توجد عناوين محظورة حاليًا.</td></tr>
+                    {% endfor %}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <div id="sec-security-history" class="security-block">
+              <div class="security-block__head">
+                <span class="security-block__icon" aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></span>
+                <h3>سجل الحظر وفك الحظر</h3>
+              </div>
+              <div class="table-fluid">
+                <table>
+                  <thead>
+                    <tr>
+                      <th>#</th>
+                      <th>الوقت</th>
+                      <th>العملية</th>
+                      <th>الحالة</th>
+                      <th>مدير النظام</th>
+                      <th>IP الهدف</th>
+                      <th>المدة (د)</th>
+                      <th>السبب</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {% for h in block_history %}
+                    <tr>
+                      <td>{{ h.id }}</td>
+                      <td>{{ h.created_at_display }}</td>
+                      <td>{{ h.event_type }}</td>
+                      <td><span class="badge">{{ h.status }}</span></td>
+                      <td>{{ h.admin_email }}</td>
+                      <td>{{ h.target_ip }}</td>
+                      <td>{{ h.minutes }}</td>
+                      <td>{{ h.reason }}</td>
+                    </tr>
+                    {% else %}
+                    <tr><td colspan="8">لا يوجد سجل حظر بعد.</td></tr>
+                    {% endfor %}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+          </div>
+        </div>
       </div>
     </section>
     {% endif %}
@@ -2108,6 +2322,8 @@
       const STORAGE_KEY = "maestro_admin_scroll_y";
       const ACCORDION_KEY = "maestro_admin_accordion_state";
       const ACTIVE_SECTION_KEY = "maestro_admin_active_section";
+      const SCROLL_ANCHOR_KEY = "maestro_admin_scroll_anchor";
+      const SECURITY_SUB_KEY = "maestro_admin_security_sub";
       const prefersReducedMotion = !!(window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches);
       const forms = document.querySelectorAll("form[data-preserve-scroll='1']");
       const preserveLinks = document.querySelectorAll("a[data-preserve-scroll-link='1']");
@@ -2341,6 +2557,17 @@
         sessionStorage.setItem(ACTIVE_SECTION_KEY, accordions[0].id);
       }
 
+      var scrollAnchorId = sessionStorage.getItem(SCROLL_ANCHOR_KEY);
+      if (scrollAnchorId) {
+        sessionStorage.removeItem(SCROLL_ANCHOR_KEY);
+        requestAnimationFrame(function () {
+          var el = document.getElementById(scrollAnchorId);
+          if (el) {
+            el.scrollIntoView({ behavior: prefersReducedMotion ? "auto" : "smooth", block: "start" });
+          }
+        });
+      }
+
       const tabs = Array.from(document.querySelectorAll(".section-tab[data-target]"));
       function closeAllTabClusters() {
         document.querySelectorAll("[data-tab-cluster].is-open").forEach(function (c) {
@@ -2372,17 +2599,31 @@
 
       function refreshActiveTab() {
         const openSection = currentOpenSection || accordions.find(function (d) { return d.classList.contains("open"); });
+        const securitySubToken = sessionStorage.getItem(SECURITY_SUB_KEY) || "";
         document.querySelectorAll("[data-tab-cluster]").forEach(function (c) {
           c.classList.remove("section-tab-cluster--active");
         });
         tabs.forEach(function (tab) {
           const isActive = openSection && tab.dataset.target === openSection.id;
-          tab.classList.toggle("active", !!isActive);
+          const isSecurityLink = tab.classList.contains("section-tab--security-link");
+          let showActive = false;
           if (isActive) {
+            if (!isSecurityLink) {
+              showActive = true;
+            } else {
+              showActive = !!tab.dataset.securitySub && tab.dataset.securitySub === securitySubToken;
+            }
+          }
+          tab.classList.toggle("active", showActive);
+          if (isActive && !isSecurityLink) {
             var cl = tab.closest("[data-tab-cluster]");
             if (cl) cl.classList.add("section-tab-cluster--active");
           }
         });
+        if (openSection && openSection.id === "section-security") {
+          var secCluster = document.getElementById("admin-cluster-security-cluster");
+          if (secCluster) secCluster.classList.add("section-tab-cluster--active");
+        }
         if (openSection && openSection.id) {
           sessionStorage.setItem(ACTIVE_SECTION_KEY, openSection.id);
         }
@@ -2390,7 +2631,8 @@
         if (navTabs) {
           navTabs.classList.toggle(
             "section-tabs--has-active",
-            !!document.querySelector("#section-tabs .section-tab.active")
+            !!document.querySelector("#section-tabs .section-tab.active") ||
+              !!document.querySelector("#section-tabs .section-tab-cluster.section-tab-cluster--active")
           );
         }
       }
@@ -2423,6 +2665,16 @@
           const section = document.getElementById(targetId);
           if (!section || !section.classList.contains("accordion")) return;
           sessionStorage.setItem(ACTIVE_SECTION_KEY, targetId);
+          if (tab.dataset.scrollAnchor) {
+            sessionStorage.setItem(SCROLL_ANCHOR_KEY, tab.dataset.scrollAnchor);
+          } else {
+            sessionStorage.removeItem(SCROLL_ANCHOR_KEY);
+          }
+          if (tab.dataset.securitySub) {
+            sessionStorage.setItem(SECURITY_SUB_KEY, tab.dataset.securitySub);
+          } else {
+            sessionStorage.removeItem(SECURITY_SUB_KEY);
+          }
           if (window.history && window.history.replaceState) {
             window.history.replaceState(null, "", window.location.pathname + window.location.search + "#" + targetId);
           }

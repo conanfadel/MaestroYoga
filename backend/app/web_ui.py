@@ -36,7 +36,7 @@ from .mailer import (
     send_mail_with_attachments,
     validate_mailer_settings,
 )
-from .payments import StripePaymentProvider, get_payment_provider
+from .payments import get_payment_provider, payment_provider_supports_hosted_checkout
 from .rate_limiter import rate_limiter
 from .request_ip import get_client_ip
 from .security_audit import log_security_event
@@ -1209,7 +1209,7 @@ def public_book(
     provider = get_payment_provider()
     base = _public_base(request)
 
-    if isinstance(provider, StripePaymentProvider):
+    if payment_provider_supports_hosted_checkout(provider):
         try:
             provider_result = provider.create_checkout_session(
                 amount=amount,
@@ -1387,7 +1387,7 @@ def public_cart_checkout(
     provider = get_payment_provider()
     base = _public_base(request)
 
-    if isinstance(provider, StripePaymentProvider):
+    if payment_provider_supports_hosted_checkout(provider):
         line_specs = [
             (
                 float(ys.price_drop_in),
@@ -4351,7 +4351,7 @@ def public_subscribe(
 
     provider = get_payment_provider()
     base = _public_base(request)
-    if isinstance(provider, StripePaymentProvider):
+    if payment_provider_supports_hosted_checkout(provider):
         try:
             provider_result = provider.create_checkout_session(
                 amount=float(plan.price),

@@ -66,8 +66,14 @@ try:
     from . import models, schemas
     from .booking_utils import count_active_bookings
     from .bootstrap import DEMO_OWNER_EMAIL, DEMO_OWNER_PASSWORD, ensure_demo_data
+    from .checkout_finalize import finalize_checkout_failed, finalize_checkout_paid
     from .database import get_db, init_db
-    from .payments import StripePaymentProvider, get_payment_provider
+    from .payments import (
+        MoyasarPaymentProvider,
+        StripePaymentProvider,
+        get_payment_provider,
+        payment_provider_supports_hosted_checkout,
+    )
     from .security import create_access_token, get_current_user, hash_password, require_roles, verify_password
     from .web_ui import router as web_ui_router
     from .tenant_utils import require_user_center_id
@@ -75,8 +81,14 @@ except ImportError:
     from backend.app import models, schemas
     from backend.app.booking_utils import count_active_bookings
     from backend.app.bootstrap import DEMO_OWNER_EMAIL, DEMO_OWNER_PASSWORD, ensure_demo_data
+    from backend.app.checkout_finalize import finalize_checkout_failed, finalize_checkout_paid
     from backend.app.database import get_db, init_db
-    from backend.app.payments import StripePaymentProvider, get_payment_provider
+    from backend.app.payments import (
+        MoyasarPaymentProvider,
+        StripePaymentProvider,
+        get_payment_provider,
+        payment_provider_supports_hosted_checkout,
+    )
     from backend.app.security import create_access_token, get_current_user, hash_password, require_roles, verify_password
     from backend.app.web_ui import router as web_ui_router
     from backend.app.tenant_utils import require_user_center_id
@@ -396,10 +408,10 @@ def create_payment(
         raise HTTPException(status_code=404, detail="Client not found for center")
 
     provider = get_payment_provider()
-    if isinstance(provider, StripePaymentProvider):
+    if payment_provider_supports_hosted_checkout(provider):
         raise HTTPException(
             status_code=400,
-            detail="Use /payments/checkout-session for Stripe payments",
+            detail="Use /payments/checkout-session for Stripe or Moyasar payments",
         )
     provider_result = provider.charge(
         amount=payload.amount,
@@ -432,21 +444,22 @@ def create_checkout_session(
         raise HTTPException(status_code=404, detail="Client not found for center")
 
     provider = get_payment_provider()
-    if not isinstance(provider, StripePaymentProvider):
-        raise HTTPException(status_code=400, detail="Checkout session requires Stripe provider")
+    if not payment_provider_supports_hosted_checkout(provider):
+        raise HTTPException(status_code=400, detail="Checkout session requires Stripe or Moyasar provider")
     if not _is_checkout_redirect_allowed(payload.success_url) or not _is_checkout_redirect_allowed(payload.cancel_url):
         raise HTTPException(
             status_code=400,
             detail="success_url/cancel_url must match allowed checkout origins",
         )
 
+    pm = "moyasar_checkout" if isinstance(provider, MoyasarPaymentProvider) else "stripe_checkout"
     payment = models.Payment(
         center_id=center_id,
         client_id=payload.client_id,
         booking_id=None,
         amount=payload.amount,
         currency=payload.currency.upper(),
-        payment_method="stripe_checkout",
+        payment_method=pm,
         status="pending",
     )
     db.add(payment)
@@ -626,87 +639,52 @@ async def stripe_webhook(
     event_data = event.get("data", {}).get("object", {})
 
     if event_type == "checkout.session.completed":
-        session_id = event_data.get("id")
-        metadata = event_data.get("metadata", {}) or {}
-        payment_rows: list[models.Payment] = []
-        pids_raw = metadata.get("payment_ids") or ""
-        if pids_raw:
-            for part in str(pids_raw).split(","):
-                part = part.strip()
-                if part.isdigit():
-                    pr = db.get(models.Payment, int(part))
-                    if pr:
-                        payment_rows.append(pr)
-        if not payment_rows:
-            payment_id = metadata.get("payment_id")
-            if payment_id and str(payment_id).strip().isdigit():
-                pr = db.get(models.Payment, int(str(payment_id).strip()))
-                if pr:
-                    payment_rows.append(pr)
-        if not payment_rows:
-            lone = db.query(models.Payment).filter(models.Payment.provider_ref == session_id).first()
-            if lone:
-                payment_rows.append(lone)
-        subscription_id = metadata.get("subscription_id")
-        subscription = None
-        if subscription_id and str(subscription_id).strip().isdigit():
-            try:
-                subscription = db.get(models.ClientSubscription, int(str(subscription_id).strip()))
-            except (TypeError, ValueError):
-                subscription = None
-        for payment in payment_rows:
-            payment.status = "paid"
-            if payment.booking_id:
-                booking = db.get(models.Booking, payment.booking_id)
-                if booking:
-                    booking.status = "confirmed"
-            if subscription and not payment.booking_id:
-                subscription.status = "active"
-        if subscription and not payment_rows:
-            subscription.status = "active"
-        if payment_rows or subscription:
-            db.commit()
+        session_id = event_data.get("id") or ""
+        metadata = dict(event_data.get("metadata", {}) or {})
+        finalize_checkout_paid(db, metadata, str(session_id))
     elif event_type == "checkout.session.expired":
-        session_id = event_data.get("id")
-        metadata = event_data.get("metadata", {}) or {}
-        payment_rows: list[models.Payment] = []
-        pids_raw = metadata.get("payment_ids") or ""
-        if pids_raw:
-            for part in str(pids_raw).split(","):
-                part = part.strip()
-                if part.isdigit():
-                    pr = db.get(models.Payment, int(part))
-                    if pr:
-                        payment_rows.append(pr)
-        if not payment_rows:
-            payment_id = metadata.get("payment_id")
-            if payment_id and str(payment_id).strip().isdigit():
-                pr = db.get(models.Payment, int(str(payment_id).strip()))
-                if pr:
-                    payment_rows.append(pr)
-        if not payment_rows:
-            lone = db.query(models.Payment).filter(models.Payment.provider_ref == session_id).first()
-            if lone:
-                payment_rows.append(lone)
-        subscription_id = metadata.get("subscription_id")
-        subscription = None
-        if subscription_id and str(subscription_id).strip().isdigit():
-            try:
-                subscription = db.get(models.ClientSubscription, int(str(subscription_id).strip()))
-            except (TypeError, ValueError):
-                subscription = None
-        for payment in payment_rows:
-            payment.status = "failed"
-            if payment.booking_id:
-                booking = db.get(models.Booking, payment.booking_id)
-                if booking and booking.status == "pending_payment":
-                    booking.status = "cancelled"
-        if subscription and subscription.status == "pending":
-            subscription.status = "cancelled"
-        if payment_rows or subscription:
-            db.commit()
+        session_id = event_data.get("id") or ""
+        metadata = dict(event_data.get("metadata", {}) or {})
+        finalize_checkout_failed(db, metadata, str(session_id))
 
     return {"received": True}
+
+
+@app.post("/payments/webhook/moyasar")
+async def moyasar_invoice_webhook(request: Request, db: Session = Depends(get_db)):
+    """إشعار ميسر عند دفع الفاتورة (callback_url). يُنصح بالتحقق عبر API."""
+    try:
+        payload = await request.json()
+    except Exception:
+        raise HTTPException(status_code=400, detail="invalid json")
+    invoice_id = _moyasar_extract_invoice_id(payload)
+    if not invoice_id:
+        return {"received": True}
+    try:
+        fresh = MoyasarPaymentProvider.fetch_invoice(str(invoice_id))
+    except Exception as exc:
+        logging.getLogger(__name__).warning("moyasar invoice fetch failed: %s", exc)
+        return {"received": True}
+    if fresh.get("status") != "paid":
+        return {"received": True}
+    meta = dict(fresh.get("metadata") or {})
+    finalize_checkout_paid(db, meta, str(invoice_id))
+    return {"received": True}
+
+
+def _moyasar_extract_invoice_id(payload: object) -> str | None:
+    if not isinstance(payload, dict):
+        return None
+    pid = payload.get("id")
+    if isinstance(pid, str) and len(pid) > 10:
+        return pid
+    data = payload.get("data")
+    if isinstance(data, dict) and data.get("id"):
+        return str(data["id"])
+    inv = payload.get("invoice")
+    if isinstance(inv, dict) and inv.get("id"):
+        return str(inv["id"])
+    return str(pid) if pid else None
 
 
 @app.post("/seed-demo")
