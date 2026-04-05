@@ -235,6 +235,13 @@ class MoyasarPaymentProvider(BasePaymentProvider):
             out[str(k)[:80]] = s[:500]
         return out
 
+    @staticmethod
+    def _moyasar_callback_url() -> str:
+        base_cb = os.getenv("PUBLIC_BASE_URL", "").strip().rstrip("/")
+        if not base_cb:
+            raise RuntimeError("PUBLIC_BASE_URL is required for Moyasar callback_url")
+        return f"{base_cb}/payments/webhook/moyasar"
+
     def _create_invoice(
         self,
         *,
@@ -274,10 +281,7 @@ class MoyasarPaymentProvider(BasePaymentProvider):
         line_item_description: str = "",
     ) -> PaymentResult:
         _ = currency
-        base_cb = os.getenv("PUBLIC_BASE_URL", "").strip().rstrip("/")
-        if not base_cb:
-            raise RuntimeError("PUBLIC_BASE_URL is required for Moyasar callback_url")
-        callback_url = f"{base_cb}/payments/webhook/moyasar"
+        callback_url = self._moyasar_callback_url()
         halalas = self._sar_to_halalas(amount)
         desc = f"{line_item_name} — {line_item_description}".strip()[:500] or line_item_name
         return self._create_invoice(
@@ -300,10 +304,7 @@ class MoyasarPaymentProvider(BasePaymentProvider):
         _ = currency
         if not line_specs:
             raise ValueError("line_specs required")
-        base_cb = os.getenv("PUBLIC_BASE_URL", "").strip().rstrip("/")
-        if not base_cb:
-            raise RuntimeError("PUBLIC_BASE_URL is required for Moyasar callback_url")
-        callback_url = f"{base_cb}/payments/webhook/moyasar"
+        callback_url = self._moyasar_callback_url()
         total = 0.0
         parts: list[str] = []
         for amt, name, description in line_specs:

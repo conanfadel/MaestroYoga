@@ -7,7 +7,7 @@ from datetime import date, datetime, timedelta
 import os
 from pathlib import Path
 from typing import Any
-from urllib.parse import urlencode, urlparse, urlsplit
+from urllib.parse import urlencode, urlparse
 
 from fastapi import APIRouter, Depends, File, Form, HTTPException, Query, Request, UploadFile
 from fastapi.responses import HTMLResponse, RedirectResponse, StreamingResponse
@@ -68,6 +68,7 @@ from .web_shared import (
     _plan_duration_days,
     _public_base,
     _sanitize_next_url,
+    PUBLIC_INDEX_DEFAULT_PATH,
     public_center_id_str_from_next,
     public_index_url_from_next,
     public_mail_fail_why_token,
@@ -346,7 +347,7 @@ def _public_user_from_verify_flash_token(db: Session, vk: str) -> models.PublicU
     return user
 
 
-def _build_verify_url(request: Request, user: models.PublicUser, next_url: str = "/index?center_id=1") -> str:
+def _build_verify_url(request: Request, user: models.PublicUser, next_url: str = PUBLIC_INDEX_DEFAULT_PATH) -> str:
     token = create_public_email_verification_token(user.id, user.email)
     safe_next = _sanitize_next_url(next_url)
     query = urlencode({"token": token, "next": safe_next})
@@ -365,10 +366,6 @@ def _request_key(request: Request, prefix: str, identity: str = "") -> str:
     return f"{prefix}:{scope}"
 
 
-def _client_ip(request: Request) -> str:
-    return get_client_ip(request)
-
-
 def _active_block_for_ip(db: Session, ip: str) -> models.BlockedIP | None:
     now = utcnow_naive()
     return (
@@ -384,20 +381,13 @@ def _active_block_for_ip(db: Session, ip: str) -> models.BlockedIP | None:
 
 
 def _is_ip_blocked(db: Session, request: Request) -> bool:
-    return _active_block_for_ip(db, _client_ip(request)) is not None
+    return _active_block_for_ip(db, get_client_ip(request)) is not None
 
 
-def _delete_center_logo_files(center_id: int) -> None:
+def _unlink_center_uploads(glob_pattern: str) -> None:
     if not CENTER_LOGO_UPLOAD_DIR.is_dir():
         return
-    for path in CENTER_LOGO_UPLOAD_DIR.glob(f"center_{center_id}.*"):
-        path.unlink(missing_ok=True)
-
-
-def _delete_center_hero_files(center_id: int) -> None:
-    if not CENTER_LOGO_UPLOAD_DIR.is_dir():
-        return
-    for path in CENTER_LOGO_UPLOAD_DIR.glob(f"center_{center_id}_hero.*"):
+    for path in CENTER_LOGO_UPLOAD_DIR.glob(glob_pattern):
         path.unlink(missing_ok=True)
 
 
@@ -511,7 +501,7 @@ def _require_admin_user_or_redirect(
     return user, None
 
 
-def _public_login_redirect(next_url: str = "/index?center_id=1", msg: str | None = None) -> RedirectResponse:
+def _public_login_redirect(next_url: str = PUBLIC_INDEX_DEFAULT_PATH, msg: str | None = None) -> RedirectResponse:
     safe_next = _sanitize_next_url(next_url)
     return RedirectResponse(url=_url_with_params("/public/login", next=safe_next, msg=msg), status_code=303)
 
@@ -605,7 +595,7 @@ def _analytics_context(page_name: str, **extra: str) -> dict:
     return data
 
 
-def _queue_verify_email_for_user(request: Request, user: models.PublicUser, next_url: str = "/index?center_id=1") -> tuple[bool, str]:
+def _queue_verify_email_for_user(request: Request, user: models.PublicUser, next_url: str = PUBLIC_INDEX_DEFAULT_PATH) -> tuple[bool, str]:
     verify_url = _build_verify_url(request, user, next_url=next_url)
     return queue_email_verification_email(user.email, verify_url, full_name=user.full_name)
 
@@ -1477,7 +1467,7 @@ def public_cart_checkout(
 
 
 @router.get("/public/register", response_class=HTMLResponse)
-def public_register_page(request: Request, next: str = "/index?center_id=1"):
+def public_register_page(request: Request, next: str = PUBLIC_INDEX_DEFAULT_PATH):
     safe_next = _sanitize_next_url(request.query_params.get("next") or next)
     return templates.TemplateResponse(
         request,
@@ -1494,7 +1484,7 @@ def public_register(
     country_code: str = Form(...),
     phone: str = Form(...),
     password: str = Form(...),
-    next: str = Form("/index?center_id=1"),
+    next: str = Form(PUBLIC_INDEX_DEFAULT_PATH),
     db: Session = Depends(get_db),
 ):
     safe_next = _sanitize_next_url(next)
@@ -1628,7 +1618,7 @@ def public_register(
 
 
 @router.get("/public/login", response_class=HTMLResponse)
-def public_login_page(request: Request, next: str = "/index?center_id=1"):
+def public_login_page(request: Request, next: str = PUBLIC_INDEX_DEFAULT_PATH):
     return templates.TemplateResponse(request, "public_login.html", {"next": next, **_analytics_context("public_login")})
 
 
@@ -1637,7 +1627,7 @@ def public_login(
     request: Request,
     email: str = Form(...),
     password: str = Form(...),
-    next: str = Form("/index?center_id=1"),
+    next: str = Form(PUBLIC_INDEX_DEFAULT_PATH),
     db: Session = Depends(get_db),
 ):
     safe_next = _sanitize_next_url(next)
@@ -1692,7 +1682,7 @@ def public_login(
 @router.get("/public/logout")
 def public_logout():
     # Request object is not required for logout, so this event is not logged here.
-    response = RedirectResponse(url="/index?center_id=1&msg=logged_out", status_code=303)
+    response = RedirectResponse(url=f"{PUBLIC_INDEX_DEFAULT_PATH}&msg=logged_out", status_code=303)
     response.delete_cookie(PUBLIC_COOKIE_NAME)
     return response
 
@@ -1710,7 +1700,7 @@ def _public_account_phone_prefill(user: models.PublicUser) -> tuple[str, str]:
 
 
 @router.get("/public/account", response_class=HTMLResponse)
-def public_account_page(request: Request, next: str = "/index?center_id=1", db: Session = Depends(get_db)):
+def public_account_page(request: Request, next: str = PUBLIC_INDEX_DEFAULT_PATH, db: Session = Depends(get_db)):
     safe_next = _sanitize_next_url(request.query_params.get("next") or next)
     user = _current_public_user(request, db)
     if not user:
@@ -1746,7 +1736,7 @@ def public_account_update(
     full_name: str = Form(...),
     country_code: str = Form(...),
     phone: str = Form(...),
-    next: str = Form("/index?center_id=1"),
+    next: str = Form(PUBLIC_INDEX_DEFAULT_PATH),
     db: Session = Depends(get_db),
 ):
     safe_next = _sanitize_next_url(next)
@@ -1805,7 +1795,7 @@ def public_account_update(
 
 
 @router.get("/public/verify-pending", response_class=HTMLResponse)
-def public_verify_pending(request: Request, next: str = "/index?center_id=1", db: Session = Depends(get_db)):
+def public_verify_pending(request: Request, next: str = PUBLIC_INDEX_DEFAULT_PATH, db: Session = Depends(get_db)):
     safe_next = _sanitize_next_url(next)
     msg_param = (request.query_params.get("msg") or "").strip()
     vk_param = (request.query_params.get("vk") or "").strip()
@@ -1870,7 +1860,7 @@ def public_verify_pending(request: Request, next: str = "/index?center_id=1", db
 @router.post("/public/resend-verification")
 def public_resend_verification(
     request: Request,
-    next: str = Form("/index?center_id=1"),
+    next: str = Form(PUBLIC_INDEX_DEFAULT_PATH),
     db: Session = Depends(get_db),
 ):
     safe_next = _sanitize_next_url(next)
@@ -1935,7 +1925,7 @@ def public_resend_verification(
 def public_verify_email(
     request: Request,
     token: str = "",
-    next: str = "/index?center_id=1",
+    next: str = PUBLIC_INDEX_DEFAULT_PATH,
     db: Session = Depends(get_db),
 ):
     token_value = token.strip().strip("<>").strip('"').strip("'")
@@ -4047,10 +4037,6 @@ def admin_reorder_faqs(
     return _admin_redirect(ADMIN_MSG_FAQ_REORDERED, scroll_y, return_section)
 
 
-def _truthy_form_flag(value: str) -> bool:
-    return (value or "").strip().lower() in {"1", "true", "on", "yes"}
-
-
 def _optional_non_negative_int_form(raw: str) -> int | None:
     s = (raw or "").strip()
     if not s:
@@ -4178,34 +4164,34 @@ async def admin_center_branding(
     tag = brand_tagline.strip()[:500]
     center.brand_tagline = tag if tag else None
 
-    remove = _truthy_form_flag(remove_logo)
-    remove_h = _truthy_form_flag(remove_hero)
-    restore_stock = _truthy_form_flag(restore_hero_stock)
-    gradient_only = _truthy_form_flag(hero_gradient_only)
+    remove = _is_truthy_env(remove_logo)
+    remove_h = _is_truthy_env(remove_hero)
+    restore_stock = _is_truthy_env(restore_hero_stock)
+    gradient_only = _is_truthy_env(hero_gradient_only)
 
     if logo_ext is not None and logo_bytes is not None:
         CENTER_LOGO_UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
-        _delete_center_logo_files(cid)
+        _unlink_center_uploads(f"center_{cid}.*")
         dest = CENTER_LOGO_UPLOAD_DIR / f"center_{cid}.{logo_ext}"
         dest.write_bytes(logo_bytes)
         center.logo_url = f"/static/uploads/centers/center_{cid}.{logo_ext}"
     elif remove:
-        _delete_center_logo_files(cid)
+        _unlink_center_uploads(f"center_{cid}.*")
         center.logo_url = None
 
     if restore_stock:
-        _delete_center_hero_files(cid)
+        _unlink_center_uploads(f"center_{cid}_hero.*")
         center.hero_image_url = None
         center.hero_show_stock_photo = True
     elif hero_ext is not None and hero_bytes is not None:
         CENTER_LOGO_UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
-        _delete_center_hero_files(cid)
+        _unlink_center_uploads(f"center_{cid}_hero.*")
         dest = CENTER_LOGO_UPLOAD_DIR / f"center_{cid}_hero.{hero_ext}"
         dest.write_bytes(hero_bytes)
         center.hero_image_url = f"/static/uploads/centers/center_{cid}_hero.{hero_ext}"
         center.hero_show_stock_photo = False
     elif remove_h:
-        _delete_center_hero_files(cid)
+        _unlink_center_uploads(f"center_{cid}_hero.*")
         center.hero_image_url = None
         center.hero_show_stock_photo = False
     elif gradient_only and not had_custom_hero:
@@ -4264,8 +4250,8 @@ async def admin_save_center_post(
     row.title = ttl
     row.summary = summ if summ else None
     row.body = bod if bod else None
-    row.is_pinned = _truthy_form_flag(is_pinned)
-    row.is_published = _truthy_form_flag(is_published)
+    row.is_pinned = _is_truthy_env(is_pinned)
+    row.is_published = _is_truthy_env(is_published)
     if row.is_published and row.published_at is None:
         row.published_at = utcnow_naive()
     row.updated_at = utcnow_naive()
@@ -4276,7 +4262,7 @@ async def admin_save_center_post(
             models.CenterPost.id != row.id,
         ).update({models.CenterPost.is_pinned: False})
 
-    if _truthy_form_flag(remove_cover) and row.cover_image_url:
+    if _is_truthy_env(remove_cover) and row.cover_image_url:
         _unlink_static_url_file(row.cover_image_url)
         row.cover_image_url = None
 

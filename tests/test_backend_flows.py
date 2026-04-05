@@ -9,6 +9,7 @@ from backend.app.mailer import validate_mailer_settings
 from backend.app.security import create_public_email_verification_token, hash_password
 from backend.app.web_shared import (
     _mail_fail_reason_query_token,
+    PUBLIC_INDEX_DEFAULT_PATH,
     public_center_id_str_from_next,
     public_index_url_from_next,
     public_mail_fail_why_token,
@@ -96,7 +97,7 @@ def test_mail_fail_reason_query_token_sanitizes():
 def test_public_index_url_from_next():
     assert public_index_url_from_next("/index?center_id=3", msg="email_verified") == "/index?center_id=3&msg=email_verified"
     assert public_index_url_from_next("/post?center_id=2&post_id=1") == "/index?center_id=2"
-    assert public_index_url_from_next(None) == "/index?center_id=1"
+    assert public_index_url_from_next(None) == PUBLIC_INDEX_DEFAULT_PATH
     assert public_center_id_str_from_next("/index?center_id=5") == "5"
 
 

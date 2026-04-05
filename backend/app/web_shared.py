@@ -5,6 +5,9 @@ from urllib.parse import parse_qs, urlencode, urlsplit
 
 from fastapi import Request
 
+# مسار الواجهة العامة الافتراضي (مركز تجريبي / افتراضي)
+PUBLIC_INDEX_DEFAULT_PATH = "/index?center_id=1"
+
 
 def _public_base(request: Request) -> str:
     """قاعدة الروابط العامة (روابط التحقق والدفع). يُفضّل PUBLIC_BASE_URL في الإنتاج خلف البروكسي."""
@@ -19,7 +22,7 @@ def _is_email_verification_required() -> bool:
     return value not in {"0", "false", "no", "off"}
 
 
-def _sanitize_next_url(next_url: str | None, fallback: str = "/index?center_id=1") -> str:
+def _sanitize_next_url(next_url: str | None, fallback: str = PUBLIC_INDEX_DEFAULT_PATH) -> str:
     candidate = (next_url or "").strip()
     if not candidate:
         return fallback
@@ -132,7 +135,7 @@ def _url_with_params(path: str, **params: str) -> str:
 
 def public_center_id_str_from_next(
     next_url: str | None,
-    fallback: str = "/index?center_id=1",
+    fallback: str = PUBLIC_INDEX_DEFAULT_PATH,
 ) -> str:
     """يستخرج center_id من معامل next (مسار نسبي آمن)."""
     safe = _sanitize_next_url(next_url, fallback=fallback)
@@ -150,7 +153,7 @@ def public_index_url_from_next(
     next_url: str | None,
     *,
     msg: str | None = None,
-    fallback: str = "/index?center_id=1",
+    fallback: str = PUBLIC_INDEX_DEFAULT_PATH,
 ) -> str:
     """رابط الواجهة العامة /index مع center_id مأخوذ من next (بعد التحقق من البريد أو زيارة verify-pending وهو موثّق)."""
     cid = public_center_id_str_from_next(next_url, fallback=fallback)
@@ -166,7 +169,6 @@ def _is_truthy_env(value: str | None) -> bool:
 
 
 def _cookie_secure_flag(request: Request) -> bool:
-    cookie_secure = os.getenv("COOKIE_SECURE", "").strip().lower() in {"1", "true", "yes", "on"}
-    if cookie_secure:
+    if _is_truthy_env(os.getenv("COOKIE_SECURE")):
         return True
     return request.url.scheme == "https"
