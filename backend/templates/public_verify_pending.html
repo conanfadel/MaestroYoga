@@ -7,6 +7,7 @@
   <meta name="mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <link rel="manifest" href="/static/manifest.json" />
+  <link rel="stylesheet" href="/static/css/app-base.css" />
   <title>{% if show_email_verified_success %}تم تفعيل حسابك{% else %}تأكيد البريد الإلكتروني{% endif %} — Maestro Yoga</title>
   {% if analytics_enabled and ga4_measurement_id %}
   <script async src="https://www.googletagmanager.com/gtag/js?id={{ ga4_measurement_id }}"></script>
@@ -18,8 +19,6 @@
   </script>
   {% endif %}
   <style>
-    * { box-sizing: border-box; }
-    html { overflow-x: clip; -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
     body {
       font-family: system-ui, sans-serif;
       background: radial-gradient(circle at top right, #ecfdf5, #f0fdfa 40%, #f8fafc);

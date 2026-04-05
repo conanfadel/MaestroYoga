@@ -10,6 +10,7 @@
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="default" />
   <link rel="manifest" href="/static/manifest.json" />
+  <link rel="stylesheet" href="/static/css/app-base.css" />
   <link rel="apple-touch-icon" href="/static/icons/pwa-icon.svg" />
   <title>حجز الجلسات | {{ center.name }} | Maestro Yoga</title>
   <meta name="description" content="احجز جلسات اليوغا أو اشترك في باقات أسبوعية وشهرية وسنوية مع دفع آمن وسريع." />
@@ -61,20 +62,6 @@
       --loyalty-bronze: #b45309;
       --loyalty-silver: #64748b;
       --loyalty-gold: #ca8a04;
-      --touch-min: 44px;
-      --tap-highlight: rgba(197, 160, 89, 0.14);
-    }
-    * { box-sizing: border-box; }
-    *,
-    *::before,
-    *::after {
-      -webkit-tap-highlight-color: var(--tap-highlight);
-    }
-    html {
-      overflow-x: clip;
-      scroll-behavior: smooth;
-      -webkit-text-size-adjust: 100%;
-      text-size-adjust: 100%;
     }
     body {
       margin: 0;
@@ -86,7 +73,6 @@
         radial-gradient(ellipse 140% 90% at 100% -10%, rgba(170, 240, 209, 0.35) 0%, transparent 52%),
         radial-gradient(ellipse 80% 50% at 0% 100%, rgba(197, 160, 89, 0.08) 0%, transparent 45%),
         var(--page-bg);
-      touch-action: manipulation;
     }
     @media (max-width: 720px) {
       body {

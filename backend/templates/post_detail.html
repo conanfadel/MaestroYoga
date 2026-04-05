@@ -7,6 +7,7 @@
   <meta name="mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <link rel="manifest" href="/static/manifest.json" />
+  <link rel="stylesheet" href="/static/css/app-base.css" />
   <title>{{ post.title }} | {{ center.name }} | Maestro Yoga</title>
   <meta name="description" content="{{ (post.summary or post.title)|truncate(160) }}" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -34,8 +35,6 @@
       --white: #ffffff;
       --page-bg: #fafcfb;
     }
-    * { box-sizing: border-box; }
-    html { overflow-x: clip; -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
     body {
       margin: 0;
       padding: max(18px, env(safe-area-inset-top, 0px)) clamp(12px, 4vw, 48px) max(28px, env(safe-area-inset-bottom, 0px));

@@ -7,6 +7,7 @@
   <meta name="mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <link rel="manifest" href="/static/manifest.json" />
+  <link rel="stylesheet" href="/static/css/app-base.css" />
   <title>أخبار وإعلانات {{ center.name }} | Maestro Yoga</title>
   <meta name="description" content="جميع الأخبار والإعلانات والنشاطات المنشورة في {{ center.name }}." />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -32,8 +33,6 @@
       --charcoal-muted: #636e72;
       --white: #ffffff;
     }
-    * { box-sizing: border-box; }
-    html { overflow-x: clip; -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
     body {
       margin: 0;
       padding: max(18px, env(safe-area-inset-top, 0px)) clamp(12px, 4vw, 40px) max(36px, env(safe-area-inset-bottom, 0px));
