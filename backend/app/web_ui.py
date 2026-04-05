@@ -8,7 +8,7 @@ from pathlib import Path
 from typing import Any
 from urllib.parse import urlencode, urlparse, urlsplit
 
-from fastapi import APIRouter, Depends, File, Form, HTTPException, Request, UploadFile
+from fastapi import APIRouter, Depends, File, Form, HTTPException, Query, Request, UploadFile
 from fastapi.responses import HTMLResponse, RedirectResponse, StreamingResponse
 from fastapi.templating import Jinja2Templates
 from sqlalchemy import and_, case, func, nullslast, or_
@@ -191,6 +191,7 @@ CENTER_POST_TYPE_LABELS = {
     "competition": "مسابقة",
     "report": "تقرير",
 }
+NEWS_LIST_SORT_MODES = frozenset({"newest", "oldest", "recent"})
 
 
 def _resolved_path_under_static(public_path: str | None) -> Path | None:
@@ -730,6 +731,7 @@ def public_index(
             {
                 "title": (pinned_post.title or "").strip(),
                 "type_label": CENTER_POST_TYPE_LABELS.get(pinned_post.post_type, pinned_post.post_type),
+                "detail_url": _url_with_params("/post", center_id=str(center_id), post_id=str(pinned_post.id)),
             }
         )
     for p in recent_posts_q:
@@ -756,6 +758,7 @@ def public_index(
                     {
                         "title": tl,
                         "type_label": CENTER_POST_TYPE_LABELS.get(p.post_type, p.post_type),
+                        "detail_url": _url_with_params("/post", center_id=str(center_id), post_id=str(p.id)),
                     }
                 )
         if len(public_posts_teasers) >= 3 and len(news_ticker_items) >= 14:
@@ -809,6 +812,8 @@ def public_index(
 def public_news_list(
     request: Request,
     center_id: int = 1,
+    filter_type: str | None = Query(None, alias="type", description="تصفية حسب نوع المنشور"),
+    sort: str = Query("newest", description="newest | oldest | recent"),
     db: Session = Depends(get_db),
 ):
     center = db.get(models.Center, center_id)
@@ -822,25 +827,48 @@ def public_news_list(
     if center.name == DEMO_CENTER_NAME:
         ensure_demo_news_posts(db, center.id)
     _clear_center_branding_urls_if_files_missing(db, center)
-    posts = (
-        db.query(models.CenterPost)
-        .filter(
-            models.CenterPost.center_id == center_id,
-            models.CenterPost.is_published.is_(True),
+
+    type_key = (filter_type or "").strip().lower()
+    if type_key and type_key not in CENTER_POST_TYPES:
+        type_key = ""
+    sort_key = (sort or "newest").strip().lower()
+    if sort_key not in NEWS_LIST_SORT_MODES:
+        sort_key = "newest"
+
+    q = db.query(models.CenterPost).filter(
+        models.CenterPost.center_id == center_id,
+        models.CenterPost.is_published.is_(True),
+    )
+    if type_key:
+        q = q.filter(models.CenterPost.post_type == type_key)
+
+    if sort_key == "oldest":
+        q = q.order_by(
+            models.CenterPost.is_pinned.desc(),
+            nullslast(models.CenterPost.published_at.asc()),
+            models.CenterPost.id.asc(),
         )
-        .order_by(
+    elif sort_key == "recent":
+        q = q.order_by(
+            models.CenterPost.is_pinned.desc(),
+            models.CenterPost.created_at.desc(),
+            models.CenterPost.id.desc(),
+        )
+    else:
+        q = q.order_by(
             models.CenterPost.is_pinned.desc(),
             nullslast(models.CenterPost.published_at.desc()),
             models.CenterPost.id.desc(),
         )
-        .all()
-    )
+
+    posts = q.all()
     news_rows = []
     for p in posts:
         sum_full = (p.summary or "").strip()
         news_rows.append(
             {
                 "title": p.title,
+                "post_type": p.post_type,
                 "type_label": CENTER_POST_TYPE_LABELS.get(p.post_type, p.post_type),
                 "summary": _preview_text(sum_full, 180),
                 "published_at_display": _fmt_dt(p.published_at) if p.published_at else "",
@@ -849,6 +877,14 @@ def public_news_list(
                 "is_pinned": bool(p.is_pinned),
             }
         )
+
+    post_type_filter_options = [("", "كل الأنواع")] + [(k, CENTER_POST_TYPE_LABELS[k]) for k in sorted(CENTER_POST_TYPES)]
+    sort_filter_options = [
+        ("newest", "الأحدث نشراً"),
+        ("oldest", "الأقدم نشراً"),
+        ("recent", "آخر إضافة"),
+    ]
+
     return templates.TemplateResponse(
         request,
         "public_news_list.html",
@@ -856,6 +892,10 @@ def public_news_list(
             "center": center,
             "center_id": center_id,
             "news_rows": news_rows,
+            "news_type_filter": type_key,
+            "news_sort": sort_key,
+            "post_type_filter_options": post_type_filter_options,
+            "sort_filter_options": sort_filter_options,
             "index_url": _url_with_params("/index", center_id=str(center_id)),
             **_analytics_context("public_news_list", center_id=str(center_id)),
         },

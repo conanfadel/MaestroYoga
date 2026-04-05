@@ -21,6 +21,7 @@
     :root {
       --gold: #c5a059;
       --gold-dark: #9a7b3c;
+      --gold-soft: rgba(197, 160, 89, 0.14);
       --mint-bg: #e8fcf4;
       --mint-mid: #7dd3ae;
       --charcoal: #2d3436;
@@ -37,7 +38,7 @@
         radial-gradient(ellipse 100% 70% at 100% 0%, var(--mint-bg) 0%, transparent 50%),
         #fafcfb;
     }
-    .wrap { max-width: 720px; margin: 0 auto; }
+    .wrap { max-width: 920px; margin: 0 auto; }
     .back {
       display: inline-flex;
       align-items: center;
@@ -60,44 +61,125 @@
       color: var(--charcoal);
     }
     .sub {
-      margin: 0 0 22px;
+      margin: 0 0 18px;
       color: var(--charcoal-muted);
       line-height: 1.6;
       font-size: 0.95rem;
     }
-    .news-list { display: flex; flex-direction: column; gap: 14px; }
-    .news-card {
-      display: grid;
-      grid-template-columns: minmax(0, 1fr) minmax(100px, 140px);
-      gap: 14px;
+    .news-toolbar {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: flex-end;
+      gap: 14px 18px;
+      margin-bottom: 22px;
       padding: 16px 18px;
       background: var(--white);
       border-radius: 16px;
-      border: 1px solid rgba(197, 160, 89, 0.3);
+      border: 1px solid rgba(197, 160, 89, 0.32);
+      box-shadow: 0 10px 32px rgba(45, 52, 54, 0.06);
+    }
+    .news-toolbar__field {
+      flex: 1 1 160px;
+      min-width: min(100%, 200px);
+    }
+    .news-toolbar__field label {
+      display: block;
+      font-size: 0.78rem;
+      font-weight: 800;
+      color: var(--charcoal-muted);
+      margin-bottom: 6px;
+    }
+    .news-toolbar__field select {
+      width: 100%;
+      padding: 10px 12px;
+      border-radius: 12px;
+      border: 1px solid rgba(125, 211, 174, 0.85);
+      font-family: inherit;
+      font-size: 0.9rem;
+      font-weight: 600;
+      background: var(--white);
+      color: var(--charcoal);
+    }
+    .news-toolbar__field select:focus {
+      outline: none;
+      border-color: var(--gold);
+      box-shadow: 0 0 0 3px var(--gold-soft);
+    }
+    .news-toolbar__submit {
+      flex: 0 0 auto;
+      margin-top: 22px;
+      padding: 10px 18px;
+      border-radius: 999px;
+      border: 0;
+      font-family: inherit;
+      font-weight: 800;
+      font-size: 0.86rem;
+      cursor: pointer;
+      background: linear-gradient(135deg, var(--gold) 0%, #d4b56e 100%);
+      color: #1a1a1a;
+      box-shadow: 0 4px 14px rgba(197, 160, 89, 0.35);
+    }
+    .news-toolbar__submit:hover { filter: brightness(1.03); }
+    .news-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(min(100%, 280px), 1fr));
+      gap: 20px;
+    }
+    .news-card {
+      display: flex;
+      flex-direction: column;
       text-decoration: none;
       color: inherit;
-      box-shadow: 0 8px 26px rgba(45, 52, 54, 0.06);
-      transition: transform 0.15s ease, box-shadow 0.15s ease;
+      background: var(--white);
+      border-radius: 18px;
+      overflow: hidden;
+      border: 1px solid rgba(197, 160, 89, 0.28);
+      box-shadow: 0 12px 36px rgba(45, 52, 54, 0.07);
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
     }
     .news-card:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 12px 34px rgba(45, 52, 54, 0.09);
+      transform: translateY(-4px);
+      box-shadow: 0 20px 48px rgba(45, 52, 54, 0.11);
+    }
+    .news-card--pinned { border-color: rgba(16, 185, 129, 0.45); }
+    .news-card__media {
+      aspect-ratio: 16 / 10;
+      background: linear-gradient(145deg, rgba(170, 240, 209, 0.45), rgba(197, 160, 89, 0.12));
+    }
+    .news-card__media img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+    .news-card__body {
+      padding: 14px 16px 18px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      flex: 1;
     }
     .news-card__badge {
       display: inline-block;
+      align-self: flex-start;
       font-size: 0.72rem;
       font-weight: 800;
       color: var(--gold-dark);
-      background: rgba(197, 160, 89, 0.14);
-      padding: 4px 10px;
+      background: var(--gold-soft);
+      padding: 5px 11px;
       border-radius: 999px;
-      margin-bottom: 8px;
+      border: 1px solid rgba(197, 160, 89, 0.35);
     }
-    .news-card__badge.is-pinned { background: rgba(16, 185, 129, 0.18); color: #047857; }
+    .news-card__badge.is-pinned {
+      background: rgba(16, 185, 129, 0.16);
+      color: #047857;
+      border-color: rgba(16, 185, 129, 0.4);
+    }
     .news-card__title {
-      margin: 0 0 8px;
-      font-size: 1.08rem;
-      font-weight: 800;
+      margin: 0;
+      font-family: "Amiri", "Tajawal", serif;
+      font-size: 1.12rem;
+      font-weight: 700;
       line-height: 1.35;
     }
     .news-card__summary {
@@ -105,52 +187,75 @@
       font-size: 0.88rem;
       color: var(--charcoal-muted);
       line-height: 1.55;
+      display: -webkit-box;
+      -webkit-line-clamp: 3;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
     }
     .news-card__foot {
-      margin-top: 10px;
+      margin-top: auto;
       font-size: 0.78rem;
       font-weight: 700;
       color: var(--mint-mid);
     }
-    .news-card__media {
-      border-radius: 12px;
-      overflow: hidden;
-      border: 1px solid rgba(197, 160, 89, 0.22);
-      min-height: 88px;
-      background: linear-gradient(135deg, rgba(170, 240, 209, 0.35), rgba(255, 255, 255, 0.9));
-    }
-    .news-card__media img {
-      width: 100%;
-      height: 100%;
-      min-height: 88px;
-      object-fit: cover;
-      display: block;
-    }
     .empty {
-      padding: 28px 20px;
+      padding: 32px 22px;
       text-align: center;
       color: var(--charcoal-muted);
       background: var(--white);
       border-radius: 16px;
-      border: 1px dashed rgba(125, 211, 174, 0.6);
+      border: 1px dashed rgba(125, 211, 174, 0.65);
+      line-height: 1.6;
     }
-    @media (max-width: 560px) {
-      .news-card { grid-template-columns: 1fr; }
-      .news-card__media { max-height: 160px; }
-    }
+    .empty strong { color: var(--charcoal); }
   </style>
 </head>
 <body>
   <div class="wrap">
     <a class="back" href="{{ index_url }}">← العودة لصفحة الحجز</a>
     <h1>أخبار وإعلانات {{ center.name }}</h1>
-    <p class="sub">قائمة بكل المنشورات المنشورة. اضغط على أي عنصر لقراءة التفاصيل كاملة.</p>
+    <p class="sub">تصفية حسب النوع وترتيب العرض — ثم اختر أي بطاقة لقراءة التفاصيل كاملة.</p>
+
+    <form class="news-toolbar" method="get" action="/news" id="news-filter-form">
+      <input type="hidden" name="center_id" value="{{ center_id }}" />
+      <div class="news-toolbar__field">
+        <label for="news-filter-type">نوع المنشور</label>
+        <select id="news-filter-type" name="type" aria-label="تصفية حسب النوع">
+          {% for val, label in post_type_filter_options %}
+          <option value="{{ val }}"{% if news_type_filter == val %} selected{% endif %}>{{ label }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="news-toolbar__field">
+        <label for="news-filter-sort">الترتيب</label>
+        <select id="news-filter-sort" name="sort" aria-label="ترتيب القائمة">
+          {% for val, label in sort_filter_options %}
+          <option value="{{ val }}"{% if news_sort == val %} selected{% endif %}>{{ label }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <button type="submit" class="news-toolbar__submit">تطبيق</button>
+    </form>
+    <script>
+      (function () {
+        var f = document.getElementById("news-filter-form");
+        if (!f) return;
+        f.querySelectorAll("select").forEach(function (sel) {
+          sel.addEventListener("change", function () { f.requestSubmit ? f.requestSubmit() : f.submit(); });
+        });
+      })();
+    </script>
 
     {% if news_rows %}
-    <div class="news-list">
+    <div class="news-grid">
       {% for row in news_rows %}
-      <a class="news-card" href="{{ row.detail_url }}">
-        <div>
+      <a class="news-card{% if row.is_pinned %} news-card--pinned{% endif %}" href="{{ row.detail_url }}">
+        <div class="news-card__media">
+          {% if row.cover_image_url %}
+          <img src="{{ row.cover_image_url }}" alt="" decoding="async" loading="lazy" />
+          {% endif %}
+        </div>
+        <div class="news-card__body">
           <span class="news-card__badge{% if row.is_pinned %} is-pinned{% endif %}">
             {% if row.is_pinned %}مثبّت · {% endif %}{{ row.type_label }}
           </span>
@@ -162,16 +267,18 @@
           <div class="news-card__foot">{{ row.published_at_display }}</div>
           {% endif %}
         </div>
-        <div class="news-card__media">
-          {% if row.cover_image_url %}
-          <img src="{{ row.cover_image_url }}" alt="" decoding="async" loading="lazy" />
-          {% endif %}
-        </div>
       </a>
       {% endfor %}
     </div>
     {% else %}
-    <p class="empty">لا توجد أخبار أو إعلانات منشورة حاليًا.</p>
+    <p class="empty">
+      {% if news_type_filter %}
+      <strong>لا توجد منشورات مطابقة.</strong><br />
+      جرّب اختيار «كل الأنواع» أو تغيير الترتيب.
+      {% else %}
+      لا توجد أخبار أو إعلانات منشورة حاليًا.
+      {% endif %}
+    </p>
     {% endif %}
   </div>
 </body>

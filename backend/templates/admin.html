@@ -116,9 +116,11 @@
       flex-shrink: 0;
       margin-inline-end: 6px;
       opacity: 0.92;
-      width: 1.35em;
-      height: 1.35em;
-      font-size: 1.05em;
+      width: 1.125rem;
+      height: 1.125rem;
+      min-width: 1.125rem;
+      min-height: 1.125rem;
+      font-size: 1rem;
       line-height: 1;
       vertical-align: middle;
     }
@@ -506,9 +508,17 @@
       overflow: visible;
       margin: 6px 0 12px;
     }
+    a.section-tab,
+    button.section-tab {
+      -webkit-appearance: none;
+      appearance: none;
+      box-sizing: border-box;
+      font-family: inherit;
+    }
     .section-tab {
       display: inline-flex;
       align-items: center;
+      justify-content: center;
       gap: 6px;
       border: 1px solid rgba(170, 240, 209, 0.95);
       border-radius: 999px;
@@ -522,6 +532,7 @@
       cursor: pointer;
       flex: 0 0 auto;
       white-space: nowrap;
+      min-height: 2.5rem;
       transition: background 0.15s ease, border-color 0.15s ease;
     }
     .section-tab:hover { border-color: rgba(197, 160, 89, 0.5); }

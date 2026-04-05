@@ -226,3 +226,10 @@ def test_public_news_list_page_ok(client):
     assert "text/html" in r.headers.get("content-type", "")
     body = r.text
     assert "أخبار وإعلانات" in body or "لا توجد أخبار" in body
+
+
+def test_public_news_list_filter_and_sort(client):
+    r = client.get("/news?center_id=1&type=news&sort=oldest")
+    assert r.status_code == 200
+    assert "نوع المنشور" in r.text
+    assert "الترتيب" in r.text
