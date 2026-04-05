@@ -700,16 +700,32 @@
       .loyalty-data-table tbody td:nth-child(3) { min-width: 150px; }
     }
     .grid-two {
-      display: grid;
-      grid-template-columns: minmax(0, 2.1fr) minmax(260px, 1fr);
-      gap: 24px;
-      align-items: start;
-    }
-    .grid-two__main {
       display: flex;
       flex-direction: column;
-      gap: 22px;
+      gap: 18px;
       min-width: 0;
+    }
+    .grid-two__cell {
+      min-width: 0;
+    }
+    @media (min-width: 981px) {
+      .grid-two {
+        display: grid;
+        grid-template-columns: minmax(0, 2.1fr) minmax(260px, 1fr);
+        gap: 24px;
+        align-items: start;
+      }
+      .grid-two__cell--sessions { grid-column: 1; grid-row: 1; }
+      .grid-two__cell--news { grid-column: 1; grid-row: 2; }
+      .grid-two__cell--plans { grid-column: 2; grid-row: 1; }
+      .grid-two__cell--tail {
+        grid-column: 2;
+        grid-row: 2;
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+      }
+      .grid-two__cell--tail .card { margin-bottom: 0; }
     }
     .card {
       background: linear-gradient(180deg, #ffffff 0%, #fcfdfc 100%);
@@ -1808,7 +1824,6 @@
     .post-teaser--strip .post-teaser__summary { font-size: 0.84rem; -webkit-line-clamp: 2; display: -webkit-box; -webkit-box-orient: vertical; overflow: hidden; }
     @media (max-width: 980px) {
       .hero { grid-template-columns: 1fr; padding: 18px 16px; }
-      .grid-two { grid-template-columns: 1fr; }
       .sessions-filters-grid { grid-template-columns: 1fr; }
       .plan-meta { grid-template-columns: 1fr; }
       body { padding-block: 14px; }
@@ -1908,6 +1923,87 @@
     @media (prefers-reduced-motion: reduce) {
       .session-card:hover,
       .plan-card:hover { transform: none; }
+    }
+    /* هاتف: هيدر مدمج جداً + قسم الجلسات أصغر */
+    @media (max-width: 520px) {
+      body { padding-block: 10px; padding-inline: max(8px, 2.5vw); }
+      .hero {
+        gap: 10px;
+        padding: 10px 12px;
+        margin-bottom: 12px;
+        border-radius: 16px;
+      }
+      .hero::before { width: 3px; border-radius: 16px; }
+      .hero-brand { gap: 10px; margin-bottom: 6px; }
+      .hero-logo { width: 44px; height: 44px; }
+      .hero h1 {
+        font-size: 0.95rem;
+        line-height: 1.3;
+        margin-bottom: 2px;
+      }
+      .brand-tagline-hint { font-size: 0.72rem; margin-top: 2px; line-height: 1.4; }
+      .hero-meta { margin-top: 6px !important; gap: 6px; }
+      .hero-meta .chip {
+        padding: 4px 8px;
+        font-size: 0.68rem;
+      }
+      .hero-actions { margin-top: 8px; gap: 6px; }
+      .hero-actions .btn,
+      .toplinks .btn {
+        padding: 7px 12px;
+        font-size: 0.78rem;
+      }
+      .hero-media {
+        min-height: 110px;
+        border-radius: 12px;
+      }
+      .public-user-menu__trigger {
+        padding: 7px 12px;
+        font-size: 0.82rem;
+        max-width: min(100%, 220px);
+      }
+      #sessions-section.sessions-panel {
+        padding: 10px 10px 12px;
+        padding-inline-start: 14px;
+        border-radius: 14px;
+        margin-bottom: 0;
+      }
+      #sessions-section.sessions-panel::before { top: 8px; bottom: 8px; width: 3px; }
+      .sessions-eyebrow { font-size: 0.6rem; margin-bottom: 4px; }
+      #sessions-section .sessions-panel__head h2 {
+        font-size: 0.88rem;
+        margin-bottom: 4px;
+      }
+      #sessions-section .sessions-lead {
+        font-size: 0.75rem;
+        line-height: 1.45;
+        margin-bottom: 10px;
+      }
+      .sessions-filters {
+        padding: 10px 12px;
+        margin-bottom: 10px;
+        border-radius: 12px;
+      }
+      .sessions-filters-title {
+        font-size: 0.78rem;
+        margin-bottom: 8px;
+      }
+      .sessions-filters-title::before { width: 6px; height: 6px; }
+      .sessions-filters .field label { font-size: 0.72rem; margin-bottom: 3px; }
+      .sessions-filters .field input,
+      .sessions-filters .field select {
+        padding: 8px 10px;
+        font-size: 0.8rem;
+        min-height: 40px;
+      }
+      .steps { gap: 8px; margin-bottom: 14px; }
+      .step {
+        padding: 14px 12px 12px;
+        padding-top: 52px;
+        font-size: 0.88rem;
+        border-radius: 14px;
+      }
+      .step::before { top: 12px; inset-inline-start: 12px; width: 26px; height: 26px; font-size: 0.78rem; }
     }
   </style>
 </head>
@@ -2159,7 +2255,7 @@
     {% if msg == 'feedback_image_too_large' %}<div class="alert err">حجم أحد الملفات كبير جدًا. قلّل الحجم أو أزل بعض الصور.</div>{% endif %}
 
     <main id="main-content" class="grid-two">
-      <div class="grid-two__main">
+      <div class="grid-two__cell grid-two__cell--sessions">
       <section id="sessions-section" class="card sessions-panel" aria-label="قائمة الجلسات">
         <header class="sessions-panel__head">
           <p class="sessions-eyebrow">حجز فوري</p>
@@ -2259,61 +2355,9 @@
               {% endfor %}
         </div>
       </section>
-
-      {% if pinned_public_post or public_posts_teasers %}
-      <section id="center-news-section" class="card index-news-showcase" aria-label="ما الجديد في المركز">
-        <div class="index-news-showcase__head">
-          <h2>ما الجديد في المركز</h2>
-          <a class="btn ghost index-news-showcase__all" href="{{ public_news_list_url }}">جميع الأخبار</a>
-        </div>
-        <p class="index-news-showcase__lead">آخر المنشورات والإعلانات بعد الجلسات — اختر بطاقة للتفاصيل والصور.</p>
-        <div class="index-news-showcase__grid">
-          {% if pinned_public_post %}
-          <a class="index-news-card index-news-card--featured" href="{{ pinned_public_post.detail_url }}">
-            <div class="index-news-card__media">
-              {% if pinned_public_post.cover_image_url %}
-              <img src="{{ pinned_public_post.cover_image_url }}" alt="" decoding="async" loading="lazy" />
-              {% endif %}
-            </div>
-            <div class="index-news-card__body">
-              <span class="index-news-card__badge">مثبّت · {{ pinned_public_post.type_label }}</span>
-              <h3 class="index-news-card__title">{{ pinned_public_post.title }}</h3>
-              {% if pinned_public_post.summary_short %}
-              <p class="index-news-card__summary">{{ pinned_public_post.summary_short }}</p>
-              {% endif %}
-            </div>
-          </a>
-          {% endif %}
-          {% for t in public_posts_teasers %}
-          <a class="index-news-card" href="{{ t.detail_url }}">
-            <div class="index-news-card__media">
-              {% if t.cover_image_url %}
-              <img src="{{ t.cover_image_url }}" alt="" decoding="async" loading="lazy" />
-              {% endif %}
-            </div>
-            <div class="index-news-card__body">
-              <span class="index-news-card__badge">{{ t.type_label }}</span>
-              <h3 class="index-news-card__title">{{ t.title }}</h3>
-              {% if t.summary %}
-              <p class="index-news-card__summary">{{ t.summary }}</p>
-              {% endif %}
-              {% if t.published_at_display %}
-              <span class="index-news-card__date">{{ t.published_at_display }}</span>
-              {% endif %}
-            </div>
-          </a>
-          {% endfor %}
-        </div>
-        {% if public_news_has_more %}
-        <p class="index-news-showcase__more">
-          <a class="btn ghost" href="{{ public_news_list_url }}">عرض المزيد من المنشورات</a>
-        </p>
-        {% endif %}
-      </section>
-      {% endif %}
       </div>
 
-      <aside>
+      <div class="grid-two__cell grid-two__cell--plans">
         <section id="plans-section" class="card plans-panel" aria-label="مقارنة الخطط">
           <header class="plans-panel__head">
             <p class="plans-eyebrow">خطط الاشتراك</p>
@@ -2375,7 +2419,63 @@
             </div>
           </div>
         </section>
+      </div>
 
+      {% if pinned_public_post or public_posts_teasers %}
+      <div class="grid-two__cell grid-two__cell--news">
+      <section id="center-news-section" class="card index-news-showcase" aria-label="ما الجديد في المركز">
+        <div class="index-news-showcase__head">
+          <h2>ما الجديد في المركز</h2>
+          <a class="btn ghost index-news-showcase__all" href="{{ public_news_list_url }}">جميع الأخبار</a>
+        </div>
+        <p class="index-news-showcase__lead">آخر المنشورات والإعلانات — اختر بطاقة للتفاصيل والصور.</p>
+        <div class="index-news-showcase__grid">
+          {% if pinned_public_post %}
+          <a class="index-news-card index-news-card--featured" href="{{ pinned_public_post.detail_url }}">
+            <div class="index-news-card__media">
+              {% if pinned_public_post.cover_image_url %}
+              <img src="{{ pinned_public_post.cover_image_url }}" alt="" decoding="async" loading="lazy" />
+              {% endif %}
+            </div>
+            <div class="index-news-card__body">
+              <span class="index-news-card__badge">مثبّت · {{ pinned_public_post.type_label }}</span>
+              <h3 class="index-news-card__title">{{ pinned_public_post.title }}</h3>
+              {% if pinned_public_post.summary_short %}
+              <p class="index-news-card__summary">{{ pinned_public_post.summary_short }}</p>
+              {% endif %}
+            </div>
+          </a>
+          {% endif %}
+          {% for t in public_posts_teasers %}
+          <a class="index-news-card" href="{{ t.detail_url }}">
+            <div class="index-news-card__media">
+              {% if t.cover_image_url %}
+              <img src="{{ t.cover_image_url }}" alt="" decoding="async" loading="lazy" />
+              {% endif %}
+            </div>
+            <div class="index-news-card__body">
+              <span class="index-news-card__badge">{{ t.type_label }}</span>
+              <h3 class="index-news-card__title">{{ t.title }}</h3>
+              {% if t.summary %}
+              <p class="index-news-card__summary">{{ t.summary }}</p>
+              {% endif %}
+              {% if t.published_at_display %}
+              <span class="index-news-card__date">{{ t.published_at_display }}</span>
+              {% endif %}
+            </div>
+          </a>
+          {% endfor %}
+        </div>
+        {% if public_news_has_more %}
+        <p class="index-news-showcase__more">
+          <a class="btn ghost" href="{{ public_news_list_url }}">عرض المزيد من المنشورات</a>
+        </p>
+        {% endif %}
+      </section>
+      </div>
+      {% endif %}
+
+      <div class="grid-two__cell grid-two__cell--tail">
         <section class="card" aria-label="آراء العملاء">
           <h2>آراء العملاء</h2>
           <div class="testimonial">"تجربة ممتازة وتنظيم احترافي للجلسات." <span class="small">— سارة</span></div>
@@ -2391,7 +2491,7 @@
             <div class="faq-item"><span class="small">لا توجد أسئلة شائعة متاحة حاليًا.</span></div>
           {% endfor %}
         </section>
-      </aside>
+      </div>
     </main>
 
     <div class="sticky-booking" id="sticky-booking" aria-live="polite">
