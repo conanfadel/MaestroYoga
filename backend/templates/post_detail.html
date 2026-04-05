@@ -6,7 +6,7 @@
   <meta name="theme-color" content="#c5a059" />
   <meta name="mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
-  <link rel="manifest" href="/static/manifest.json" />
+  <link rel="manifest" href="/manifest.json?v={{ app_version }}" />
   {% include '_app_base_stylesheet.html' %}
   <title>{{ post.title }} | {{ center.name }} | Maestro Yoga</title>
   <meta name="description" content="{{ (post.summary or post.title)|truncate(160) }}" />
@@ -269,5 +269,6 @@
   </script>
   {% endif %}
   {% include '_mobile_landscape_hint.html' %}
+  {% include '_pwa_footer.html' %}
 </body>
 </html>

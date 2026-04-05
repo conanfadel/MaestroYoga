@@ -69,7 +69,14 @@ try:
     from .bootstrap import DEMO_OWNER_EMAIL, DEMO_OWNER_PASSWORD, ensure_demo_data
     from .checkout_finalize import finalize_checkout_failed, finalize_checkout_paid
     from .database import get_db, init_db
-    from .middleware import ApiClientHeadersMiddleware, MaintenanceMiddleware, RequestIDMiddleware, attach_cors
+    from .middleware import (
+        ApiClientHeadersMiddleware,
+        MaintenanceMiddleware,
+        RequestIDMiddleware,
+        SecurityHeadersMiddleware,
+        StaticCacheHeadersMiddleware,
+        attach_cors,
+    )
     from .payments import (
         MoyasarPaymentProvider,
         StripePaymentProvider,
@@ -77,6 +84,7 @@ try:
         payment_provider_supports_hosted_checkout,
     )
     from .security import create_access_token, get_current_user, hash_password, require_roles, verify_password
+    from .pwa import pwa_router
     from .web_ui import router as web_ui_router
     from .tenant_utils import require_user_center_id
 except ImportError:
@@ -85,7 +93,14 @@ except ImportError:
     from backend.app.bootstrap import DEMO_OWNER_EMAIL, DEMO_OWNER_PASSWORD, ensure_demo_data
     from backend.app.checkout_finalize import finalize_checkout_failed, finalize_checkout_paid
     from backend.app.database import get_db, init_db
-    from backend.app.middleware import ApiClientHeadersMiddleware, MaintenanceMiddleware, RequestIDMiddleware, attach_cors
+    from backend.app.middleware import (
+        ApiClientHeadersMiddleware,
+        MaintenanceMiddleware,
+        RequestIDMiddleware,
+        SecurityHeadersMiddleware,
+        StaticCacheHeadersMiddleware,
+        attach_cors,
+    )
     from backend.app.payments import (
         MoyasarPaymentProvider,
         StripePaymentProvider,
@@ -93,11 +108,17 @@ except ImportError:
         payment_provider_supports_hosted_checkout,
     )
     from backend.app.security import create_access_token, get_current_user, hash_password, require_roles, verify_password
+    from backend.app.pwa import pwa_router
     from backend.app.web_ui import router as web_ui_router
     from backend.app.tenant_utils import require_user_center_id
 
 load_dotenv()
 logger = logging.getLogger(__name__)
+
+try:
+    from .app_version import APP_VERSION_STRING
+except ImportError:
+    from backend.app.app_version import APP_VERSION_STRING  # type: ignore[no-redef]
 
 
 @asynccontextmanager
@@ -108,7 +129,7 @@ async def _app_lifespan(app: FastAPI):
     yield
 
 
-app = FastAPI(title="Maestro Yoga API", version="1.0.0", lifespan=_app_lifespan)
+app = FastAPI(title="Maestro Yoga API", version=APP_VERSION_STRING, lifespan=_app_lifespan)
 
 api_router = APIRouter(tags=["api"])
 
@@ -116,8 +137,11 @@ init_db()
 app.add_middleware(RequestIDMiddleware)
 app.add_middleware(ApiClientHeadersMiddleware)
 app.add_middleware(MaintenanceMiddleware)
+app.add_middleware(SecurityHeadersMiddleware)
+app.add_middleware(StaticCacheHeadersMiddleware)
 _cors_origins = [x.strip() for x in os.getenv("CORS_ORIGINS", "").split(",") if x.strip()]
 attach_cors(app, _cors_origins)
+app.include_router(pwa_router)
 app.include_router(web_ui_router)
 _STATIC_DIR = Path(__file__).resolve().parent.parent / "static"
 if _STATIC_DIR.is_dir():

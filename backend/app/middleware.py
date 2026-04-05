@@ -51,6 +51,8 @@ def _path_exempt_from_maintenance(path: str) -> bool:
         return True
     if path.startswith("/static/"):
         return True
+    if path in {"/manifest.json", "/sw.js"}:
+        return True
     if path in {"/favicon.ico", "/openapi.json", "/docs", "/redoc"}:
         return True
     if path.startswith("/docs") or path.startswith("/redoc"):
@@ -117,6 +119,32 @@ class MaintenanceMiddleware(BaseHTTPMiddleware):
             status_code=503,
             headers={"Retry-After": "120"},
         )
+
+
+class SecurityHeadersMiddleware(BaseHTTPMiddleware):
+    """رؤوس أمان عامة (بدون CSP صارم حتى لا يكسر السكربتات المضمّنة والخطوط الخارجية)."""
+
+    async def dispatch(self, request: Request, call_next):
+        response: Response = await call_next(request)
+        response.headers.setdefault("X-Content-Type-Options", "nosniff")
+        response.headers.setdefault("Referrer-Policy", "strict-origin-when-cross-origin")
+        response.headers.setdefault("X-Frame-Options", "SAMEORIGIN")
+        response.headers.setdefault(
+            "Permissions-Policy",
+            "geolocation=(), microphone=(), camera=()",
+        )
+        return response
+
+
+class StaticCacheHeadersMiddleware(BaseHTTPMiddleware):
+    """كاش للملفات الثابتة (CSS/JS/صور) لتخفيف الحمل بعد النشر."""
+
+    async def dispatch(self, request: Request, call_next):
+        response: Response = await call_next(request)
+        path = request.url.path
+        if path.startswith("/static/") and response.status_code < 400:
+            response.headers.setdefault("Cache-Control", "public, max-age=86400")
+        return response
 
 
 def attach_cors(app, origins: list[str]) -> None:

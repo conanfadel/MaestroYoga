@@ -57,6 +57,11 @@ from .security import (
 )
 from .tenant_utils import require_user_center_id
 from .time_utils import utcnow_naive
+
+try:
+    from .app_version import APP_VERSION_STRING
+except ImportError:
+    from backend.app.app_version import APP_VERSION_STRING  # type: ignore[no-redef]
 from .web_shared import (
     _cookie_secure_flag,
     _fmt_dt,
@@ -77,6 +82,7 @@ from .web_shared import (
 
 templates = Jinja2Templates(directory=str(Path(__file__).resolve().parent.parent / "templates"))
 templates.env.globals["PUBLIC_INDEX_DEFAULT_PATH"] = PUBLIC_INDEX_DEFAULT_PATH
+templates.env.globals["app_version"] = APP_VERSION_STRING
 
 router = APIRouter(tags=["web"])
 PUBLIC_COOKIE_NAME = "public_access_token"

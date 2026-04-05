@@ -1,0 +1,6 @@
+{# تسجيل عامل خدمة خفيف؛ الإصدار في الاستعلام يضمن استلام نسخة جديدة بعد النشر #}
+<script>
+if ("serviceWorker" in navigator) {
+  navigator.serviceWorker.register("/sw.js?v={{ app_version }}", { scope: "/" }).catch(function () {});
+}
+</script>
