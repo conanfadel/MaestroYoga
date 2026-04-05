@@ -102,53 +102,151 @@
     .links { margin-top: 18px; font-size: 0.9rem; line-height: 1.8; }
     .links a { color: #0f766e; font-weight: 700; text-decoration: none; }
     .hint { font-size: 0.82rem; color: var(--charcoal-muted); margin-top: 6px; }
+    .loyalty-user-summary {
+      margin-bottom: 20px;
+      padding: 18px 18px 16px;
+      border-radius: 18px;
+      border: 1px solid rgba(125, 211, 174, 0.55);
+      background: linear-gradient(145deg, #f0fdf4 0%, #ffffff 55%);
+      box-shadow: 0 8px 28px rgba(15, 118, 110, 0.08);
+    }
+    .loyalty-user-summary__title {
+      margin: 0 0 8px;
+      font-weight: 800;
+      color: #0f766e;
+      font-size: 1rem;
+    }
+    .loyalty-user-summary__body {
+      margin: 0 0 8px;
+      font-size: 0.92rem;
+      color: #475569;
+      line-height: 1.55;
+    }
+    .loyalty-user-summary__hint {
+      margin: 10px 0 0;
+      font-size: 0.78rem;
+      color: #94a3b8;
+      line-height: 1.5;
+    }
+    .loyalty-user-summary__meta {
+      margin: 0;
+      font-size: 0.88rem;
+      color: #64748b;
+      line-height: 1.5;
+    }
+    .tier-tag {
+      display: inline-block;
+      margin-inline-start: 6px;
+      padding: 4px 10px;
+      border-radius: 999px;
+      font-size: 0.78rem;
+      font-weight: 800;
+    }
+    .tier-tag--bronze { background: linear-gradient(135deg, #cd7f32, #8b5a2b); color: #fff; }
+    .tier-tag--silver { background: linear-gradient(135deg, #e2e8f0, #94a3b8); color: #1e293b; }
+    .tier-tag--gold { background: linear-gradient(135deg, #fcd34d, #ca8a04); color: #422006; }
+    .tier-tag--none { background: #f1f5f9; color: #64748b; }
     .loyalty-program-mini {
-      margin-bottom: 18px;
-      padding: 14px 14px 16px;
-      border-radius: 14px;
+      position: relative;
+      margin-bottom: 20px;
+      padding: 18px 16px 20px;
+      padding-inline-start: 20px;
+      border-radius: 20px;
       border: 1px solid rgba(197, 160, 89, 0.35);
-      background: #fff;
-      box-shadow: 0 8px 24px rgba(45, 52, 54, 0.06);
+      background: linear-gradient(155deg, #ffffff 0%, rgba(232, 252, 244, 0.5) 100%);
+      box-shadow: 0 10px 36px rgba(45, 52, 54, 0.07);
+      overflow: hidden;
+    }
+    .loyalty-program-mini::before {
+      content: "";
+      position: absolute;
+      inset-inline-start: 0;
+      top: 10px;
+      bottom: 10px;
+      width: 4px;
+      border-radius: 999px;
+      background: linear-gradient(180deg, #0f766e, #c5a059, #7dd3ae);
+    }
+    .loyalty-program-mini__eyebrow {
+      margin: 0 0 6px;
+      font-size: 0.65rem;
+      font-weight: 800;
+      letter-spacing: 0.1em;
+      color: #0f766e;
+      opacity: 0.85;
     }
     .loyalty-program-mini h2 {
       margin: 0 0 8px;
-      font-size: 0.95rem;
-      font-weight: 800;
-      color: #0f766e;
+      font-family: "Amiri", "Tajawal", serif;
+      font-size: 1.05rem;
+      font-weight: 700;
+      color: var(--charcoal);
     }
     .loyalty-program-mini__lead {
-      margin: 0 0 10px;
-      font-size: 0.8rem;
+      margin: 0 0 12px;
+      font-size: 0.82rem;
       color: var(--charcoal-muted);
       line-height: 1.55;
     }
-    .loyalty-program-mini__wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
-    .loyalty-program-mini table {
+    .loyalty-program-mini__wrap {
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+      border-radius: 12px;
+      border: 1px solid rgba(197, 160, 89, 0.2);
+      background: rgba(255, 255, 255, 0.75);
+    }
+    .loyalty-mini-table {
       width: 100%;
       border-collapse: collapse;
-      font-size: 0.78rem;
-      min-width: 260px;
+      font-size: 0.8rem;
+      min-width: 480px;
     }
-    .loyalty-program-mini th,
-    .loyalty-program-mini td {
-      padding: 8px 9px;
+    .loyalty-mini-table thead th {
+      padding: 10px 11px;
       text-align: start;
-      border-bottom: 1px solid rgba(45, 52, 54, 0.08);
-      vertical-align: top;
-    }
-    .loyalty-program-mini th {
-      background: rgba(232, 252, 244, 0.85);
       font-weight: 800;
-      color: var(--charcoal);
-      font-size: 0.72rem;
+      font-size: 0.68rem;
+      letter-spacing: 0.03em;
+      color: #f1f5f9;
+      background: linear-gradient(135deg, #134e4a 0%, #0f766e 100%);
+      border-bottom: 1px solid rgba(0, 0, 0, 0.1);
     }
-    .loyalty-program-mini__medal { font-size: 1.1rem; line-height: 1; width: 1.8rem; }
-    .loyalty-program-mini__tier { font-weight: 800; color: var(--charcoal); }
-    .loyalty-program-mini__range { color: var(--charcoal-muted); font-weight: 600; white-space: nowrap; }
-    .loyalty-program-mini__reward { line-height: 1.45; color: var(--charcoal); }
-    .loyalty-program-mini tr.loyalty-program__row--bronze td:first-child { box-shadow: inset 3px 0 0 #cd7f32; }
-    .loyalty-program-mini tr.loyalty-program__row--silver td:first-child { box-shadow: inset 3px 0 0 #94a3b8; }
-    .loyalty-program-mini tr.loyalty-program__row--gold td:first-child { box-shadow: inset 3px 0 0 #ca8a04; }
+    .loyalty-mini-table tbody td {
+      padding: 10px 11px;
+      text-align: start;
+      border-bottom: 1px solid rgba(45, 52, 54, 0.06);
+      vertical-align: top;
+      background: #fff;
+    }
+    .loyalty-mini-table tbody tr:last-child td { border-bottom: 0; }
+    .loyalty-program-mini__medal { font-size: 1.15rem; line-height: 1; width: 1.85rem; text-align: center; }
+    .loyalty-program-mini__tier { font-weight: 800; color: var(--charcoal); font-size: 0.82rem; }
+    .loyalty-program-mini__range { color: var(--charcoal-muted); font-weight: 600; font-size: 0.76rem; white-space: nowrap; }
+    .loyalty-program-mini__reward { line-height: 1.45; color: var(--charcoal); font-size: 0.78rem; }
+    .loyalty-program-mini tr.loyalty-program__row--bronze td:first-child { border-inline-start: 3px solid #b45309; }
+    .loyalty-program-mini tr.loyalty-program__row--silver td:first-child { border-inline-start: 3px solid #64748b; }
+    .loyalty-program-mini tr.loyalty-program__row--gold td:first-child { border-inline-start: 3px solid #ca8a04; }
+    .loyalty-mini-cards { display: none; gap: 12px; }
+    .loyalty-mini-card {
+      border-radius: 14px;
+      padding: 14px;
+      border: 1px solid rgba(197, 160, 89, 0.28);
+      background: #fff;
+      box-shadow: 0 6px 20px rgba(45, 52, 54, 0.06);
+    }
+    .loyalty-mini-card--bronze { background: linear-gradient(165deg, #fffbeb, #fff); border-color: rgba(180, 83, 9, 0.3); }
+    .loyalty-mini-card--silver { background: linear-gradient(165deg, #f8fafc, #fff); border-color: rgba(100, 116, 139, 0.3); }
+    .loyalty-mini-card--gold { background: linear-gradient(165deg, #fffbeb, #fef9c3 50%, #fff); border-color: rgba(202, 138, 4, 0.35); }
+    .loyalty-mini-card__top { display: flex; gap: 10px; align-items: flex-start; margin-bottom: 10px; padding-bottom: 10px; border-bottom: 1px solid rgba(45, 52, 54, 0.07); }
+    .loyalty-mini-card__medal { font-size: 1.5rem; line-height: 1; }
+    .loyalty-mini-card__label { display: block; font-weight: 800; font-size: 0.9rem; color: var(--charcoal); }
+    .loyalty-mini-card__range { display: block; font-size: 0.78rem; color: var(--charcoal-muted); margin-top: 2px; line-height: 1.4; }
+    .loyalty-mini-card__k { font-size: 0.62rem; font-weight: 800; letter-spacing: 0.05em; color: #0f766e; margin-bottom: 4px; }
+    .loyalty-mini-card__v { margin: 0; font-size: 0.82rem; line-height: 1.5; color: var(--charcoal); }
+    @media (max-width: 560px) {
+      .loyalty-program-mini__wrap { display: none; }
+      .loyalty-mini-cards { display: grid; }
+    }
   </style>
 </head>
 <body>
@@ -157,9 +255,9 @@
       <h1>إعدادات الحساب</h1>
       <p class="sub">عدّل اسمك ورقم جوالك. البريد الإلكتروني ثابت لأنه مرتبط بالتحقق والحجوزات.</p>
 
-      <div class="loyalty-card" style="margin-bottom:20px;padding:14px 16px;border-radius:14px;border:1px solid rgba(125,211,174,0.65);background:linear-gradient(145deg,#f0fdf4,#fff);">
-        <p style="margin:0 0 6px;font-weight:800;color:#0f766e;font-size:1rem;">برنامج الولاء (حسب الجلسات المؤكدة في المركز)</p>
-        <p style="margin:0 0 8px;font-size:0.92rem;color:#475569;line-height:1.55;">
+      <div class="loyalty-user-summary">
+        <p class="loyalty-user-summary__title">برنامج الولاء (حسب الجلسات المؤكدة في المركز)</p>
+        <p class="loyalty-user-summary__body">
           لديك <strong>{{ loyalty_confirmed_count }}</strong> جلسة بحالة «مؤكد».
           {% if loyalty_tier == 'gold' %}
             <span class="tier-tag tier-tag--gold">وسام ذهبي</span>
@@ -172,18 +270,19 @@
           {% endif %}
         </p>
         {% if loyalty_sessions_to_next is not none and loyalty_sessions_to_next > 0 %}
-        <p style="margin:0;font-size:0.88rem;color:#64748b;">احجز وأكمل الدفع لـ <strong>{{ loyalty_sessions_to_next }}</strong> جلسة أخرى للترقية إلى «{{ loyalty_next_tier_label }}».</p>
+        <p class="loyalty-user-summary__meta">احجز وأكمل الدفع لـ <strong>{{ loyalty_sessions_to_next }}</strong> جلسة أخرى للترقية إلى «{{ loyalty_next_tier_label }}».</p>
         {% elif loyalty_tier == 'gold' %}
-        <p style="margin:0;font-size:0.88rem;color:#64748b;">أعلى مستوى ولاء — شكراً لالتزامك.</p>
+        <p class="loyalty-user-summary__meta">أعلى مستوى ولاء — شكراً لالتزامك.</p>
         {% endif %}
-        <p style="margin:10px 0 0;font-size:0.8rem;color:#94a3b8;">العتبات الحالية (مع التسلسل برونزي ثم فضي +1 ثم ذهبي +1): برونزي من {{ loyalty_thresholds.bronze }}، فضي من {{ loyalty_thresholds.silver }}، ذهبي من {{ loyalty_thresholds.gold }}. يضبطها المدير من لوحة الإدارة → تبويب «برنامج الولاء» (★).</p>
+        <p class="loyalty-user-summary__hint">العتبات الحالية (مع التسلسل برونزي ثم فضي +1 ثم ذهبي +1): برونزي من {{ loyalty_thresholds.bronze }}، فضي من {{ loyalty_thresholds.silver }}، ذهبي من {{ loyalty_thresholds.gold }}. يضبطها المدير من لوحة الإدارة → تبويب «برنامج الولاء» (★).</p>
       </div>
 
       <section class="loyalty-program-mini" aria-label="جدول أوسمة الولاء والمكافآت">
+        <p class="loyalty-program-mini__eyebrow">نفس المستويات في الصفحة العامة</p>
         <h2>أوسمة الولاء والمكافآت (هذا المركز)</h2>
-        <p class="loyalty-program-mini__lead">نفس الجدول يظهر في الصفحة العامة للمركز. يخصّص المدير نصوص المكافآت من لوحة الإدارة.</p>
+        <p class="loyalty-program-mini__lead">يخصّص المدير نصوص المكافآت من لوحة الإدارة.</p>
         <div class="loyalty-program-mini__wrap">
-          <table>
+          <table class="loyalty-mini-table">
             <thead>
               <tr>
                 <th scope="col">وسام</th>
@@ -204,15 +303,22 @@
             </tbody>
           </table>
         </div>
+        <div class="loyalty-mini-cards" aria-label="مستويات الولاء">
+          {% for row in loyalty_program_rows %}
+          <article class="loyalty-mini-card loyalty-mini-card--{{ row.tier_key }}">
+            <div class="loyalty-mini-card__top">
+              <span class="loyalty-mini-card__medal" aria-hidden="true">{{ row.medal }}</span>
+              <div>
+                <span class="loyalty-mini-card__label">{{ row.label }}</span>
+                <span class="loyalty-mini-card__range">{{ row.range_label }}</span>
+              </div>
+            </div>
+            <div class="loyalty-mini-card__k">المكافآت</div>
+            <p class="loyalty-mini-card__v">{{ row.reward }}</p>
+          </article>
+          {% endfor %}
+        </div>
       </section>
-
-      <style>
-        .tier-tag { display:inline-block;margin-inline-start:6px;padding:4px 10px;border-radius:999px;font-size:0.78rem;font-weight:800; }
-        .tier-tag--bronze { background:linear-gradient(135deg,#cd7f32,#8b5a2b);color:#fff; }
-        .tier-tag--silver { background:linear-gradient(135deg,#e2e8f0,#94a3b8);color:#1e293b; }
-        .tier-tag--gold { background:linear-gradient(135deg,#fcd34d,#ca8a04);color:#422006; }
-        .tier-tag--none { background:#f1f5f9;color:#64748b; }
-      </style>
 
       {% if request.query_params.get('msg') == 'saved' %}
         <div class="alert ok">تم حفظ التعديلات بنجاح.</div>
