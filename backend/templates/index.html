@@ -513,12 +513,12 @@
     /* —— برنامج الولاء (أولوية التصميم) —— */
     .loyalty-program {
       position: relative;
-      margin-bottom: 28px;
-      padding: 28px 26px 30px;
-      padding-inline-start: 30px;
+      margin-bottom: 20px;
+      padding: 18px 16px 20px;
+      padding-inline-start: 22px;
       background: linear-gradient(155deg, #ffffff 0%, rgba(232, 252, 244, 0.65) 42%, #fffef9 100%);
       border: 1px solid rgba(197, 160, 89, 0.38);
-      border-radius: var(--radius-xl);
+      border-radius: 18px;
       box-shadow: var(--shadow-soft), var(--shadow-gold);
       overflow: hidden;
     }
@@ -526,58 +526,58 @@
       content: "";
       position: absolute;
       inset-inline-start: 0;
-      top: 12px;
-      bottom: 12px;
-      width: 5px;
+      top: 10px;
+      bottom: 10px;
+      width: 4px;
       border-radius: 999px;
       background: linear-gradient(180deg, #0f766e, var(--gold), var(--mint-mid));
     }
-    .loyalty-program__header { margin-bottom: 20px; }
+    .loyalty-program__header { margin-bottom: 12px; }
     .loyalty-program__eyebrow {
-      margin: 0 0 8px;
-      font-size: 0.74rem;
+      margin: 0 0 5px;
+      font-size: 0.65rem;
       font-weight: 800;
       letter-spacing: 0.06em;
       color: #0f766e;
       opacity: 0.92;
     }
     .loyalty-program__header h2 {
-      margin: 0 0 10px;
+      margin: 0 0 6px;
       font-family: "Amiri", "Tajawal", serif;
-      font-size: clamp(1.35rem, 3vw + 0.6rem, 1.75rem);
+      font-size: clamp(1.05rem, 2.4vw + 0.45rem, 1.45rem);
       font-weight: 700;
       color: var(--charcoal);
       letter-spacing: -0.02em;
-      line-height: 1.25;
+      line-height: 1.22;
     }
     .loyalty-program__lead {
       margin: 0;
       color: var(--charcoal-muted);
-      font-size: 0.98rem;
-      line-height: 1.7;
-      max-width: 52ch;
+      font-size: 0.84rem;
+      line-height: 1.5;
+      max-width: 56ch;
     }
     .loyalty-program__lead strong { color: var(--charcoal); font-weight: 800; }
     .loyalty-program__table-wrap {
       overflow-x: auto;
       -webkit-overflow-scrolling: touch;
-      border-radius: 16px;
-      border: 1px solid rgba(197, 160, 89, 0.22);
+      border-radius: 12px;
+      border: 1px solid rgba(197, 160, 89, 0.2);
       background: rgba(255, 255, 255, 0.65);
-      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.9), 0 8px 32px rgba(45, 52, 54, 0.05);
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.9), 0 4px 20px rgba(45, 52, 54, 0.04);
     }
     .loyalty-data-table {
       width: 100%;
       border-collapse: collapse;
-      font-size: 0.92rem;
-      min-width: 560px;
+      font-size: 0.78rem;
+      min-width: 420px;
     }
     .loyalty-data-table thead th {
-      padding: 15px 16px;
+      padding: 8px 10px;
       text-align: start;
       font-weight: 800;
-      font-size: 0.76rem;
-      letter-spacing: 0.04em;
+      font-size: 0.65rem;
+      letter-spacing: 0.03em;
       color: #f1f5f9;
       background: linear-gradient(135deg, #134e4a 0%, #0f766e 38%, #115e59 100%);
       border-bottom: 1px solid rgba(0, 0, 0, 0.12);
@@ -586,7 +586,7 @@
       border-inline-end: 1px solid rgba(255, 255, 255, 0.12);
     }
     .loyalty-data-table tbody td {
-      padding: 16px 16px;
+      padding: 8px 10px;
       text-align: start;
       vertical-align: top;
       border-bottom: 1px solid rgba(45, 52, 54, 0.06);
@@ -600,42 +600,43 @@
       background: linear-gradient(180deg, rgba(232, 252, 244, 0.5) 0%, rgba(255, 255, 255, 0.95) 100%);
     }
     .loyalty-program__medal {
-      font-size: 1.5rem;
+      font-size: 1.15rem;
       line-height: 1;
-      width: 2.5rem;
+      width: 2rem;
       text-align: center;
     }
     .loyalty-program__tier {
       font-weight: 800;
-      font-size: 0.98rem;
+      font-size: 0.82rem;
       color: var(--charcoal);
     }
     .loyalty-program__range {
       color: var(--charcoal-muted);
       font-weight: 700;
-      font-size: 0.88rem;
-      white-space: nowrap;
+      font-size: 0.72rem;
+      white-space: normal;
+      line-height: 1.35;
     }
     .loyalty-program__reward {
-      line-height: 1.65;
+      line-height: 1.45;
       color: var(--charcoal);
-      font-size: 0.9rem;
+      font-size: 0.76rem;
     }
-    .loyalty-program__row--bronze td:first-child { border-inline-start: 4px solid var(--loyalty-bronze); }
-    .loyalty-program__row--silver td:first-child { border-inline-start: 4px solid var(--loyalty-silver); }
-    .loyalty-program__row--gold td:first-child { border-inline-start: 4px solid var(--loyalty-gold); }
+    .loyalty-program__row--bronze td:first-child { border-inline-start: 3px solid var(--loyalty-bronze); }
+    .loyalty-program__row--silver td:first-child { border-inline-start: 3px solid var(--loyalty-silver); }
+    .loyalty-program__row--gold td:first-child { border-inline-start: 3px solid var(--loyalty-gold); }
     /* بطاقات الجوال لبرنامج الولاء */
     .loyalty-program__cards {
       display: none;
-      gap: 14px;
+      gap: 10px;
       grid-template-columns: 1fr;
     }
     .loyalty-tier-card {
-      border-radius: 18px;
-      padding: 18px 18px 16px;
+      border-radius: 14px;
+      padding: 12px 12px 11px;
       border: 1px solid rgba(197, 160, 89, 0.28);
       background: var(--white);
-      box-shadow: 0 10px 32px rgba(45, 52, 54, 0.07);
+      box-shadow: 0 6px 22px rgba(45, 52, 54, 0.06);
     }
     .loyalty-tier-card--bronze {
       background: linear-gradient(165deg, #fffbeb 0%, #ffffff 55%);
@@ -652,13 +653,13 @@
     .loyalty-tier-card__top {
       display: flex;
       align-items: flex-start;
-      gap: 14px;
-      margin-bottom: 14px;
-      padding-bottom: 14px;
+      gap: 10px;
+      margin-bottom: 10px;
+      padding-bottom: 10px;
       border-bottom: 1px solid rgba(45, 52, 54, 0.07);
     }
     .loyalty-tier-card__medal {
-      font-size: 2rem;
+      font-size: 1.45rem;
       line-height: 1;
       flex-shrink: 0;
     }
@@ -666,38 +667,50 @@
     .loyalty-tier-card__label {
       display: block;
       font-weight: 800;
-      font-size: 1.05rem;
+      font-size: 0.88rem;
       color: var(--charcoal);
-      margin-bottom: 4px;
+      margin-bottom: 2px;
     }
     .loyalty-tier-card__range {
       display: block;
-      font-size: 0.88rem;
+      font-size: 0.76rem;
       font-weight: 700;
       color: var(--charcoal-muted);
-      line-height: 1.45;
+      line-height: 1.35;
     }
     .loyalty-tier-card__reward-k {
       display: block;
-      font-size: 0.68rem;
+      font-size: 0.58rem;
       font-weight: 800;
-      letter-spacing: 0.06em;
+      letter-spacing: 0.05em;
       color: #0f766e;
-      margin-bottom: 6px;
+      margin-bottom: 4px;
     }
     .loyalty-tier-card__reward-v {
       margin: 0;
-      font-size: 0.92rem;
-      line-height: 1.65;
+      font-size: 0.78rem;
+      line-height: 1.45;
       color: var(--charcoal);
     }
     @media (max-width: 720px) {
-      .loyalty-program { padding: 22px 18px 24px; padding-inline-start: 22px; }
+      .loyalty-program { padding: 12px 10px 14px; padding-inline-start: 16px; border-radius: 14px; }
+      .loyalty-program::before { width: 3px; top: 8px; bottom: 8px; }
+      .loyalty-program__header { margin-bottom: 8px; }
+      .loyalty-program__eyebrow { font-size: 0.58rem; margin-bottom: 3px; }
+      .loyalty-program__header h2 { font-size: 0.92rem; }
+      .loyalty-program__lead { font-size: 0.76rem; line-height: 1.45; }
       .loyalty-program__table-wrap { display: none; }
-      .loyalty-program__cards { display: grid; }
+      .loyalty-program__cards { display: grid; gap: 8px; }
+      .loyalty-tier-card { padding: 10px 10px 9px; border-radius: 12px; }
+      .loyalty-tier-card__top { gap: 8px; margin-bottom: 8px; padding-bottom: 8px; }
+      .loyalty-tier-card__medal { font-size: 1.25rem; }
+      .loyalty-tier-card__label { font-size: 0.8rem; }
+      .loyalty-tier-card__range { font-size: 0.7rem; }
+      .loyalty-tier-card__reward-k { font-size: 0.55rem; }
+      .loyalty-tier-card__reward-v { font-size: 0.72rem; }
     }
     @media (max-width: 900px) {
-      .loyalty-data-table tbody td:nth-child(3) { min-width: 150px; }
+      .loyalty-data-table tbody td:nth-child(3) { min-width: 100px; }
     }
     .grid-two {
       display: flex;
@@ -754,75 +767,76 @@
     }
     #sessions-section.sessions-panel {
       position: relative;
-      padding: 28px 26px 30px;
-      padding-inline-start: 28px;
+      padding: 18px 18px 20px;
+      padding-inline-start: 22px;
       border: 1px solid rgba(197, 160, 89, 0.32);
-      box-shadow: var(--shadow-soft), 0 22px 56px rgba(15, 118, 110, 0.07);
+      box-shadow: var(--shadow-soft), 0 16px 44px rgba(15, 118, 110, 0.06);
       background: linear-gradient(168deg, #ffffff 0%, rgba(232, 252, 244, 0.55) 42%, #ffffff 100%);
       overflow: hidden;
+      border-radius: 16px;
     }
     #sessions-section.sessions-panel::before {
       content: "";
       position: absolute;
       inset-inline-start: 0;
-      top: 16px;
-      bottom: 16px;
-      width: 5px;
+      top: 12px;
+      bottom: 12px;
+      width: 4px;
       border-radius: 999px;
       background: linear-gradient(180deg, #0f766e 0%, var(--gold) 50%, var(--mint-mid) 100%);
     }
-    .sessions-panel__head { margin-bottom: 2px; }
+    .sessions-panel__head { margin-bottom: 0; }
     .sessions-eyebrow {
-      margin: 0 0 8px;
-      font-size: 0.74rem;
+      margin: 0 0 5px;
+      font-size: 0.65rem;
       font-weight: 800;
       letter-spacing: 0.08em;
       color: #0f766e;
     }
     #sessions-section .sessions-panel__head h2 {
-      font-size: clamp(1.25rem, 2.5vw + 0.5rem, 1.65rem);
-      margin: 0 0 10px;
+      font-size: clamp(1.05rem, 2.2vw + 0.45rem, 1.45rem);
+      margin: 0 0 6px;
       letter-spacing: -0.03em;
       line-height: 1.2;
       font-family: "Amiri", "Tajawal", serif;
       color: var(--charcoal);
     }
     #sessions-section .sessions-lead {
-      margin: 0 0 22px;
-      font-size: 1.02rem;
-      line-height: 1.65;
+      margin: 0 0 14px;
+      font-size: 0.88rem;
+      line-height: 1.5;
       color: var(--charcoal-muted);
       max-width: 62ch;
     }
     .sessions-filters {
-      margin-bottom: 24px;
-      padding: 20px 22px;
+      margin-bottom: 16px;
+      padding: 14px 16px;
       background: linear-gradient(180deg, #ffffff 0%, #f9fdfb 100%);
       border: 1px solid rgba(125, 211, 174, 0.65);
-      border-radius: 18px;
-      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.9), 0 6px 20px rgba(15, 118, 110, 0.05);
+      border-radius: 14px;
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.9), 0 4px 16px rgba(15, 118, 110, 0.04);
     }
     .sessions-filters-title {
-      margin: 0 0 14px;
-      font-size: 1.02rem;
+      margin: 0 0 10px;
+      font-size: 0.88rem;
       font-weight: 800;
       color: var(--charcoal);
       display: flex;
       align-items: center;
-      gap: 8px;
+      gap: 6px;
     }
     .sessions-filters-title::before {
       content: "";
-      width: 8px;
-      height: 8px;
+      width: 6px;
+      height: 6px;
       border-radius: 50%;
       background: linear-gradient(135deg, var(--gold), var(--mint-mid));
       flex-shrink: 0;
     }
     .sessions-filters-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(min(100%, 200px), 1fr));
-      gap: 16px 18px;
+      grid-template-columns: repeat(auto-fit, minmax(min(100%, 180px), 1fr));
+      gap: 10px 12px;
       align-items: end;
     }
     @media (min-width: 1280px) {
@@ -831,17 +845,17 @@
     .sessions-filters .field label {
       display: block;
       font-weight: 700;
-      font-size: 0.92rem;
+      font-size: 0.8rem;
       color: var(--charcoal);
-      margin-bottom: 8px;
+      margin-bottom: 5px;
     }
     .sessions-filters .field input,
     .sessions-filters .field select {
-      padding: 13px 14px;
-      font-size: 1.02rem;
-      border-radius: 12px;
+      padding: 9px 11px;
+      font-size: 0.88rem;
+      border-radius: 10px;
       border: 2px solid rgba(170, 240, 209, 0.95);
-      min-height: 50px;
+      min-height: 42px;
     }
     .sessions-filters .field input:focus,
     .sessions-filters .field select:focus {
@@ -851,15 +865,15 @@
     }
     .sessions-cards {
       display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(min(100%, 300px), 1fr));
-      gap: 18px;
+      grid-template-columns: repeat(auto-fill, minmax(min(100%, 260px), 1fr));
+      gap: 12px;
     }
     .session-card {
       background: var(--white);
-      border-radius: 18px;
+      border-radius: 14px;
       overflow: hidden;
       border: 1px solid rgba(45, 52, 54, 0.09);
-      box-shadow: 0 8px 32px rgba(45, 52, 54, 0.07);
+      box-shadow: 0 6px 24px rgba(45, 52, 54, 0.06);
       display: flex;
       flex-direction: column;
       transition: box-shadow 0.22s ease, border-color 0.22s ease, transform 0.18s ease;
@@ -872,17 +886,17 @@
     .session-card__bar {
       background: linear-gradient(135deg, #1e293b 0%, #0f766e 55%, #115e59 100%);
       color: #fff;
-      padding: 14px 18px;
+      padding: 10px 12px;
       font-weight: 800;
-      font-size: 1.02rem;
-      line-height: 1.35;
+      font-size: 0.88rem;
+      line-height: 1.3;
       text-shadow: 0 1px 2px rgba(0, 0, 0, 0.15);
     }
     .session-card__body {
       display: grid;
       grid-template-columns: 1fr 1.1fr;
-      gap: 14px 16px;
-      padding: 18px;
+      gap: 10px 12px;
+      padding: 12px;
       align-items: start;
       flex: 1;
     }
@@ -890,22 +904,22 @@
       .session-card__body { grid-template-columns: 1fr; }
     }
     .session-card__price {
-      font-size: 1.75rem;
+      font-size: 1.35rem;
       font-weight: 800;
       color: var(--charcoal);
       line-height: 1.2;
     }
     .session-card__price span {
-      font-size: 1rem;
+      font-size: 0.82rem;
       font-weight: 700;
       color: var(--gold-dark);
-      margin-inline-start: 4px;
+      margin-inline-start: 3px;
     }
     .session-card__when {
       text-align: center;
-      padding: 10px 12px;
+      padding: 7px 9px;
       background: var(--mint-bg);
-      border-radius: 12px;
+      border-radius: 10px;
       border: 1px solid rgba(170, 240, 209, 0.6);
     }
     .session-card__when-label {
@@ -917,24 +931,24 @@
       margin-bottom: 4px;
     }
     .session-card__when-main {
-      font-size: 1.05rem;
+      font-size: 0.88rem;
       font-weight: 800;
       color: var(--charcoal);
       font-variant-numeric: tabular-nums;
-      line-height: 1.4;
+      line-height: 1.35;
     }
     .session-card__info {
       grid-column: 1 / -1;
-      font-size: 0.92rem;
+      font-size: 0.78rem;
       color: var(--charcoal-muted);
-      line-height: 1.55;
+      line-height: 1.45;
     }
     .session-card__info strong { color: var(--charcoal); }
     .session-card__footer {
-      padding: 0 18px 18px;
+      padding: 0 12px 12px;
       display: flex;
       flex-direction: column;
-      gap: 12px;
+      gap: 8px;
     }
     .session-card__row {
       display: flex;
@@ -952,7 +966,7 @@
       color: var(--gold-dark);
     }
     .session-card .availability strong {
-      font-size: 1.15rem;
+      font-size: 1rem;
       color: var(--charcoal);
     }
     .bar {
@@ -997,9 +1011,9 @@
     .book-btn.book-btn-lg,
     .sub-btn.book-btn-lg {
       width: 100%;
-      padding: 14px 18px;
-      font-size: 1.02rem;
-      min-height: 52px;
+      padding: 10px 14px;
+      font-size: 0.88rem;
+      min-height: 44px;
     }
     .book-btn:disabled {
       background: #cbd5e1;
@@ -1829,7 +1843,7 @@
       body { padding-block: 14px; }
       .post-pin { grid-template-columns: 1fr; }
       .steps { grid-template-columns: 1fr; }
-      #sessions-section.sessions-panel { padding: 22px 18px; }
+      #sessions-section.sessions-panel { padding: 16px 16px 18px; padding-inline-start: 20px; }
       .post-pin.post-pin--compact { grid-template-columns: 1fr; }
     }
     @media (max-width: 480px) {
@@ -1838,60 +1852,60 @@
       .sessions-filters { padding: 14px; margin-bottom: 14px; }
     }
     @media (max-width: 640px) {
-      .sessions-eyebrow { font-size: 0.68rem; margin-bottom: 6px; }
-      #sessions-section .sessions-panel__head h2 { margin-bottom: 8px; }
+      .sessions-eyebrow { font-size: 0.62rem; margin-bottom: 4px; }
+      #sessions-section .sessions-panel__head h2 { margin-bottom: 5px; font-size: 0.95rem; }
       #sessions-section .sessions-lead {
-        font-size: 0.88rem;
-        margin-bottom: 16px;
-        line-height: 1.55;
+        font-size: 0.8rem;
+        margin-bottom: 12px;
+        line-height: 1.45;
       }
-      .sessions-filters-title { font-size: 0.92rem; margin-bottom: 10px; }
+      .sessions-filters-title { font-size: 0.82rem; margin-bottom: 8px; }
       .sessions-filters .field label {
-        font-size: 0.82rem;
-        margin-bottom: 5px;
+        font-size: 0.75rem;
+        margin-bottom: 4px;
       }
       .sessions-filters .field input,
       .sessions-filters .field select {
-        padding: 10px 12px;
-        font-size: 0.88rem;
-        min-height: 44px;
-        border-radius: 11px;
+        padding: 8px 10px;
+        font-size: 0.82rem;
+        min-height: 40px;
+        border-radius: 10px;
       }
       .sessions-cards {
         grid-template-columns: 1fr;
-        gap: 12px;
+        gap: 10px;
       }
-      .session-card { border-radius: 15px; }
+      .session-card { border-radius: 13px; }
       .session-card:hover { transform: none; }
       .session-card__bar {
-        padding: 10px 14px;
-        font-size: 0.88rem;
-        line-height: 1.3;
+        padding: 9px 11px;
+        font-size: 0.82rem;
+        line-height: 1.25;
       }
       .session-card__body {
-        padding: 12px 14px;
-        gap: 10px 12px;
+        padding: 10px 11px;
+        gap: 8px 10px;
       }
-      .session-card__price { font-size: 1.28rem; }
-      .session-card__price span { font-size: 0.85rem; }
+      .session-card__price { font-size: 1.18rem; }
+      .session-card__price span { font-size: 0.78rem; }
       .session-card__when {
-        padding: 8px 10px;
-        border-radius: 11px;
+        padding: 6px 8px;
+        border-radius: 9px;
       }
-      .session-card__when-label { font-size: 0.65rem; }
-      .session-card__when-main { font-size: 0.92rem; }
-      .session-card__info { font-size: 0.8rem; line-height: 1.5; }
-      .session-card__footer { padding: 0 14px 14px; gap: 10px; }
-      .session-card .availability strong { font-size: 1.02rem; }
-      .session-card__tag { font-size: 0.7rem; padding: 4px 8px; }
+      .session-card__when-label { font-size: 0.6rem; }
+      .session-card__when-main { font-size: 0.82rem; }
+      .session-card__info { font-size: 0.72rem; line-height: 1.4; }
+      .session-card__footer { padding: 0 11px 11px; gap: 8px; }
+      .session-card .availability strong { font-size: 0.95rem; }
+      .session-card__tag { font-size: 0.65rem; padding: 3px 7px; }
       .book-btn.book-btn-lg,
       .sub-btn.book-btn-lg {
-        padding: 11px 14px;
-        min-height: 46px;
-        font-size: 0.9rem;
-        border-radius: 11px;
+        padding: 9px 12px;
+        min-height: 42px;
+        font-size: 0.84rem;
+        border-radius: 10px;
       }
-      .sessions-empty { padding: 24px 14px; font-size: 0.92rem; }
+      .sessions-empty { padding: 18px 12px; font-size: 0.85rem; }
       #plans-section.plans-panel {
         padding: 16px 14px 18px;
         padding-inline-start: 20px;
@@ -2004,6 +2018,19 @@
         border-radius: 14px;
       }
       .step::before { top: 12px; inset-inline-start: 12px; width: 26px; height: 26px; font-size: 0.78rem; }
+      .loyalty-program {
+        margin-bottom: 14px;
+        padding: 10px 8px 11px;
+        padding-inline-start: 13px;
+      }
+      .loyalty-program__lead { font-size: 0.7rem; }
+      .loyalty-tier-card__reward-v { font-size: 0.68rem; }
+      .sessions-cards { gap: 8px; }
+      .session-card__bar { padding: 8px 10px; font-size: 0.8rem; }
+      .session-card__body { padding: 10px; gap: 8px; }
+      .session-card__price { font-size: 1.15rem; }
+      .session-card__footer { padding: 0 10px 10px; }
+      .book-btn.book-btn-lg { min-height: 40px; padding: 8px 12px; font-size: 0.82rem; }
     }
   </style>
 </head>
