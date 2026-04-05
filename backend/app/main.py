@@ -56,7 +56,7 @@ try:
 except Exception:  # pragma: no cover - optional in non-venv runtime
     def load_dotenv() -> bool:  # type: ignore[override]
         return False
-from fastapi import Depends, FastAPI, Header, HTTPException, Request
+from fastapi import APIRouter, Depends, FastAPI, Header, HTTPException, Request
 from fastapi.responses import StreamingResponse
 from fastapi.staticfiles import StaticFiles
 from openpyxl import Workbook
@@ -69,7 +69,7 @@ try:
     from .bootstrap import DEMO_OWNER_EMAIL, DEMO_OWNER_PASSWORD, ensure_demo_data
     from .checkout_finalize import finalize_checkout_failed, finalize_checkout_paid
     from .database import get_db, init_db
-    from .middleware import MaintenanceMiddleware, RequestIDMiddleware, attach_cors
+    from .middleware import ApiClientHeadersMiddleware, MaintenanceMiddleware, RequestIDMiddleware, attach_cors
     from .payments import (
         MoyasarPaymentProvider,
         StripePaymentProvider,
@@ -85,7 +85,7 @@ except ImportError:
     from backend.app.bootstrap import DEMO_OWNER_EMAIL, DEMO_OWNER_PASSWORD, ensure_demo_data
     from backend.app.checkout_finalize import finalize_checkout_failed, finalize_checkout_paid
     from backend.app.database import get_db, init_db
-    from backend.app.middleware import MaintenanceMiddleware, RequestIDMiddleware, attach_cors
+    from backend.app.middleware import ApiClientHeadersMiddleware, MaintenanceMiddleware, RequestIDMiddleware, attach_cors
     from backend.app.payments import (
         MoyasarPaymentProvider,
         StripePaymentProvider,
@@ -110,8 +110,11 @@ async def _app_lifespan(app: FastAPI):
 
 app = FastAPI(title="Maestro Yoga API", version="1.0.0", lifespan=_app_lifespan)
 
+api_router = APIRouter(tags=["api"])
+
 init_db()
 app.add_middleware(RequestIDMiddleware)
+app.add_middleware(ApiClientHeadersMiddleware)
 app.add_middleware(MaintenanceMiddleware)
 _cors_origins = [x.strip() for x in os.getenv("CORS_ORIGINS", "").split(",") if x.strip()]
 attach_cors(app, _cors_origins)
@@ -124,18 +127,18 @@ PUBLIC_BASE_URL = os.getenv("PUBLIC_BASE_URL", "").strip().rstrip("/")
 STRIPE_CHECKOUT_ALLOWED_ORIGINS = [x.strip().rstrip("/") for x in os.getenv("STRIPE_CHECKOUT_ALLOWED_ORIGINS", "").split(",") if x.strip()]
 
 
-@app.get("/")
+@api_router.get("/")
 def root():
     return {"app": "Maestro Yoga", "status": "running"}
 
 
-@app.get("/health")
+@api_router.get("/health")
 def health():
     """مسار خفيف لفحص الصحة على Render وغيره (بدون اتصال بقاعدة البيانات)."""
     return {"status": "ok"}
 
 
-@app.get("/health/ready")
+@api_router.get("/health/ready")
 def health_ready(db: Session = Depends(get_db)):
     """جاهزية الخدمة مع التحقق من قاعدة البيانات (مناسب بعد النشر أو للموازن)."""
     try:
@@ -181,7 +184,7 @@ def _is_local_client(request: Request) -> bool:
     return host in {"127.0.0.1", "::1", "localhost"}
 
 
-@app.get("/dashboard/summary", response_model=schemas.DashboardSummaryOut)
+@api_router.get("/dashboard/summary", response_model=schemas.DashboardSummaryOut)
 def dashboard_summary(
     db: Session = Depends(get_db),
     user: models.User = Depends(get_current_user),
@@ -229,7 +232,7 @@ def dashboard_summary(
     }
 
 
-@app.post("/auth/register", response_model=schemas.TokenOut)
+@api_router.post("/auth/register", response_model=schemas.TokenOut)
 def register_owner(payload: schemas.UserRegister, db: Session = Depends(get_db)):
     exists = db.query(models.User).filter(models.User.email == payload.email).first()
     if exists:
@@ -254,7 +257,7 @@ def register_owner(payload: schemas.UserRegister, db: Session = Depends(get_db))
     return {"access_token": token, "user": owner}
 
 
-@app.post("/auth/login", response_model=schemas.TokenOut)
+@api_router.post("/auth/login", response_model=schemas.TokenOut)
 def login(payload: schemas.UserLogin, db: Session = Depends(get_db)):
     user = db.query(models.User).filter(models.User.email == payload.email.lower()).first()
     if not user or not verify_password(payload.password, user.password_hash):
@@ -265,12 +268,12 @@ def login(payload: schemas.UserLogin, db: Session = Depends(get_db)):
     return {"access_token": token, "user": user}
 
 
-@app.get("/auth/me", response_model=schemas.UserOut)
+@api_router.get("/auth/me", response_model=schemas.UserOut)
 def me(user: models.User = Depends(get_current_user)):
     return user
 
 
-@app.post("/auth/users", response_model=schemas.UserOut)
+@api_router.post("/auth/users", response_model=schemas.UserOut)
 def create_user_by_owner(
     payload: schemas.UserCreateByOwner,
     db: Session = Depends(get_db),
@@ -292,7 +295,7 @@ def create_user_by_owner(
     return new_user
 
 
-@app.post("/centers", response_model=schemas.CenterOut)
+@api_router.post("/centers", response_model=schemas.CenterOut)
 def create_center(
     payload: schemas.CenterCreate,
     db: Session = Depends(get_db),
@@ -305,7 +308,7 @@ def create_center(
     return center
 
 
-@app.get("/centers", response_model=list[schemas.CenterOut])
+@api_router.get("/centers", response_model=list[schemas.CenterOut])
 def list_centers(
     db: Session = Depends(get_db),
     user: models.User = Depends(get_current_user),
@@ -317,7 +320,7 @@ def list_centers(
     return [center] if center else []
 
 
-@app.post("/clients", response_model=schemas.ClientOut)
+@api_router.post("/clients", response_model=schemas.ClientOut)
 def create_client(
     payload: schemas.ClientCreate,
     db: Session = Depends(get_db),
@@ -330,7 +333,7 @@ def create_client(
     return client
 
 
-@app.get("/clients", response_model=list[schemas.ClientOut])
+@api_router.get("/clients", response_model=list[schemas.ClientOut])
 def list_clients(
     db: Session = Depends(get_db),
     user: models.User = Depends(get_current_user),
@@ -338,7 +341,7 @@ def list_clients(
     return db.query(models.Client).filter(models.Client.center_id == require_user_center_id(user)).all()
 
 
-@app.post("/plans", response_model=schemas.SubscriptionPlanOut)
+@api_router.post("/plans", response_model=schemas.SubscriptionPlanOut)
 def create_plan(
     payload: schemas.SubscriptionPlanCreate,
     db: Session = Depends(get_db),
@@ -351,7 +354,7 @@ def create_plan(
     return plan
 
 
-@app.get("/plans", response_model=list[schemas.SubscriptionPlanOut])
+@api_router.get("/plans", response_model=list[schemas.SubscriptionPlanOut])
 def list_plans(
     db: Session = Depends(get_db),
     user: models.User = Depends(get_current_user),
@@ -359,7 +362,7 @@ def list_plans(
     return db.query(models.SubscriptionPlan).filter(models.SubscriptionPlan.center_id == require_user_center_id(user)).all()
 
 
-@app.post("/rooms", response_model=schemas.RoomOut)
+@api_router.post("/rooms", response_model=schemas.RoomOut)
 def create_room(
     payload: schemas.RoomCreate,
     db: Session = Depends(get_db),
@@ -372,7 +375,7 @@ def create_room(
     return room
 
 
-@app.post("/sessions", response_model=schemas.YogaSessionOut)
+@api_router.post("/sessions", response_model=schemas.YogaSessionOut)
 def create_session(
     payload: schemas.YogaSessionCreate,
     db: Session = Depends(get_db),
@@ -389,7 +392,7 @@ def create_session(
     return yoga_session
 
 
-@app.get("/sessions", response_model=list[schemas.YogaSessionOut])
+@api_router.get("/sessions", response_model=list[schemas.YogaSessionOut])
 def list_sessions(
     db: Session = Depends(get_db),
     user: models.User = Depends(get_current_user),
@@ -397,7 +400,7 @@ def list_sessions(
     return db.query(models.YogaSession).filter(models.YogaSession.center_id == require_user_center_id(user)).all()
 
 
-@app.post("/bookings", response_model=schemas.BookingOut)
+@api_router.post("/bookings", response_model=schemas.BookingOut)
 def create_booking(
     payload: schemas.BookingCreate,
     db: Session = Depends(get_db),
@@ -424,7 +427,7 @@ def create_booking(
     return booking
 
 
-@app.post("/payments", response_model=schemas.PaymentOut)
+@api_router.post("/payments", response_model=schemas.PaymentOut)
 def create_payment(
     payload: schemas.PaymentCreate,
     db: Session = Depends(get_db),
@@ -460,7 +463,7 @@ def create_payment(
     return payment
 
 
-@app.post("/payments/checkout-session", response_model=schemas.PaymentCheckoutOut)
+@api_router.post("/payments/checkout-session", response_model=schemas.PaymentCheckoutOut)
 def create_checkout_session(
     payload: schemas.PaymentCheckoutCreate,
     db: Session = Depends(get_db),
@@ -524,7 +527,7 @@ def create_checkout_session(
     }
 
 
-@app.get("/payments/{payment_id}", response_model=schemas.PaymentOut)
+@api_router.get("/payments/{payment_id}", response_model=schemas.PaymentOut)
 def get_payment_status(
     payment_id: int,
     db: Session = Depends(get_db),
@@ -537,7 +540,7 @@ def get_payment_status(
     return payment
 
 
-@app.get("/payments", response_model=list[schemas.PaymentOut])
+@api_router.get("/payments", response_model=list[schemas.PaymentOut])
 def list_payments(
     client_id: int | None = None,
     status: str | None = None,
@@ -549,7 +552,7 @@ def list_payments(
     return query.order_by(models.Payment.paid_at.desc()).all()
 
 
-@app.get("/payments/export/csv")
+@api_router.get("/payments/export/csv")
 def export_payments_csv(
     client_id: int | None = None,
     status: str | None = None,
@@ -598,7 +601,7 @@ def export_payments_csv(
     return StreamingResponse(iter([content]), media_type="text/csv; charset=utf-8", headers=headers)
 
 
-@app.get("/payments/export/xlsx")
+@api_router.get("/payments/export/xlsx")
 def export_payments_xlsx(
     client_id: int | None = None,
     status: str | None = None,
@@ -715,7 +718,7 @@ def _moyasar_extract_invoice_id(payload: object) -> str | None:
     return str(pid) if pid else None
 
 
-@app.post("/seed-demo")
+@api_router.post("/seed-demo")
 def seed_demo(
     request: Request,
     x_seed_demo_key: str = Header(default="", alias="X-Seed-Demo-Key"),
@@ -732,6 +735,27 @@ def seed_demo(
         "message": "Demo data ready",
         "center_id": center.id,
     }
+
+
+api_v1_meta_router = APIRouter(prefix="/api/v1", tags=["api-v1"])
+
+
+@api_v1_meta_router.get("/meta")
+def api_v1_meta():
+    """نقطة دخول موحّدة لتطبيق أندرويد: إصدار الـ API وروابط التوثيق."""
+    return {
+        "api_version": "1",
+        "app": "Maestro Yoga",
+        "server_version": app.version,
+        "openapi_json": "/openapi.json",
+        "docs": "/docs",
+        "client_hint": "أرسل الرأس X-App-Version (مثل 1.0.0) ليُعاد في X-App-Version-Accepted.",
+    }
+
+
+app.include_router(api_router)
+app.include_router(api_router, prefix="/api/v1")
+app.include_router(api_v1_meta_router)
 
 
 if __name__ == "__main__":

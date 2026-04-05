@@ -10,6 +10,28 @@ def test_health_lightweight(client: TestClient) -> None:
     assert r.json() == {"status": "ok"}
 
 
+def test_api_v1_health_alias(client: TestClient) -> None:
+    r = client.get("/api/v1/health")
+    assert r.status_code == 200
+    assert r.json() == {"status": "ok"}
+
+
+def test_api_v1_meta(client: TestClient) -> None:
+    r = client.get("/api/v1/meta")
+    assert r.status_code == 200
+    data = r.json()
+    assert data.get("api_version") == "1"
+    assert data.get("app") == "Maestro Yoga"
+    assert "openapi_json" in data
+
+
+def test_api_version_headers(client: TestClient) -> None:
+    r = client.get("/health", headers={"X-App-Version": "2.0.0-test"})
+    assert r.status_code == 200
+    assert r.headers.get("X-API-Version") == "1"
+    assert r.headers.get("X-App-Version-Accepted") == "2.0.0-test"
+
+
 def test_health_ready_database(client: TestClient) -> None:
     r = client.get("/health/ready")
     assert r.status_code == 200

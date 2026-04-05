@@ -47,6 +47,8 @@ def maintenance_enabled() -> bool:
 def _path_exempt_from_maintenance(path: str) -> bool:
     if path == "/health" or path.startswith("/health/"):
         return True
+    if path == "/api/v1/health" or path.startswith("/api/v1/health/"):
+        return True
     if path.startswith("/static/"):
         return True
     if path in {"/favicon.ico", "/openapi.json", "/docs", "/redoc"}:
@@ -72,6 +74,21 @@ class RequestIDMiddleware(BaseHTTPMiddleware):
         request.state.request_id = rid
         response: Response = await call_next(request)
         response.headers["X-Request-ID"] = rid
+        return response
+
+
+class ApiClientHeadersMiddleware(BaseHTTPMiddleware):
+    """إصدار واجهة REST (X-API-Version) واعتماد رأس إصدار تطبيق العميل (أندرويد/WebView)."""
+
+    async def dispatch(self, request: Request, call_next):
+        raw = (request.headers.get("X-App-Version") or "").strip()
+        av = raw[:64] if raw else ""
+        if av:
+            request.state.app_version = av
+        response: Response = await call_next(request)
+        response.headers["X-API-Version"] = "1"
+        if av:
+            response.headers["X-App-Version-Accepted"] = av
         return response
 
 
@@ -114,5 +131,10 @@ def attach_cors(app, origins: list[str]) -> None:
         allow_credentials=True,
         allow_methods=["*"],
         allow_headers=["*"],
-        expose_headers=["X-Request-ID", "Retry-After"],
+        expose_headers=[
+            "X-Request-ID",
+            "Retry-After",
+            "X-API-Version",
+            "X-App-Version-Accepted",
+        ],
     )
