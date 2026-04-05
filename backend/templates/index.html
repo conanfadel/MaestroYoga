@@ -406,6 +406,7 @@
     .feedback-modal__field label { display: block; font-weight: 700; font-size: 0.88rem; margin-bottom: 6px; color: var(--charcoal); }
     .feedback-modal__field input[type="text"],
     .feedback-modal__field input[type="email"],
+    .feedback-modal__field input[type="tel"],
     .feedback-modal__field select,
     .feedback-modal__field textarea {
       width: 100%;
@@ -414,6 +415,12 @@
       border: 2px solid rgba(170, 240, 209, 0.85);
       font-family: inherit;
       font-size: 0.92rem;
+    }
+    .feedback-modal__field input[readonly] {
+      background: #f1f5f9;
+      border-color: rgba(148, 163, 184, 0.45);
+      color: var(--charcoal-muted);
+      cursor: default;
     }
     .feedback-modal__field textarea { min-height: 120px; resize: vertical; }
     .feedback-modal__actions { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 16px; justify-content: flex-end; }
@@ -1754,6 +1761,7 @@
     {% if msg == 'cart_session_full' %}<div class="alert err">إحدى الجلسات في السلة لم تعد متاحة. حدّث السلة وحاول مرة أخرى.</div>{% endif %}
     {% if msg == 'feedback_sent' %}<div class="alert">تم إرسال رسالتك. شكرًا لتواصلك معنا.</div>{% endif %}
     {% if msg == 'feedback_error' %}<div class="alert err">تعذر إرسال الرسالة. حاول لاحقًا أو تواصل مع المركز مباشرة.</div>{% endif %}
+    {% if msg == 'feedback_auth_required' %}<div class="alert warn">يجب تسجيل الدخول لإرسال الملاحظات من صفحة الحجز.</div>{% endif %}
     {% if msg == 'feedback_unavailable' %}<div class="alert warn">خدمة إرسال الملاحظات غير مفعّلة حاليًا على الخادم.</div>{% endif %}
     {% if msg == 'feedback_rate_limited' %}<div class="alert warn">تم تجاوز عدد المحاولات المسموح. حاول لاحقًا.</div>{% endif %}
     {% if msg == 'feedback_bad_image' %}<div class="alert err">صيغة الصورة غير مدعومة. استخدم JPG أو PNG أو WebP أو GIF.</div>{% endif %}
@@ -2402,7 +2410,7 @@
       }
     })();
   </script>
-  {% if feedback_enabled %}
+  {% if feedback_enabled and public_user %}
   <button type="button" class="feedback-fab" id="feedback-fab" aria-haspopup="dialog" aria-controls="feedback-modal" title="مساعدة — مشاكل، شكاوى، اقتراحات">
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
     مساعدة
@@ -2412,9 +2420,21 @@
     <div class="feedback-modal__panel">
       <button type="button" class="feedback-modal__close" id="feedback-modal-close" aria-label="إغلاق">×</button>
       <h2 id="feedback-modal-title">مساعدة وملاحظات</h2>
-      <p class="feedback-modal__lead">أرسل مشكلة تقنية، شكوى، أو اقتراحًا. تُرسل الرسالة إلى إدارة المركز عبر البريد. يمكنك إرفاق صور لتوضيح المشكلة (حتى 4 صور، بحد أقصى تقريبًا 3 ميجابايت لكل صورة).</p>
+      <p class="feedback-modal__lead">أرسل مشكلة تقنية، شكوى، أو اقتراحًا إلى إدارة المركز. يُستخدم بريدك المسجّل في الحساب تلقائيًا. يمكنك إرفاق صور توضيحية (حتى 4 صور، حتى نحو 3 ميجابايت لكل صورة).</p>
       <form method="post" action="/public/feedback" enctype="multipart/form-data">
         <input type="hidden" name="center_id" value="{{ center_id }}" />
+        <div class="feedback-modal__field">
+          <label for="feedback-contact-name">الاسم</label>
+          <input id="feedback-contact-name" type="text" name="contact_name" required minlength="2" maxlength="200" autocomplete="name" value="{{ public_user.full_name }}" />
+        </div>
+        <div class="feedback-modal__field">
+          <label for="feedback-contact-phone">رقم الجوال (اختياري)</label>
+          <input id="feedback-contact-phone" type="tel" name="contact_phone" maxlength="40" autocomplete="tel" inputmode="tel" placeholder="مثال: 05xxxxxxxx" value="{{ public_user.phone or '' }}" />
+        </div>
+        <div class="feedback-modal__field">
+          <label for="feedback-email-display">البريد الإلكتروني</label>
+          <input id="feedback-email-display" type="email" readonly tabindex="-1" autocomplete="email" value="{{ public_user.email }}" aria-readonly="true" title="يُؤخذ من حسابك ولا يمكن تغييره هنا" />
+        </div>
         <div class="feedback-modal__field">
           <label for="feedback-category">نوع الطلب</label>
           <select id="feedback-category" name="category" required>
@@ -2426,10 +2446,6 @@
         <div class="feedback-modal__field">
           <label for="feedback-message">التفاصيل</label>
           <textarea id="feedback-message" name="message" required minlength="3" maxlength="8000" placeholder="صف المشكلة أو الاقتراح"></textarea>
-        </div>
-        <div class="feedback-modal__field">
-          <label for="feedback-email">بريدك (اختياري للرد)</label>
-          <input id="feedback-email" type="email" name="contact_email" maxlength="254" autocomplete="email" placeholder="you@example.com" />
         </div>
         <div class="feedback-modal__field">
           <label for="feedback-images">صور توضيحية (اختياري)</label>
@@ -2453,7 +2469,7 @@
       };
       fab.addEventListener("click", function () {
         modal.removeAttribute("hidden");
-        var first = modal.querySelector("select, textarea, input");
+        var first = document.getElementById("feedback-contact-name") || modal.querySelector("select, textarea, input:not([readonly])");
         if (first) setTimeout(function () { try { first.focus(); } catch (e) {} }, 0);
       });
       var c1 = document.getElementById("feedback-modal-close");

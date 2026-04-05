@@ -828,11 +828,19 @@ async def public_feedback_submit(
     center_id: int = Form(1),
     category: str = Form(...),
     message: str = Form(...),
-    contact_email: str = Form(""),
+    contact_name: str = Form(""),
+    contact_phone: str = Form(""),
     images: list[UploadFile] | None = File(None),
     db: Session = Depends(get_db),
 ):
     """إرسال مشكلة / شكوى / اقتراح من الواجهة العامة إلى بريد الإدارة (مع صور اختيارية)."""
+    pu = _current_public_user(request, db)
+    if not pu:
+        return RedirectResponse(
+            url=_url_with_params("/index", center_id=str(center_id), msg="feedback_auth_required"),
+            status_code=303,
+        )
+
     dest = feedback_destination_email()
     ok_cfg, _why = validate_mailer_settings()
     if not dest or not ok_cfg:
@@ -862,8 +870,16 @@ async def public_feedback_submit(
             status_code=303,
         )
 
-    ce = (contact_email or "").strip()
-    if ce and ("@" not in ce or len(ce) > 254):
+    name_sub = (contact_name or "").strip()
+    if len(name_sub) < 2 or len(name_sub) > 200:
+        return RedirectResponse(
+            url=_url_with_params("/index", center_id=str(center_id), msg="feedback_error"),
+            status_code=303,
+        )
+    phone_sub = (contact_phone or "").strip()[:40]
+
+    ce = (pu.email or "").strip().lower()
+    if not ce or "@" not in ce or len(ce) > 254:
         return RedirectResponse(
             url=_url_with_params("/index", center_id=str(center_id), msg="feedback_error"),
             status_code=303,
@@ -906,11 +922,13 @@ async def public_feedback_submit(
     body_lines = [
         f"المركز: {center.name} (center_id={center_id})",
         f"التصنيف: {cat_label}",
+        f"الاسم: {name_sub}",
+        f"الجوال: {phone_sub or '—'}",
+        f"البريد (من حساب المستخدم): {ce}",
         "",
         "النص:",
         msg_text,
         "",
-        f"بريد للتواصل (اختياري): {ce or '—'}",
         f"عنوان IP: {ip}",
     ]
     body = "\n".join(body_lines)
@@ -918,8 +936,10 @@ async def public_feedback_submit(
         f"<div dir='rtl' style='font-family:Tahoma,Arial,sans-serif;line-height:1.6'>"
         f"<p><strong>المركز:</strong> {html_escape(center.name)}</p>"
         f"<p><strong>التصنيف:</strong> {html_escape(cat_label)}</p>"
+        f"<p><strong>الاسم:</strong> {html_escape(name_sub)}</p>"
+        f"<p><strong>الجوال:</strong> {html_escape(phone_sub or '—')}</p>"
+        f"<p><strong>البريد:</strong> {html_escape(ce)}</p>"
         f"<p><strong>النص:</strong></p><pre style='white-space:pre-wrap'>{html_escape(msg_text)}</pre>"
-        f"<p><strong>بريد للتواصل:</strong> {html_escape(ce or '—')}</p>"
         f"<p><strong>IP:</strong> {html_escape(ip)}</p>"
         f"</div>"
     )
