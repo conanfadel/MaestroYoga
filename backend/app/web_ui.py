@@ -107,6 +107,8 @@ ADMIN_QP_PUBLIC_USER_Q = "public_user_q"
 ADMIN_QP_PUBLIC_USER_STATUS = "public_user_status"
 ADMIN_QP_PUBLIC_USER_VERIFIED = "public_user_verified"
 ADMIN_QP_PUBLIC_USER_PAGE = "public_user_page"
+ADMIN_QP_TRASH_PAGE = "trash_page"
+ADMIN_QP_TRASH_Q = "trash_q"
 ADMIN_QP_SESSIONS_PAGE = "sessions_page"
 ADMIN_QP_PAYMENTS_PAGE = "payments_page"
 ADMIN_QP_AUDIT_EVENT_TYPE = "audit_event_type"
@@ -124,6 +126,7 @@ ALLOWED_ADMIN_RETURN_SECTIONS = frozenset(
         "section-rooms",
         "section-plans",
         "section-public-users",
+        "section-public-users-trash",
         "section-sessions",
         "section-faq",
         "section-security",
@@ -143,6 +146,8 @@ ADMIN_MSG_PUBLIC_USER_ALREADY_VERIFIED = "public_user_already_verified"
 ADMIN_MSG_PUBLIC_USER_VERIFICATION_MAIL_FAILED = "public_user_verification_mail_failed"
 ADMIN_MSG_PUBLIC_USER_VERIFICATION_RESENT = "public_user_verification_resent"
 ADMIN_MSG_PUBLIC_USER_RESTORED = "public_user_restored"
+ADMIN_MSG_PUBLIC_USER_PERMANENT_DELETED = "public_user_permanent_deleted"
+ADMIN_MSG_PUBLIC_USER_PERMANENT_DELETE_FORBIDDEN = "public_user_permanent_delete_forbidden"
 ADMIN_MSG_PUBLIC_USERS_NONE_SELECTED = "public_users_none_selected"
 ADMIN_MSG_PUBLIC_USERS_BULK_INVALID_ACTION = "public_users_bulk_invalid_action"
 ADMIN_MSG_PUBLIC_USERS_BULK_DONE = "public_users_bulk_done"
@@ -277,6 +282,11 @@ ADMIN_FLASH_MESSAGES: dict[str, tuple[str, str]] = {
     ADMIN_MSG_PUBLIC_USER_VERIFICATION_MAIL_FAILED: ("تعذر إرسال رابط التحقق. تحقق من إعدادات SMTP.", "warn"),
     ADMIN_MSG_PUBLIC_USER_ALREADY_VERIFIED: ("هذا المستخدم موثق بالفعل.", "warn"),
     ADMIN_MSG_PUBLIC_USER_RESTORED: ("تمت استعادة المستخدم بنجاح.", "info"),
+    ADMIN_MSG_PUBLIC_USER_PERMANENT_DELETED: ("تم حذف المستخدم نهائياً من قاعدة البيانات.", "info"),
+    ADMIN_MSG_PUBLIC_USER_PERMANENT_DELETE_FORBIDDEN: (
+        "الحذف النهائي متاح فقط للحسابات في سلة المحذوفات (محذوفة Soft مسبقاً).",
+        "warn",
+    ),
     ADMIN_MSG_PUBLIC_USERS_NONE_SELECTED: ("اختر مستخدمًا واحدًا على الأقل لتنفيذ العملية الجماعية.", "warn"),
     ADMIN_MSG_PUBLIC_USERS_BULK_INVALID_ACTION: ("الإجراء الجماعي غير صالح.", "warn"),
     ADMIN_MSG_PUBLIC_USERS_BULK_DONE: ("تم تنفيذ العملية الجماعية على المستخدمين المحددين.", "info"),
@@ -543,11 +553,14 @@ PUBLIC_USER_BULK_ACTIONS = frozenset(
         "resend_verification",
         "soft_delete",
         "restore",
+        "permanent_delete",
     }
 )
 
 
-def _apply_public_user_bulk_action(action_key: str, row: models.PublicUser, request: Request) -> tuple[int, int]:
+def _apply_public_user_bulk_action(
+    db: Session, action_key: str, row: models.PublicUser, request: Request
+) -> tuple[int, int]:
     updated = 0
     queued = 0
     if action_key == "activate" and not row.is_deleted:
@@ -574,6 +587,9 @@ def _apply_public_user_bulk_action(action_key: str, row: models.PublicUser, requ
         row.is_deleted = False
         row.deleted_at = None
         row.is_active = True
+        updated = 1
+    elif action_key == "permanent_delete" and row.is_deleted:
+        db.delete(row)
         updated = 1
     return updated, queued
 
@@ -2169,6 +2185,8 @@ def admin_dashboard(
     public_user_status: str = "active",
     public_user_verified: str = "all",
     public_user_page: int = 1,
+    trash_page: int = 1,
+    trash_q: str = "",
     sessions_page: int = 1,
     payments_page: int = 1,
     audit_event_type: str = "",
@@ -2299,6 +2317,27 @@ def admin_dashboard(
     public_users = (
         public_users_query.order_by(models.PublicUser.created_at.desc())
         .offset(public_users_offset)
+        .limit(public_users_page_size)
+        .all()
+    )
+    trash_q_s = trash_q.strip()
+    trash_base = db.query(models.PublicUser).filter(models.PublicUser.is_deleted.is_(True))
+    if trash_q_s:
+        trash_base = trash_base.filter(
+            or_(
+                models.PublicUser.full_name.ilike(f"%{trash_q_s}%"),
+                models.PublicUser.email.ilike(f"%{trash_q_s}%"),
+            )
+        )
+    trash_total = trash_base.order_by(None).count()
+    safe_trash_page, trash_total_pages, trash_offset = _normalize_page(
+        trash_page,
+        trash_total,
+        public_users_page_size,
+    )
+    trash_users_list = (
+        trash_base.order_by(models.PublicUser.deleted_at.desc(), models.PublicUser.id.desc())
+        .offset(trash_offset)
         .limit(public_users_page_size)
         .all()
     )
@@ -2622,6 +2661,23 @@ def admin_dashboard(
                 "loyalty_tier_label": lt["loyalty_tier_label"],
             }
         )
+    trash_user_rows = []
+    for u in trash_users_list:
+        cnt = loyalty_by_email.get((u.email or "").lower(), 0)
+        lt = loyalty_context_for_count(cnt, center=center)
+        trash_user_rows.append(
+            {
+                "id": u.id,
+                "full_name": u.full_name,
+                "email": u.email,
+                "phone": u.phone or "-",
+                "deleted_at_display": _fmt_dt(u.deleted_at),
+                "created_at_display": _fmt_dt(u.created_at),
+                "loyalty_confirmed_count": cnt,
+                "loyalty_tier": lt["loyalty_tier"],
+                "loyalty_tier_label": lt["loyalty_tier_label"],
+            }
+        )
     faq_rows = [
         {
             "id": f.id,
@@ -2772,6 +2828,8 @@ def admin_dashboard(
         ADMIN_QP_PUBLIC_USER_STATUS: public_user_status,
         ADMIN_QP_PUBLIC_USER_VERIFIED: public_user_verified,
         ADMIN_QP_PUBLIC_USER_PAGE: str(safe_public_user_page),
+        ADMIN_QP_TRASH_PAGE: str(safe_trash_page),
+        ADMIN_QP_TRASH_Q: trash_q,
         ADMIN_QP_SESSIONS_PAGE: str(safe_sessions_page),
         ADMIN_QP_PAYMENTS_PAGE: str(safe_payments_page),
         ADMIN_QP_AUDIT_EVENT_TYPE: audit_event_type,
@@ -2804,6 +2862,10 @@ def admin_dashboard(
     payments_page_prev_url = _admin_page_url(**{ADMIN_QP_PAYMENTS_PAGE: str(max(1, safe_payments_page - 1))})
     payments_page_next_url = _admin_page_url(
         **{ADMIN_QP_PAYMENTS_PAGE: str(min(payments_total_pages, safe_payments_page + 1))}
+    )
+    trash_page_prev_url = _admin_page_url(**{ADMIN_QP_TRASH_PAGE: str(max(1, safe_trash_page - 1))})
+    trash_page_next_url = _admin_page_url(
+        **{ADMIN_QP_TRASH_PAGE: str(min(trash_total_pages, safe_trash_page + 1))}
     )
 
     safe_post_edit = max(0, int(post_edit or 0))
@@ -2953,6 +3015,18 @@ def admin_dashboard(
                 "has_next": safe_public_user_page < public_users_total_pages,
                 "prev_url": public_users_page_prev_url,
                 "next_url": public_users_page_next_url,
+            },
+            "trash_users": trash_user_rows,
+            "trash_filters": {"q": trash_q},
+            "trash_pagination": {
+                "page": safe_trash_page,
+                "page_size": public_users_page_size,
+                "total": trash_total,
+                "total_pages": trash_total_pages,
+                "has_prev": safe_trash_page > 1,
+                "has_next": safe_trash_page < trash_total_pages,
+                "prev_url": trash_page_prev_url,
+                "next_url": trash_page_next_url,
             },
             "security_pagination": {
                 "page": safe_audit_page,
@@ -3467,6 +3541,42 @@ def admin_restore_public_user(
     return _admin_redirect(ADMIN_MSG_PUBLIC_USER_RESTORED, scroll_y, return_section)
 
 
+@router.post("/admin/public-users/permanent-delete")
+def admin_permanent_delete_public_user(
+    request: Request,
+    public_user_id: int = Form(...),
+    scroll_y: str = Form(default=""),
+    return_section: str = Form(""),
+    db: Session = Depends(get_db),
+):
+    admin_user, redirect = _require_admin_user_or_redirect(request, db)
+    if redirect:
+        return redirect
+    assert admin_user is not None
+    if admin_user.role == "trainer":
+        return _trainer_forbidden_redirect(return_section)
+    row, redirect = _get_public_user_or_redirect(
+        db, public_user_id, scroll_y, allow_deleted=True, return_section=return_section
+    )
+    if redirect:
+        return redirect
+    assert row is not None
+    if not row.is_deleted:
+        return _admin_redirect(ADMIN_MSG_PUBLIC_USER_PERMANENT_DELETE_FORBIDDEN, scroll_y, return_section)
+    uid = row.id
+    tomb_email = row.email
+    db.delete(row)
+    db.commit()
+    log_security_event(
+        "admin_public_user_permanent_delete",
+        request,
+        "success",
+        email=admin_user.email,
+        details={"target_public_user_id": uid, "tombstone_email": tomb_email},
+    )
+    return _admin_redirect(ADMIN_MSG_PUBLIC_USER_PERMANENT_DELETED, scroll_y, return_section)
+
+
 @router.post("/admin/public-users/bulk-action")
 def admin_public_users_bulk_action(
     request: Request,
@@ -3501,7 +3611,7 @@ def admin_public_users_bulk_action(
     updated = 0
     queued = 0
     for row in rows:
-        row_updated, row_queued = _apply_public_user_bulk_action(action_key, row, request)
+        row_updated, row_queued = _apply_public_user_bulk_action(db, action_key, row, request)
         updated += row_updated
         queued += row_queued
     db.commit()
