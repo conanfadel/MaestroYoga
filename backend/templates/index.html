@@ -348,6 +348,104 @@
     }
     .alert.warn { background: #fffbeb; border-color: #fcd34d; color: #92400e; }
     .alert.err { background: #fef2f2; border-color: #fecaca; color: #991b1b; }
+    .feedback-fab {
+      position: fixed;
+      bottom: max(16px, env(safe-area-inset-bottom, 0px) + 8px);
+      inset-inline-start: max(16px, env(safe-area-inset-left, 0px) + 8px);
+      z-index: 900;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 12px 16px;
+      border-radius: 999px;
+      border: 1px solid rgba(197, 160, 89, 0.45);
+      background: linear-gradient(135deg, var(--gold) 0%, #d4b56e 100%);
+      color: #1a1a1a;
+      font-weight: 800;
+      font-size: 0.92rem;
+      cursor: pointer;
+      box-shadow: 0 10px 28px rgba(197, 160, 89, 0.4);
+      font-family: inherit;
+      transition: transform 0.15s ease, box-shadow 0.15s ease;
+    }
+    .feedback-fab:hover { transform: translateY(-2px); box-shadow: 0 14px 32px rgba(197, 160, 89, 0.45); }
+    .feedback-fab svg { width: 22px; height: 22px; flex-shrink: 0; }
+    .feedback-modal { position: fixed; inset: 0; z-index: 901; display: flex; align-items: center; justify-content: center; padding: 16px; }
+    .feedback-modal[hidden] { display: none !important; }
+    .feedback-modal__backdrop {
+      position: absolute;
+      inset: 0;
+      background: rgba(15, 23, 42, 0.45);
+      backdrop-filter: blur(4px);
+    }
+    .feedback-modal__panel {
+      position: relative;
+      width: 100%;
+      max-width: 440px;
+      max-height: min(90vh, 640px);
+      overflow: auto;
+      background: var(--white);
+      border-radius: 18px;
+      border: 1px solid rgba(197, 160, 89, 0.35);
+      box-shadow: 0 24px 60px rgba(45, 52, 54, 0.18);
+      padding: 20px 20px 18px;
+    }
+    .feedback-modal__panel h2 {
+      margin: 0 0 8px;
+      font-family: "Amiri", "Tajawal", serif;
+      font-size: 1.25rem;
+      color: var(--charcoal);
+    }
+    .feedback-modal__lead {
+      margin: 0 0 16px;
+      font-size: 0.9rem;
+      color: var(--charcoal-muted);
+      line-height: 1.55;
+    }
+    .feedback-modal__field { margin-bottom: 12px; }
+    .feedback-modal__field label { display: block; font-weight: 700; font-size: 0.88rem; margin-bottom: 6px; color: var(--charcoal); }
+    .feedback-modal__field input[type="text"],
+    .feedback-modal__field input[type="email"],
+    .feedback-modal__field select,
+    .feedback-modal__field textarea {
+      width: 100%;
+      padding: 10px 12px;
+      border-radius: 12px;
+      border: 2px solid rgba(170, 240, 209, 0.85);
+      font-family: inherit;
+      font-size: 0.92rem;
+    }
+    .feedback-modal__field textarea { min-height: 120px; resize: vertical; }
+    .feedback-modal__actions { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 16px; justify-content: flex-end; }
+    .feedback-modal__btn {
+      padding: 10px 18px;
+      border-radius: 999px;
+      font-weight: 800;
+      font-size: 0.9rem;
+      cursor: pointer;
+      font-family: inherit;
+      border: none;
+    }
+    .feedback-modal__btn--primary {
+      background: linear-gradient(135deg, var(--gold) 0%, #d4b56e 100%);
+      color: #1a1a1a;
+      box-shadow: 0 6px 18px rgba(197, 160, 89, 0.35);
+    }
+    .feedback-modal__btn--ghost { background: var(--mint-bg); color: var(--charcoal); border: 1px solid rgba(170, 240, 209, 0.95); }
+    .feedback-modal__close {
+      position: absolute;
+      top: 12px;
+      inset-inline-end: 12px;
+      width: 36px;
+      height: 36px;
+      border: none;
+      border-radius: 999px;
+      background: var(--mint-bg);
+      cursor: pointer;
+      font-size: 1.2rem;
+      line-height: 1;
+      color: var(--charcoal);
+    }
     .steps {
       display: grid;
       grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -1654,6 +1752,12 @@
     {% if msg == 'cart_invalid' %}<div class="alert err">تعذر قراءة السلة. أعد تحميل الصفحة وحاول مرة أخرى.</div>{% endif %}
     {% if msg == 'cart_too_many' %}<div class="alert warn">تجاوزت السلة الحد المسموح للجلسات في طلب واحد.</div>{% endif %}
     {% if msg == 'cart_session_full' %}<div class="alert err">إحدى الجلسات في السلة لم تعد متاحة. حدّث السلة وحاول مرة أخرى.</div>{% endif %}
+    {% if msg == 'feedback_sent' %}<div class="alert">تم إرسال رسالتك. شكرًا لتواصلك معنا.</div>{% endif %}
+    {% if msg == 'feedback_error' %}<div class="alert err">تعذر إرسال الرسالة. حاول لاحقًا أو تواصل مع المركز مباشرة.</div>{% endif %}
+    {% if msg == 'feedback_unavailable' %}<div class="alert warn">خدمة إرسال الملاحظات غير مفعّلة حاليًا على الخادم.</div>{% endif %}
+    {% if msg == 'feedback_rate_limited' %}<div class="alert warn">تم تجاوز عدد المحاولات المسموح. حاول لاحقًا.</div>{% endif %}
+    {% if msg == 'feedback_bad_image' %}<div class="alert err">صيغة الصورة غير مدعومة. استخدم JPG أو PNG أو WebP أو GIF.</div>{% endif %}
+    {% if msg == 'feedback_image_too_large' %}<div class="alert err">حجم أحد الملفات كبير جدًا. قلّل الحجم أو أزل بعض الصور.</div>{% endif %}
 
     <main id="main-content" class="grid-two">
       <div class="grid-two__main">
@@ -2298,5 +2402,71 @@
       }
     })();
   </script>
+  {% if feedback_enabled %}
+  <button type="button" class="feedback-fab" id="feedback-fab" aria-haspopup="dialog" aria-controls="feedback-modal" title="مساعدة — مشاكل، شكاوى، اقتراحات">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+    مساعدة
+  </button>
+  <div id="feedback-modal" class="feedback-modal" hidden role="dialog" aria-modal="true" aria-labelledby="feedback-modal-title">
+    <div class="feedback-modal__backdrop" id="feedback-modal-backdrop"></div>
+    <div class="feedback-modal__panel">
+      <button type="button" class="feedback-modal__close" id="feedback-modal-close" aria-label="إغلاق">×</button>
+      <h2 id="feedback-modal-title">مساعدة وملاحظات</h2>
+      <p class="feedback-modal__lead">أرسل مشكلة تقنية، شكوى، أو اقتراحًا. تُرسل الرسالة إلى إدارة المركز عبر البريد. يمكنك إرفاق صور لتوضيح المشكلة (حتى 4 صور، بحد أقصى تقريبًا 3 ميجابايت لكل صورة).</p>
+      <form method="post" action="/public/feedback" enctype="multipart/form-data">
+        <input type="hidden" name="center_id" value="{{ center_id }}" />
+        <div class="feedback-modal__field">
+          <label for="feedback-category">نوع الطلب</label>
+          <select id="feedback-category" name="category" required>
+            <option value="problem">مشكلة تقنية</option>
+            <option value="complaint">شكوى</option>
+            <option value="suggestion">اقتراح</option>
+          </select>
+        </div>
+        <div class="feedback-modal__field">
+          <label for="feedback-message">التفاصيل</label>
+          <textarea id="feedback-message" name="message" required minlength="3" maxlength="8000" placeholder="صف المشكلة أو الاقتراح"></textarea>
+        </div>
+        <div class="feedback-modal__field">
+          <label for="feedback-email">بريدك (اختياري للرد)</label>
+          <input id="feedback-email" type="email" name="contact_email" maxlength="254" autocomplete="email" placeholder="you@example.com" />
+        </div>
+        <div class="feedback-modal__field">
+          <label for="feedback-images">صور توضيحية (اختياري)</label>
+          <input id="feedback-images" type="file" name="images" accept="image/jpeg,image/png,image/webp,image/gif" multiple />
+        </div>
+        <div class="feedback-modal__actions">
+          <button type="button" class="feedback-modal__btn feedback-modal__btn--ghost" id="feedbackCancelBtn">إلغاء</button>
+          <button type="submit" class="feedback-modal__btn feedback-modal__btn--primary">إرسال</button>
+        </div>
+      </form>
+    </div>
+  </div>
+  <script>
+    (function () {
+      var fab = document.getElementById("feedback-fab");
+      var modal = document.getElementById("feedback-modal");
+      if (!fab || !modal) return;
+      var close = function () {
+        modal.setAttribute("hidden", "");
+        fab.focus();
+      };
+      fab.addEventListener("click", function () {
+        modal.removeAttribute("hidden");
+        var first = modal.querySelector("select, textarea, input");
+        if (first) setTimeout(function () { try { first.focus(); } catch (e) {} }, 0);
+      });
+      var c1 = document.getElementById("feedback-modal-close");
+      var bd = document.getElementById("feedback-modal-backdrop");
+      var cancel = document.getElementById("feedbackCancelBtn");
+      if (c1) c1.addEventListener("click", close);
+      if (bd) bd.addEventListener("click", close);
+      if (cancel) cancel.addEventListener("click", close);
+      document.addEventListener("keydown", function (e) {
+        if (e.key === "Escape" && !modal.hasAttribute("hidden")) close();
+      });
+    })();
+  </script>
+  {% endif %}
 </body>
 </html>

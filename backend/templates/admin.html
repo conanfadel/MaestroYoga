@@ -142,19 +142,23 @@
       vector-effect: non-scaling-stroke;
       transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.3s ease;
     }
+    .section-tab:not(.active) .section-tab__icon {
+      color: var(--gold-dark);
+    }
     .section-tab:not(.active) .section-tab__icon svg {
-      opacity: 0.9;
+      opacity: 1;
+    }
+    /* التبويب النشط: أيقونة بلون داكن يُقرأ على الخلفية الذهبية */
+    .section-tab.active .section-tab__icon {
+      color: #1a1a1a;
     }
     .section-tab.active .section-tab__icon svg {
       opacity: 1;
     }
-    /* الدرع يملأ الـ viewBox أكثر من باقي الرموز — تصغير بصري ليتوازن مع الكرة والتقويم */
-    .section-tab__icon--shield svg {
-      transform: scale(0.76);
-      transform-origin: center center;
-    }
-    .section-tab.active .section-tab__icon--shield svg {
-      transform: scale(0.8);
+    /* مجموعة تحتوي قسمًا نشطًا أو قائمة مفتوحة: أيقونة التجميع بلون ذهبي */
+    .section-tab-cluster--active > .section-tab--cluster-toggle .section-tab__icon,
+    .section-tab-cluster.is-open > .section-tab--cluster-toggle .section-tab__icon {
+      color: var(--gold);
     }
     /* أيقونة المجموعتين أوسع قليلاً في الـ viewBox */
     .section-tab__icon--users svg {
@@ -168,6 +172,17 @@
       fill: currentColor;
       stroke: none !important;
       vector-effect: unset;
+    }
+    /* عناصر القائمة المنسدلة النشطة: نفس التدرج الذهبي الكامل للتبويب الرئيسي */
+    .section-tab.section-tab--subitem.active {
+      background: linear-gradient(135deg, var(--gold) 0%, #d4b56e 100%);
+      color: #1a1a1a;
+      border-color: rgba(197, 160, 89, 0.55);
+      box-shadow: 0 4px 14px rgba(197, 160, 89, 0.38);
+      font-weight: 800;
+    }
+    .section-tab.section-tab--subitem.active .section-tab__icon {
+      color: #1a1a1a;
     }
     @media (prefers-reduced-motion: reduce) {
       .section-tab,
@@ -948,7 +963,7 @@
       {% endif %}
       {% if show_security_section %}
       <a class="section-tab" data-target="section-security" href="#section-security" id="tab-section-security">
-        <span class="section-tab__icon section-tab__icon--shield" aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></span>
+        <span class="section-tab__icon section-tab__icon--shield" aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" aria-hidden="true"><g transform="translate(12,12) scale(0.48) translate(-12,-12)"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></g></svg></span>
         الأمان والمخاطر
       </a>
       {% endif %}

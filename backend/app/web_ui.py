@@ -1,6 +1,7 @@
 import csv
 import io
 import json
+from html import escape as html_escape
 from collections import defaultdict
 from datetime import date, datetime, timedelta
 import os
@@ -29,8 +30,10 @@ from .loyalty import (
     validate_loyalty_threshold_triple,
 )
 from .mailer import (
+    feedback_destination_email,
     queue_email_verification_email,
     queue_password_reset_email,
+    send_mail_with_attachments,
     validate_mailer_settings,
 )
 from .payments import StripePaymentProvider, get_payment_provider
@@ -77,6 +80,16 @@ PUBLIC_COOKIE_NAME = "public_access_token"
 MAX_LOCKOUT_SECONDS = int(os.getenv("RATE_LIMIT_MAX_LOCKOUT_SECONDS", "900"))
 MAX_PUBLIC_CART_SESSIONS = int(os.getenv("MAX_PUBLIC_CART_SESSIONS", "8"))
 GA4_MEASUREMENT_ID = os.getenv("GA4_MEASUREMENT_ID", "").strip()
+PUBLIC_FEEDBACK_MAX_IMAGES = int(os.getenv("PUBLIC_FEEDBACK_MAX_IMAGES", "4"))
+PUBLIC_FEEDBACK_MAX_IMAGE_BYTES = int(os.getenv("PUBLIC_FEEDBACK_MAX_IMAGE_BYTES", str(3 * 1024 * 1024)))
+PUBLIC_FEEDBACK_ALLOWED_IMAGE_TYPES = frozenset(
+    {"image/jpeg", "image/png", "image/webp", "image/gif"}
+)
+PUBLIC_FEEDBACK_CATEGORY_LABELS = {
+    "problem": "مشكلة تقنية",
+    "complaint": "شكوى",
+    "suggestion": "اقتراح",
+}
 
 # Admin dashboard pagination tuning.
 ADMIN_SESSIONS_PAGE_SIZE = 50
@@ -802,9 +815,138 @@ def public_index(
             "public_news_has_more": public_news_has_more,
             "public_news_list_url": public_news_list_url,
             "loyalty_program_rows": loyalty_program_table_rows(center),
+            "feedback_enabled": bool(feedback_destination_email()) and validate_mailer_settings()[0],
             **loyalty_ctx,
             **_analytics_context("index", center_id=str(center_id)),
         },
+    )
+
+
+@router.post("/public/feedback")
+async def public_feedback_submit(
+    request: Request,
+    center_id: int = Form(1),
+    category: str = Form(...),
+    message: str = Form(...),
+    contact_email: str = Form(""),
+    images: list[UploadFile] | None = File(None),
+    db: Session = Depends(get_db),
+):
+    """إرسال مشكلة / شكوى / اقتراح من الواجهة العامة إلى بريد الإدارة (مع صور اختيارية)."""
+    dest = feedback_destination_email()
+    ok_cfg, _why = validate_mailer_settings()
+    if not dest or not ok_cfg:
+        return RedirectResponse(
+            url=_url_with_params("/index", center_id=str(center_id), msg="feedback_unavailable"),
+            status_code=303,
+        )
+
+    cat_key = (category or "").strip().lower()
+    if cat_key not in PUBLIC_FEEDBACK_CATEGORY_LABELS:
+        return RedirectResponse(
+            url=_url_with_params("/index", center_id=str(center_id), msg="feedback_error"),
+            status_code=303,
+        )
+
+    center = db.get(models.Center, center_id)
+    if not center:
+        ensure_demo_data(db)
+        center = db.get(models.Center, center_id)
+    if not center:
+        raise HTTPException(status_code=404, detail="Center not found")
+
+    msg_text = (message or "").strip()
+    if len(msg_text) < 3 or len(msg_text) > 8000:
+        return RedirectResponse(
+            url=_url_with_params("/index", center_id=str(center_id), msg="feedback_error"),
+            status_code=303,
+        )
+
+    ce = (contact_email or "").strip()
+    if ce and ("@" not in ce or len(ce) > 254):
+        return RedirectResponse(
+            url=_url_with_params("/index", center_id=str(center_id), msg="feedback_error"),
+            status_code=303,
+        )
+
+    fb_key = _request_key(request, "public_feedback", f"{center_id}")
+    if not rate_limiter.allow(fb_key, limit=5, window_seconds=3600, lockout_seconds=120, max_lockout_seconds=MAX_LOCKOUT_SECONDS):
+        log_security_event("public_feedback", request, "rate_limited", email=ce or None)
+        return RedirectResponse(
+            url=_url_with_params("/index", center_id=str(center_id), msg="feedback_rate_limited"),
+            status_code=303,
+        )
+
+    attachments: list[tuple[str, bytes, str]] = []
+    upload_list = images if images else []
+    for uf in upload_list:
+        if not uf.filename:
+            continue
+        ct = (uf.content_type or "").split(";")[0].strip().lower()
+        if ct not in PUBLIC_FEEDBACK_ALLOWED_IMAGE_TYPES:
+            return RedirectResponse(
+                url=_url_with_params("/index", center_id=str(center_id), msg="feedback_bad_image"),
+                status_code=303,
+            )
+        raw = await uf.read()
+        if len(raw) > PUBLIC_FEEDBACK_MAX_IMAGE_BYTES:
+            return RedirectResponse(
+                url=_url_with_params("/index", center_id=str(center_id), msg="feedback_image_too_large"),
+                status_code=303,
+            )
+        if len(attachments) >= PUBLIC_FEEDBACK_MAX_IMAGES:
+            break
+        safe_name = os.path.basename(uf.filename or "image.jpg")[:180]
+        attachments.append((safe_name, raw, ct))
+
+    app_name = os.getenv("APP_NAME", "Maestro Yoga")
+    cat_label = PUBLIC_FEEDBACK_CATEGORY_LABELS[cat_key]
+    ip = get_client_ip(request)
+    subject = f"{app_name} — {center.name} — {cat_label}"
+    body_lines = [
+        f"المركز: {center.name} (center_id={center_id})",
+        f"التصنيف: {cat_label}",
+        "",
+        "النص:",
+        msg_text,
+        "",
+        f"بريد للتواصل (اختياري): {ce or '—'}",
+        f"عنوان IP: {ip}",
+    ]
+    body = "\n".join(body_lines)
+    html_body = (
+        f"<div dir='rtl' style='font-family:Tahoma,Arial,sans-serif;line-height:1.6'>"
+        f"<p><strong>المركز:</strong> {html_escape(center.name)}</p>"
+        f"<p><strong>التصنيف:</strong> {html_escape(cat_label)}</p>"
+        f"<p><strong>النص:</strong></p><pre style='white-space:pre-wrap'>{html_escape(msg_text)}</pre>"
+        f"<p><strong>بريد للتواصل:</strong> {html_escape(ce or '—')}</p>"
+        f"<p><strong>IP:</strong> {html_escape(ip)}</p>"
+        f"</div>"
+    )
+
+    sent_ok, send_reason = send_mail_with_attachments(
+        dest,
+        subject,
+        body,
+        html_body=html_body,
+        attachments=attachments or None,
+    )
+    if not sent_ok:
+        log_security_event(
+            "public_feedback",
+            request,
+            "send_failed",
+            email=ce or None,
+            details={"reason": send_reason[:400]},
+        )
+        return RedirectResponse(
+            url=_url_with_params("/index", center_id=str(center_id), msg="feedback_error"),
+            status_code=303,
+        )
+    log_security_event("public_feedback", request, "success", email=ce or None)
+    return RedirectResponse(
+        url=_url_with_params("/index", center_id=str(center_id), msg="feedback_sent"),
+        status_code=303,
     )
 
 

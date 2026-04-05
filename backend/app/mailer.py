@@ -1,9 +1,13 @@
+import base64
 import os
 import smtplib
 import json
 import urllib.error
 import urllib.request
 from concurrent.futures import Future, ThreadPoolExecutor
+from email import encoders
+from email.mime.base import MIMEBase
+from email.mime.image import MIMEImage
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 
@@ -212,6 +216,168 @@ def _send_via_resend(
         return False, reason
     except Exception as exc:
         return False, f"resend_error:{exc}"
+
+
+def _send_via_resend_with_attachments(
+    *,
+    to_email: str,
+    subject: str,
+    body: str,
+    html_body: str | None,
+    attachments: list[tuple[str, bytes, str]],
+) -> tuple[bool, str]:
+    api_key = os.getenv("RESEND_API_KEY", "").strip()
+    from_addr = os.getenv("RESEND_FROM", os.getenv("SMTP_FROM", "")).strip()
+    if not api_key:
+        return False, "missing_resend_api_key"
+    if _looks_like_placeholder(api_key):
+        return False, "invalid_resend_api_key_placeholder"
+    if not from_addr:
+        return False, "missing_resend_from"
+    payload: dict[str, object] = {
+        "from": from_addr,
+        "to": [to_email],
+        "subject": subject,
+        "text": body,
+        "attachments": [
+            {"filename": fn, "content": base64.b64encode(raw).decode("ascii")}
+            for fn, raw, _ct in attachments
+        ],
+    }
+    if html_body:
+        payload["html"] = html_body
+    data = json.dumps(payload).encode("utf-8")
+    req = urllib.request.Request(
+        "https://api.resend.com/emails",
+        data=data,
+        method="POST",
+        headers={
+            "Authorization": f"Bearer {api_key}",
+            "Content-Type": "application/json",
+            "User-Agent": "MaestroYoga-Mailer/1.0",
+        },
+    )
+    try:
+        with urllib.request.urlopen(req, timeout=30) as response:
+            status = int(getattr(response, "status", 200))
+            raw = (response.read() or b"").decode("utf-8", errors="ignore").strip()
+            if 200 <= status < 300:
+                return True, "ok"
+            reason = f"resend_http_{status}:{raw[:300]}"
+            _maybe_log_resend_sandbox_restriction(reason)
+            return False, reason
+    except urllib.error.HTTPError as exc:
+        err_body = exc.read().decode("utf-8", errors="ignore").strip()
+        reason = f"resend_http_{exc.code}:{err_body[:300]}"
+        _maybe_log_resend_sandbox_restriction(reason)
+        return False, reason
+    except Exception as exc:
+        return False, f"resend_error:{exc}"
+
+
+def feedback_destination_email() -> str:
+    v = os.getenv("FEEDBACK_TO_EMAIL", "").strip()
+    if v:
+        return v
+    return os.getenv("SMTP_FROM", os.getenv("SMTP_USER", "")).strip()
+
+
+def send_mail_with_attachments(
+    to_email: str,
+    subject: str,
+    body: str,
+    *,
+    html_body: str | None = None,
+    attachments: list[tuple[str, bytes, str]] | None = None,
+) -> tuple[bool, str]:
+    """إرسال بريد مع مرفقات (صور وغيرها). يدعم SMTP و Resend؛ المزودات الأخرى تُرفض عند وجود مرفقات."""
+    attachments = attachments or []
+    smtp_host = os.getenv("SMTP_HOST", "").strip()
+    smtp_port = _parse_smtp_port(os.getenv("SMTP_PORT", "587"))
+    smtp_user = os.getenv("SMTP_USER", "").strip()
+    smtp_password = os.getenv("SMTP_PASSWORD", "").strip()
+    smtp_from = os.getenv("SMTP_FROM", smtp_user or "no-reply@maestroyoga.local")
+    mail_provider = os.getenv("MAIL_PROVIDER", "smtp").strip().lower()
+    smtp_security = _smtp_transport_mode()
+
+    try:
+        if mail_provider in {"http_relay", "apps_script"}:
+            if attachments:
+                return False, "attachments_not_supported_for_relay"
+            return _send_mail(to_email, subject, body, html_body)
+
+        if mail_provider == "resend":
+            if not attachments:
+                return _send_via_resend(to_email=to_email, subject=subject, body=body, html_body=html_body)
+            return _send_via_resend_with_attachments(
+                to_email=to_email,
+                subject=subject,
+                body=body,
+                html_body=html_body,
+                attachments=attachments,
+            )
+
+        if not smtp_host:
+            return False, "missing_smtp_host"
+        if _looks_like_placeholder(smtp_password):
+            return False, "invalid_smtp_password_placeholder"
+        if not smtp_user:
+            return False, "missing_smtp_user"
+
+        if mail_provider == "pywhatkit":
+            if attachments:
+                return False, "attachments_not_supported_for_pywhatkit"
+            return _send_mail(to_email, subject, body, html_body)
+
+        msg = MIMEMultipart("mixed")
+        msg["Subject"] = subject
+        msg["From"] = smtp_from
+        msg["To"] = to_email
+        alt = MIMEMultipart("alternative")
+        alt.attach(MIMEText(body, "plain", _charset="utf-8"))
+        if html_body:
+            alt.attach(MIMEText(html_body, "html", _charset="utf-8"))
+        msg.attach(alt)
+
+        for filename, data, ctype in attachments:
+            maintype, _, subtype = (ctype or "application/octet-stream").partition("/")
+            maintype = maintype or "application"
+            subtype = subtype or "octet-stream"
+            if maintype == "image":
+                part = MIMEImage(data, _subtype=subtype)
+            else:
+                part = MIMEBase(maintype, subtype)
+                part.set_payload(data)
+                encoders.encode_base64(part)
+            part.add_header("Content-Disposition", "attachment", filename=filename)
+            msg.attach(part)
+
+        msg_raw = msg.as_string()
+        last_error = "unknown"
+        for mode, port in _build_smtp_attempts(smtp_host, smtp_port, smtp_security):
+            try:
+                _send_smtp_message(
+                    smtp_host=smtp_host,
+                    smtp_port=port,
+                    smtp_security=mode,
+                    smtp_user=smtp_user,
+                    smtp_password=smtp_password,
+                    smtp_from=smtp_from,
+                    to_email=to_email,
+                    msg_raw=msg_raw,
+                )
+                return True, "ok"
+            except Exception as exc:
+                last_error = f"mode={mode} port={port} error={exc}"
+        raise RuntimeError(last_error)
+    except Exception as exc:
+        err_text = str(exc).lower()
+        print(f"[MAILER][ERROR] Failed to send email with attachments to {to_email}: {exc}")
+        if "unreachable" in err_text or "network is unreachable" in err_text or "[errno 101]" in err_text:
+            print(
+                "[MAILER][HINT] منصات مثل Render غالبًا تحجب SMTP. عيّن MAIL_PROVIDER=resend وRESEND_API_KEY (HTTPS)."
+            )
+        return False, str(exc)
 
 
 def _brand_email_html(
