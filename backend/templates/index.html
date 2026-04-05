@@ -61,11 +61,20 @@
       --loyalty-bronze: #b45309;
       --loyalty-silver: #64748b;
       --loyalty-gold: #ca8a04;
+      --touch-min: 44px;
+      --tap-highlight: rgba(197, 160, 89, 0.14);
     }
     * { box-sizing: border-box; }
+    *,
+    *::before,
+    *::after {
+      -webkit-tap-highlight-color: var(--tap-highlight);
+    }
     html {
       overflow-x: clip;
       scroll-behavior: smooth;
+      -webkit-text-size-adjust: 100%;
+      text-size-adjust: 100%;
     }
     body {
       margin: 0;
@@ -77,17 +86,20 @@
         radial-gradient(ellipse 140% 90% at 100% -10%, rgba(170, 240, 209, 0.35) 0%, transparent 52%),
         radial-gradient(ellipse 80% 50% at 0% 100%, rgba(197, 160, 89, 0.08) 0%, transparent 45%),
         var(--page-bg);
+      touch-action: manipulation;
     }
     @media (max-width: 720px) {
-      body { padding-inline: max(10px, 3vw); }
+      body {
+        padding-inline: max(10px, 3vw, env(safe-area-inset-left, 0px) + 6px, env(safe-area-inset-right, 0px) + 6px);
+      }
+      .container {
+        max-width: 100%;
+      }
     }
     .container {
       width: 100%;
       max-width: min(1680px, 80vw);
       margin-inline: auto;
-    }
-    @media (max-width: 720px) {
-      .container { max-width: 100%; }
     }
     .skip-link {
       position: absolute; inset-inline-start: -9999px; top: 0;
@@ -190,6 +202,7 @@
     }
     .hero-actions, .toplinks, .hero-meta { display: flex; gap: 8px; flex-wrap: wrap; }
     .hero-actions { margin-top: 10px; }
+    .hero-meta { margin-top: 10px; }
     .public-user-menu { position: relative; display: inline-block; max-width: 100%; z-index: 100; }
     .public-user-menu__trigger {
       max-width: min(100%, 280px);
@@ -329,12 +342,16 @@
       border: 0;
       border-radius: 999px;
       padding: 8px 14px;
+      min-height: var(--touch-min);
       font-weight: 800;
       text-decoration: none;
       cursor: pointer;
       font-family: inherit;
       font-size: 0.88rem;
       transition: transform 0.15s ease, box-shadow 0.15s ease;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
     }
     .btn:active { transform: scale(0.98); }
     .btn.primary {
@@ -549,6 +566,7 @@
       gap: 10px;
       padding: 10px 12px 10px 18px;
       padding-inline-end: 14px;
+      min-height: var(--touch-min);
       cursor: pointer;
       font-family: inherit;
       color: inherit;
@@ -1300,7 +1318,7 @@
     }
     .sticky-booking {
       position: sticky;
-      bottom: 12px;
+      bottom: max(12px, env(safe-area-inset-bottom, 0px));
       z-index: 75;
       margin-top: 10px;
       display: flex;
@@ -1312,6 +1330,7 @@
       color: #f8fafc;
       border-radius: 16px;
       padding: 14px 18px;
+      padding-bottom: max(14px, env(safe-area-inset-bottom, 0px) + 8px);
       border: 2px solid rgba(197, 160, 89, 0.4);
       box-shadow: 0 12px 36px rgba(45, 52, 54, 0.2);
     }
@@ -1323,12 +1342,16 @@
       background: linear-gradient(135deg, var(--gold), #e0c989);
       border-radius: 999px;
       padding: 9px 16px;
+      min-height: var(--touch-min);
       text-decoration: none;
       font-weight: 800;
       border: 0;
       cursor: pointer;
       font-family: inherit;
       font-size: inherit;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
     }
     .sticky-cart-btn {
       display: inline-flex;
@@ -1749,6 +1772,11 @@
         gap: 0.5rem 1.1rem;
       }
       .news-ticker__link { white-space: normal; }
+      .session-card:hover,
+      .plan-card:hover,
+      .index-news-card:hover {
+        transform: none;
+      }
     }
     .index-news-showcase {
       margin-bottom: 0 !important;
@@ -1977,11 +2005,20 @@
       #sessions-section .sessions-panel__expandable { padding: 0 14px 16px; padding-inline-start: 20px; }
       .post-pin.post-pin--compact { grid-template-columns: 1fr; }
     }
-    @media (max-width: 480px) {
-      #sessions-section .sessions-panel__summary { padding: 10px 12px 10px 18px; padding-inline-end: 10px; }
-      #sessions-section .sessions-panel__expandable { padding: 0 12px 16px; padding-inline-start: 18px; }
-      #sessions-section.sessions-panel::before { top: 12px; bottom: 12px; width: 4px; }
-      .sessions-filters { padding: 14px; margin-bottom: 14px; }
+    /* ألواح: مساحة أنسب ولمس أوضح بين الهاتف وسطح المكتب */
+    @media (min-width: 721px) and (max-width: 980px) {
+      body {
+        padding-inline: max(16px, env(safe-area-inset-left, 0px) + 10px, env(safe-area-inset-right, 0px) + 10px);
+      }
+      .grid-two {
+        gap: 20px;
+      }
+      .hero {
+        padding: 16px 18px;
+      }
+      .container {
+        max-width: min(100%, 920px);
+      }
     }
     @media (max-width: 640px) {
       .sessions-eyebrow { font-size: 0.62rem; margin-bottom: 4px; }
@@ -2062,10 +2099,6 @@
       }
       .plan-meta .k { font-size: 0.65rem; }
       .best-note { font-size: 0.72rem; padding: 5px 8px; margin-top: 6px; }
-    }
-    @media (prefers-reduced-motion: reduce) {
-      .session-card:hover,
-      .plan-card:hover { transform: none; }
     }
     /* هاتف (يشمل ~412px مثل S25 Ultra): هيدر مدمج جداً */
     @media (max-width: 520px) {
@@ -2179,7 +2212,7 @@
             {% endif %}
           </div>
         </div>
-        <div class="hero-meta" style="margin-top:10px;">
+        <div class="hero-meta">
           <span class="chip">جلسات يومية</span>
           <span class="chip">مدربون محترفون</span>
           <span class="chip">دفع إلكتروني آمن</span>
