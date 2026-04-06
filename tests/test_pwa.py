@@ -33,3 +33,16 @@ def test_index_links_dynamic_manifest_and_registers_sw(client: TestClient) -> No
     assert r.status_code == 200
     assert f"/manifest.json?v={APP_VERSION_STRING}" in r.text
     assert f"/sw.js?v={APP_VERSION_STRING}" in r.text
+
+
+def test_index_public_hero_is_real_img_and_static_asset_served(client: TestClient) -> None:
+    """الغلاف التوضيحي يُعرض عبر <img> وملف PNG يُخدم من /static (لا يعتمد على background CSS فقط)."""
+    from backend.app.app_version import APP_VERSION_STRING
+
+    r = client.get("/index?center_id=1")
+    assert r.status_code == 200
+    assert 'class="hero-media__img"' in r.text
+    assert f"/static/branding/hero-stock.png?v={APP_VERSION_STRING}" in r.text
+    img = client.get(f"/static/branding/hero-stock.png?v={APP_VERSION_STRING}")
+    assert img.status_code == 200
+    assert "image" in (img.headers.get("content-type") or "").lower()

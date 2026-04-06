@@ -182,12 +182,35 @@
           {% endif %}
         </div>
       </div>
-      <div
-        class="hero-media{% if center.hero_image_url %} hero-media--custom{% elif center.hero_show_stock_photo | default(true) %} hero-media--stock{% endif %}"
-        role="img"
-        aria-label="{% if center.hero_image_url %}صورة الغلاف للمركز{% elif center.hero_show_stock_photo | default(true) %}صورة يوغا توضيحية{% else %}خلفية ملونة للقسم{% endif %}"
-        {% if center.hero_image_url %}style="--hero-src: url('{{ center.hero_image_url }}');"{% elif center.hero_show_stock_photo | default(true) %}style="--hero-stock: url('{{ hero_stock_src }}?v={{ app_version }}');"{% endif %}
-      ></div>
+      {% if center.hero_image_url %}
+      <div class="hero-media hero-media--photo" role="img" aria-label="صورة الغلاف للمركز">
+        <img
+          class="hero-media__img"
+          src="{{ center.hero_image_url }}"
+          alt=""
+          width="1200"
+          height="675"
+          decoding="async"
+          loading="eager"
+          fetchpriority="high"
+        />
+      </div>
+      {% elif center.hero_show_stock_photo | default(true) %}
+      <div class="hero-media hero-media--photo" role="img" aria-label="صورة يوغا توضيحية">
+        <img
+          class="hero-media__img"
+          src="{{ hero_stock_src }}?v={{ app_version }}"
+          alt=""
+          width="1200"
+          height="675"
+          decoding="async"
+          loading="eager"
+          fetchpriority="high"
+        />
+      </div>
+      {% else %}
+      <div class="hero-media hero-media--gradient-only" role="img" aria-label="خلفية ملونة للقسم"></div>
+      {% endif %}
     </header>
 
     {% if news_ticker_items %}
