@@ -96,7 +96,8 @@
       overflow: hidden;
       position: relative;
       isolation: isolate;
-      min-height: 240px;
+      /* مساحة كافية لعرض الصورة كاملة (contain) بوضوح داخل الهيدر */
+      min-height: clamp(300px, 40vh, 460px);
     }
     .hero::before {
       content: "";
@@ -178,30 +179,28 @@
       font-weight: 500;
       opacity: 0.9;
     }
-    /* غلاف: الصورة كاملة (contain) + ضبابية وشفافية كالمرجع */
+    /* غلاف: يملأ الهيدر؛ الصورة كاملة (contain) بوضوح وشفافية معتدلة */
     .hero__media.hero-media {
       overflow: hidden;
       background-color: var(--page-bg);
       background-image:
         linear-gradient(
           135deg,
-          rgba(170, 240, 209, 0.08) 0%,
-          rgba(255, 255, 255, 0.2) 55%,
-          rgba(197, 160, 89, 0.05) 100%
+          rgba(170, 240, 209, 0.06) 0%,
+          rgba(255, 255, 255, 0.12) 55%,
+          rgba(197, 160, 89, 0.04) 100%
         );
     }
     .hero__media.hero-media--stock::before,
     .hero__media.hero-media--custom::before {
       content: "";
       position: absolute;
-      inset: -8px;
+      inset: 0;
       background-repeat: no-repeat;
       background-size: contain;
-      background-position: left center;
-      filter: blur(6px);
-      opacity: 0.52;
-      transform: scale(1.06);
-      transform-origin: left center;
+      background-position: center center;
+      filter: blur(2.5px);
+      opacity: 0.92;
       pointer-events: none;
       z-index: 0;
     }
@@ -218,21 +217,18 @@
       inset: 0;
       pointer-events: none;
       z-index: 1;
-      background:
-        linear-gradient(
-          105deg,
-          rgba(255, 255, 255, 0.38) 0%,
-          rgba(255, 255, 255, 0.52) 38%,
-          rgba(250, 252, 251, 0.45) 72%,
-          rgba(255, 255, 255, 0.36) 100%
-        ),
-        radial-gradient(ellipse 90% 70% at 85% 45%, rgba(255, 255, 255, 0.28) 0%, transparent 58%);
+      /* طبقة خفيفة فقط لقراءة النص دون إخفاء الصورة */
+      background: linear-gradient(
+        115deg,
+        rgba(255, 255, 255, 0.12) 0%,
+        rgba(255, 255, 255, 0.18) 45%,
+        rgba(250, 252, 251, 0.1) 100%
+      );
     }
     @media (prefers-reduced-motion: reduce) {
       .hero__media.hero-media--stock::before,
       .hero__media.hero-media--custom::before {
-        filter: blur(3px);
-        transform: none;
+        filter: blur(1.5px);
       }
     }
     .hero-toolbar {
@@ -1672,7 +1668,7 @@
     .post-teaser--strip .post-teaser__title { font-size: 0.98rem; }
     .post-teaser--strip .post-teaser__summary { font-size: 0.84rem; -webkit-line-clamp: 2; display: -webkit-box; -webkit-box-orient: vertical; overflow: hidden; }
     @media (max-width: 980px) {
-      .hero { min-height: 220px; }
+      .hero { min-height: clamp(280px, 48vh, 420px); }
       .hero__inner { padding: 18px 16px; }
       .grid-two { grid-template-columns: 1fr; }
       .sessions-filters-grid { grid-template-columns: 1fr; }
