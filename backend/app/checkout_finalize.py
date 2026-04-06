@@ -5,6 +5,7 @@ from __future__ import annotations
 from sqlalchemy.orm import Session
 
 from . import models
+from .push_service import safe_notify_booking_confirmed_push
 
 
 def collect_payments_from_metadata(
@@ -45,6 +46,7 @@ def collect_payments_from_metadata(
 def finalize_checkout_paid(db: Session, metadata: dict, provider_ref: str) -> None:
     payment_rows, subscription = collect_payments_from_metadata(db, metadata, provider_ref)
     changed = False
+    confirmed_booking_ids: set[int] = set()
     for payment in payment_rows:
         if payment.status != "paid":
             payment.status = "paid"
@@ -54,6 +56,7 @@ def finalize_checkout_paid(db: Session, metadata: dict, provider_ref: str) -> No
             if booking and booking.status != "confirmed":
                 booking.status = "confirmed"
                 changed = True
+                confirmed_booking_ids.add(booking.id)
         elif subscription and subscription.status != "active":
             subscription.status = "active"
             changed = True
@@ -62,6 +65,8 @@ def finalize_checkout_paid(db: Session, metadata: dict, provider_ref: str) -> No
         changed = True
     if changed:
         db.commit()
+    for bid in confirmed_booking_ids:
+        safe_notify_booking_confirmed_push(db, bid)
 
 
 def finalize_checkout_failed(db: Session, metadata: dict, provider_ref: str) -> None:

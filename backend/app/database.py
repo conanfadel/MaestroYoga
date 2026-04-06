@@ -77,6 +77,7 @@ def _ensure_performance_indexes(conn, insp) -> None:
         ("session_ratings", "idx_session_ratings_booking_id", "booking_id"),
         ("reminder_sent", "idx_reminder_sent_booking_kind", "booking_id, kind"),
         ("feature_flags", "idx_feature_flags_center_key", "center_id, flag_key"),
+        ("public_push_devices", "idx_public_push_devices_public_user_id", "public_user_id"),
     ]
     for table_name, index_name, columns in index_specs:
         if insp.has_table(table_name):
@@ -96,11 +97,21 @@ def migrate_schema() -> None:
     needs_public_user_phone = False
     needs_public_user_is_deleted = False
     needs_public_user_deleted_at = False
+    needs_public_push_enabled = False
+    needs_public_push_reminders = False
+    needs_public_push_bookings = False
+    needs_public_push_waitlist = False
+    needs_public_push_marketing = False
     if insp.has_table("public_users"):
         public_user_cols = {c["name"] for c in insp.get_columns("public_users")}
         needs_public_user_phone = "phone" not in public_user_cols
         needs_public_user_is_deleted = "is_deleted" not in public_user_cols
         needs_public_user_deleted_at = "deleted_at" not in public_user_cols
+        needs_public_push_enabled = "push_enabled" not in public_user_cols
+        needs_public_push_reminders = "push_reminders" not in public_user_cols
+        needs_public_push_bookings = "push_bookings" not in public_user_cols
+        needs_public_push_waitlist = "push_waitlist" not in public_user_cols
+        needs_public_push_marketing = "push_marketing" not in public_user_cols
 
     needs_center_logo_url = False
     needs_center_brand_tagline = False
@@ -157,6 +168,11 @@ def migrate_schema() -> None:
         and not needs_center_loyalty_rg
         and not needs_client_referral_code
         and not needs_client_referred_by
+        and not needs_public_push_enabled
+        and not needs_public_push_reminders
+        and not needs_public_push_bookings
+        and not needs_public_push_waitlist
+        and not needs_public_push_marketing
     ):
         with engine.begin() as conn:
             _cleanup_stale_center_logo_urls_sql(conn)
@@ -212,6 +228,52 @@ def migrate_schema() -> None:
             conn.execute(text("ALTER TABLE clients ADD COLUMN referral_code VARCHAR(32)"))
         if needs_client_referred_by:
             conn.execute(text("ALTER TABLE clients ADD COLUMN referred_by_client_id INTEGER"))
+        if needs_public_push_enabled:
+            if dialect == "postgresql":
+                conn.execute(
+                    text("ALTER TABLE public_users ADD COLUMN push_enabled BOOLEAN NOT NULL DEFAULT TRUE")
+                )
+            else:
+                conn.execute(text("ALTER TABLE public_users ADD COLUMN push_enabled BOOLEAN DEFAULT 1"))
+        if needs_public_push_reminders:
+            if dialect == "postgresql":
+                conn.execute(
+                    text("ALTER TABLE public_users ADD COLUMN push_reminders BOOLEAN NOT NULL DEFAULT TRUE")
+                )
+            else:
+                conn.execute(text("ALTER TABLE public_users ADD COLUMN push_reminders BOOLEAN DEFAULT 1"))
+        if needs_public_push_bookings:
+            if dialect == "postgresql":
+                conn.execute(
+                    text("ALTER TABLE public_users ADD COLUMN push_bookings BOOLEAN NOT NULL DEFAULT TRUE")
+                )
+            else:
+                conn.execute(text("ALTER TABLE public_users ADD COLUMN push_bookings BOOLEAN DEFAULT 1"))
+        if needs_public_push_waitlist:
+            if dialect == "postgresql":
+                conn.execute(
+                    text("ALTER TABLE public_users ADD COLUMN push_waitlist BOOLEAN NOT NULL DEFAULT TRUE")
+                )
+            else:
+                conn.execute(text("ALTER TABLE public_users ADD COLUMN push_waitlist BOOLEAN DEFAULT 1"))
+        if needs_public_push_marketing:
+            if dialect == "postgresql":
+                conn.execute(
+                    text("ALTER TABLE public_users ADD COLUMN push_marketing BOOLEAN NOT NULL DEFAULT FALSE")
+                )
+            else:
+                conn.execute(text("ALTER TABLE public_users ADD COLUMN push_marketing BOOLEAN DEFAULT 0"))
+        if dialect != "postgresql" and insp.has_table("public_users"):
+            if needs_public_push_enabled:
+                conn.execute(text("UPDATE public_users SET push_enabled = 1 WHERE push_enabled IS NULL"))
+            if needs_public_push_reminders:
+                conn.execute(text("UPDATE public_users SET push_reminders = 1 WHERE push_reminders IS NULL"))
+            if needs_public_push_bookings:
+                conn.execute(text("UPDATE public_users SET push_bookings = 1 WHERE push_bookings IS NULL"))
+            if needs_public_push_waitlist:
+                conn.execute(text("UPDATE public_users SET push_waitlist = 1 WHERE push_waitlist IS NULL"))
+            if needs_public_push_marketing:
+                conn.execute(text("UPDATE public_users SET push_marketing = 0 WHERE push_marketing IS NULL"))
         _cleanup_stale_center_logo_urls_sql(conn)
         _clear_legacy_default_hero_url(conn, inspect(conn))
         _ensure_performance_indexes(conn, insp)

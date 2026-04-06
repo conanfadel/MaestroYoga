@@ -54,14 +54,27 @@ def notify_waitlist_slot_available(db: Session, session_id: int) -> None:
         f"سارع بالحجز من الصفحة:\n{link}\n\n"
         "إذا لم تعد ترغب بالحجز، يمكنك تجاهل هذه الرسالة."
     )
-    ok, reason = queue_notification_email(pu.email, subject, body)
-    if ok:
+    ok_email, reason = queue_notification_email(pu.email, subject, body)
+    ok_push = False
+    try:
+        from .push_service import notify_waitlist_slot_push
+
+        ok_push = notify_waitlist_slot_push(
+            db,
+            pu.id,
+            session.title or "",
+            session.center_id,
+            session_id,
+        )
+    except Exception:
+        logger.exception("waitlist push session_id=%s", session_id)
+    if ok_email or ok_push:
         row.notified_at = utcnow_naive()
         db.delete(row)
         db.commit()
         logger.info("waitlist notified session_id=%s public_user_id=%s", session_id, pu.id)
     else:
-        logger.warning("waitlist email failed session_id=%s reason=%s", session_id, reason)
+        logger.warning("waitlist notify failed session_id=%s email_reason=%s", session_id, reason)
 
 
 def notify_waitlist_for_sessions(db: Session, session_ids: set[int]) -> None:

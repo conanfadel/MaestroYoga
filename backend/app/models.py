@@ -104,6 +104,14 @@ class PublicUser(Base):
     email_verified = Column(Boolean, default=False)
     verification_sent_at = Column(DateTime, nullable=True)
     created_at = Column(DateTime, default=utcnow_naive)
+    # إشعارات الدفع (FCM) — تفضيلات لكل مستخدم
+    push_enabled = Column(Boolean, nullable=False, default=True)
+    push_reminders = Column(Boolean, nullable=False, default=True)
+    push_bookings = Column(Boolean, nullable=False, default=True)
+    push_waitlist = Column(Boolean, nullable=False, default=True)
+    push_marketing = Column(Boolean, nullable=False, default=False)
+
+    push_devices = relationship("PublicPushDevice", back_populates="public_user", cascade="all, delete-orphan")
 
 
 class Client(Base):
@@ -306,3 +314,19 @@ class ReminderSent(Base):
     booking_id = Column(Integer, ForeignKey("bookings.id"), nullable=False, index=True)
     kind = Column(String(32), nullable=False, index=True)
     created_at = Column(DateTime, default=utcnow_naive, index=True)
+
+
+class PublicPushDevice(Base):
+    """جهاز واحد لكل توكن FCM (أندرويد / iOS عبر Firebase)."""
+
+    __tablename__ = "public_push_devices"
+    __table_args__ = (UniqueConstraint("fcm_token", name="uq_public_push_fcm_token"),)
+
+    id = Column(Integer, primary_key=True, index=True)
+    public_user_id = Column(Integer, ForeignKey("public_users.id", ondelete="CASCADE"), nullable=False, index=True)
+    fcm_token = Column(String(512), nullable=False)
+    platform = Column(String(16), nullable=False)  # android | ios
+    created_at = Column(DateTime, default=utcnow_naive)
+    last_seen_at = Column(DateTime, default=utcnow_naive, onupdate=utcnow_naive)
+
+    public_user = relationship("PublicUser", back_populates="push_devices")

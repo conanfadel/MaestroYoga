@@ -60,8 +60,21 @@ def run_session_reminders() -> int:
                 f"تذكير: لديك حجز في جلسة «{session.title}» ({st}) في {cname}.\n\n"
                 "نتمنى لك وقتاً ممتعاً."
             )
-            ok, _ = queue_notification_email(client.email, subject, body)
-            if ok:
+            ok_email, _ = queue_notification_email(client.email, subject, body)
+            ok_push = False
+            try:
+                from .push_service import notify_booking_reminder_push
+
+                ok_push = notify_booking_reminder_push(
+                    db,
+                    booking.id,
+                    session.title or "",
+                    cname,
+                    st,
+                )
+            except Exception:
+                logger.exception("reminder push booking_id=%s", booking.id)
+            if ok_email or ok_push:
                 db.add(
                     models.ReminderSent(
                         booking_id=booking.id,

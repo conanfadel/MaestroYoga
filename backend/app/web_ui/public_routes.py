@@ -37,6 +37,7 @@ from ..mailer import (
     validate_mailer_settings,
 )
 from ..payments import get_payment_provider, payment_provider_supports_hosted_checkout
+from ..push_service import safe_notify_booking_confirmed_push
 from ..rate_limiter import rate_limiter
 from ..request_ip import get_client_ip
 from ..security_audit import log_security_event
@@ -731,6 +732,7 @@ def public_book(
     payment_row.status = provider_result.status
     booking.status = "confirmed"
     db.commit()
+    safe_notify_booking_confirmed_push(db, booking.id)
 
     return RedirectResponse(
         url=f"/index?center_id={center_id}&msg=paid_mock&booking_id={booking.id}",
@@ -925,6 +927,9 @@ def public_cart_checkout(
         db,
         {bk.session_id for bk, _, _ in bundle if bk.status == "cancelled"},
     )
+    for bk, _, _ in bundle:
+        if bk.status == "confirmed":
+            safe_notify_booking_confirmed_push(db, bk.id)
     first_bid = bundle[0][0].id if bundle else ""
     return RedirectResponse(
         url=f"/index?center_id={center_id}&msg=paid_mock&booking_id={first_bid}",

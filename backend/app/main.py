@@ -89,6 +89,7 @@ try:
     from .web_ui import router as web_ui_router
     from .tenant_utils import require_user_center_id
     from .innovation_api import features_router
+    from .push_api import push_router
 except ImportError:
     from backend.app import models, schemas
     from backend.app.booking_utils import count_active_bookings
@@ -114,6 +115,7 @@ except ImportError:
     from backend.app.web_ui import router as web_ui_router
     from backend.app.tenant_utils import require_user_center_id
     from backend.app.innovation_api import features_router
+    from backend.app.push_api import push_router
 
 load_dotenv()
 logger = logging.getLogger(__name__)
@@ -212,6 +214,8 @@ app.include_router(pwa_router)
 app.include_router(web_ui_router)
 app.include_router(features_router)
 app.include_router(features_router, prefix="/api/v1")
+app.include_router(push_router)
+app.include_router(push_router, prefix="/api/v1")
 _STATIC_DIR = Path(__file__).resolve().parent.parent / "static"
 if _STATIC_DIR.is_dir():
     app.mount("/static", StaticFiles(directory=str(_STATIC_DIR)), name="static")
