@@ -23,6 +23,8 @@
 
 3. **Sync Gradle** ثم شغّل على محاكي أو جهاز.
 
+الشاشة الرئيسية تعرض نتيجة `GET /api/v1/meta`؛ زر **فتح وثائق API** يفتح `{MAESTRO_API_BASE_URL}/docs` في المتصفح (إن كان الخادم يعرض الوثائق؛ في الإنتاج قد تكون معطّلة).
+
 ## البناء
 
 - **Debug APK:** Build → Build Bundle(s) / APK(s) → Build APK(s).

@@ -1,5 +1,7 @@
 package com.maestroyoga.app
 
+import android.content.Intent
+import android.net.Uri
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
@@ -21,6 +23,11 @@ class MainActivity : AppCompatActivity() {
         binding.baseUrlLabel.text = getString(R.string.hint_api) + "\n\nBase: " + BuildConfig.API_BASE_URL
 
         binding.btnRetry.setOnClickListener { loadMeta() }
+        binding.btnOpenDocs.setOnClickListener {
+            val base = BuildConfig.API_BASE_URL.trimEnd('/')
+            val url = "$base/docs"
+            startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(url)))
+        }
         loadMeta()
     }
 

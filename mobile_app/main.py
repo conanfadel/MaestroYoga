@@ -9,7 +9,7 @@ import flet as ft
 import httpx
 from openpyxl import Workbook
 
-API_BASE = "http://127.0.0.1:8000"
+API_BASE = os.environ.get("MAESTRO_API_BASE", "http://127.0.0.1:8000").strip().rstrip("/")
 SUCCESS_URL = "https://example.com/maestro/success"
 CANCEL_URL = "https://example.com/maestro/cancel"
 

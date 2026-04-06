@@ -9,7 +9,7 @@
 | **REST تحت `/api/v1`** | نفس المسارات السابقة مع بادئة موحّدة للعميل. |
 | **`GET /api/v1/meta`** | نقطة انطلاق: إصدار API وروابط التوثيق. |
 | **رؤوس** `X-Request-ID`، `X-API-Version`، `X-App-Version` | للتتبع ومطابقة إصدارات التطبيق. |
-| **`android/`** | مشروع **Kotlin** أصلي (Retrofit) يستدعي `/api/v1/meta` — راجع [`android/README.md`](../android/README.md). |
+| **`android/`** | مشروع **Kotlin** أصلي (Retrofit) يستدعي `/api/v1/meta`؛ زر «فتح وثائق API» يفتح `{API_BASE_URL}/docs` في المتصفح (إن عطّل الخادم الوثائق في الإنتاج فسيظهر 404). راجع [`android/README.md`](../android/README.md). |
 | **`scripts/verify_production_readiness.py`** | بعد نشر الخادم، شغّله مع `BASE_URL` للتحقق من الصحة و`/api/v1`. |
 | **`scripts/healthcheck_prod.sh`** | فحوصات سريعة من سطر الأوامر (Linux/macOS/Git Bash). |
 | **واجهة ويب متجاوبة + manifest** | تجربة «مثل التطبيق» من المتصفح قبل بناء APK. |

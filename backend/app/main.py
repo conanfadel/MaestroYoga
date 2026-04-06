@@ -121,6 +121,18 @@ except ImportError:
     from backend.app.app_version import APP_VERSION_STRING  # type: ignore[no-redef]
 
 
+def _openapi_enabled() -> bool:
+    """Disable interactive OpenAPI/Redoc in production unless explicitly overridden."""
+    if os.getenv("ENABLE_OPENAPI", "").strip().lower() in {"1", "true", "yes", "on"}:
+        return True
+    if os.getenv("DISABLE_OPENAPI", "").strip().lower() in {"1", "true", "yes", "on"}:
+        return False
+    app_env = os.getenv("APP_ENV", "development").strip().lower()
+    if app_env in {"production", "prod"}:
+        return False
+    return True
+
+
 @asynccontextmanager
 async def _app_lifespan(app: FastAPI):
     lvl_name = os.getenv("LOG_LEVEL", "INFO").upper()
@@ -129,7 +141,15 @@ async def _app_lifespan(app: FastAPI):
     yield
 
 
-app = FastAPI(title="Maestro Yoga API", version=APP_VERSION_STRING, lifespan=_app_lifespan)
+_openapi = _openapi_enabled()
+app = FastAPI(
+    title="Maestro Yoga API",
+    version=APP_VERSION_STRING,
+    lifespan=_app_lifespan,
+    docs_url="/docs" if _openapi else None,
+    redoc_url="/redoc" if _openapi else None,
+    openapi_url="/openapi.json" if _openapi else None,
+)
 
 api_router = APIRouter(tags=["api"])
 
@@ -767,12 +787,14 @@ api_v1_meta_router = APIRouter(prefix="/api/v1", tags=["api-v1"])
 @api_v1_meta_router.get("/meta")
 def api_v1_meta():
     """نقطة دخول موحّدة لتطبيق أندرويد: إصدار الـ API وروابط التوثيق."""
+    oj = app.openapi_url
+    docs_url = app.docs_url
     return {
         "api_version": "1",
         "app": "Maestro Yoga",
         "server_version": app.version,
-        "openapi_json": "/openapi.json",
-        "docs": "/docs",
+        "openapi_json": oj,
+        "docs": docs_url,
         "client_hint": "أرسل الرأس X-App-Version (مثل 1.0.0) ليُعاد في X-App-Version-Accepted.",
     }
 

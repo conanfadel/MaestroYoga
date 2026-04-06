@@ -70,6 +70,26 @@ function Test-VenvHealthy {
   }
 }
 
+function Test-VenvPyvenvHomeValid {
+  $cfg = Join-Path $venvPath "pyvenv.cfg"
+  if (-not (Test-Path $cfg)) {
+    return $true
+  }
+  $homeLine = Select-String -Path $cfg -Pattern '^\s*home\s*=' | Select-Object -First 1
+  if (-not $homeLine) {
+    return $true
+  }
+  $homePath = ($homeLine.Line -split '=', 2)[1].Trim()
+  if (-not $homePath) {
+    return $false
+  }
+  $basePy = Join-Path $homePath "python.exe"
+  if (Test-Path $basePy) {
+    return $true
+  }
+  return $false
+}
+
 function Ensure-CommonAppDataRegistry {
   if ($env:OS -ne "Windows_NT") {
     return
@@ -122,6 +142,9 @@ if ($Recreate) {
   New-ProjectVenv -Launcher $launcher -VersionArg $launcherArg
 } elseif (-not (Test-VenvHealthy)) {
   Write-Host "Detected missing/broken .venv. Rebuilding it for this machine ..." -ForegroundColor Yellow
+  New-ProjectVenv -Launcher $launcher -VersionArg $launcherArg
+} elseif (-not (Test-VenvPyvenvHomeValid)) {
+  Write-Host "Detected stale .venv (base Python path from pyvenv.cfg is missing). Rebuilding ..." -ForegroundColor Yellow
   New-ProjectVenv -Launcher $launcher -VersionArg $launcherArg
 }
 

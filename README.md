@@ -378,6 +378,8 @@ set STRIPE_WEBHOOK_SECRET=whsec_xxx
 python mobile_app/main.py
 ```
 
+عنوان الـ API الافتراضي `http://127.0.0.1:8000`. لتغييره: `set MAESTRO_API_BASE=https://your-host` (أو نفس المتغير في بيئة التشغيل).
+
 4) صفحات الويب (المتصفح):
 
 - الصفحة العامة (حجز + دفع): [http://127.0.0.1:8000/index?center_id=1](http://127.0.0.1:8000/index?center_id=1)
@@ -405,6 +407,7 @@ curl -X POST http://127.0.0.1:8000/seed-demo -H "X-Seed-Demo-Key: replace-with-s
 
 ## هيكل المشروع
 
+- `alembic/` + `alembic.ini` — ترحيلات قاعدة البيانات (Alembic). المنصات الحالية ما زالت تُنشأ عبر `init_db()`؛ لإضافة تغييرات مخطط جديدة: `alembic revision -m "..."` ثم `alembic upgrade head` (بعد ضبط `DATABASE_URL`).
 - `backend/app/main.py` - نقاط النهاية الأساسية
 - `backend/app/models.py` - نماذج قاعدة البيانات
 - `backend/app/schemas.py` - مخططات الإدخال والإخراج
@@ -412,7 +415,7 @@ curl -X POST http://127.0.0.1:8000/seed-demo -H "X-Seed-Demo-Key: replace-with-s
 - `backend/app/security.py` - JWT + كلمة المرور + الصلاحيات
 - `backend/app/payments.py` - طبقة مزود الدفع
 - `mobile_app/main.py` - واجهة العميل (موبايل/تابلت)
-- `backend/app/web_ui.py` - صفحات الويب (إدارة + عامة)
+- `backend/app/web_ui/` - صفحات الويب (إدارة + عامة؛ مقسّم على `public_routes.py` و`admin_routes.py` و`helpers.py`)
 - `backend/templates/` - قوالب HTML (لوحة الإدارة + الفهرس العام)
 
 ## Smoke Checks (سريعة)

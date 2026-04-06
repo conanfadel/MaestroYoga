@@ -24,7 +24,7 @@ jobs:
           python -m pip install -r requirements-api.txt -r requirements-dev.txt
 
       - name: Syntax check (compileall)
-        run: python -m compileall -q backend/app tests
+        run: python -m compileall -q backend/app tests alembic
 
       - name: Run tests
         run: python -m pytest tests/ -q --tb=short

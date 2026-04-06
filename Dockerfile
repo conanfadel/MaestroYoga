@@ -16,6 +16,8 @@ RUN pip install --no-cache-dir -r requirements-api.txt
 COPY backend backend
 COPY scripts scripts
 COPY docs docs
+COPY alembic alembic
+COPY alembic.ini alembic.ini
 
 EXPOSE 8000
 
