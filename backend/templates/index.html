@@ -4,13 +4,14 @@
 {% set hero_show_stock_preload = (not center.hero_image_url) and (center.hero_show_stock_photo | default(true)) %}
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, interactive-widget=resizes-content" />
   <meta name="theme-color" content="#c5a059" />
   <meta name="mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="default" />
   <link rel="manifest" href="/static/manifest.json" />
   <link rel="apple-touch-icon" href="/static/icons/pwa-icon.svg" />
+  <link rel="stylesheet" href="/static/css/mobile-enhancements.css" />
   <title>حجز الجلسات | {{ center.name }} | Maestro Yoga</title>
   <meta name="description" content="احجز جلسات اليوغا أو اشترك في باقات أسبوعية وشهرية وسنوية مع دفع آمن وسريع." />
   <meta property="og:title" content="Maestro Yoga - {{ center.name }}" />
@@ -79,6 +80,13 @@
     }
     @media (max-width: 720px) {
       .container { max-width: 100%; }
+    }
+    /* لوحي: استغلال أفضل لعرض الشاشة */
+    @media (min-width: 721px) and (max-width: 1024px) {
+      .container { max-width: min(1680px, 94vw); }
+      body {
+        padding-inline: max(14px, 2.5vw, env(safe-area-inset-left, 0px), env(safe-area-inset-right, 0px));
+      }
     }
     .skip-link {
       position: absolute; inset-inline-start: -9999px; top: 0;
@@ -329,6 +337,10 @@
         justify-content: flex-start;
       }
       .hero-toolbar__divider { display: none; }
+      .hero-toolbar__btn {
+        min-height: 44px;
+        padding-inline: 16px;
+      }
     }
     .public-user-menu { position: relative; display: inline-flex; max-width: 100%; z-index: 100; }
     .public-user-menu__trigger {
@@ -1074,7 +1086,7 @@
     }
     .sticky-booking {
       position: sticky;
-      bottom: 12px;
+      bottom: calc(12px + env(safe-area-inset-bottom, 0px));
       z-index: 75;
       margin-top: 10px;
       display: flex;
@@ -1096,7 +1108,12 @@
       color: var(--charcoal);
       background: linear-gradient(135deg, var(--gold), #e0c989);
       border-radius: 999px;
-      padding: 9px 16px;
+      padding: 10px 18px;
+      min-height: 44px;
+      min-width: 48px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
       text-decoration: none;
       font-weight: 800;
       border: 0;
@@ -1183,7 +1200,7 @@
       transform: translateX(0);
     }
     .cart-drawer__head {
-      padding: 18px 20px;
+      padding: max(18px, env(safe-area-inset-top, 0px)) 20px 18px;
       border-bottom: 1px solid rgba(197, 160, 89, 0.25);
       display: flex;
       align-items: center;
@@ -1213,7 +1230,7 @@
       padding: 14px 20px;
     }
     .cart-drawer__foot {
-      padding: 16px 20px 22px;
+      padding: 16px 20px max(22px, calc(12px + env(safe-area-inset-bottom, 0px)));
       border-top: 1px solid rgba(197, 160, 89, 0.25);
       background: linear-gradient(180deg, #fff 0%, var(--mint-bg) 100%);
     }
@@ -1265,7 +1282,8 @@
       width: 100%;
       border: 0;
       border-radius: 999px;
-      padding: 12px 18px;
+      padding: 14px 18px;
+      min-height: 48px;
       font-weight: 800;
       font-family: inherit;
       font-size: 1rem;
@@ -1757,6 +1775,10 @@
       .steps { grid-template-columns: 1fr; }
       #sessions-section.sessions-panel { padding: 22px 18px; }
       .post-pin.post-pin--compact { grid-template-columns: 1fr; }
+      /* مسافة أسفل المحتوى حتى لا يغطي شريط السلة النص عند التمرير */
+      main#main-content {
+        padding-bottom: max(28px, calc(80px + env(safe-area-inset-bottom, 0px)));
+      }
     }
     @media (max-width: 480px) {
       #sessions-section.sessions-panel { padding: 18px 14px; }

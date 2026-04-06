@@ -1,0 +1,22 @@
+/**
+ * Maestro Yoga — تحسينات عرض للهاتف واللوحي (جميع الصفحات التي تربط هذا الملف)
+ */
+html {
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+  scroll-padding-top: 10px;
+}
+body {
+  -webkit-tap-highlight-color: rgba(197, 160, 89, 0.22);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  touch-action: manipulation;
+}
+/* يمنع iOS من تكبير الحقول عند التركيز إذا كان حجم الخط أقل من 16px */
+@media (max-width: 720px) {
+  input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="color"]):not([type="file"]):not([type="hidden"]),
+  select,
+  textarea {
+    font-size: max(16px, 1em);
+  }
+}
