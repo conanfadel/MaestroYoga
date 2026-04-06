@@ -58,9 +58,9 @@
       flex-direction: row;
       flex-wrap: wrap;
       align-items: stretch;
-      gap: clamp(14px, 2.5vw, 22px);
-      padding: clamp(14px, 2vw, 20px) clamp(16px, 2.2vw, 22px);
-      margin-bottom: 14px;
+      gap: clamp(10px, 1.8vw, 16px);
+      padding: clamp(8px, 1.2vw, 12px) clamp(12px, 1.8vw, 18px);
+      margin-bottom: 12px;
       overflow: visible;
       position: relative;
     }
@@ -69,7 +69,7 @@
       min-width: min(100%, 260px);
       display: flex;
       flex-direction: column;
-      justify-content: center;
+      justify-content: flex-start;
       gap: 0;
     }
     .hero-visual {
@@ -85,21 +85,21 @@
       flex: 1 1 auto;
       display: flex;
       flex-direction: column;
-      min-height: 220px;
+      min-height: 104px;
       height: 100%;
-      border-radius: calc(var(--radius-lg) + 2px);
-      padding: 3px;
+      border-radius: calc(var(--radius-lg) + 1px);
+      padding: 2px;
       background: linear-gradient(145deg, rgba(197, 160, 89, 0.45) 0%, rgba(15, 118, 110, 0.2) 50%, rgba(170, 240, 209, 0.35) 100%);
       box-shadow:
-        0 12px 40px rgba(15, 118, 110, 0.1),
-        0 2px 0 rgba(255, 255, 255, 0.85) inset,
-        0 0 0 1px rgba(197, 160, 89, 0.15);
+        0 6px 20px rgba(15, 118, 110, 0.08),
+        0 1px 0 rgba(255, 255, 255, 0.85) inset,
+        0 0 0 1px rgba(197, 160, 89, 0.12);
     }
     .hero-visual__frame::before {
       content: "";
       position: absolute;
-      inset: 8px;
-      border-radius: calc(var(--radius-lg) - 2px);
+      inset: 5px;
+      border-radius: calc(var(--radius-lg) - 3px);
       border: 1px solid rgba(255, 255, 255, 0.55);
       pointer-events: none;
       z-index: 2;
@@ -119,20 +119,20 @@
     .hero-brand {
       display: flex;
       align-items: flex-start;
-      gap: 12px;
+      gap: 8px;
       flex-wrap: wrap;
-      margin-bottom: 8px;
+      margin-bottom: 4px;
     }
     .hero-logo {
-      width: 56px;
-      height: 56px;
+      width: 44px;
+      height: 44px;
       object-fit: contain;
       flex-shrink: 0;
     }
     .hero h1 {
-      margin: 0 0 4px;
+      margin: 0 0 2px;
       font-family: "Amiri", "Tajawal", serif;
-      font-size: clamp(1.1rem, 3.2vw + 0.5rem, 1.75rem);
+      font-size: clamp(1rem, 2.4vw + 0.4rem, 1.45rem);
       font-weight: 700;
       color: var(--charcoal);
       line-height: 1.25;
@@ -159,7 +159,7 @@
     }
     .hero-media--gradient-only {
       flex: 1 1 auto;
-      min-height: 200px;
+      min-height: 96px;
       background-image:
         linear-gradient(
           135deg,
@@ -174,7 +174,7 @@
       padding: 0;
       flex: 1 1 auto;
       width: 100%;
-      min-height: 220px;
+      min-height: 104px;
       background: linear-gradient(180deg, #f0fdf8 0%, #e8fcf4 100%);
     }
     .hero-media__img {
@@ -209,15 +209,26 @@
         width: 100%;
       }
       .hero-visual__frame {
-        min-height: min(52vw, 280px);
+        min-height: min(28vw, 120px);
       }
       .hero-media--photo {
-        min-height: min(50vw, 260px);
+        min-height: min(26vw, 112px);
       }
     }
-    .hero-actions, .toplinks, .hero-meta { display: flex; gap: 8px; flex-wrap: wrap; }
-    .hero-actions { margin-top: 10px; }
-    .hero-meta { margin-top: 10px; }
+    .hero-actions, .toplinks, .hero-meta { display: flex; gap: 6px; flex-wrap: wrap; }
+    .hero-actions { margin-top: 6px; }
+    .hero-meta { margin-top: 4px; }
+    .hero-toplinks { margin-top: 6px; }
+    .hero-meta .chip {
+      padding: 3px 8px;
+      font-size: 0.68rem;
+      line-height: 1.2;
+    }
+    .hero .btn {
+      padding: 6px 12px;
+      font-size: 0.82rem;
+      min-height: 36px;
+    }
     .public-user-menu { position: relative; display: inline-block; max-width: 100%; z-index: 100; }
     .public-user-menu__trigger {
       max-width: min(100%, 280px);
@@ -2145,7 +2156,7 @@
         font-size: 0.72rem;
       }
       .hero-media {
-        min-height: 88px;
+        min-height: 72px;
         border-radius: 10px;
       }
       .public-user-menu__trigger {
