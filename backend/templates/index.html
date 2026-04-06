@@ -178,40 +178,62 @@
       font-weight: 500;
       opacity: 0.9;
     }
-    /* غلاف: طبقة أوضح فوق الصورة لتبدو الخلفية أشفّ */
+    /* غلاف: الصورة كاملة (contain) + ضبابية وشفافية كالمرجع */
     .hero__media.hero-media {
       overflow: hidden;
-      background-size: cover;
-      background-position: center;
+      background-color: var(--page-bg);
       background-image:
         linear-gradient(
           135deg,
-          rgba(170, 240, 209, 0.07) 0%,
-          rgba(255, 255, 255, 0.14) 50%,
-          rgba(197, 160, 89, 0.04) 100%
+          rgba(170, 240, 209, 0.08) 0%,
+          rgba(255, 255, 255, 0.2) 55%,
+          rgba(197, 160, 89, 0.05) 100%
         );
     }
-    .hero__media.hero-media--stock {
-      background-image:
-        linear-gradient(
-          135deg,
-          rgba(170, 240, 209, 0.09) 0%,
-          rgba(255, 255, 255, 0.12) 45%,
-          rgba(255, 255, 255, 0.05) 72%,
-          rgba(197, 160, 89, 0.04) 100%
-        ),
-        url("{{ hero_stock_src }}");
+    .hero__media.hero-media--stock::before,
+    .hero__media.hero-media--custom::before {
+      content: "";
+      position: absolute;
+      inset: -8px;
+      background-repeat: no-repeat;
+      background-size: contain;
+      background-position: left center;
+      filter: blur(6px);
+      opacity: 0.52;
+      transform: scale(1.06);
+      transform-origin: left center;
+      pointer-events: none;
+      z-index: 0;
     }
-    .hero__media.hero-media--custom {
-      background-image:
+    .hero__media.hero-media--stock::before {
+      background-image: url("{{ hero_stock_src }}");
+    }
+    .hero__media.hero-media--custom::before {
+      background-image: var(--hero-src);
+    }
+    .hero__media.hero-media--stock::after,
+    .hero__media.hero-media--custom::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      z-index: 1;
+      background:
         linear-gradient(
-          135deg,
-          rgba(170, 240, 209, 0.09) 0%,
-          rgba(255, 255, 255, 0.11) 42%,
-          rgba(255, 255, 255, 0.05) 68%,
-          rgba(197, 160, 89, 0.04) 100%
+          105deg,
+          rgba(255, 255, 255, 0.38) 0%,
+          rgba(255, 255, 255, 0.52) 38%,
+          rgba(250, 252, 251, 0.45) 72%,
+          rgba(255, 255, 255, 0.36) 100%
         ),
-        var(--hero-src);
+        radial-gradient(ellipse 90% 70% at 85% 45%, rgba(255, 255, 255, 0.28) 0%, transparent 58%);
+    }
+    @media (prefers-reduced-motion: reduce) {
+      .hero__media.hero-media--stock::before,
+      .hero__media.hero-media--custom::before {
+        filter: blur(3px);
+        transform: none;
+      }
     }
     .hero-toolbar {
       display: flex;
