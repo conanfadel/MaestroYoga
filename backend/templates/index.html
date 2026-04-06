@@ -186,7 +186,7 @@
       font-weight: 500;
       opacity: 0.9;
     }
-    /* غلاف: صورة responsive بعرض الحاوية؛ object-fit: contain لإظهار الصورة كاملة */
+    /* غلاف: صورة responsive بعرض الحاوية؛ cover لملء عرض الهيدر */
     .hero__media.hero-media {
       overflow: hidden;
       background-color: transparent;
@@ -207,9 +207,9 @@
       max-width: 100%;
       height: 100%;
       margin: auto;
-      object-fit: contain;
-      /* محاذاة بصرية لمساحة الشريط السفلي (عناصر الدخول → أخبار المركز) */
-      object-position: center 44%;
+      /* يملأ عرض الهيدر بالكامل (من الحافة إلى الحافة) مع الحفاظ على محتوى الصورة قدر الإمكان */
+      object-fit: cover;
+      object-position: center 42%;
       pointer-events: none;
     }
     .hero__media-veil {
@@ -244,14 +244,19 @@
       -webkit-overflow-scrolling: touch;
       scrollbar-width: thin;
     }
-    /* الشريط فوق صورة الغلاف مباشرة (من دخول المستخدم حتى أخبار المركز) */
+    /* الشريط بعرض كامل داخل الهيدر — صورة الغلاف تظهر خلفه من الحافة اليمنى إلى اليسرى */
     .hero-toolbar--over-cover {
+      width: 100%;
+      box-sizing: border-box;
       margin-top: 10px;
-      margin-inline: 14px;
+      margin-inline: 0;
       margin-bottom: 14px;
+      padding-inline: 14px;
+      border-radius: 0;
       background: rgba(255, 255, 255, 0.22);
       backdrop-filter: blur(12px);
       -webkit-backdrop-filter: blur(12px);
+      border-width: 1px 0;
       border-color: rgba(255, 255, 255, 0.35);
       box-shadow: 0 2px 18px rgba(45, 52, 54, 0.04);
     }
@@ -1676,7 +1681,7 @@
     @media (max-width: 980px) {
       .hero { min-height: clamp(280px, 48vh, 420px); }
       .hero__inner { padding: 18px 16px; margin: 10px; }
-      .hero-toolbar--over-cover { margin-inline: 10px; margin-bottom: 10px; }
+      .hero-toolbar--over-cover { margin-inline: 0; margin-bottom: 10px; padding-inline: 12px; }
       .grid-two { grid-template-columns: 1fr; }
       .sessions-filters-grid { grid-template-columns: 1fr; }
       .plan-meta { grid-template-columns: 1fr; }
