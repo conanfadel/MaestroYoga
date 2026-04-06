@@ -1,0 +1,146 @@
+{# تنبيه الوضع الأفقي: يظهر على الهاتف واللوحي في الوضع العمودي فقط #}
+<div id="mobile-landscape-hint" class="mobile-landscape-hint" hidden role="status" aria-live="polite" aria-atomic="true">
+  <div class="mobile-landscape-hint__inner">
+    <p class="mobile-landscape-hint__text">للاستمتاع بتجربة أفضل، استخدم الوضع الأفقي.</p>
+    <button type="button" class="mobile-landscape-hint__close" aria-label="إغلاق">×</button>
+  </div>
+</div>
+<style>
+  .mobile-landscape-hint {
+    position: fixed;
+    z-index: 950;
+    inset-inline: max(10px, env(safe-area-inset-left, 0px)) max(10px, env(safe-area-inset-right, 0px));
+    bottom: max(12px, env(safe-area-inset-bottom, 0px) + 8px);
+    font-family: "Tajawal", system-ui, sans-serif;
+    pointer-events: none;
+    opacity: 0;
+    transform: translateY(12px);
+    transition: opacity 0.28s ease, transform 0.28s ease;
+  }
+  .mobile-landscape-hint.is-visible {
+    opacity: 1;
+    transform: translateY(0);
+    pointer-events: auto;
+  }
+  .mobile-landscape-hint__inner {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    max-width: 520px;
+    margin-inline: auto;
+    padding: 12px 14px;
+    border-radius: 14px;
+    background: rgba(45, 52, 54, 0.92);
+    color: #fff;
+    box-shadow: 0 8px 28px rgba(0, 0, 0, 0.22);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+  }
+  .mobile-landscape-hint__text {
+    margin: 0;
+    flex: 1;
+    font-size: 0.92rem;
+    line-height: 1.55;
+    text-align: start;
+  }
+  .mobile-landscape-hint__close {
+    flex-shrink: 0;
+    width: 32px;
+    height: 32px;
+    margin: -4px -4px -4px 0;
+    border: none;
+    border-radius: 10px;
+    background: rgba(255, 255, 255, 0.12);
+    color: #fff;
+    font-size: 1.35rem;
+    line-height: 1;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .mobile-landscape-hint__close:hover {
+    background: rgba(255, 255, 255, 0.22);
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .mobile-landscape-hint {
+      transition: none;
+    }
+  }
+</style>
+<script>
+(function () {
+  var el = document.getElementById("mobile-landscape-hint");
+  if (!el) return;
+  var STORAGE_KEY = "maestro_landscape_hint_dismissed";
+  var closeBtn = el.querySelector(".mobile-landscape-hint__close");
+  var autoHideMs = 30000;
+  var autoTimer = null;
+  var bannerShown = false;
+
+  function isDesktopLike() {
+    return window.matchMedia("(pointer: fine)").matches &&
+      window.matchMedia("(min-width: 900px)").matches;
+  }
+
+  /** هاتف أو لوحي، وضع عمودي، بعرض نموذجي للأجهزة المحمولة */
+  function isTargetPortrait() {
+    if (isDesktopLike()) return false;
+    var w = window.innerWidth;
+    var h = window.innerHeight;
+    if (w > 1024) return false;
+    return h >= w;
+  }
+
+  function clearAutoTimer() {
+    if (autoTimer) {
+      clearTimeout(autoTimer);
+      autoTimer = null;
+    }
+  }
+
+  function hideVisual() {
+    el.classList.remove("is-visible");
+    el.setAttribute("hidden", "");
+    bannerShown = false;
+  }
+
+  function persistDismiss() {
+    try {
+      sessionStorage.setItem(STORAGE_KEY, "1");
+    } catch (e) {}
+    clearAutoTimer();
+    hideVisual();
+  }
+
+  function sync() {
+    if (sessionStorage.getItem(STORAGE_KEY) === "1") {
+      clearAutoTimer();
+      hideVisual();
+      return;
+    }
+    if (!isTargetPortrait()) {
+      clearAutoTimer();
+      hideVisual();
+      return;
+    }
+    if (!bannerShown) {
+      bannerShown = true;
+      el.removeAttribute("hidden");
+      requestAnimationFrame(function () {
+        el.classList.add("is-visible");
+      });
+      clearAutoTimer();
+      autoTimer = setTimeout(persistDismiss, autoHideMs);
+    }
+  }
+
+  if (closeBtn) {
+    closeBtn.addEventListener("click", persistDismiss);
+  }
+  window.addEventListener("resize", sync);
+  window.addEventListener("orientationchange", function () {
+    setTimeout(sync, 150);
+  });
+  sync();
+})();
+</script>
