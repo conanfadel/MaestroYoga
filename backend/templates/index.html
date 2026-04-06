@@ -21,7 +21,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   {% if hero_show_stock_preload %}
-  <link rel="preload" as="image" href="{{ hero_stock_src }}" fetchpriority="high" />
+  <link rel="preload" as="image" href="{{ hero_stock_src }}?v={{ app_version }}" fetchpriority="high" />
   {% endif %}
   <link href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet" />
   {% if analytics_enabled and ga4_measurement_id %}
@@ -186,7 +186,7 @@
         class="hero-media{% if center.hero_image_url %} hero-media--custom{% elif center.hero_show_stock_photo | default(true) %} hero-media--stock{% endif %}"
         role="img"
         aria-label="{% if center.hero_image_url %}صورة الغلاف للمركز{% elif center.hero_show_stock_photo | default(true) %}صورة يوغا توضيحية{% else %}خلفية ملونة للقسم{% endif %}"
-        {% if center.hero_image_url %}style="--hero-src: url('{{ center.hero_image_url }}');"{% endif %}
+        {% if center.hero_image_url %}style="--hero-src: url('{{ center.hero_image_url }}');"{% elif center.hero_show_stock_photo | default(true) %}style="--hero-stock: url('{{ hero_stock_src }}?v={{ app_version }}');"{% endif %}
       ></div>
     </header>
 
