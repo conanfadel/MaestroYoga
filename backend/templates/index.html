@@ -178,7 +178,7 @@
       font-weight: 500;
       opacity: 0.9;
     }
-    /* غلاف بعرض الهيدر كاملاً + طبقة شفافة؛ المحتوى (شعار، أزرار، شِبس) فوق الصورة */
+    /* غلاف: طبقة أوضح فوق الصورة لتبدو الخلفية أشفّ */
     .hero__media.hero-media {
       overflow: hidden;
       background-size: cover;
@@ -186,19 +186,19 @@
       background-image:
         linear-gradient(
           135deg,
-          rgba(170, 240, 209, 0.18) 0%,
-          rgba(255, 255, 255, 0.32) 48%,
-          rgba(197, 160, 89, 0.1) 100%
+          rgba(170, 240, 209, 0.07) 0%,
+          rgba(255, 255, 255, 0.14) 50%,
+          rgba(197, 160, 89, 0.04) 100%
         );
     }
     .hero__media.hero-media--stock {
       background-image:
         linear-gradient(
           135deg,
-          rgba(170, 240, 209, 0.2) 0%,
-          rgba(255, 255, 255, 0.28) 42%,
-          rgba(255, 255, 255, 0.12) 70%,
-          rgba(197, 160, 89, 0.08) 100%
+          rgba(170, 240, 209, 0.09) 0%,
+          rgba(255, 255, 255, 0.12) 45%,
+          rgba(255, 255, 255, 0.05) 72%,
+          rgba(197, 160, 89, 0.04) 100%
         ),
         url("{{ hero_stock_src }}");
     }
@@ -206,15 +206,88 @@
       background-image:
         linear-gradient(
           135deg,
-          rgba(170, 240, 209, 0.2) 0%,
-          rgba(255, 255, 255, 0.26) 40%,
-          rgba(255, 255, 255, 0.1) 65%,
-          rgba(197, 160, 89, 0.08) 100%
+          rgba(170, 240, 209, 0.09) 0%,
+          rgba(255, 255, 255, 0.11) 42%,
+          rgba(255, 255, 255, 0.05) 68%,
+          rgba(197, 160, 89, 0.04) 100%
         ),
         var(--hero-src);
     }
-    .hero-actions, .toplinks, .hero-meta { display: flex; gap: 10px; flex-wrap: wrap; }
-    .hero-actions { margin-top: 14px; }
+    .hero-toolbar {
+      display: flex;
+      flex-direction: row;
+      flex-wrap: nowrap;
+      align-items: center;
+      gap: 10px 12px;
+      margin-top: 16px;
+      padding: 11px 13px;
+      border-radius: 16px;
+      background: rgba(255, 255, 255, 0.38);
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+      border: 1px solid rgba(197, 160, 89, 0.22);
+      box-shadow: 0 4px 20px rgba(45, 52, 54, 0.05);
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+      scrollbar-width: thin;
+    }
+    .hero-toolbar::-webkit-scrollbar { height: 4px; }
+    .hero-toolbar::-webkit-scrollbar-thumb {
+      background: rgba(197, 160, 89, 0.35);
+      border-radius: 999px;
+    }
+    .hero-toolbar__group {
+      display: inline-flex;
+      align-items: center;
+      flex-wrap: nowrap;
+      gap: 8px;
+      flex-shrink: 0;
+    }
+    .hero-toolbar__group--chips {
+      flex: 1 1 auto;
+      min-width: 0;
+      justify-content: center;
+      gap: 7px;
+    }
+    .hero-toolbar__group--cta {
+      gap: 8px;
+    }
+    .hero-toolbar__divider {
+      width: 1px;
+      height: 28px;
+      flex-shrink: 0;
+      background: linear-gradient(180deg, transparent, rgba(197, 160, 89, 0.45), transparent);
+      opacity: 0.85;
+    }
+    .hero-toolbar__btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 7px;
+      padding: 9px 14px;
+      font-size: 0.88rem;
+      font-weight: 800;
+      white-space: nowrap;
+    }
+    .hero-toolbar__ico {
+      width: 17px;
+      height: 17px;
+      flex-shrink: 0;
+      opacity: 0.95;
+    }
+    .hero-toolbar .chip {
+      padding: 6px 11px;
+      font-size: 0.78rem;
+      font-weight: 700;
+    }
+    @media (max-width: 720px) {
+      .hero-toolbar {
+        flex-wrap: wrap;
+        overflow-x: visible;
+        justify-content: flex-start;
+      }
+      .hero-toolbar__divider { display: none; }
+    }
     .public-user-menu { position: relative; display: inline-block; max-width: 100%; z-index: 100; }
     .public-user-menu__trigger {
       max-width: min(100%, 280px);
@@ -222,6 +295,9 @@
       display: inline-flex;
       align-items: center;
       gap: 8px;
+    }
+    .public-user-menu__trigger.hero-toolbar__btn {
+      gap: 7px;
     }
     .public-user-menu__trigger-label {
       min-width: 0;
@@ -1613,29 +1689,19 @@
             {% endif %}
           </div>
         </div>
-        <div class="hero-meta" style="margin-top:10px;">
-          <span class="chip">جلسات يومية</span>
-          <span class="chip">مدربون محترفون</span>
-          <span class="chip">دفع إلكتروني آمن</span>
-        </div>
-        <div class="hero-actions">
-          <a class="btn primary" href="#sessions-section">احجز الآن</a>
-          <a class="btn ghost" href="#plans-section">قارن الخطط</a>
-          {% if pinned_public_post or public_posts_teasers %}
-          <a class="btn ghost" href="#center-news-section">أخبار المركز</a>
-          {% endif %}
-        </div>
-        <div class="toplinks" style="margin-top:10px;">
+        <div class="hero-toolbar" role="toolbar" aria-label="إجراءات سريعة">
           {% if public_user %}
+          <div class="hero-toolbar__group hero-toolbar__group--account">
             <div class="public-user-menu" id="public-user-menu">
               <button
                 type="button"
-                class="btn ghost public-user-menu__trigger"
+                class="btn ghost public-user-menu__trigger hero-toolbar__btn"
                 id="public-user-menu-trigger"
                 aria-expanded="false"
                 aria-controls="public-user-menu-panel"
                 aria-haspopup="true"
               >
+                <svg class="hero-toolbar__ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
                 <span class="public-user-menu__trigger-label">{{ public_user.full_name }}</span>
                 <span class="public-user-menu__trigger-chevron" aria-hidden="true"></span>
               </button>
@@ -1729,10 +1795,43 @@
                 </div>
               </div>
             </div>
+          </div>
+          <span class="hero-toolbar__divider" aria-hidden="true"></span>
           {% else %}
-            <a class="btn primary" href="/public/login?next=/index?center_id={{ center_id }}">دخول المستخدم</a>
-            <a class="btn ghost" href="/public/register?next={{ ('/index?center_id=' ~ center_id|string)|urlencode }}">تسجيل جديد</a>
+          <div class="hero-toolbar__group hero-toolbar__group--auth">
+            <a class="btn primary hero-toolbar__btn" href="/public/login?next=/index?center_id={{ center_id }}">
+              <svg class="hero-toolbar__ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+              <span>دخول المستخدم</span>
+            </a>
+            <a class="btn ghost hero-toolbar__btn" href="/public/register?next={{ ('/index?center_id=' ~ center_id|string)|urlencode }}">
+              <svg class="hero-toolbar__ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><line x1="20" y1="8" x2="20" y2="14"/><line x1="23" y1="11" x2="17" y2="11"/></svg>
+              <span>تسجيل جديد</span>
+            </a>
+          </div>
+          <span class="hero-toolbar__divider" aria-hidden="true"></span>
           {% endif %}
+          <div class="hero-toolbar__group hero-toolbar__group--chips">
+            <span class="chip">جلسات يومية</span>
+            <span class="chip">مدربون محترفون</span>
+            <span class="chip">دفع إلكتروني آمن</span>
+          </div>
+          <span class="hero-toolbar__divider" aria-hidden="true"></span>
+          <div class="hero-toolbar__group hero-toolbar__group--cta">
+            <a class="btn primary hero-toolbar__btn" href="#sessions-section">
+              <svg class="hero-toolbar__ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+              <span>احجز الآن</span>
+            </a>
+            <a class="btn ghost hero-toolbar__btn" href="#plans-section">
+              <svg class="hero-toolbar__ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
+              <span>قارن الخطط</span>
+            </a>
+            {% if pinned_public_post or public_posts_teasers %}
+            <a class="btn ghost hero-toolbar__btn" href="#center-news-section">
+              <svg class="hero-toolbar__ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 22h16a2 2 0 0 0 2-2V4a2 2 0 0 0-2-2H8a2 2 0 0 0-2 2v16a2 2 0 0 1-2 2Zm0 0a2 2 0 0 1-2-2v-9c0-1.1.9-2 2-2h2"/><path d="M18 14h-8"/><path d="M15 18h-5"/><path d="M10 6h8v4h-8V6Z"/></svg>
+              <span>أخبار المركز</span>
+            </a>
+            {% endif %}
+          </div>
         </div>
       </div>
     </header>
