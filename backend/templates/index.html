@@ -211,6 +211,15 @@
       object-fit: cover;
       object-position: center 42%;
       pointer-events: none;
+      filter: blur(1.5px);
+      transform: scale(1.02);
+      transform-origin: center center;
+    }
+    @media (prefers-reduced-motion: reduce) {
+      .hero__cover-img {
+        filter: blur(0.5px);
+        transform: none;
+      }
     }
     .hero__media-veil {
       position: absolute;
