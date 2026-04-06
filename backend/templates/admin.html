@@ -1222,7 +1222,7 @@
           <form method="post" action="/admin/center/branding" enctype="multipart/form-data" data-preserve-scroll="1">
             <h3 class="branding-subhead">صورة الغلاف (أعلى صفحة الحجز)</h3>
             <p class="small" style="margin:0 0 10px;line-height:1.55;">
-              تظهر بجانب عنوان المركز في الواجهة العامة. بدون رفع صورة يمكنك اختيار <strong>صورة يوغا توضيحية</strong> (افتراضي) أو <strong>تدرج ألوان فقط</strong>. عند رفع غلاف مخصص يُستبدل العرض بالكامل. يُفضّل <strong>صورة أفقية</strong> بنسبة تقريبية <strong>3∶2</strong> أو <strong>16∶9</strong>، بعرض حوالي <strong>1200–1600 بكسل</strong> (ارتفاع نحو 600–900 بكسل)، بصيغة PNG أو JPG أو WebP أو GIF — حتى <strong>2 ميجابايت</strong> لكل ملف.
+              تظهر بجانب عنوان المركز في الواجهة العامة. بدون رفع صورة يمكنك اختيار <strong>صورة يوغا توضيحية</strong> (افتراضي) أو <strong>تدرج ألوان فقط</strong>. عند رفع غلاف مخصص يُستبدل العرض بالكامل. <strong>الصورة التوضيحية الافتراضية الحالية: 1024×434 بكسل</strong> (نسبة تقريبية ~<strong>2.4∶1</strong>). يُفضّل غلاف أفقي بعرض حوالي <strong>1000–1600 بكسل</strong> وارتفاع يتناسب مع نسبة <strong>~2.4∶1</strong> أو <strong>16∶9</strong> أو <strong>3∶2</strong> (مثال لـ16∶9: 1600×900)، بصيغة PNG أو JPG أو WebP أو GIF — حتى <strong>2 ميجابايت</strong> لكل ملف.
             </p>
             {% if center and center.hero_image_url %}
             <p class="small" style="margin-bottom:8px;">معاينة الغلاف الحالي:</p>
@@ -1231,7 +1231,7 @@
             </div>
             {% endif %}
             <label for="center_hero_file">رفع صورة غلاف</label>
-            <input id="center_hero_file" name="hero" type="file" accept="image/png,image/jpeg,image/webp,image/gif,.png,.jpg,.jpeg,.webp,.gif" title="أفقي 1200–1600 بكسل تقريباً، حتى 2 ميجابايت" />
+            <input id="center_hero_file" name="hero" type="file" accept="image/png,image/jpeg,image/webp,image/gif,.png,.jpg,.jpeg,.webp,.gif" title="أفقي ~1000–1600 بكسل (الافتراضي 1024×434)، حتى 2 ميجابايت" />
             {% if center and center.hero_image_url %}
             <div class="branding-remove-zone" role="group" aria-labelledby="remove-hero-label" style="margin-top:14px;">
               <div class="branding-remove-zone__head">
