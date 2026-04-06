@@ -41,6 +41,8 @@ def test_index_public_hero_is_real_img_and_static_asset_served(client: TestClien
 
     r = client.get("/index?center_id=1")
     assert r.status_code == 200
+    assert 'class="hero-main"' in r.text
+    assert 'class="hero-visual__frame"' in r.text
     assert 'class="hero-media__img"' in r.text
     assert f"/static/branding/hero-stock.png?v={APP_VERSION_STRING}" in r.text
     img = client.get(f"/static/branding/hero-stock.png?v={APP_VERSION_STRING}")

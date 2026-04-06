@@ -48,7 +48,7 @@
   <a class="skip-link" href="#main-content">تخطي إلى المحتوى</a>
   <div class="container">
     <header class="hero" aria-label="واجهة البداية">
-      <div>
+      <div class="hero-main">
         <div class="hero-brand">
           {% if center.logo_url %}
           <img class="hero-logo" src="{{ center.logo_url }}" width="56" height="56" alt="شعار {{ center.name }}" decoding="async" fetchpriority="high" loading="eager" onerror="this.remove();" />
@@ -182,35 +182,39 @@
           {% endif %}
         </div>
       </div>
-      {% if center.hero_image_url %}
-      <div class="hero-media hero-media--photo" role="img" aria-label="صورة الغلاف للمركز">
-        <img
-          class="hero-media__img"
-          src="{{ center.hero_image_url }}"
-          alt=""
-          width="1200"
-          height="675"
-          decoding="async"
-          loading="eager"
-          fetchpriority="high"
-        />
+      <div class="hero-visual">
+        <div class="hero-visual__frame">
+          {% if center.hero_image_url %}
+          <div class="hero-media hero-media--photo" role="img" aria-label="صورة الغلاف للمركز">
+            <img
+              class="hero-media__img"
+              src="{{ center.hero_image_url }}"
+              alt=""
+              width="640"
+              height="400"
+              decoding="async"
+              loading="eager"
+              fetchpriority="high"
+            />
+          </div>
+          {% elif center.hero_show_stock_photo | default(true) %}
+          <div class="hero-media hero-media--photo" role="img" aria-label="صورة يوغا توضيحية">
+            <img
+              class="hero-media__img"
+              src="{{ hero_stock_src }}?v={{ app_version }}"
+              alt=""
+              width="640"
+              height="400"
+              decoding="async"
+              loading="eager"
+              fetchpriority="high"
+            />
+          </div>
+          {% else %}
+          <div class="hero-media hero-media--gradient-only" role="img" aria-label="خلفية ملونة للقسم"></div>
+          {% endif %}
+        </div>
       </div>
-      {% elif center.hero_show_stock_photo | default(true) %}
-      <div class="hero-media hero-media--photo" role="img" aria-label="صورة يوغا توضيحية">
-        <img
-          class="hero-media__img"
-          src="{{ hero_stock_src }}?v={{ app_version }}"
-          alt=""
-          width="1200"
-          height="675"
-          decoding="async"
-          loading="eager"
-          fetchpriority="high"
-        />
-      </div>
-      {% else %}
-      <div class="hero-media hero-media--gradient-only" role="img" aria-label="خلفية ملونة للقسم"></div>
-      {% endif %}
     </header>
 
     {% if news_ticker_items %}
