@@ -57,6 +57,7 @@ from ..security import (
 )
 from ..tenant_utils import require_user_center_id
 from ..time_utils import utcnow_naive
+from ..waitlist_service import notify_waitlist_for_sessions
 from ..web_shared import (
     _cookie_secure_flag,
     _fmt_dt,
@@ -695,6 +696,7 @@ def public_book(
             booking.status = "cancelled"
             payment_row.status = "failed"
             db.commit()
+            notify_waitlist_for_sessions(db, {session_id})
             log_security_event(
                 "public_book",
                 request,
@@ -713,6 +715,7 @@ def public_book(
             booking.status = "cancelled"
             payment_row.status = "failed"
             db.commit()
+            notify_waitlist_for_sessions(db, {session_id})
             return RedirectResponse(
                 url=f"/index?center_id={center_id}&msg=stripe_no_url",
                 status_code=303,
@@ -879,6 +882,7 @@ def public_cart_checkout(
                 bk.status = "cancelled"
                 pay.status = "failed"
             db.commit()
+            notify_waitlist_for_sessions(db, {bk.session_id for bk, _, _ in bundle})
             log_security_event(
                 "public_cart_checkout",
                 request,
@@ -894,6 +898,7 @@ def public_cart_checkout(
                 bk.status = "cancelled"
                 pay.status = "failed"
             db.commit()
+            notify_waitlist_for_sessions(db, {bk.session_id for bk, _, _ in bundle})
             return RedirectResponse(url=f"/index?center_id={center_id}&msg=stripe_no_url", status_code=303)
         for _, pay, _ in bundle:
             pay.provider_ref = pref
@@ -916,6 +921,10 @@ def public_cart_checkout(
             pay.status = "failed"
             bk.status = "cancelled"
     db.commit()
+    notify_waitlist_for_sessions(
+        db,
+        {bk.session_id for bk, _, _ in bundle if bk.status == "cancelled"},
+    )
     first_bid = bundle[0][0].id if bundle else ""
     return RedirectResponse(
         url=f"/index?center_id={center_id}&msg=paid_mock&booking_id={first_bid}",
@@ -1142,6 +1151,40 @@ def public_logout():
     response = RedirectResponse(url=f"{PUBLIC_INDEX_DEFAULT_PATH}&msg=logged_out", status_code=303)
     response.delete_cookie(PUBLIC_COOKIE_NAME)
     return response
+
+
+@router.get("/public/my-bookings", response_class=HTMLResponse)
+def public_my_bookings_page(
+    request: Request,
+    center_id: int = 1,
+    db: Session = Depends(get_db),
+):
+    user = _current_public_user(request, db)
+    if not user:
+        return _public_login_redirect(next_url=f"/public/my-bookings?center_id={center_id}")
+    center = db.get(models.Center, center_id)
+    if not center:
+        raise HTTPException(status_code=404, detail="Center not found")
+    client = (
+        db.query(models.Client)
+        .filter(models.Client.center_id == center_id, models.Client.email == user.email.lower())
+        .first()
+    )
+    rows: list = []
+    if client:
+        rows = (
+            db.query(models.Booking, models.YogaSession)
+            .join(models.YogaSession, models.YogaSession.id == models.Booking.session_id)
+            .filter(models.Booking.client_id == client.id)
+            .order_by(models.YogaSession.starts_at.desc())
+            .limit(50)
+            .all()
+        )
+    return templates.TemplateResponse(
+        request,
+        "public_my_bookings.html",
+        {"rows": rows, "center_id": center_id, "center": center},
+    )
 
 
 @router.get("/public/account", response_class=HTMLResponse)

@@ -1,3 +1,4 @@
+import asyncio
 import csv
 import io
 from contextlib import asynccontextmanager
@@ -87,6 +88,7 @@ try:
     from .pwa import pwa_router
     from .web_ui import router as web_ui_router
     from .tenant_utils import require_user_center_id
+    from .innovation_api import features_router
 except ImportError:
     from backend.app import models, schemas
     from backend.app.booking_utils import count_active_bookings
@@ -111,6 +113,7 @@ except ImportError:
     from backend.app.pwa import pwa_router
     from backend.app.web_ui import router as web_ui_router
     from backend.app.tenant_utils import require_user_center_id
+    from backend.app.innovation_api import features_router
 
 load_dotenv()
 logger = logging.getLogger(__name__)
@@ -138,7 +141,41 @@ async def _app_lifespan(app: FastAPI):
     lvl_name = os.getenv("LOG_LEVEL", "INFO").upper()
     lvl = getattr(logging, lvl_name, logging.INFO)
     logging.getLogger("maestro.request").setLevel(lvl)
+
+    sentry_dsn = os.getenv("SENTRY_DSN", "").strip()
+    if sentry_dsn:
+        try:
+            import sentry_sdk
+
+            sentry_sdk.init(
+                dsn=sentry_dsn,
+                send_default_pii=False,
+                traces_sample_rate=float(os.getenv("SENTRY_TRACES_SAMPLE_RATE", "0.1")),
+            )
+        except Exception as exc:
+            logger.warning("Sentry init skipped: %s", exc)
+
+    try:
+        from .reminders import run_session_reminders
+    except ImportError:
+        from backend.app.reminders import run_session_reminders
+
+    async def _reminder_bg() -> None:
+        await asyncio.sleep(120)
+        while True:
+            try:
+                await asyncio.to_thread(run_session_reminders)
+            except Exception:
+                logger.exception("session reminders background task")
+            await asyncio.sleep(3600)
+
+    task = asyncio.create_task(_reminder_bg())
     yield
+    task.cancel()
+    try:
+        await task
+    except asyncio.CancelledError:
+        pass
 
 
 _openapi = _openapi_enabled()
@@ -154,6 +191,16 @@ app = FastAPI(
 api_router = APIRouter(tags=["api"])
 
 init_db()
+try:
+    from .innovation_seed import seed_default_feature_flags
+except ImportError:
+    from backend.app.innovation_seed import seed_default_feature_flags
+
+try:
+    seed_default_feature_flags()
+except Exception as exc:
+    logger.warning("innovation seed: %s", exc)
+
 app.add_middleware(RequestIDMiddleware)
 app.add_middleware(ApiClientHeadersMiddleware)
 app.add_middleware(MaintenanceMiddleware)
@@ -163,6 +210,8 @@ _cors_origins = [x.strip() for x in os.getenv("CORS_ORIGINS", "").split(",") if 
 attach_cors(app, _cors_origins)
 app.include_router(pwa_router)
 app.include_router(web_ui_router)
+app.include_router(features_router)
+app.include_router(features_router, prefix="/api/v1")
 _STATIC_DIR = Path(__file__).resolve().parent.parent / "static"
 if _STATIC_DIR.is_dir():
     app.mount("/static", StaticFiles(directory=str(_STATIC_DIR)), name="static")

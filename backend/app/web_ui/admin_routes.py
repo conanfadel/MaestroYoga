@@ -1761,9 +1761,18 @@ def admin_delete_session(
 
     booking_ids = [b.id for b in db.query(models.Booking).filter(models.Booking.session_id == session_id).all()]
     if booking_ids:
+        db.query(models.ReminderSent).filter(models.ReminderSent.booking_id.in_(booking_ids)).delete(
+            synchronize_session=False
+        )
+        db.query(models.SessionRating).filter(models.SessionRating.booking_id.in_(booking_ids)).delete(
+            synchronize_session=False
+        )
         db.query(models.Payment).filter(models.Payment.booking_id.in_(booking_ids)).delete(
             synchronize_session=False
         )
+    db.query(models.SessionWaitlist).filter(models.SessionWaitlist.session_id == session_id).delete(
+        synchronize_session=False
+    )
     db.query(models.Booking).filter(models.Booking.session_id == session_id).delete()
     db.delete(yoga_session)
     db.commit()

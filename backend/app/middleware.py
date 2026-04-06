@@ -6,6 +6,7 @@ from __future__ import annotations
 
 import logging
 import os
+import time
 import uuid
 
 from starlette.middleware.base import BaseHTTPMiddleware
@@ -87,8 +88,10 @@ class ApiClientHeadersMiddleware(BaseHTTPMiddleware):
         av = raw[:64] if raw else ""
         if av:
             request.state.app_version = av
+        t0 = time.perf_counter()
         response: Response = await call_next(request)
         response.headers["X-API-Version"] = "1"
+        response.headers["X-Response-Time-Ms"] = f"{(time.perf_counter() - t0) * 1000.0:.1f}"
         if av:
             response.headers["X-App-Version-Accepted"] = av
         return response
@@ -164,5 +167,6 @@ def attach_cors(app, origins: list[str]) -> None:
             "Retry-After",
             "X-API-Version",
             "X-App-Version-Accepted",
+            "X-Response-Time-Ms",
         ],
     )

@@ -6,11 +6,25 @@ from backend.app.database import SessionLocal
 from backend.app.payments import StripePaymentProvider
 
 
+def _ensure_demo_client_row(db, center: models.Center) -> models.Client:
+    row = db.query(models.Client).filter(models.Client.center_id == center.id).first()
+    if row:
+        return row
+    row = models.Client(
+        center_id=center.id,
+        full_name="Stripe Webhook Test",
+        email="stripe_webhook_test@example.com",
+    )
+    db.add(row)
+    db.commit()
+    db.refresh(row)
+    return row
+
+
 def test_stripe_webhook_checkout_completed_marks_payment_paid(client, monkeypatch):
     db = SessionLocal()
     center = ensure_demo_data(db)
-    client_row = db.query(models.Client).filter(models.Client.center_id == center.id).first()
-    assert client_row is not None
+    client_row = _ensure_demo_client_row(db, center)
     pay = models.Payment(
         center_id=center.id,
         client_id=client_row.id,
@@ -52,8 +66,7 @@ def test_stripe_webhook_checkout_completed_marks_payment_paid(client, monkeypatc
 def test_stripe_webhook_checkout_expired_marks_payment_failed(client, monkeypatch):
     db = SessionLocal()
     center = ensure_demo_data(db)
-    client_row = db.query(models.Client).filter(models.Client.center_id == center.id).first()
-    assert client_row is not None
+    client_row = _ensure_demo_client_row(db, center)
     pay = models.Payment(
         center_id=center.id,
         client_id=client_row.id,

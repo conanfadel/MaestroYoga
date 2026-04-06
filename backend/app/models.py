@@ -1,4 +1,4 @@
-from sqlalchemy import Boolean, Column, DateTime, Float, ForeignKey, Integer, String, Text
+from sqlalchemy import Boolean, Column, DateTime, Float, ForeignKey, Integer, String, Text, UniqueConstraint
 from sqlalchemy.orm import relationship
 
 from .database import Base
@@ -115,6 +115,8 @@ class Client(Base):
     email = Column(String, nullable=False)
     phone = Column(String, nullable=True)
     created_at = Column(DateTime, default=utcnow_naive)
+    referral_code = Column(String(32), nullable=True, index=True)
+    referred_by_client_id = Column(Integer, ForeignKey("clients.id"), nullable=True, index=True)
 
     center = relationship("Center", back_populates="clients")
     subscriptions = relationship("ClientSubscription", back_populates="client")
@@ -252,4 +254,55 @@ class BlockedIP(Base):
     reason = Column(String, nullable=True)
     blocked_until = Column(DateTime, nullable=True, index=True)
     is_active = Column(Boolean, default=True, index=True)
+    created_at = Column(DateTime, default=utcnow_naive, index=True)
+
+
+class SessionWaitlist(Base):
+    """قائمة انتظار عند امتلاء الجلسة (يرتبط بحساب جمهور)."""
+
+    __tablename__ = "session_waitlist"
+    __table_args__ = (UniqueConstraint("session_id", "public_user_id", name="uq_waitlist_session_public"),)
+
+    id = Column(Integer, primary_key=True, index=True)
+    center_id = Column(Integer, ForeignKey("centers.id"), nullable=False, index=True)
+    session_id = Column(Integer, ForeignKey("yoga_sessions.id"), nullable=False, index=True)
+    public_user_id = Column(Integer, ForeignKey("public_users.id"), nullable=False, index=True)
+    created_at = Column(DateTime, default=utcnow_naive, index=True)
+    notified_at = Column(DateTime, nullable=True, index=True)
+
+
+class SessionRating(Base):
+    """تقييم بعد الجلسة (نجوم + تعليق اختياري)."""
+
+    __tablename__ = "session_ratings"
+
+    id = Column(Integer, primary_key=True, index=True)
+    booking_id = Column(Integer, ForeignKey("bookings.id"), nullable=False, unique=True, index=True)
+    stars = Column(Integer, nullable=False)  # 1–5
+    comment = Column(Text, nullable=True)
+    created_at = Column(DateTime, default=utcnow_naive, index=True)
+
+
+class FeatureFlag(Base):
+    """ميزات قابلة للتبديل لكل مركز أو عامة (center_id NULL = عام لكل المراكز)."""
+
+    __tablename__ = "feature_flags"
+
+    id = Column(Integer, primary_key=True, index=True)
+    center_id = Column(Integer, ForeignKey("centers.id"), nullable=True, index=True)
+    flag_key = Column(String(64), nullable=False, index=True)
+    enabled = Column(Boolean, nullable=False, default=False)
+    value_json = Column(Text, nullable=True)
+    updated_at = Column(DateTime, default=utcnow_naive, onupdate=utcnow_naive)
+
+
+class ReminderSent(Base):
+    """منع تكرار نفس التذكير لنفس الحجز."""
+
+    __tablename__ = "reminder_sent"
+    __table_args__ = (UniqueConstraint("booking_id", "kind", name="uq_reminder_booking_kind"),)
+
+    id = Column(Integer, primary_key=True, index=True)
+    booking_id = Column(Integer, ForeignKey("bookings.id"), nullable=False, index=True)
+    kind = Column(String(32), nullable=False, index=True)
     created_at = Column(DateTime, default=utcnow_naive, index=True)

@@ -12,3 +12,4 @@ redis
 pywhatkit
 python-dotenv
 alembic
+sentry-sdk[fastapi]>=2.0.0

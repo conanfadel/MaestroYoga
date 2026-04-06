@@ -624,6 +624,22 @@ def queue_email_verification_email(to_email: str, verification_url: str, full_na
     return True, "queued"
 
 
+def queue_notification_email(to_email: str, subject: str, body: str) -> tuple[bool, str]:
+    """بريد عام (تذكيرات، قائمة انتظار، إلخ)."""
+    ok, reason = validate_mailer_settings()
+    if not ok:
+        print(f"[MAILER][CONFIG] notification blocked: {reason}")
+        return False, reason
+    if _mailer_delivery_mode() == "sync":
+        sent_ok, sent_reason = _send_mail(to_email, subject, body, html_body=None)
+        if not sent_ok:
+            print(f"[MAILER][ERROR] notification send failed: {sent_reason}")
+        return sent_ok, sent_reason
+    fut = _MAILER_EXECUTOR.submit(_send_mail, to_email, subject, body, None)
+    fut.add_done_callback(lambda done: _log_mail_future("notification", done))
+    return True, "queued"
+
+
 def queue_password_reset_email(to_email: str, reset_url: str, full_name: str = "") -> tuple[bool, str]:
     ok, reason = validate_mailer_settings()
     if not ok:

@@ -73,6 +73,10 @@ def _ensure_performance_indexes(conn, insp) -> None:
         ("center_posts", "idx_center_posts_center_published_pinned", "center_id, is_published, is_pinned"),
         ("center_posts", "idx_center_posts_published_at", "published_at"),
         ("center_post_images", "idx_center_post_images_post_id", "post_id"),
+        ("session_waitlist", "idx_session_waitlist_session_created", "session_id, created_at"),
+        ("session_ratings", "idx_session_ratings_booking_id", "booking_id"),
+        ("reminder_sent", "idx_reminder_sent_booking_kind", "booking_id, kind"),
+        ("feature_flags", "idx_feature_flags_center_key", "center_id, flag_key"),
     ]
     for table_name, index_name, columns in index_specs:
         if insp.has_table(table_name):
@@ -111,6 +115,12 @@ def migrate_schema() -> None:
     needs_center_loyalty_rb = False
     needs_center_loyalty_rs = False
     needs_center_loyalty_rg = False
+    needs_client_referral_code = False
+    needs_client_referred_by = False
+    if insp.has_table("clients"):
+        client_cols = {c["name"] for c in insp.get_columns("clients")}
+        needs_client_referral_code = "referral_code" not in client_cols
+        needs_client_referred_by = "referred_by_client_id" not in client_cols
     if insp.has_table("centers"):
         center_cols = {c["name"] for c in insp.get_columns("centers")}
         needs_center_logo_url = "logo_url" not in center_cols
@@ -145,6 +155,8 @@ def migrate_schema() -> None:
         and not needs_center_loyalty_rb
         and not needs_center_loyalty_rs
         and not needs_center_loyalty_rg
+        and not needs_client_referral_code
+        and not needs_client_referred_by
     ):
         with engine.begin() as conn:
             _cleanup_stale_center_logo_urls_sql(conn)
@@ -196,6 +208,10 @@ def migrate_schema() -> None:
             conn.execute(text("ALTER TABLE centers ADD COLUMN loyalty_reward_silver TEXT"))
         if needs_center_loyalty_rg:
             conn.execute(text("ALTER TABLE centers ADD COLUMN loyalty_reward_gold TEXT"))
+        if needs_client_referral_code:
+            conn.execute(text("ALTER TABLE clients ADD COLUMN referral_code VARCHAR(32)"))
+        if needs_client_referred_by:
+            conn.execute(text("ALTER TABLE clients ADD COLUMN referred_by_client_id INTEGER"))
         _cleanup_stale_center_logo_urls_sql(conn)
         _clear_legacy_default_hero_url(conn, inspect(conn))
         _ensure_performance_indexes(conn, insp)
