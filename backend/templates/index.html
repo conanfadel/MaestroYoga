@@ -92,13 +92,11 @@
       background: var(--white);
       border: 1px solid rgba(197, 160, 89, 0.35);
       box-shadow: 0 20px 50px rgba(45, 52, 54, 0.08);
-      display: grid;
-      grid-template-columns: 1.15fr 1fr;
-      gap: 20px;
-      padding: 24px 26px;
       margin-bottom: 18px;
-      overflow: visible;
+      overflow: hidden;
       position: relative;
+      isolation: isolate;
+      min-height: 240px;
     }
     .hero::before {
       content: "";
@@ -110,6 +108,44 @@
       background: linear-gradient(180deg, var(--gold), var(--mint-mid));
       border-start-start-radius: 22px;
       border-end-start-radius: 22px;
+      z-index: 4;
+      pointer-events: none;
+    }
+    .hero__media {
+      position: absolute;
+      inset: 0;
+      z-index: 0;
+      min-height: 100%;
+      border: none;
+      box-shadow: none;
+      border-radius: 0;
+    }
+    .hero__inner {
+      position: relative;
+      z-index: 2;
+      padding: 24px 26px;
+      max-width: 100%;
+    }
+    .hero__inner .hero-logo {
+      filter: drop-shadow(0 2px 10px rgba(255, 255, 255, 0.95)) drop-shadow(0 1px 3px rgba(45, 52, 54, 0.12));
+    }
+    .hero__inner .chip {
+      background: rgba(255, 255, 255, 0.52);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      border-color: rgba(197, 160, 89, 0.38);
+    }
+    .hero__inner .btn.ghost {
+      background: rgba(255, 255, 255, 0.42);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+    }
+    .hero__inner .btn.primary {
+      box-shadow: 0 4px 18px rgba(45, 52, 54, 0.15), 0 2px 8px rgba(197, 160, 89, 0.35);
+    }
+    .hero h1,
+    .hero .brand-tagline-hint {
+      text-shadow: 0 1px 0 rgba(255, 255, 255, 0.85), 0 0 24px rgba(255, 255, 255, 0.65);
     }
     .hero-brand {
       display: flex;
@@ -142,40 +178,38 @@
       font-weight: 500;
       opacity: 0.9;
     }
-    /* غلاف: تدرج فقط، أو تدرج + صورة يوغا افتراضية (ثيم التطبيق)، أو غلاف مرفوع */
-    .hero-media {
-      border-radius: 16px;
-      min-height: 200px;
+    /* غلاف بعرض الهيدر كاملاً + طبقة شفافة؛ المحتوى (شعار، أزرار، شِبس) فوق الصورة */
+    .hero__media.hero-media {
       overflow: hidden;
       background-size: cover;
       background-position: center;
-      border: 1px solid rgba(197, 160, 89, 0.32);
-      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.8);
       background-image:
         linear-gradient(
           135deg,
-          rgba(170, 240, 209, 0.42) 0%,
-          rgba(255, 255, 255, 0.72) 47%,
-          rgba(197, 160, 89, 0.16) 100%
+          rgba(170, 240, 209, 0.18) 0%,
+          rgba(255, 255, 255, 0.32) 48%,
+          rgba(197, 160, 89, 0.1) 100%
         );
     }
-    .hero-media.hero-media--stock {
+    .hero__media.hero-media--stock {
       background-image:
         linear-gradient(
           135deg,
-          rgba(170, 240, 209, 0.42) 0%,
-          rgba(255, 255, 255, 0.72) 47%,
-          rgba(197, 160, 89, 0.16) 100%
+          rgba(170, 240, 209, 0.2) 0%,
+          rgba(255, 255, 255, 0.28) 42%,
+          rgba(255, 255, 255, 0.12) 70%,
+          rgba(197, 160, 89, 0.08) 100%
         ),
         url("{{ hero_stock_src }}");
     }
-    .hero-media.hero-media--custom {
+    .hero__media.hero-media--custom {
       background-image:
         linear-gradient(
           135deg,
-          rgba(170, 240, 209, 0.42) 0%,
-          rgba(255, 255, 255, 0.72) 47%,
-          rgba(197, 160, 89, 0.16) 100%
+          rgba(170, 240, 209, 0.2) 0%,
+          rgba(255, 255, 255, 0.26) 40%,
+          rgba(255, 255, 255, 0.1) 65%,
+          rgba(197, 160, 89, 0.08) 100%
         ),
         var(--hero-src);
     }
@@ -1540,7 +1574,8 @@
     .post-teaser--strip .post-teaser__title { font-size: 0.98rem; }
     .post-teaser--strip .post-teaser__summary { font-size: 0.84rem; -webkit-line-clamp: 2; display: -webkit-box; -webkit-box-orient: vertical; overflow: hidden; }
     @media (max-width: 980px) {
-      .hero { grid-template-columns: 1fr; padding: 18px 16px; }
+      .hero { min-height: 220px; }
+      .hero__inner { padding: 18px 16px; }
       .grid-two { grid-template-columns: 1fr; }
       .sessions-filters-grid { grid-template-columns: 1fr; }
       .plan-meta { grid-template-columns: 1fr; }
@@ -1560,7 +1595,13 @@
   <a class="skip-link" href="#main-content">تخطي إلى المحتوى</a>
   <div class="container">
     <header class="hero" aria-label="واجهة البداية">
-      <div>
+      <div
+        class="hero__media hero-media{% if center.hero_image_url %} hero-media--custom{% elif center.hero_show_stock_photo | default(true) %} hero-media--stock{% endif %}"
+        role="img"
+        aria-label="{% if center.hero_image_url %}صورة الغلاف للمركز{% elif center.hero_show_stock_photo | default(true) %}صورة يوغا توضيحية{% else %}خلفية ملونة للقسم{% endif %}"
+        {% if center.hero_image_url %}style="--hero-src: url('{{ center.hero_image_url }}');"{% endif %}
+      ></div>
+      <div class="hero__inner">
         <div class="hero-brand">
           {% if center.logo_url %}
           <img class="hero-logo" src="{{ center.logo_url }}" width="72" height="72" alt="شعار {{ center.name }}" decoding="async" onerror="this.remove();" />
@@ -1694,12 +1735,6 @@
           {% endif %}
         </div>
       </div>
-      <div
-        class="hero-media{% if center.hero_image_url %} hero-media--custom{% elif center.hero_show_stock_photo | default(true) %} hero-media--stock{% endif %}"
-        role="img"
-        aria-label="{% if center.hero_image_url %}صورة الغلاف للمركز{% elif center.hero_show_stock_photo | default(true) %}صورة يوغا توضيحية{% else %}خلفية ملونة للقسم{% endif %}"
-        {% if center.hero_image_url %}style="--hero-src: url('{{ center.hero_image_url }}');"{% endif %}
-      ></div>
     </header>
 
     {% if news_ticker_items %}
