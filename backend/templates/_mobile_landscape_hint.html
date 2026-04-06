@@ -1,21 +1,43 @@
-{# تنبيه الوضع الأفقي: يظهر على الهاتف واللوحي في الوضع العمودي فقط #}
+{# تنبيه الوضع الأفقي: أعلى الشاشة لتفادي التداخل مع شريط السلة السفلي #}
 <div id="mobile-landscape-hint" class="mobile-landscape-hint" hidden role="status" aria-live="polite" aria-atomic="true">
   <div class="mobile-landscape-hint__inner">
-    <p class="mobile-landscape-hint__text">للاستمتاع بتجربة أفضل، استخدم الوضع الأفقي.</p>
-    <button type="button" class="mobile-landscape-hint__close" aria-label="إغلاق">×</button>
+    <span class="mobile-landscape-hint__accent" aria-hidden="true"></span>
+    <div class="mobile-landscape-hint__icon-wrap" aria-hidden="true">
+      <svg class="mobile-landscape-hint__icon" viewBox="0 0 24 24" width="22" height="22" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M7 3h10a2 2 0 012 2v14a2 2 0 01-2 2H7a2 2 0 01-2-2V5a2 2 0 012-2z" stroke="currentColor" stroke-width="1.75" stroke-linejoin="round"/>
+        <path d="M9 18h6" stroke="currentColor" stroke-width="1.75" stroke-linecap="round"/>
+      </svg>
+    </div>
+    <div class="mobile-landscape-hint__body">
+      <p class="mobile-landscape-hint__eyebrow">عرض الشاشة</p>
+      <p class="mobile-landscape-hint__text">للاستمتاع بتجربة أفضل، استخدم <strong>الوضع الأفقي</strong>.</p>
+    </div>
+    <button type="button" class="mobile-landscape-hint__close" aria-label="إغلاق">
+      <span aria-hidden="true">×</span>
+    </button>
   </div>
 </div>
 <style>
   .mobile-landscape-hint {
+    --mlh-gold: var(--gold, #c5a059);
+    --mlh-gold-dark: var(--gold-dark, #9a7b3c);
+    --mlh-mint: var(--mint, #aaf0d1);
+    --mlh-mint-mid: var(--mint-mid, #7dd3ae);
+    --mlh-mint-bg: var(--mint-bg, #e8fcf4);
+    --mlh-charcoal: var(--charcoal, #2d3436);
+    --mlh-muted: var(--charcoal-muted, #636e72);
+    --mlh-white: var(--white, #ffffff);
     position: fixed;
-    z-index: 950;
-    inset-inline: max(10px, env(safe-area-inset-left, 0px)) max(10px, env(safe-area-inset-right, 0px));
-    bottom: max(12px, env(safe-area-inset-bottom, 0px) + 8px);
+    z-index: 940;
+    inset-inline: max(12px, env(safe-area-inset-left, 0px)) max(12px, env(safe-area-inset-right, 0px));
+    top: max(10px, env(safe-area-inset-top, 0px) + 6px);
+    bottom: auto;
     font-family: "Tajawal", system-ui, sans-serif;
     pointer-events: none;
     opacity: 0;
-    transform: translateY(12px);
-    transition: opacity 0.28s ease, transform 0.28s ease;
+    transform: translateY(-14px);
+    transition: opacity 0.32s ease, transform 0.32s cubic-bezier(0.22, 1, 0.36, 1);
+    filter: drop-shadow(0 12px 28px rgba(45, 52, 54, 0.14));
   }
   .mobile-landscape-hint.is-visible {
     opacity: 1;
@@ -23,47 +45,99 @@
     pointer-events: auto;
   }
   .mobile-landscape-hint__inner {
+    position: relative;
     display: flex;
-    align-items: flex-start;
-    gap: 10px;
-    max-width: 520px;
+    align-items: center;
+    gap: 12px;
+    max-width: min(520px, 100%);
     margin-inline: auto;
-    padding: 12px 14px;
+    padding-block: 14px;
+    padding-inline: 16px;
+    padding-inline-start: 20px;
+    border-radius: 18px;
+    overflow: hidden;
+    background:
+      linear-gradient(145deg, rgba(255, 255, 255, 0.98) 0%, rgba(248, 253, 251, 0.98) 42%, var(--mlh-mint-bg) 120%);
+    border: 1px solid rgba(170, 240, 209, 0.85);
+    box-shadow:
+      0 1px 0 rgba(255, 255, 255, 0.9) inset,
+      0 8px 32px rgba(45, 52, 54, 0.08);
+  }
+  .mobile-landscape-hint__accent {
+    position: absolute;
+    inset-inline-start: 0;
+    top: 0;
+    bottom: 0;
+    width: 5px;
+    background: linear-gradient(180deg, var(--mlh-gold) 0%, var(--mlh-gold-dark) 100%);
+  }
+  .mobile-landscape-hint__icon-wrap {
+    flex-shrink: 0;
+    width: 44px;
+    height: 44px;
     border-radius: 14px;
-    background: rgba(45, 52, 54, 0.92);
-    color: #fff;
-    box-shadow: 0 8px 28px rgba(0, 0, 0, 0.22);
-    border: 1px solid rgba(255, 255, 255, 0.12);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(145deg, rgba(170, 240, 209, 0.45), rgba(125, 211, 174, 0.35));
+    border: 1px solid rgba(125, 211, 174, 0.55);
+    color: var(--mlh-gold-dark);
+    box-shadow: 0 2px 8px rgba(154, 123, 60, 0.12);
+  }
+  .mobile-landscape-hint__icon {
+    display: block;
+  }
+  .mobile-landscape-hint__body {
+    flex: 1;
+    min-width: 0;
+    text-align: start;
+  }
+  .mobile-landscape-hint__eyebrow {
+    margin: 0 0 4px;
+    font-size: 0.68rem;
+    font-weight: 800;
+    letter-spacing: 0.02em;
+    color: var(--mlh-mint-mid);
+    line-height: 1.2;
   }
   .mobile-landscape-hint__text {
     margin: 0;
-    flex: 1;
-    font-size: 0.92rem;
-    line-height: 1.55;
-    text-align: start;
+    font-size: 0.98rem;
+    font-weight: 600;
+    line-height: 1.5;
+    color: var(--mlh-charcoal);
+  }
+  .mobile-landscape-hint__text strong {
+    font-weight: 800;
+    color: var(--mlh-gold-dark);
   }
   .mobile-landscape-hint__close {
     flex-shrink: 0;
-    width: 32px;
-    height: 32px;
-    margin: -4px -4px -4px 0;
+    width: 38px;
+    height: 38px;
+    margin-block: -4px;
+    margin-inline-end: -2px;
     border: none;
-    border-radius: 10px;
-    background: rgba(255, 255, 255, 0.12);
-    color: #fff;
-    font-size: 1.35rem;
+    border-radius: 12px;
+    background: rgba(255, 255, 255, 0.75);
+    color: var(--mlh-muted);
+    font-size: 1.4rem;
     line-height: 1;
     cursor: pointer;
     display: inline-flex;
     align-items: center;
     justify-content: center;
+    border: 1px solid rgba(170, 240, 209, 0.65);
+    transition: background 0.2s ease, color 0.2s ease, border-color 0.2s ease;
   }
   .mobile-landscape-hint__close:hover {
-    background: rgba(255, 255, 255, 0.22);
+    background: var(--mlh-white);
+    color: var(--mlh-charcoal);
+    border-color: var(--mlh-mint-mid);
   }
   @media (prefers-reduced-motion: reduce) {
     .mobile-landscape-hint {
-      transition: none;
+      transition: opacity 0.2s ease;
     }
   }
 </style>
