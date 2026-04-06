@@ -32,11 +32,13 @@
       padding: max(16px, env(safe-area-inset-top, 0px)) max(16px, env(safe-area-inset-right, 0px)) max(16px, env(safe-area-inset-bottom, 0px)) max(16px, env(safe-area-inset-left, 0px));
       min-height: 100dvh;
       min-height: 100vh;
+      display: grid;
+      place-items: center;
     }
     .card {
       width: 100%;
       max-width: min(440px, 100%);
-      margin: clamp(20px, 6vw, 36px) auto;
+      margin: 0;
       background: #fff;
       border-radius: 20px;
       padding: clamp(22px, 5vw, 32px) clamp(20px, 4vw, 28px);
@@ -103,6 +105,11 @@
     .err { color: #b91c1c; font-size: 0.9rem; margin-bottom: 8px; font-weight: 700; }
     a { color: var(--gold-dark); font-weight: 700; text-decoration: none; }
     a:hover { text-decoration: underline; }
+    form[action="/admin/login"] {
+      display: flex;
+      flex-direction: column;
+      gap: 0;
+    }
   </style>
 </head>
 <body>

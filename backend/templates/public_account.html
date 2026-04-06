@@ -40,11 +40,13 @@
         radial-gradient(ellipse 100% 80% at 100% 0%, var(--mint-bg) 0%, transparent 55%),
         #fafcfb;
       padding: max(20px, env(safe-area-inset-top, 0px)) max(14px, env(safe-area-inset-right, 0px)) max(32px, env(safe-area-inset-bottom, 0px)) max(14px, env(safe-area-inset-left, 0px));
+      display: grid;
+      place-items: center;
     }
     .shell {
       width: min(100%, 520px);
       max-width: 520px;
-      margin: 0 auto;
+      margin: 0;
     }
     .card {
       background: #fff;
@@ -149,6 +151,11 @@
     .loyalty-program-mini tr.loyalty-program__row--bronze td:first-child { box-shadow: inset 3px 0 0 #cd7f32; }
     .loyalty-program-mini tr.loyalty-program__row--silver td:first-child { box-shadow: inset 3px 0 0 #94a3b8; }
     .loyalty-program-mini tr.loyalty-program__row--gold td:first-child { box-shadow: inset 3px 0 0 #ca8a04; }
+    form[action="/public/account"] {
+      display: flex;
+      flex-direction: column;
+      gap: 0;
+    }
   </style>
 </head>
 <body>
@@ -207,7 +214,7 @@
       </section>
 
       <style>
-        .tier-tag { display:inline-block;margin-inline-start:6px;padding:4px 10px;border-radius:999px;font-size:0.78rem;font-weight:800; }
+        .tier-tag { display:inline-flex;align-items:center;margin-inline-start:6px;padding:4px 10px;border-radius:999px;font-size:0.78rem;font-weight:800;vertical-align:middle; }
         .tier-tag--bronze { background:linear-gradient(135deg,#cd7f32,#8b5a2b);color:#fff; }
         .tier-tag--silver { background:linear-gradient(135deg,#e2e8f0,#94a3b8);color:#1e293b; }
         .tier-tag--gold { background:linear-gradient(135deg,#fcd34d,#ca8a04);color:#422006; }

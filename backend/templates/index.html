@@ -330,7 +330,7 @@
       }
       .hero-toolbar__divider { display: none; }
     }
-    .public-user-menu { position: relative; display: inline-block; max-width: 100%; z-index: 100; }
+    .public-user-menu { position: relative; display: inline-flex; max-width: 100%; z-index: 100; }
     .public-user-menu__trigger {
       max-width: min(100%, 280px);
       text-align: inherit;
@@ -679,11 +679,21 @@
       .loyalty-program th:nth-child(3),
       .loyalty-program td:nth-child(3) { min-width: 160px; }
     }
+    /* عمودان: الجلسات+الأخبار | الخطط+الذيل — أسماء المناطق تسهّل الصيانة */
     .grid-two {
       display: grid;
       grid-template-columns: minmax(0, 2.1fr) minmax(260px, 1fr);
+      grid-template-areas: "main aside";
       gap: 24px;
       align-items: start;
+    }
+    .grid-two > .grid-two__main {
+      grid-area: main;
+      min-width: 0;
+    }
+    .grid-two > aside {
+      grid-area: aside;
+      min-width: 0;
     }
     .grid-two__main {
       display: flex;
@@ -1695,7 +1705,12 @@
       .hero { min-height: clamp(280px, 48vh, 420px); }
       .hero__inner { padding: 18px 16px; margin: 10px; }
       .hero-toolbar--over-cover { margin-inline: 0; margin-bottom: 10px; padding-inline: 12px; }
-      .grid-two { grid-template-columns: 1fr; }
+      .grid-two {
+        grid-template-columns: 1fr;
+        grid-template-areas:
+          "main"
+          "aside";
+      }
       .sessions-filters-grid { grid-template-columns: 1fr; }
       .plan-meta { grid-template-columns: 1fr; }
       body { padding-block: 14px; }
