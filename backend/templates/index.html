@@ -211,13 +211,14 @@
       object-fit: cover;
       object-position: center 42%;
       pointer-events: none;
-      filter: blur(1.5px);
-      transform: scale(1.02);
+      /* ضبابية ناعمة + سطوع أعلى وتباين أخف (مظهر قريب من المرجع) */
+      filter: blur(4px) brightness(1.08) contrast(0.86) saturate(0.92);
+      transform: scale(1.045);
       transform-origin: center center;
     }
     @media (prefers-reduced-motion: reduce) {
       .hero__cover-img {
-        filter: blur(0.5px);
+        filter: blur(1.5px) brightness(1.04) contrast(0.9) saturate(0.96);
         transform: none;
       }
     }
@@ -226,12 +227,15 @@
       inset: 0;
       z-index: 1;
       pointer-events: none;
-      background: linear-gradient(
-        115deg,
-        rgba(255, 255, 255, 0.02) 0%,
-        rgba(255, 255, 255, 0.05) 45%,
-        rgba(250, 252, 251, 0.02) 100%
-      );
+      /* غسل أبيض خفيف + لمسة باردة على اليسار كالمرجع */
+      background:
+        linear-gradient(90deg, rgba(200, 245, 240, 0.12) 0%, transparent 45%),
+        linear-gradient(
+          115deg,
+          rgba(255, 255, 255, 0.14) 0%,
+          rgba(255, 255, 255, 0.22) 42%,
+          rgba(252, 253, 252, 0.18) 100%
+        );
     }
     .hero-toolbar {
       display: flex;
