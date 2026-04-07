@@ -342,7 +342,3 @@ def handbook_matrix_rows() -> list[dict[str, Any]]:
             }
         )
     return rows
-
-
-def permission_labels_by_id() -> dict[str, str]:
-    return {p["id"]: p["label"] for p in PERMISSION_CATALOG}
