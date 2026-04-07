@@ -1413,6 +1413,9 @@
                 <a class="soft-link" href="/admin/reports/sessions?period=year">جلسات: السنة</a>
                 <a class="soft-link" href="/admin/reports/insights?period=month"><strong>رؤى تشغيلية</strong> (شهر)</a>
                 <a class="soft-link" href="/admin/reports/insights?period=year">رؤى: السنة</a>
+                <a class="soft-link" href="/admin/reports/clients?period=month">عملاء: جدد/عائدون</a>
+                <a class="soft-link" href="/admin/reports/subscriptions?days=30">اشتراكات تنتهي (٣٠ يوماً)</a>
+                <a class="soft-link" href="/admin/reports/health">صحة النظام</a>
                 {% endif %}
                 {% if perm_report_revenue %}
                 <a class="soft-link" href="/admin/reports/revenue?period=today">إيراد: اليوم</a>
@@ -1423,7 +1426,10 @@
                 {% if perm_exports_clients %}<a class="soft-link" href="{{ data_export_urls.clients }}">تصدير عملاء CSV</a>{% endif %}
                 {% if perm_exports_bookings %}<a class="soft-link" href="{{ data_export_urls.bookings }}">تصدير حجوزات CSV</a>{% endif %}
                 {% if perm_exports_payments %}<a class="soft-link" href="{{ data_export_urls.payments }}">تصدير مدفوعات CSV</a>{% endif %}
-                {% if show_security_section %}<a class="soft-link" href="{{ security_export_url }}">تصدير تدقيق أمني CSV</a>{% endif %}
+                {% if show_security_section %}
+                <a class="soft-link" href="/admin/reports/security-audit?period=month">تدقيق أمني (عرض)</a>
+                <a class="soft-link" href="{{ security_export_url }}">تصدير تدقيق أمني CSV</a>
+                {% endif %}
               </div>
             </div>
           </div>

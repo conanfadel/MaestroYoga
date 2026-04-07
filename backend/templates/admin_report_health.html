@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>صحة النظام — {{ center.name if center else 'المركز' }}</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/static/css/admin-dashboard.css" />
+</head>
+<body class="report-run-sheet">
+  <header class="report-run-sheet__toolbar no-print">
+    <a class="soft-link" href="/admin#section-reports">← العودة إلى التقارير</a>
+  </header>
+
+  <main class="report-run-sheet__main">
+    <div class="report-run-sheet__brand">
+      <div>
+        <p class="report-run-sheet__brand-title">{{ center.name if center else 'المركز' }}</p>
+        <p class="report-run-sheet__brand-sub">مؤشرات تقنية وتشغيلية (مدفوعات، انتظار، حظر)</p>
+      </div>
+    </div>
+    <h1 class="admin-booking-block-heading admin-booking-block-heading--flush-top">صحة النظام</h1>
+    <p class="report-run-sheet__meta">أُنشئ في {{ generated_at }}</p>
+
+    <div class="report-run-sheet__kpis">
+      <div class="stat"><div class="k">مدفوعات فاشلة (٧ أيام)</div><div class="v">{{ failed_7d }}</div></div>
+      <div class="stat"><div class="k">مدفوعات فاشلة (٣٠ يوماً)</div><div class="v">{{ failed_30d }}</div></div>
+      <div class="stat"><div class="k">مدفوعات معلّقة مفتوحة</div><div class="v">{{ pending_payments_open }}</div></div>
+      <div class="stat"><div class="k">عناوين محظورة نشطة (عام)</div><div class="v">{{ blocked_ips_active }}</div></div>
+    </div>
+    <p class="small report-run-sheet__footnote">لا يتتبّع النظام حالياً أخطاء البريد الإلكتروني في لوحة واحدة؛ راجع سجلات الخادم عند الحاجة. أحداث تدقيق أمني مفصّلة: صفحة «تدقيق أمني» أو تصدير CSV.</p>
+  </main>
+</body>
+</html>

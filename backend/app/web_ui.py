@@ -1543,6 +1543,7 @@ def public_book(
         currency="SAR",
         payment_method="public_checkout",
         status="pending",
+        created_at=utcnow_naive(),
     )
     db.add(payment_row)
     db.commit()
@@ -1719,6 +1720,7 @@ def public_cart_checkout(
             currency="SAR",
             payment_method="public_cart_checkout",
             status="pending",
+            created_at=utcnow_naive(),
         )
         db.add(payment_row)
         db.flush()
@@ -3556,6 +3558,27 @@ def _report_period_to_range(
     return today, today, "اليوم", None
 
 
+def _report_previous_period_range(d0: date, d1: date) -> tuple[date, date, str]:
+    """نفس طول الفترة الحالية مباشرة قبلها (للمقارنة)."""
+    span_days = (d1 - d0).days + 1
+    if span_days < 1:
+        span_days = 1
+    prev_end = d0 - timedelta(days=1)
+    prev_start = prev_end - timedelta(days=span_days - 1)
+    label = f"{prev_start.isoformat()} ← {prev_end.isoformat()}"
+    return prev_start, prev_end, label
+
+
+def _vat_inclusive_breakdown(gross_total: float, vat_rate_percent: float) -> dict[str, float]:
+    """تقدير صافي وضريبة بافتراض أن الإجمالي يشمل الضريبة (عرض شائع بالريال)."""
+    if gross_total <= 0 or vat_rate_percent <= 0:
+        return {"gross": gross_total, "net": gross_total, "vat": 0.0}
+    div = 1.0 + (vat_rate_percent / 100.0)
+    net = gross_total / div
+    vat_amt = gross_total - net
+    return {"gross": gross_total, "net": net, "vat": vat_amt}
+
+
 def _payment_method_label_ar(method: str | None) -> str:
     m = (method or "").strip()
     return {
@@ -3625,6 +3648,7 @@ def admin_report_sessions(
         bc = booking_counts.get(s.id, {"active": 0, "cancelled": 0})
         cap = room.capacity if room else 0
         spots = spots_available(db, s)
+        util_pct = round(100.0 * bc["active"] / cap, 1) if cap > 0 else None
         session_rows.append(
             {
                 "id": s.id,
@@ -3638,6 +3662,7 @@ def admin_report_sessions(
                 "bookings_active": bc["active"],
                 "bookings_cancelled": bc["cancelled"],
                 "spots_free": spots,
+                "utilization_pct": util_pct,
                 "price_drop_in": s.price_drop_in,
             }
         )
@@ -3682,6 +3707,11 @@ def admin_report_revenue(
     cid = require_user_center_id(user)
     center = db.get(models.Center, cid)
     d0, d1, range_label, range_err = _report_period_to_range(period, date_from, date_to)
+    try:
+        vat_pct = float((os.getenv("VAT_RATE_PERCENT") or "15").strip() or "15")
+    except ValueError:
+        vat_pct = 15.0
+
     base_pf = [
         models.Payment.center_id == cid,
         func.date(models.Payment.paid_at) >= d0,
@@ -3693,10 +3723,33 @@ def admin_report_revenue(
         .scalar()
         or 0.0
     )
+    vat_breakdown = _vat_inclusive_breakdown(paid_total, vat_pct)
     paid_count = (
         db.query(func.count(models.Payment.id)).filter(*base_pf, models.Payment.status == "paid").scalar()
         or 0
     )
+    p0, p1, prev_period_label = _report_previous_period_range(d0, d1)
+    prev_pf = [
+        models.Payment.center_id == cid,
+        func.date(models.Payment.paid_at) >= p0,
+        func.date(models.Payment.paid_at) <= p1,
+    ]
+    prev_paid_total = float(
+        db.query(func.coalesce(func.sum(models.Payment.amount), 0.0))
+        .filter(*prev_pf, models.Payment.status == "paid")
+        .scalar()
+        or 0.0
+    )
+    prev_paid_count = int(
+        db.query(func.count(models.Payment.id)).filter(*prev_pf, models.Payment.status == "paid").scalar() or 0
+    )
+    paid_delta_pct = (
+        round(100.0 * (paid_total - prev_paid_total) / prev_paid_total, 1)
+        if prev_paid_total > 0
+        else None
+    )
+    count_delta = int(paid_count - prev_paid_count)
+
     by_day = (
         db.query(
             func.date(models.Payment.paid_at).label("d"),
@@ -3727,6 +3780,65 @@ def admin_report_revenue(
         .group_by(models.Payment.status)
         .all()
     )
+    paid_rows_cat = (
+        db.query(models.Payment.amount, models.Payment.payment_method, models.Payment.booking_id)
+        .filter(*base_pf, models.Payment.status == "paid")
+        .all()
+    )
+    cat_session = {"count": 0, "amount": 0.0}
+    cat_sub = {"count": 0, "amount": 0.0}
+    cat_other = {"count": 0, "amount": 0.0}
+    for amt, pm, bid in paid_rows_cat:
+        a = float(amt or 0)
+        pms = (pm or "").strip()
+        if pms.startswith("subscription_"):
+            cat_sub["count"] += 1
+            cat_sub["amount"] += a
+        elif bid is not None:
+            cat_session["count"] += 1
+            cat_session["amount"] += a
+        else:
+            cat_other["count"] += 1
+            cat_other["amount"] += a
+    product_rows = [
+        {"label": "حجز جلسة (مرتبط بحجز)", **cat_session},
+        {"label": "اشتراك / باقة", **cat_sub},
+        {"label": "أخرى (بدون ربط حجز)", **cat_other},
+    ]
+
+    status_counts: dict[str, tuple[int, float]] = {}
+    for st, c, a in by_status:
+        status_counts[st] = (int(c), float(a or 0))
+    paid_n = status_counts.get("paid", (0, 0.0))[0]
+    failed_n = status_counts.get("failed", (0, 0.0))[0]
+    pend_n = status_counts.get("pending", (0, 0.0))[0] + status_counts.get("pending_payment", (0, 0.0))[0]
+    terminal_n = paid_n + failed_n + pend_n
+    success_rate_pct = round(100.0 * paid_n / terminal_n, 1) if terminal_n else 0.0
+
+    now = utcnow_naive()
+    pending_open = (
+        db.query(models.Payment)
+        .filter(
+            models.Payment.center_id == cid,
+            models.Payment.status.in_(("pending", "pending_payment")),
+        )
+        .all()
+    )
+    pend_age_buckets = {"0_1": {"n": 0, "amt": 0.0}, "2_7": {"n": 0, "amt": 0.0}, "8p": {"n": 0, "amt": 0.0}}
+    for pr in pending_open:
+        anchor = pr.created_at or pr.paid_at or now
+        days = max(0, (now - anchor).days)
+        amt = float(pr.amount or 0)
+        if days <= 1:
+            k = "0_1"
+        elif days <= 7:
+            k = "2_7"
+        else:
+            k = "8p"
+        pend_age_buckets[k]["n"] += 1
+        pend_age_buckets[k]["amt"] += amt
+    pending_total_amt = sum(float(p.amount or 0) for p in pending_open)
+
     day_rows = [{"d": row[0], "amount": float(row[1] or 0)} for row in by_day]
     method_rows = [
         {
@@ -3752,6 +3864,19 @@ def admin_report_revenue(
         }
         for st, c, a in by_status
     ]
+    revenue_charts_json = json.dumps(
+        {
+            "daily": {
+                "labels": [str(r["d"]) for r in day_rows],
+                "data": [r["amount"] for r in day_rows],
+            },
+            "methods": {
+                "labels": [r["method"][:28] for r in method_rows],
+                "data": [r["amount"] for r in method_rows],
+            },
+        },
+        ensure_ascii=False,
+    )
     export_q = _url_with_params(
         "/admin/export/payments.csv",
         **{
@@ -3771,9 +3896,23 @@ def admin_report_revenue(
             "date_to_val": (date_to or "")[:10],
             "paid_total": paid_total,
             "paid_count": int(paid_count),
+            "prev_period_label": prev_period_label,
+            "prev_paid_total": prev_paid_total,
+            "prev_paid_count": prev_paid_count,
+            "paid_delta_pct": paid_delta_pct,
+            "count_delta": count_delta,
+            "vat_rate_percent": vat_pct,
+            "vat_net": vat_breakdown["net"],
+            "vat_amount": vat_breakdown["vat"],
+            "product_rows": product_rows,
+            "success_rate_pct": success_rate_pct,
+            "pending_total_amt": pending_total_amt,
+            "pending_open_count": len(pending_open),
+            "pend_age_buckets": pend_age_buckets,
             "day_rows": day_rows,
             "method_rows": method_rows,
             "status_rows": status_rows,
+            "revenue_charts_json": revenue_charts_json,
             "export_payments_csv_url": export_q,
             "generated_at": _fmt_dt(utcnow_naive()),
         },
@@ -3948,6 +4087,66 @@ def admin_report_insights(
         round(total_active_bookings / total_sessions, 2) if total_sessions else 0.0
     )
 
+    now = utcnow_naive()
+    sessions_for_util = (
+        db.query(models.YogaSession)
+        .filter(*sess_filters)
+        .all()
+    )
+    sid_list = [x.id for x in sessions_for_util]
+    bk_active_by_sid: dict[int, int] = {}
+    if sid_list:
+        for sid, cnt in (
+            db.query(models.Booking.session_id, func.count(models.Booking.id))
+            .filter(
+                models.Booking.session_id.in_(sid_list),
+                models.Booking.status.in_(ACTIVE_BOOKING_STATUSES),
+            )
+            .group_by(models.Booking.session_id)
+            .all()
+        ):
+            bk_active_by_sid[sid] = int(cnt or 0)
+    util_pcts: list[float] = []
+    room_util: dict[str, list[float]] = defaultdict(list)
+    for s in sessions_for_util:
+        rm_u = rooms_by_id.get(s.room_id)
+        cap = rm_u.capacity if rm_u else 0
+        bct = bk_active_by_sid.get(s.id, 0)
+        if cap > 0:
+            u = 100.0 * bct / cap
+            util_pcts.append(u)
+            rn = rm_u.name if rm_u else "—"
+            room_util[rn].append(u)
+    avg_utilization_pct = round(sum(util_pcts) / len(util_pcts), 1) if util_pcts else 0.0
+    room_util_rows = [
+        {
+            "name": name,
+            "avg_util_pct": round(sum(vals) / len(vals), 1) if vals else 0.0,
+            "sessions_n": len(vals),
+        }
+        for name, vals in sorted(room_util.items(), key=lambda x: -len(x[1]))
+    ]
+
+    past_sess_ids = [s.id for s in sessions_for_util if s.starts_at < now]
+    attend_counts = {"attended": 0, "no_show": 0, "unknown": 0}
+    if past_sess_ids:
+        for cin, cnt in (
+            db.query(models.Booking.checked_in, func.count(models.Booking.id))
+            .filter(
+                models.Booking.session_id.in_(past_sess_ids),
+                models.Booking.status.in_(ACTIVE_BOOKING_STATUSES),
+            )
+            .group_by(models.Booking.checked_in)
+            .all()
+        ):
+            cni = int(cnt or 0)
+            if cin is True:
+                attend_counts["attended"] += cni
+            elif cin is False:
+                attend_counts["no_show"] += cni
+            else:
+                attend_counts["unknown"] += cni
+
     charts_payload = {
         "trainers": {
             "labels": [t["name"][:28] for t in trainer_merged[:12]],
@@ -3985,6 +4184,276 @@ def admin_report_insights(
             "trainer_rows": trainer_merged[:20],
             "room_rows": room_rows,
             "charts_json": charts_json,
+            "avg_utilization_pct": avg_utilization_pct,
+            "room_util_rows": room_util_rows,
+            "attend_counts": attend_counts,
+            "generated_at": _fmt_dt(utcnow_naive()),
+        },
+    )
+
+
+def _user_can_report_health(user: models.User) -> bool:
+    return _user_can_report_sessions(user) or _user_can_report_revenue(user)
+
+
+@router.get("/admin/reports/clients", response_class=HTMLResponse)
+def admin_report_clients(
+    request: Request,
+    period: str = "month",
+    date_from: str = "",
+    date_to: str = "",
+    db: Session = Depends(get_db),
+):
+    """عملاء جدد مقابل عائدون ضمن حجوزات الجلسات في الفترة."""
+    user, redirect = _require_admin_user_or_redirect(request, db)
+    if redirect:
+        return redirect
+    assert user is not None
+    if (user.role or "") == "trainer":
+        return RedirectResponse(
+            url=_url_with_params("/admin", msg=ADMIN_MSG_TRAINER_ADMIN_FORBIDDEN),
+            status_code=303,
+        )
+    if not _user_can_report_sessions(user):
+        return RedirectResponse(
+            url=_url_with_params("/admin", msg=ADMIN_MSG_REPORT_FORBIDDEN),
+            status_code=303,
+        )
+    cid = require_user_center_id(user)
+    center = db.get(models.Center, cid)
+    d0, d1, range_label, range_err = _report_period_to_range(period, date_from, date_to)
+    sess_filters = [
+        models.YogaSession.center_id == cid,
+        func.date(models.YogaSession.starts_at) >= d0,
+        func.date(models.YogaSession.starts_at) <= d1,
+    ]
+    active_client_ids = (
+        db.query(models.Booking.client_id)
+        .join(models.YogaSession, models.YogaSession.id == models.Booking.session_id)
+        .filter(*sess_filters, models.Booking.status.in_(ACTIVE_BOOKING_STATUSES))
+        .distinct()
+        .all()
+    )
+    cids_period = [r[0] for r in active_client_ids]
+    first_dates: dict[int, date] = {}
+    if cids_period:
+        for cid_row, fst in (
+            db.query(models.Booking.client_id, func.min(models.Booking.booked_at))
+            .filter(models.Booking.center_id == cid, models.Booking.client_id.in_(cids_period))
+            .group_by(models.Booking.client_id)
+            .all()
+        ):
+            if fst:
+                first_dates[cid_row] = fst.date() if isinstance(fst, datetime) else fst
+    new_clients = 0
+    returning_clients = 0
+    for cl_id in set(cids_period):
+        fd = first_dates.get(cl_id)
+        if not fd:
+            continue
+        if d0 <= fd <= d1:
+            new_clients += 1
+        else:
+            returning_clients += 1
+    distinct_booking_clients = len(set(cids_period))
+
+    return templates.TemplateResponse(
+        request,
+        "admin_report_clients.html",
+        {
+            "center": center,
+            "range_label": range_label or "الفترة",
+            "range_error": range_err,
+            "period": (period or "month").strip().lower(),
+            "date_from_val": (date_from or "")[:10],
+            "date_to_val": (date_to or "")[:10],
+            "new_clients": new_clients,
+            "returning_clients": returning_clients,
+            "distinct_booking_clients": distinct_booking_clients,
+            "generated_at": _fmt_dt(utcnow_naive()),
+        },
+    )
+
+
+@router.get("/admin/reports/subscriptions", response_class=HTMLResponse)
+def admin_report_subscriptions(
+    request: Request,
+    days: int = 30,
+    db: Session = Depends(get_db),
+):
+    """اشتراكات تنتهي قريباً مع حد الجلسات في الخطة."""
+    user, redirect = _require_admin_user_or_redirect(request, db)
+    if redirect:
+        return redirect
+    assert user is not None
+    if (user.role or "") == "trainer":
+        return RedirectResponse(
+            url=_url_with_params("/admin", msg=ADMIN_MSG_TRAINER_ADMIN_FORBIDDEN),
+            status_code=303,
+        )
+    if not _user_can_report_sessions(user):
+        return RedirectResponse(
+            url=_url_with_params("/admin", msg=ADMIN_MSG_REPORT_FORBIDDEN),
+            status_code=303,
+        )
+    cid = require_user_center_id(user)
+    center = db.get(models.Center, cid)
+    if days < 1 or days > 365:
+        days = 30
+    today = utcnow_naive().date()
+    horizon = today + timedelta(days=days)
+    rows_raw = (
+        db.query(models.ClientSubscription, models.Client, models.SubscriptionPlan)
+        .join(models.Client, models.Client.id == models.ClientSubscription.client_id)
+        .join(models.SubscriptionPlan, models.SubscriptionPlan.id == models.ClientSubscription.plan_id)
+        .filter(
+            models.Client.center_id == cid,
+            models.ClientSubscription.status == "active",
+            func.date(models.ClientSubscription.end_date) >= today,
+            func.date(models.ClientSubscription.end_date) <= horizon,
+        )
+        .order_by(models.ClientSubscription.end_date.asc())
+        .all()
+    )
+    sub_rows: list[dict[str, Any]] = []
+    for sub, client, plan in rows_raw:
+        sub_rows.append(
+            {
+                "id": sub.id,
+                "client_name": client.full_name,
+                "plan_name": plan.name,
+                "plan_type": plan.plan_type,
+                "session_limit": plan.session_limit,
+                "end_date_display": _fmt_dt(sub.end_date),
+                "end_date_d": sub.end_date.date() if isinstance(sub.end_date, datetime) else sub.end_date,
+            }
+        )
+
+    return templates.TemplateResponse(
+        request,
+        "admin_report_subscriptions.html",
+        {
+            "center": center,
+            "days": days,
+            "sub_rows": sub_rows,
+            "generated_at": _fmt_dt(utcnow_naive()),
+        },
+    )
+
+
+@router.get("/admin/reports/health", response_class=HTMLResponse)
+def admin_report_health(request: Request, db: Session = Depends(get_db)):
+    """مؤشرات تقنية وتشغيلية خفيفة للمركز."""
+    user, redirect = _require_admin_user_or_redirect(request, db)
+    if redirect:
+        return redirect
+    assert user is not None
+    if (user.role or "") == "trainer":
+        return RedirectResponse(
+            url=_url_with_params("/admin", msg=ADMIN_MSG_TRAINER_ADMIN_FORBIDDEN),
+            status_code=303,
+        )
+    if not _user_can_report_health(user):
+        return RedirectResponse(
+            url=_url_with_params("/admin", msg=ADMIN_MSG_REPORT_FORBIDDEN),
+            status_code=303,
+        )
+    cid = require_user_center_id(user)
+    center = db.get(models.Center, cid)
+    today = utcnow_naive().date()
+    d7 = today - timedelta(days=7)
+    d30 = today - timedelta(days=30)
+
+    def _failed_count(since: date) -> int:
+        return int(
+            db.query(func.count(models.Payment.id))
+            .filter(
+                models.Payment.center_id == cid,
+                models.Payment.status == "failed",
+                func.date(models.Payment.paid_at) >= since,
+                func.date(models.Payment.paid_at) <= today,
+            )
+            .scalar()
+            or 0
+        )
+
+    failed_7d = _failed_count(d7)
+    failed_30d = _failed_count(d30)
+    pending_n = int(
+        db.query(func.count(models.Payment.id))
+        .filter(
+            models.Payment.center_id == cid,
+            models.Payment.status.in_(("pending", "pending_payment")),
+        )
+        .scalar()
+        or 0
+    )
+    blocked_ips = int(
+        db.query(func.count(models.BlockedIP.id)).filter(models.BlockedIP.is_active.is_(True)).scalar() or 0
+    )
+
+    return templates.TemplateResponse(
+        request,
+        "admin_report_health.html",
+        {
+            "center": center,
+            "failed_7d": failed_7d,
+            "failed_30d": failed_30d,
+            "pending_payments_open": pending_n,
+            "blocked_ips_active": blocked_ips,
+            "generated_at": _fmt_dt(utcnow_naive()),
+        },
+    )
+
+
+@router.get("/admin/reports/security-audit", response_class=HTMLResponse)
+def admin_report_security_audit(
+    request: Request,
+    period: str = "month",
+    date_from: str = "",
+    date_to: str = "",
+    audit_event_type: str = "",
+    audit_status: str = "",
+    db: Session = Depends(get_db),
+):
+    user, redirect = _require_admin_user_or_redirect(request, db)
+    if redirect:
+        return redirect
+    assert user is not None
+    if not user_has_permission(user, "security.audit"):
+        return _security_owner_forbidden_redirect()
+    d0, d1, range_label, range_err = _report_period_to_range(period, date_from, date_to)
+    q = db.query(models.SecurityAuditEvent).filter(
+        func.date(models.SecurityAuditEvent.created_at) >= d0,
+        func.date(models.SecurityAuditEvent.created_at) <= d1,
+    )
+    if audit_event_type.strip():
+        q = q.filter(models.SecurityAuditEvent.event_type == audit_event_type.strip())
+    if audit_status.strip():
+        q = q.filter(models.SecurityAuditEvent.status == audit_status.strip())
+    events = q.order_by(models.SecurityAuditEvent.created_at.desc()).limit(400).all()
+    csv_url = _url_with_params(
+        "/admin/security/export/csv",
+        **{
+            "audit_date_from": d0.isoformat(),
+            "audit_date_to": d1.isoformat(),
+            **({"audit_event_type": audit_event_type.strip()} if audit_event_type.strip() else {}),
+            **({"audit_status": audit_status.strip()} if audit_status.strip() else {}),
+        },
+    )
+    return templates.TemplateResponse(
+        request,
+        "admin_report_security_audit.html",
+        {
+            "range_label": range_label or "الفترة",
+            "range_error": range_err,
+            "period": (period or "month").strip().lower(),
+            "date_from_val": (date_from or "")[:10],
+            "date_to_val": (date_to or "")[:10],
+            "audit_event_type": audit_event_type.strip(),
+            "audit_status": audit_status.strip(),
+            "events": events,
+            "csv_url": csv_url,
             "generated_at": _fmt_dt(utcnow_naive()),
         },
     )
@@ -4143,6 +4612,8 @@ def export_security_events_csv(
     audit_status: str = "",
     audit_email: str = "",
     audit_ip: str = "",
+    audit_date_from: str = "",
+    audit_date_to: str = "",
     db: Session = Depends(get_db),
 ):
     user, redirect = _require_admin_user_or_redirect(request, db)
@@ -4153,6 +4624,12 @@ def export_security_events_csv(
         return _security_owner_forbidden_redirect()
 
     query = db.query(models.SecurityAuditEvent)
+    df = _parse_optional_date_str(audit_date_from.strip() or None)
+    dt = _parse_optional_date_str(audit_date_to.strip() or None)
+    if df:
+        query = query.filter(func.date(models.SecurityAuditEvent.created_at) >= df)
+    if dt:
+        query = query.filter(func.date(models.SecurityAuditEvent.created_at) <= dt)
     if audit_event_type.strip():
         query = query.filter(models.SecurityAuditEvent.event_type == audit_event_type.strip())
     if audit_status.strip():
@@ -5402,6 +5879,7 @@ def public_subscribe(
         currency="SAR",
         payment_method=f"subscription_{plan.plan_type}",
         status="pending",
+        created_at=utcnow_naive(),
     )
     db.add(payment_row)
     db.commit()

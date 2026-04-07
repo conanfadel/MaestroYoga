@@ -94,6 +94,7 @@ try:
     )
     from .web_ui import router as web_ui_router
     from .tenant_utils import require_user_center_id
+    from .time_utils import utcnow_naive
 except ImportError:
     from backend.app import models, schemas
     from backend.app.booking_utils import count_active_bookings
@@ -124,6 +125,7 @@ except ImportError:
     )
     from backend.app.web_ui import router as web_ui_router
     from backend.app.tenant_utils import require_user_center_id
+    from backend.app.time_utils import utcnow_naive
 
 load_dotenv()
 logger = logging.getLogger(__name__)
@@ -495,6 +497,7 @@ def create_payment(
         **payload.model_dump(),
         provider_ref=provider_result.provider_ref,
         status=provider_result.status,
+        created_at=utcnow_naive(),
     )
     db.add(payment)
     db.commit()
@@ -531,6 +534,7 @@ def create_checkout_session(
         currency=payload.currency.upper(),
         payment_method=pm,
         status="pending",
+        created_at=utcnow_naive(),
     )
     db.add(payment)
     db.commit()

@@ -8,8 +8,9 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="/static/css/admin-dashboard.css" />
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js" crossorigin="anonymous"></script>
 </head>
-<body class="report-run-sheet">
+<body class="report-run-sheet report-revenue">
   <header class="report-run-sheet__toolbar no-print">
     <a class="soft-link" href="/admin#section-reports">← العودة إلى التقارير</a>
     <span class="report-run-sheet__toolbar-gap"></span>
@@ -24,8 +25,14 @@
   </header>
 
   <main class="report-run-sheet__main">
+    <div class="report-run-sheet__brand">
+      <div>
+        <p class="report-run-sheet__brand-title">{{ center.name if center else 'المركز' }}</p>
+        <p class="report-run-sheet__brand-sub">تقرير الإيرادات والمدفوعات — مقارنة، ضريبة تقديرية، مخططات</p>
+      </div>
+    </div>
     <h1 class="admin-booking-block-heading admin-booking-block-heading--flush-top">تقرير الإيرادات والمدفوعات</h1>
-    <p class="report-run-sheet__meta"><strong>{{ center.name if center else 'المركز' }}</strong> — {{ range_label }} — أُنشئ في {{ generated_at }}</p>
+    <p class="report-run-sheet__meta"><strong>{{ range_label }}</strong> — أُنشئ في {{ generated_at }}</p>
     {% if range_error %}
     <p class="alert warn">{{ range_error }}</p>
     {% endif %}
@@ -40,6 +47,56 @@
     <div class="report-run-sheet__kpis">
       <div class="stat"><div class="k">إجمالي مدفوع (حالة: مدفوع)</div><div class="v">{{ '%.2f'|format(paid_total) }} SAR</div></div>
       <div class="stat"><div class="k">عدد عمليات مدفوعة</div><div class="v">{{ paid_count }}</div></div>
+      <div class="stat"><div class="k">الفترة السابقة (نفس الطول)</div><div class="v small">{{ prev_period_label }}</div></div>
+      <div class="stat"><div class="k">مدفوع سابق</div><div class="v">{{ '%.2f'|format(prev_paid_total) }} SAR</div></div>
+      <div class="stat"><div class="k">تغيّر الإيراد</div><div class="v">{% if paid_delta_pct is not none %}{{ paid_delta_pct }}%{% else %}—{% endif %}</div></div>
+      <div class="stat"><div class="k">فرق العدد</div><div class="v">{{ count_delta }}</div></div>
+    </div>
+
+    <h2 class="admin-booking-block-heading admin-booking-block-heading--compact">تقدير ضريبة القيمة المضافة (السعر يُفترض شاملاً للضريبة)</h2>
+    <p class="small" style="margin:0 0 10px;">اضبط النسبة عبر متغير البيئة <code>VAT_RATE_PERCENT</code> (الحالية {{ '%.1f'|format(vat_rate_percent) }}٪)؛ هذا عرض محاسبي وليس إقراراً ضريبياً.</p>
+    <div class="report-run-sheet__kpis">
+      <div class="stat"><div class="k">صافٍ تقديري</div><div class="v">{{ '%.2f'|format(vat_net) }} SAR</div></div>
+      <div class="stat"><div class="k">ضريبة تقديرية</div><div class="v">{{ '%.2f'|format(vat_amount) }} SAR</div></div>
+    </div>
+
+    <h2 class="admin-booking-block-heading admin-booking-block-heading--compact">حسب مصدر الدفع (مدفوع فقط)</h2>
+    <div class="table-fluid">
+      <table>
+        <thead><tr><th>الفئة</th><th>العدد</th><th>المبلغ (SAR)</th></tr></thead>
+        <tbody>
+          {% for r in product_rows %}
+          <tr><td>{{ r.label }}</td><td>{{ r.count }}</td><td>{{ '%.2f'|format(r.amount) }}</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+
+    <h2 class="admin-booking-block-heading admin-booking-block-heading--compact">معدل إتمام الدفع في الفترة</h2>
+    <p class="small">من إجمالي الحالات المنتهية تقريباً (مدفوع + فاشل + معلّق): <strong>{{ success_rate_pct }}%</strong> مدفوع.</p>
+
+    <h2 class="admin-booking-block-heading admin-booking-block-heading--compact">المعلّقات المفتوحة — عمر الانتظار (كل الأوقات)</h2>
+    <p class="small">إجمالي المبالغ المعلّقة: <strong>{{ '%.2f'|format(pending_total_amt) }} SAR</strong> — <strong>{{ pending_open_count }}</strong> عملية.</p>
+    <div class="table-fluid">
+      <table>
+        <thead><tr><th>الفئة العمرية</th><th>العدد</th><th>المبلغ (SAR)</th></tr></thead>
+        <tbody>
+          <tr><td>٠–١ يوم</td><td>{{ pend_age_buckets['0_1'].n }}</td><td>{{ '%.2f'|format(pend_age_buckets['0_1'].amt) }}</td></tr>
+          <tr><td>٢–٧ أيام</td><td>{{ pend_age_buckets['2_7'].n }}</td><td>{{ '%.2f'|format(pend_age_buckets['2_7'].amt) }}</td></tr>
+          <tr><td>٨+ أيام</td><td>{{ pend_age_buckets['8p'].n }}</td><td>{{ '%.2f'|format(pend_age_buckets['8p'].amt) }}</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="report-revenue__charts no-print">
+      <div class="report-insights__chart-card">
+        <h2 class="admin-booking-block-heading admin-booking-block-heading--compact">الإيراد اليومي (مدفوع)</h2>
+        <canvas id="chartRevenueDaily" height="140" aria-label="إيراد يومي"></canvas>
+      </div>
+      <div class="report-insights__chart-card">
+        <h2 class="admin-booking-block-heading admin-booking-block-heading--compact">حسب طريقة الدفع (مبلغ)</h2>
+        <canvas id="chartRevenueMethods" height="140" aria-label="طرق الدفع"></canvas>
+      </div>
     </div>
 
     <h2 class="admin-booking-block-heading admin-booking-block-heading--compact">حسب اليوم (مدفوع فقط)</h2>
@@ -85,8 +142,36 @@
     </div>
     <p class="small report-run-sheet__footnote">المدفوعات تُفلتر بتاريخ <code>paid_at</code> كما في بقية لوحة الإدارة.</p>
   </main>
+  <script type="application/json" id="revenue-charts-data">{{ revenue_charts_json | safe }}</script>
   <script>
     document.getElementById("report-print-btn").addEventListener("click", function () { window.print(); });
+    (function () {
+      var el = document.getElementById("revenue-charts-data");
+      if (!el || !window.Chart) return;
+      var payload = {};
+      try { payload = JSON.parse(el.textContent || "{}"); } catch (e) { return; }
+      var common = { responsive: true, maintainAspectRatio: false };
+      if (payload.daily && payload.daily.labels && payload.daily.labels.length) {
+        new Chart(document.getElementById("chartRevenueDaily"), {
+          type: "line",
+          data: {
+            labels: payload.daily.labels,
+            datasets: [{ label: "SAR", data: payload.daily.data, borderColor: "#2d6874", tension: 0.2 }]
+          },
+          options: common
+        });
+      }
+      if (payload.methods && payload.methods.labels && payload.methods.labels.length) {
+        new Chart(document.getElementById("chartRevenueMethods"), {
+          type: "bar",
+          data: {
+            labels: payload.methods.labels,
+            datasets: [{ label: "SAR", data: payload.methods.data, backgroundColor: "rgba(197, 160, 89, 0.55)" }]
+          },
+          options: { ...common, indexAxis: "y" }
+        });
+      }
+    })();
   </script>
 </body>
 </html>

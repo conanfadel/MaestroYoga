@@ -22,8 +22,14 @@
   </header>
 
   <main class="report-run-sheet__main">
+    <div class="report-run-sheet__brand">
+      <div>
+        <p class="report-run-sheet__brand-title">{{ center.name if center else 'المركز' }}</p>
+        <p class="report-run-sheet__brand-sub">رؤى تشغيلية — إشغال، حضور، مخططات</p>
+      </div>
+    </div>
     <h1 class="admin-booking-block-heading admin-booking-block-heading--flush-top">رؤى تشغيلية</h1>
-    <p class="report-run-sheet__meta"><strong>{{ center.name if center else 'المركز' }}</strong> — {{ range_label }} — أُنشئ في {{ generated_at }}</p>
+    <p class="report-run-sheet__meta">{{ range_label }} — أُنشئ في {{ generated_at }}</p>
     {% if range_error %}
     <p class="alert warn">{{ range_error }}</p>
     {% endif %}
@@ -40,6 +46,22 @@
       <div class="stat"><div class="k">حجوزات نشطة (في جلسات الفترة)</div><div class="v">{{ total_active_bookings }}</div></div>
       <div class="stat"><div class="k">متوسط حجز/جلسة</div><div class="v">{{ '%.2f'|format(avg_bookings_per_session) }}</div></div>
       <div class="stat"><div class="k">نسبة الإلغاء</div><div class="v">{{ cancel_rate }}% <span class="small">({{ cancelled_bookings }} ملغاة)</span></div></div>
+      <div class="stat"><div class="k">متوسط إشغال السعة (جلسات بسعة &gt; 0)</div><div class="v">{{ '%.1f'|format(avg_utilization_pct) }}%</div></div>
+    </div>
+    <h2 class="admin-booking-block-heading admin-booking-block-heading--compact">حضور الجلسات الماضية (حجوزات نشطة)</h2>
+    <p class="small" style="margin:0 0 10px;">حضر: <strong>{{ attend_counts.attended }}</strong> — تغيّب مسجّل: <strong>{{ attend_counts.no_show }}</strong> — غير مسجّل: <strong>{{ attend_counts.unknown }}</strong> (سجّل الحضور من واجهة الإدارة عند توفرها).</p>
+    <h2 class="admin-booking-block-heading admin-booking-block-heading--compact">متوسط الإشغال حسب الغرفة</h2>
+    <div class="table-fluid">
+      <table>
+        <thead><tr><th>الغرفة</th><th>جلسات</th><th>متوسط الإشغال %</th></tr></thead>
+        <tbody>
+          {% for r in room_util_rows %}
+          <tr><td>{{ r.name }}</td><td>{{ r.sessions_n }}</td><td>{{ '%.1f'|format(r.avg_util_pct) }}</td></tr>
+          {% else %}
+          <tr><td colspan="3">لا بيانات.</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
     </div>
 
     <div class="report-insights__charts no-print">

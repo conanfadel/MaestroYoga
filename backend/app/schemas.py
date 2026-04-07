@@ -210,5 +210,6 @@ class PaymentOut(BaseModel):
     provider_ref: Optional[str] = None
     status: str
     paid_at: datetime
+    created_at: Optional[datetime] = None
 
     model_config = ConfigDict(from_attributes=True)

@@ -85,9 +85,16 @@ def migrate_schema() -> None:
     insp = inspect(engine)
     has_payments = insp.has_table("payments")
     needs_payment_booking_id = False
+    needs_payment_created_at = False
     if has_payments:
         payment_cols = {c["name"] for c in insp.get_columns("payments")}
         needs_payment_booking_id = "booking_id" not in payment_cols
+        needs_payment_created_at = "created_at" not in payment_cols
+
+    needs_booking_checked_in = False
+    if insp.has_table("bookings"):
+        booking_cols = {c["name"] for c in insp.get_columns("bookings")}
+        needs_booking_checked_in = "checked_in" not in booking_cols
 
     needs_public_user_phone = False
     needs_public_user_is_deleted = False
@@ -157,6 +164,8 @@ def migrate_schema() -> None:
         and not needs_center_index_config_json
         and not needs_users_custom_role_label
         and not needs_users_permissions_json
+        and not needs_booking_checked_in
+        and not needs_payment_created_at
     ):
         with engine.begin() as conn:
             _cleanup_stale_center_logo_urls_sql(conn)
@@ -214,6 +223,14 @@ def migrate_schema() -> None:
             conn.execute(text("ALTER TABLE users ADD COLUMN custom_role_label VARCHAR(120)"))
         if needs_users_permissions_json:
             conn.execute(text("ALTER TABLE users ADD COLUMN permissions_json TEXT"))
+        if needs_booking_checked_in:
+            conn.execute(text("ALTER TABLE bookings ADD COLUMN checked_in BOOLEAN"))
+        if needs_payment_created_at:
+            if dialect == "postgresql":
+                conn.execute(text("ALTER TABLE payments ADD COLUMN created_at TIMESTAMP"))
+            else:
+                conn.execute(text("ALTER TABLE payments ADD COLUMN created_at DATETIME"))
+            conn.execute(text("UPDATE payments SET created_at = paid_at WHERE created_at IS NULL"))
         _cleanup_stale_center_logo_urls_sql(conn)
         _clear_legacy_default_hero_url(conn, inspect(conn))
         _ensure_performance_indexes(conn, insp)

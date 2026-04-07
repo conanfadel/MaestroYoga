@@ -21,8 +21,14 @@
   </header>
 
   <main class="report-run-sheet__main">
+    <div class="report-run-sheet__brand">
+      <div>
+        <p class="report-run-sheet__brand-title">{{ center.name if center else 'المركز' }}</p>
+        <p class="report-run-sheet__brand-sub">تقرير الجلسات — إشغال مقابل السعة</p>
+      </div>
+    </div>
     <h1 class="admin-booking-block-heading admin-booking-block-heading--flush-top">تقرير الجلسات</h1>
-    <p class="report-run-sheet__meta"><strong>{{ center.name if center else 'المركز' }}</strong> — {{ range_label }} — أُنشئ في {{ generated_at }}</p>
+    <p class="report-run-sheet__meta">{{ range_label }} — أُنشئ في {{ generated_at }}</p>
     {% if range_error %}
     <p class="alert warn">{{ range_error }}</p>
     {% endif %}
@@ -47,6 +53,7 @@
             <th>الغرفة</th>
             <th>سعة</th>
             <th>حجوزات نشطة</th>
+            <th>إشغال %</th>
             <th>ملغاة</th>
             <th>متبقٍ</th>
             <th>سعر الحضور</th>
@@ -64,12 +71,13 @@
             <td>{{ row.room_name }}</td>
             <td>{{ row.capacity }}</td>
             <td>{{ row.bookings_active }}</td>
+            <td>{% if row.utilization_pct is not none %}{{ row.utilization_pct }}%{% else %}—{% endif %}</td>
             <td>{{ row.bookings_cancelled }}</td>
             <td>{{ row.spots_free }}</td>
             <td>{{ '%.2f'|format(row.price_drop_in) }}</td>
           </tr>
           {% else %}
-          <tr><td colspan="12">لا توجد جلسات في هذه الفترة.</td></tr>
+          <tr><td colspan="13">لا توجد جلسات في هذه الفترة.</td></tr>
           {% endfor %}
         </tbody>
       </table>

@@ -211,6 +211,8 @@ class Booking(Base):
     # booked legacy | confirmed paid or staff | pending_payment awaiting payment | cancelled
     status = Column(String, default="booked", index=True)
     booked_at = Column(DateTime, default=utcnow_naive, index=True)
+    # حضور: NULL لم يُسجَّل بعد، True حضر، False تغيّب (للجلسات الماضية)
+    checked_in = Column(Boolean, nullable=True)
 
     session = relationship("YogaSession", back_populates="bookings")
     client = relationship("Client", back_populates="bookings")
@@ -230,6 +232,7 @@ class Payment(Base):
     provider_ref = Column(String, nullable=True)
     status = Column(String, default="paid", index=True)
     paid_at = Column(DateTime, default=utcnow_naive, index=True)
+    created_at = Column(DateTime, default=utcnow_naive, index=True)
 
     client = relationship("Client", back_populates="payments")
     booking = relationship("Booking", back_populates="payments")

@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>تدقيق أمني — Maestro</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/static/css/admin-dashboard.css" />
+</head>
+<body class="report-run-sheet">
+  <header class="report-run-sheet__toolbar no-print">
+    <a class="soft-link" href="/admin#section-reports">← العودة إلى التقارير</a>
+    <span class="report-run-sheet__toolbar-gap"></span>
+    <a class="soft-link" href="/admin/reports/security-audit?period=today">اليوم</a>
+    <a class="soft-link" href="/admin/reports/security-audit?period=week">أسبوع</a>
+    <a class="soft-link" href="/admin/reports/security-audit?period=month">شهر</a>
+    <a class="soft-link" href="{{ csv_url }}">تصدير CSV (نفس الفلاتر)</a>
+    <button type="button" class="secondary" id="report-print-btn">طباعة / حفظ PDF</button>
+  </header>
+
+  <main class="report-run-sheet__main">
+    <div class="report-run-sheet__brand">
+      <div>
+        <p class="report-run-sheet__brand-title">تدقيق أمني</p>
+        <p class="report-run-sheet__brand-sub">عرض تفاعلي مع فلترة زمنية — آخر ٤٠٠ حدث</p>
+      </div>
+    </div>
+    <h1 class="admin-booking-block-heading admin-booking-block-heading--flush-top">سجل الأحداث</h1>
+    <p class="report-run-sheet__meta"><strong>{{ range_label }}</strong> — أُنشئ في {{ generated_at }}</p>
+    {% if range_error %}
+    <p class="alert warn">{{ range_error }}</p>
+    {% endif %}
+
+    <form method="get" action="/admin/reports/security-audit" class="report-run-sheet__filter no-print">
+      <input type="hidden" name="period" value="custom" />
+      <label>من <input type="date" name="date_from" value="{{ date_from_val }}" required /></label>
+      <label>إلى <input type="date" name="date_to" value="{{ date_to_val }}" required /></label>
+      <label>نوع الحدث <input type="text" name="audit_event_type" value="{{ audit_event_type }}" placeholder="اختياري" /></label>
+      <label>الحالة <input type="text" name="audit_status" value="{{ audit_status }}" placeholder="اختياري" /></label>
+      <button type="submit">تطبيق</button>
+    </form>
+
+    <div class="table-fluid">
+      <table class="table-card-rwd">
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>الوقت</th>
+            <th>النوع</th>
+            <th>الحالة</th>
+            <th>البريد</th>
+            <th>IP</th>
+            <th>المسار</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for ev in events %}
+          <tr>
+            <td>{{ ev.id }}</td>
+            <td>{{ ev.created_at }}</td>
+            <td>{{ ev.event_type }}</td>
+            <td>{{ ev.status }}</td>
+            <td>{{ ev.email or '—' }}</td>
+            <td>{{ ev.ip or '—' }}</td>
+            <td class="small">{{ ev.path or '—' }}</td>
+          </tr>
+          {% else %}
+          <tr><td colspan="7">لا توجد أحداث في هذه الفترة.</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </main>
+  <script>
+    document.getElementById("report-print-btn").addEventListener("click", function () { window.print(); });
+  </script>
+</body>
+</html>

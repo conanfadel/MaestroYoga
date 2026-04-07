@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>تقرير العملاء — {{ center.name if center else 'المركز' }}</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/static/css/admin-dashboard.css" />
+</head>
+<body class="report-run-sheet">
+  <header class="report-run-sheet__toolbar no-print">
+    <a class="soft-link" href="/admin#section-reports">← العودة إلى التقارير</a>
+    <span class="report-run-sheet__toolbar-gap"></span>
+    <a class="soft-link" href="/admin/reports/clients?period=today">اليوم</a>
+    <a class="soft-link" href="/admin/reports/clients?period=week">الأسبوع</a>
+    <a class="soft-link" href="/admin/reports/clients?period=month">الشهر</a>
+    <a class="soft-link" href="/admin/reports/clients?period=year">السنة</a>
+    <button type="button" class="secondary" id="report-print-btn">طباعة / حفظ PDF</button>
+  </header>
+
+  <main class="report-run-sheet__main">
+    <div class="report-run-sheet__brand">
+      <div>
+        <p class="report-run-sheet__brand-title">{{ center.name if center else 'المركز' }}</p>
+        <p class="report-run-sheet__brand-sub">تقرير العملاء — جدد مقابل عائدون (حسب أول حجز مسجّل)</p>
+      </div>
+    </div>
+    <h1 class="admin-booking-block-heading admin-booking-block-heading--flush-top">تقرير العملاء</h1>
+    <p class="report-run-sheet__meta"><strong>{{ range_label }}</strong> — أُنشئ في {{ generated_at }}</p>
+    {% if range_error %}
+    <p class="alert warn">{{ range_error }}</p>
+    {% endif %}
+
+    <form method="get" action="/admin/reports/clients" class="report-run-sheet__filter no-print">
+      <input type="hidden" name="period" value="custom" />
+      <label>من <input type="date" name="date_from" value="{{ date_from_val }}" required /></label>
+      <label>إلى <input type="date" name="date_to" value="{{ date_to_val }}" required /></label>
+      <button type="submit">عرض النطاق</button>
+    </form>
+
+    <div class="report-run-sheet__kpis">
+      <div class="stat"><div class="k">عملاء بحجز نشط في الفترة (فريد)</div><div class="v">{{ distinct_booking_clients }}</div></div>
+      <div class="stat"><div class="k">جدد (أول حجز لهم ضمن الفترة)</div><div class="v">{{ new_clients }}</div></div>
+      <div class="stat"><div class="k">عائدون (سبق لهم حجز قبل الفترة)</div><div class="v">{{ returning_clients }}</div></div>
+    </div>
+    <p class="small report-run-sheet__footnote">يُستند إلى أقل تاريخ <code>booked_at</code> لكل عميل في المركز، مقابل جلسات ضمن الفترة المختارة.</p>
+  </main>
+  <script>
+    document.getElementById("report-print-btn").addEventListener("click", function () { window.print(); });
+  </script>
+</body>
+</html>

@@ -2224,6 +2224,42 @@ body.report-run-sheet {
   margin-top: 14px;
   color: var(--charcoal-muted);
 }
+.report-run-sheet__brand {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 10px 12px;
+  margin-bottom: 14px;
+  border-radius: 12px;
+  border: 1px solid rgba(197, 160, 89, 0.28);
+  background: rgba(255, 255, 255, 0.72);
+}
+.report-run-sheet__brand-title {
+  font-weight: 800;
+  font-size: 1.1rem;
+  margin: 0;
+}
+.report-run-sheet__brand-sub {
+  margin: 4px 0 0;
+  font-size: 0.82rem;
+  color: var(--charcoal-muted);
+  line-height: 1.45;
+}
+.report-revenue__charts {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+  margin: 16px 0 20px;
+}
+@media (max-width: 900px) {
+  .report-revenue__charts {
+    grid-template-columns: 1fr;
+  }
+}
+html[data-theme="dark"] .report-run-sheet__brand {
+  background: rgba(20, 24, 31, 0.85);
+  border-color: rgba(197, 160, 89, 0.32);
+}
 .report-insights__kpis {
   display: flex;
   flex-wrap: wrap;
