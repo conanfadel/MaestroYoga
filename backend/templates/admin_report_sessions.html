@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>تقرير الجلسات — {{ center.name if center else 'المركز' }}</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/static/css/admin-dashboard.css" />
+</head>
+<body class="report-run-sheet">
+  <header class="report-run-sheet__toolbar no-print">
+    <a class="soft-link" href="/admin#section-reports">← العودة إلى التقارير</a>
+    <span class="report-run-sheet__toolbar-gap"></span>
+    <a class="soft-link" href="/admin/reports/sessions?period=today">اليوم</a>
+    <a class="soft-link" href="/admin/reports/sessions?period=week">هذا الأسبوع</a>
+    <a class="soft-link" href="/admin/reports/sessions?period=month">هذا الشهر</a>
+    <button type="button" class="secondary" id="report-print-btn">طباعة / حفظ PDF</button>
+  </header>
+
+  <main class="report-run-sheet__main">
+    <h1 class="admin-booking-block-heading admin-booking-block-heading--flush-top">تقرير الجلسات</h1>
+    <p class="report-run-sheet__meta"><strong>{{ center.name if center else 'المركز' }}</strong> — {{ range_label }} — أُنشئ في {{ generated_at }}</p>
+    {% if range_error %}
+    <p class="alert warn">{{ range_error }}</p>
+    {% endif %}
+
+    <form method="get" action="/admin/reports/sessions" class="report-run-sheet__filter no-print">
+      <input type="hidden" name="period" value="custom" />
+      <label>من <input type="date" name="date_from" value="{{ date_from_val }}" required /></label>
+      <label>إلى <input type="date" name="date_to" value="{{ date_to_val }}" required /></label>
+      <button type="submit">عرض النطاق</button>
+    </form>
+
+    <div class="table-fluid" style="margin-top:12px;">
+      <table class="table-card-rwd">
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>العنوان</th>
+            <th>المدرّب</th>
+            <th>المستوى</th>
+            <th>البداية</th>
+            <th>الدقائق</th>
+            <th>الغرفة</th>
+            <th>سعة</th>
+            <th>حجوزات نشطة</th>
+            <th>ملغاة</th>
+            <th>متبقٍ</th>
+            <th>سعر الحضور</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for row in session_rows %}
+          <tr>
+            <td>{{ row.id }}</td>
+            <td>{{ row.title }}</td>
+            <td>{{ row.trainer_name }}</td>
+            <td>{{ row.level_label }}</td>
+            <td>{{ row.starts_at_display }}</td>
+            <td>{{ row.duration_minutes }}</td>
+            <td>{{ row.room_name }}</td>
+            <td>{{ row.capacity }}</td>
+            <td>{{ row.bookings_active }}</td>
+            <td>{{ row.bookings_cancelled }}</td>
+            <td>{{ row.spots_free }}</td>
+            <td>{{ '%.2f'|format(row.price_drop_in) }}</td>
+          </tr>
+          {% else %}
+          <tr><td colspan="12">لا توجد جلسات في هذه الفترة.</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    <p class="small report-run-sheet__footnote">يُحسب «اليوم» و«الأسبوع» و«الشهر» وفق تاريخ الخادم المخزّن للجلسات (يتوافق مع لوحة الإدارة الحالية).</p>
+  </main>
+  <script>
+    document.getElementById("report-print-btn").addEventListener("click", function () { window.print(); });
+  </script>
+</body>
+</html>

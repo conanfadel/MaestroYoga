@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>تقرير الإيرادات — {{ center.name if center else 'المركز' }}</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/static/css/admin-dashboard.css" />
+</head>
+<body class="report-run-sheet">
+  <header class="report-run-sheet__toolbar no-print">
+    <a class="soft-link" href="/admin#section-reports">← العودة إلى التقارير</a>
+    <span class="report-run-sheet__toolbar-gap"></span>
+    <a class="soft-link" href="/admin/reports/revenue?period=today">اليوم</a>
+    <a class="soft-link" href="/admin/reports/revenue?period=week">هذا الأسبوع</a>
+    <a class="soft-link" href="/admin/reports/revenue?period=month">هذا الشهر</a>
+    {% if export_payments_csv_url %}
+    <a class="soft-link" href="{{ export_payments_csv_url }}">تصدير CSV للمدفوعات (نفس الفترة)</a>
+    {% endif %}
+    <button type="button" class="secondary" id="report-print-btn">طباعة / حفظ PDF</button>
+  </header>
+
+  <main class="report-run-sheet__main">
+    <h1 class="admin-booking-block-heading admin-booking-block-heading--flush-top">تقرير الإيرادات والمدفوعات</h1>
+    <p class="report-run-sheet__meta"><strong>{{ center.name if center else 'المركز' }}</strong> — {{ range_label }} — أُنشئ في {{ generated_at }}</p>
+    {% if range_error %}
+    <p class="alert warn">{{ range_error }}</p>
+    {% endif %}
+
+    <form method="get" action="/admin/reports/revenue" class="report-run-sheet__filter no-print">
+      <input type="hidden" name="period" value="custom" />
+      <label>من <input type="date" name="date_from" value="{{ date_from_val }}" required /></label>
+      <label>إلى <input type="date" name="date_to" value="{{ date_to_val }}" required /></label>
+      <button type="submit">عرض النطاق</button>
+    </form>
+
+    <div class="report-run-sheet__kpis">
+      <div class="stat"><div class="k">إجمالي مدفوع (حالة: مدفوع)</div><div class="v">{{ '%.2f'|format(paid_total) }} SAR</div></div>
+      <div class="stat"><div class="k">عدد عمليات مدفوعة</div><div class="v">{{ paid_count }}</div></div>
+    </div>
+
+    <h2 class="admin-booking-block-heading admin-booking-block-heading--compact">حسب اليوم (مدفوع فقط)</h2>
+    <div class="table-fluid">
+      <table>
+        <thead><tr><th>التاريخ</th><th>المبلغ (SAR)</th></tr></thead>
+        <tbody>
+          {% for r in day_rows %}
+          <tr><td>{{ r.d }}</td><td>{{ '%.2f'|format(r.amount) }}</td></tr>
+          {% else %}
+          <tr><td colspan="2">لا توجد مدفوعات في هذه الفترة.</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+
+    <h2 class="admin-booking-block-heading admin-booking-block-heading--compact">حسب طريقة الدفع (مدفوع فقط)</h2>
+    <div class="table-fluid">
+      <table>
+        <thead><tr><th>الطريقة</th><th>العدد</th><th>المبلغ (SAR)</th></tr></thead>
+        <tbody>
+          {% for r in method_rows %}
+          <tr><td>{{ r.method }}</td><td>{{ r.count }}</td><td>{{ '%.2f'|format(r.amount) }}</td></tr>
+          {% else %}
+          <tr><td colspan="3">—</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+
+    <h2 class="admin-booking-block-heading admin-booking-block-heading--compact">حسب حالة الدفع (كل الحالات في الفترة)</h2>
+    <div class="table-fluid">
+      <table>
+        <thead><tr><th>الحالة</th><th>العدد</th><th>مجموع المبالغ (SAR)</th></tr></thead>
+        <tbody>
+          {% for r in status_rows %}
+          <tr><td>{{ r.status }}</td><td>{{ r.count }}</td><td>{{ '%.2f'|format(r.amount) }}</td></tr>
+          {% else %}
+          <tr><td colspan="3">—</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    <p class="small report-run-sheet__footnote">المدفوعات تُفلتر بتاريخ <code>paid_at</code> كما في بقية لوحة الإدارة.</p>
+  </main>
+  <script>
+    document.getElementById("report-print-btn").addEventListener("click", function () { window.print(); });
+  </script>
+</body>
+</html>

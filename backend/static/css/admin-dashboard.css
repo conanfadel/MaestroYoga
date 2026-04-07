@@ -2157,3 +2157,83 @@ html[data-theme="dark"] .staff-perm-cb:checked {
     padding: 12px;
   }
 }
+
+/* صفحات تقارير الطباعة (/admin/reports/*) */
+.report-catalog-groups--flat {
+  max-height: none !important;
+  overflow: visible !important;
+  padding: 12px 14px 14px !important;
+}
+.report-live-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 10px;
+}
+body.report-run-sheet {
+  margin: 0;
+  padding: 16px;
+  min-height: 100vh;
+  background: var(--page-bg, #fafcfb);
+  color: var(--charcoal);
+}
+.report-run-sheet__toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 10px;
+  margin-bottom: 16px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid rgba(197, 160, 89, 0.25);
+}
+.report-run-sheet__toolbar-gap {
+  flex: 1 1 12px;
+  min-width: 0;
+}
+.report-run-sheet__main {
+  max-width: min(1100px, 100%);
+  margin-inline: auto;
+}
+.report-run-sheet__meta {
+  margin: 0 0 12px;
+  font-size: 0.9rem;
+  color: var(--charcoal-muted);
+  line-height: 1.55;
+}
+.report-run-sheet__filter {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 10px 14px;
+  margin-bottom: 12px;
+}
+.report-run-sheet__filter label {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 0.86rem;
+  font-weight: 700;
+}
+.report-run-sheet__kpis {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin: 12px 0 18px;
+}
+.report-run-sheet__footnote {
+  margin-top: 14px;
+  color: var(--charcoal-muted);
+}
+@media print {
+  .no-print {
+    display: none !important;
+  }
+  body.report-run-sheet {
+    background: #fff;
+    padding: 8px;
+  }
+  .report-run-sheet__main h1.admin-booking-block-heading {
+    box-shadow: none;
+    border: 1px solid #ccc;
+  }
+}

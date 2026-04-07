@@ -151,6 +151,7 @@ ALLOWED_ADMIN_RETURN_SECTIONS = frozenset(
         "section-loyalty",
         "section-staff-invite",
         "section-staff-roles",
+        "section-reports",
     }
 )
 
@@ -207,6 +208,7 @@ ADMIN_MSG_CENTER_LOYALTY_SAVED = "center_loyalty_saved"
 ADMIN_MSG_CENTER_LOYALTY_INVALID = "center_loyalty_invalid"
 ADMIN_MSG_CENTER_LOYALTY_BAD_NUMBER = "center_loyalty_bad_number"
 ADMIN_MSG_TRAINER_ADMIN_FORBIDDEN = "trainer_admin_forbidden"
+ADMIN_MSG_REPORT_FORBIDDEN = "report_forbidden"
 ADMIN_MSG_SECURITY_OWNER_ONLY = "security_owner_only"
 ADMIN_MSG_CENTER_POST_SAVED = "center_post_saved"
 ADMIN_MSG_CENTER_POST_DELETED = "center_post_deleted"
@@ -332,6 +334,7 @@ ADMIN_FLASH_MESSAGES: dict[str, tuple[str, str]] = {
     ADMIN_MSG_CENTER_LOYALTY_INVALID: ("إعدادات الولاء غير صالحة. يجب أن تكون عتبة البرونزي أقل من الفضي، والفضي أقل من الذهبي.", "warn"),
     ADMIN_MSG_CENTER_LOYALTY_BAD_NUMBER: ("أدخل أرقاماً صحيحة فقط لعتبات الجلسات، أو اترك الحقل فارغاً لاستخدام الافتراضي.", "warn"),
     ADMIN_MSG_TRAINER_ADMIN_FORBIDDEN: ("هذا الإجراء غير متاح لدور المدرب. يمكنك إدارة الجلسات من قسم «الجلسات والمدفوعات» فقط.", "warn"),
+    ADMIN_MSG_REPORT_FORBIDDEN: ("لا تملك صلاحية عرض هذا التقرير.", "warn"),
     ADMIN_MSG_SECURITY_OWNER_ONLY: ("قسم الأمان والتصدير الحساس متاح لمالك المركز فقط.", "warn"),
     ADMIN_MSG_CENTER_POST_SAVED: ("تم حفظ المنشور بنجاح.", "info"),
     ADMIN_MSG_CENTER_POST_DELETED: ("تم حذف المنشور.", "info"),
@@ -3414,6 +3417,16 @@ def admin_dashboard(
             "editing_post": editing_post,
             "center_post_type_choices": center_post_type_choices,
             "post_edit_id": safe_post_edit,
+            "perm_report_sessions": (
+                user_has_permission(user, "sessions.manage")
+                or user_has_permission(user, "reports.financial")
+                or user_has_permission(user, "dashboard.view")
+            ),
+            "perm_report_revenue": (
+                user_has_permission(user, "payments.records")
+                or user_has_permission(user, "reports.financial")
+                or user_has_permission(user, "dashboard.financial")
+            ),
         },
     )
 
@@ -3496,6 +3509,272 @@ def _admin_user_for_export_permission(
 def _utf8_bom_csv_content(output: io.StringIO) -> str:
     """BOM لعرض UTF-8 بشكل صحيح في Excel."""
     return "\ufeff" + output.getvalue()
+
+
+def _user_can_report_sessions(user: models.User) -> bool:
+    return user_has_permission(user, "sessions.manage") or user_has_permission(
+        user, "reports.financial"
+    ) or user_has_permission(user, "dashboard.view")
+
+
+def _user_can_report_revenue(user: models.User) -> bool:
+    return user_has_permission(user, "payments.records") or user_has_permission(
+        user, "reports.financial"
+    ) or user_has_permission(user, "dashboard.financial")
+
+
+def _report_period_to_range(
+    period: str,
+    date_from_s: str | None,
+    date_to_s: str | None,
+) -> tuple[date, date, str, str | None]:
+    """(start, end, label_ar, error_or_none). التواريخ حسب تخزين الخادم (نفس لوحة الإدارة)."""
+    today = utcnow_naive().date()
+    p = (period or "today").strip().lower()
+    if p == "today":
+        return today, today, "اليوم", None
+    if p == "week":
+        w0 = today - timedelta(days=today.weekday())
+        w6 = w0 + timedelta(days=6)
+        return w0, w6, "هذا الأسبوع (الإثنين–الأحد)", None
+    if p == "month":
+        first = today.replace(day=1)
+        if first.month == 12:
+            last = date(first.year, 12, 31)
+        else:
+            last = date(first.year, first.month + 1, 1) - timedelta(days=1)
+        return first, last, "هذا الشهر", None
+    if p == "custom":
+        a = _parse_optional_date_str(date_from_s)
+        b = _parse_optional_date_str(date_to_s)
+        if not a or not b or a > b:
+            return today, today, "", "أدخل تاريخ البداية والنهاية بصيغة YYYY-MM-DD ضمن فترة صحيحة."
+        return a, b, f"من {a.isoformat()} إلى {b.isoformat()}", None
+    return today, today, "اليوم", None
+
+
+def _payment_method_label_ar(method: str | None) -> str:
+    m = (method or "").strip()
+    return {
+        "in_app_mock": "وهمي / تجريبي",
+        "public_checkout": "دفع صفحة الحجز",
+        "public_cart_checkout": "دفع السلة العامة",
+    }.get(m, m or "—")
+
+
+@router.get("/admin/reports/sessions", response_class=HTMLResponse)
+def admin_report_sessions(
+    request: Request,
+    period: str = "today",
+    date_from: str = "",
+    date_to: str = "",
+    db: Session = Depends(get_db),
+):
+    user, redirect = _require_admin_user_or_redirect(request, db)
+    if redirect:
+        return redirect
+    assert user is not None
+    if (user.role or "") == "trainer":
+        return RedirectResponse(
+            url=_url_with_params("/admin", msg=ADMIN_MSG_TRAINER_ADMIN_FORBIDDEN),
+            status_code=303,
+        )
+    if not _user_can_report_sessions(user):
+        return RedirectResponse(
+            url=_url_with_params("/admin", msg=ADMIN_MSG_REPORT_FORBIDDEN),
+            status_code=303,
+        )
+    cid = require_user_center_id(user)
+    center = db.get(models.Center, cid)
+    d0, d1, range_label, range_err = _report_period_to_range(period, date_from, date_to)
+    rooms_by_id = {r.id: r for r in db.query(models.Room).filter(models.Room.center_id == cid).all()}
+    sessions = (
+        db.query(models.YogaSession)
+        .filter(
+            models.YogaSession.center_id == cid,
+            func.date(models.YogaSession.starts_at) >= d0,
+            func.date(models.YogaSession.starts_at) <= d1,
+        )
+        .order_by(models.YogaSession.starts_at.asc())
+        .all()
+    )
+    session_ids = [s.id for s in sessions]
+    booking_counts: dict[int, dict[str, int]] = defaultdict(lambda: {"active": 0, "cancelled": 0})
+    if session_ids:
+        for sid, st, cnt in (
+            db.query(models.Booking.session_id, models.Booking.status, func.count(models.Booking.id))
+            .filter(models.Booking.session_id.in_(session_ids))
+            .group_by(models.Booking.session_id, models.Booking.status)
+            .all()
+        ):
+            if st == "cancelled":
+                booking_counts[sid]["cancelled"] += int(cnt)
+            elif st in ACTIVE_BOOKING_STATUSES:
+                booking_counts[sid]["active"] += int(cnt)
+    level_labels = {
+        "beginner": "مبتدئ",
+        "intermediate": "متوسط",
+        "advanced": "متقدم",
+    }
+    session_rows: list[dict[str, Any]] = []
+    for s in sessions:
+        room = rooms_by_id.get(s.room_id)
+        bc = booking_counts.get(s.id, {"active": 0, "cancelled": 0})
+        cap = room.capacity if room else 0
+        spots = spots_available(db, s)
+        session_rows.append(
+            {
+                "id": s.id,
+                "title": s.title,
+                "trainer_name": s.trainer_name,
+                "level_label": level_labels.get(s.level, s.level),
+                "starts_at_display": _fmt_dt(s.starts_at),
+                "duration_minutes": s.duration_minutes,
+                "room_name": room.name if room else "—",
+                "capacity": cap,
+                "bookings_active": bc["active"],
+                "bookings_cancelled": bc["cancelled"],
+                "spots_free": spots,
+                "price_drop_in": s.price_drop_in,
+            }
+        )
+    return templates.TemplateResponse(
+        request,
+        "admin_report_sessions.html",
+        {
+            "center": center,
+            "range_label": range_label or "الفترة",
+            "range_error": range_err,
+            "period": (period or "today").strip().lower(),
+            "date_from_val": (date_from or "")[:10],
+            "date_to_val": (date_to or "")[:10],
+            "session_rows": session_rows,
+            "generated_at": _fmt_dt(utcnow_naive()),
+        },
+    )
+
+
+@router.get("/admin/reports/revenue", response_class=HTMLResponse)
+def admin_report_revenue(
+    request: Request,
+    period: str = "today",
+    date_from: str = "",
+    date_to: str = "",
+    db: Session = Depends(get_db),
+):
+    user, redirect = _require_admin_user_or_redirect(request, db)
+    if redirect:
+        return redirect
+    assert user is not None
+    if (user.role or "") == "trainer":
+        return RedirectResponse(
+            url=_url_with_params("/admin", msg=ADMIN_MSG_TRAINER_ADMIN_FORBIDDEN),
+            status_code=303,
+        )
+    if not _user_can_report_revenue(user):
+        return RedirectResponse(
+            url=_url_with_params("/admin", msg=ADMIN_MSG_REPORT_FORBIDDEN),
+            status_code=303,
+        )
+    cid = require_user_center_id(user)
+    center = db.get(models.Center, cid)
+    d0, d1, range_label, range_err = _report_period_to_range(period, date_from, date_to)
+    base_pf = [
+        models.Payment.center_id == cid,
+        func.date(models.Payment.paid_at) >= d0,
+        func.date(models.Payment.paid_at) <= d1,
+    ]
+    paid_total = float(
+        db.query(func.coalesce(func.sum(models.Payment.amount), 0.0))
+        .filter(*base_pf, models.Payment.status == "paid")
+        .scalar()
+        or 0.0
+    )
+    paid_count = (
+        db.query(func.count(models.Payment.id)).filter(*base_pf, models.Payment.status == "paid").scalar()
+        or 0
+    )
+    by_day = (
+        db.query(
+            func.date(models.Payment.paid_at).label("d"),
+            func.coalesce(func.sum(models.Payment.amount), 0.0),
+        )
+        .filter(*base_pf, models.Payment.status == "paid")
+        .group_by(func.date(models.Payment.paid_at))
+        .order_by(func.date(models.Payment.paid_at).asc())
+        .all()
+    )
+    by_method = (
+        db.query(
+            models.Payment.payment_method,
+            func.count(models.Payment.id),
+            func.coalesce(func.sum(models.Payment.amount), 0.0),
+        )
+        .filter(*base_pf, models.Payment.status == "paid")
+        .group_by(models.Payment.payment_method)
+        .all()
+    )
+    by_status = (
+        db.query(
+            models.Payment.status,
+            func.count(models.Payment.id),
+            func.coalesce(func.sum(models.Payment.amount), 0.0),
+        )
+        .filter(*base_pf)
+        .group_by(models.Payment.status)
+        .all()
+    )
+    day_rows = [{"d": row[0], "amount": float(row[1] or 0)} for row in by_day]
+    method_rows = [
+        {
+            "method": _payment_method_label_ar(m),
+            "method_id": m or "",
+            "count": int(c),
+            "amount": float(a or 0),
+        }
+        for m, c, a in by_method
+    ]
+    status_labels = {
+        "paid": "مدفوع",
+        "pending": "معلّق",
+        "pending_payment": "بانتظار الدفع",
+        "failed": "فاشل",
+    }
+    status_rows = [
+        {
+            "status": status_labels.get(st, st),
+            "status_id": st,
+            "count": int(c),
+            "amount": float(a or 0),
+        }
+        for st, c, a in by_status
+    ]
+    export_q = _url_with_params(
+        "/admin/export/payments.csv",
+        **{
+            ADMIN_QP_PAYMENT_DATE_FROM: d0.isoformat(),
+            ADMIN_QP_PAYMENT_DATE_TO: d1.isoformat(),
+        },
+    )
+    return templates.TemplateResponse(
+        request,
+        "admin_report_revenue.html",
+        {
+            "center": center,
+            "range_label": range_label or "الفترة",
+            "range_error": range_err,
+            "period": (period or "today").strip().lower(),
+            "date_from_val": (date_from or "")[:10],
+            "date_to_val": (date_to or "")[:10],
+            "paid_total": paid_total,
+            "paid_count": int(paid_count),
+            "day_rows": day_rows,
+            "method_rows": method_rows,
+            "status_rows": status_rows,
+            "export_payments_csv_url": export_q,
+            "generated_at": _fmt_dt(utcnow_naive()),
+        },
+    )
 
 
 @router.get("/admin/export/clients.csv")

@@ -1394,14 +1394,37 @@
     </section>
     {% endif %}
 
-    {% if perm_faq %}
     {% if perm_reports_hub %}
     <section id="section-reports" class="accordion">
       <div class="accordion-body">
         <div class="card" style="margin-top:0;">
           <h2 class="admin-booking-block-heading admin-booking-block-heading--flush-top">التقارير</h2>
+          <div class="staff-perm-shell report-catalog-shell" style="margin-bottom:16px;" aria-labelledby="report-live-title">
+            <div class="staff-perm-shell__head">
+              <span id="report-live-title" class="staff-perm-shell__title">تقارير جاهزة للعرض والطباعة</span>
+              <span class="staff-perm-shell__subtitle">فلترة زمنية (اليوم / الأسبوع / الشهر / نطاق مخصّص). استخدم «طباعة / حفظ PDF» من صفحة التقرير. الأرقام بنفس منطق لوحة الإدارة.</span>
+            </div>
+            <div class="staff-perm-groups report-catalog-groups report-catalog-groups--flat">
+              <div class="report-live-actions no-print">
+                {% if perm_report_sessions %}
+                <a class="soft-link" href="/admin/reports/sessions?period=today">جلسات: اليوم</a>
+                <a class="soft-link" href="/admin/reports/sessions?period=week">جلسات: الأسبوع</a>
+                <a class="soft-link" href="/admin/reports/sessions?period=month">جلسات: الشهر</a>
+                {% endif %}
+                {% if perm_report_revenue %}
+                <a class="soft-link" href="/admin/reports/revenue?period=today">إيراد: اليوم</a>
+                <a class="soft-link" href="/admin/reports/revenue?period=week">إيراد: الأسبوع</a>
+                <a class="soft-link" href="/admin/reports/revenue?period=month">إيراد: الشهر</a>
+                {% endif %}
+                {% if perm_exports_clients %}<a class="soft-link" href="{{ data_export_urls.clients }}">تصدير عملاء CSV</a>{% endif %}
+                {% if perm_exports_bookings %}<a class="soft-link" href="{{ data_export_urls.bookings }}">تصدير حجوزات CSV</a>{% endif %}
+                {% if perm_exports_payments %}<a class="soft-link" href="{{ data_export_urls.payments }}">تصدير مدفوعات CSV</a>{% endif %}
+                {% if show_security_section %}<a class="soft-link" href="{{ security_export_url }}">تصدير تدقيق أمني CSV</a>{% endif %}
+              </div>
+            </div>
+          </div>
           <p class="small" style="margin:0 0 16px;line-height:1.65;">
-            خارطة طريق مقترحة لتقارير الطباعة وتصدير PDF ولوحات زمنية (اليوم / الأسبوع / الشهر). التنفيذ التدريجي يبدأ بالأعلى قيمة تشغيلياً: <strong>المالية والحجوزات</strong>، ثم <strong>العملاء والولاء</strong>، ثم <strong>الأمان للأرشفة</strong>. استخدم مجموعات أدناه كمرجع موحّد دون تكرار أيقونة لكل فرع فرعي؛ الفلتر الزمني (اليوم / هذا الأسبوع / هذا الشهر / من–إلى) يغطي الفروع داخل كل نوع تقرير.
+            أدناه خارطة طريق ومرجع موحّد؛ التقارير التفاعلية أعلاه تُكمّل الجداول الموجودة في الأقسام (مثل <a class="soft-link" href="#section-sessions">الجلسات والمدفوعات</a> عند توفر الصلاحية).
           </p>
 
           <div class="staff-perm-shell report-catalog-shell" aria-labelledby="report-catalog-main-title">
@@ -1478,7 +1501,7 @@
                   <li><strong>الأمان</strong>: نفس صلاحيات لوحة الإدارة للتقارير التي تحوي بيانات شخصية أو مالية.</li>
                   <li>أولوية التنفيذ المقترحة: <strong>1)</strong> مالية + حجوزات، <strong>2)</strong> قوائم تشغيل عملاء، <strong>3)</strong> ولاء/تسويق، <strong>4)</strong> أمان للأرشفة.</li>
                 </ul>
-                <p class="report-catalog-note">هذا القسم وصفٌ للمنتج المستهدف؛ التنفيذ البرمجي يضيف تدريجياً الصفحات والفلاتر والتصدير وفق هذه القائمة.</p>
+                <p class="report-catalog-note">صفحات «جلسات» و«إيراد» أعلاه تُنفّذ الجزء التشغيلي الأساسي؛ بقية النقاط تُوسَّع لاحقاً حسب الأولوية.</p>
               </div>
 
             </div>
@@ -1488,6 +1511,7 @@
     </section>
     {% endif %}
 
+    {% if perm_faq %}
     <section id="section-faq" class="accordion">
       <div class="accordion-body">
     <div class="card" style="margin-top:0;">
