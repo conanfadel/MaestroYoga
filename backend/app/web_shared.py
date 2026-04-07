@@ -58,6 +58,16 @@ def _normalize_phone_with_country(country_code: str, phone: str) -> str | None:
     return f"{cc}{digits}"
 
 
+def _phone_admin_display(phone: str | None) -> str:
+    """عرض الجوال في لوحة المسؤول: +9665XXXXXXXX → 05XXXXXXXX (صيغة محلية)."""
+    if phone is None or not str(phone).strip():
+        return "-"
+    s = str(phone).strip()
+    if s.startswith("+966") and len(s) >= 13 and s[4:].isdigit() and len(s[4:]) == 9:
+        return "0" + s[4:]
+    return s
+
+
 def _is_strong_public_password(password: str) -> bool:
     if len(password) < 8:
         return False
