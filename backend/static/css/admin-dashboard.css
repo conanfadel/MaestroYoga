@@ -848,15 +848,15 @@
     }
     /* أزرار التحكم في جدول المستخدمين: أصغر لتقليل العرض وتفادي التمرير الأفقي */
     .admin-users-datagrid .controls-wrap {
-      gap: 4px;
+      gap: 3px;
       padding: 0;
       overflow-x: visible;
     }
     .admin-users-datagrid .controls-wrap button {
-      padding: 5px 8px;
-      font-size: 0.68rem;
-      border-radius: 8px;
-      line-height: 1.2;
+      padding: 3px 5px;
+      font-size: 0.6rem;
+      border-radius: 6px;
+      line-height: 1.15;
       font-weight: 700;
     }
     @media (max-width: 900px) {
