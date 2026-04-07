@@ -543,6 +543,224 @@
     }
     .feedback-fab:hover { transform: translateY(-2px); box-shadow: 0 14px 32px rgba(197, 160, 89, 0.45); }
     .feedback-fab svg { width: 22px; height: 22px; flex-shrink: 0; }
+    /* زر عائم: انتقال سريع لقسم الجلسات */
+    .fab-book {
+      position: fixed;
+      inset-inline-end: max(14px, env(safe-area-inset-right, 0px) + 6px);
+      bottom: max(88px, calc(72px + env(safe-area-inset-bottom, 0px)));
+      z-index: 899;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 12px 18px;
+      border-radius: 999px;
+      border: 0;
+      cursor: pointer;
+      font-family: inherit;
+      font-weight: 800;
+      font-size: 0.9rem;
+      color: #1a1a1a;
+      background: linear-gradient(135deg, var(--mint) 0%, #8fe8c4 100%);
+      box-shadow: 0 8px 28px rgba(45, 52, 54, 0.18), 0 0 0 2px rgba(197, 160, 89, 0.35) inset;
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+    .fab-book:hover { transform: translateY(-2px); box-shadow: 0 12px 32px rgba(197, 160, 89, 0.28); }
+    .fab-book svg { width: 20px; height: 20px; flex-shrink: 0; }
+    @media (min-width: 981px) {
+      .fab-book { bottom: max(24px, env(safe-area-inset-bottom, 0px) + 12px); }
+    }
+    /* تلميح أخبار تحت الهيرو */
+    .hero-news-hint {
+      margin: 0 0 14px;
+      border-radius: 14px;
+      border: 1px solid rgba(125, 211, 174, 0.55);
+      background: linear-gradient(120deg, rgba(232, 252, 244, 0.95), #fff);
+      box-shadow: 0 6px 22px rgba(45, 52, 54, 0.05);
+      overflow: hidden;
+    }
+    .hero-news-hint__link {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+      padding: 10px 14px;
+      text-decoration: none;
+      color: var(--charcoal);
+      font-size: 0.92rem;
+      line-height: 1.45;
+    }
+    .hero-news-hint__link:hover { background: rgba(255, 255, 255, 0.65); }
+    .hero-news-hint__badge {
+      flex-shrink: 0;
+      font-size: 0.68rem;
+      font-weight: 800;
+      padding: 4px 10px;
+      border-radius: 999px;
+      background: var(--gold-soft);
+      color: var(--gold-dark);
+      border: 1px solid rgba(197, 160, 89, 0.35);
+    }
+    .hero-news-hint__title { flex: 1; min-width: 0; font-weight: 700; }
+    .hero-news-hint__cta {
+      flex-shrink: 0;
+      font-weight: 800;
+      color: var(--gold-dark);
+      font-size: 0.82rem;
+    }
+    /* شريط سريع عند وجود عناصر في السلة */
+    .cart-live-banner {
+      margin: 0 0 14px;
+      padding: 10px 14px;
+      border-radius: 14px;
+      background: linear-gradient(135deg, rgba(197, 160, 89, 0.18), rgba(170, 240, 209, 0.35));
+      border: 1px solid rgba(197, 160, 89, 0.4);
+    }
+    .cart-live-banner[hidden] { display: none !important; }
+    .cart-live-banner__btn {
+      width: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 10px 14px;
+      border: 0;
+      border-radius: 12px;
+      background: var(--white);
+      color: var(--charcoal);
+      font-family: inherit;
+      font-size: 0.92rem;
+      font-weight: 700;
+      cursor: pointer;
+      box-shadow: 0 2px 10px rgba(45, 52, 54, 0.08);
+    }
+    .cart-live-banner__btn:hover { box-shadow: 0 4px 14px rgba(197, 160, 89, 0.25); }
+    .cart-live-banner__btn strong { color: var(--gold-dark); font-size: 1.05em; }
+    /* أقرب جلسات */
+    .upcoming-sessions {
+      margin: 0 0 18px;
+      padding: 14px 16px;
+      border-radius: 16px;
+      border: 1px dashed rgba(197, 160, 89, 0.45);
+      background: rgba(255, 255, 255, 0.75);
+    }
+    .upcoming-sessions[hidden] { display: none !important; }
+    .upcoming-sessions__title {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin: 0 0 12px;
+      font-size: 0.88rem;
+      font-weight: 800;
+      color: var(--gold-dark);
+    }
+    .upcoming-sessions__title svg { width: 18px; height: 18px; flex-shrink: 0; opacity: 0.9; }
+    .upcoming-sessions__list {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    @media (min-width: 640px) {
+      .upcoming-sessions__list {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 12px;
+      }
+    }
+    .upcoming-sessions__item {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      padding: 12px;
+      border-radius: 12px;
+      background: var(--white);
+      border: 1px solid rgba(170, 240, 209, 0.75);
+      font-size: 0.86rem;
+    }
+    .upcoming-sessions__item-title { font-weight: 800; color: var(--charcoal); line-height: 1.3; }
+    .upcoming-sessions__item-meta { font-size: 0.78rem; color: var(--charcoal-muted); }
+    .upcoming-sessions__item-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 4px; }
+    .upcoming-sessions__link {
+      font-size: 0.78rem;
+      font-weight: 800;
+      color: var(--gold-dark);
+      background: none;
+      border: 0;
+      padding: 0;
+      cursor: pointer;
+      font-family: inherit;
+      text-decoration: underline;
+    }
+    /* أيقونات العناوين */
+    .section-heading__ico {
+      flex-shrink: 0;
+      width: 1.15em;
+      height: 1.15em;
+      color: var(--gold-dark);
+      opacity: 0.88;
+    }
+    .section-heading__ico svg { width: 100%; height: 100%; display: block; }
+    .section-heading__label {
+      min-width: 0;
+      white-space: nowrap;
+      overflow-x: auto;
+      scrollbar-width: none;
+    }
+    .section-heading__label::-webkit-scrollbar { display: none; }
+    /* تمييز مقاعد شحيحة */
+    .session-card--scarce {
+      border-color: rgba(197, 160, 89, 0.55);
+      box-shadow: 0 0 0 1px rgba(197, 160, 89, 0.15), 0 10px 32px rgba(197, 160, 89, 0.1);
+    }
+    .session-card--scarce .session-card__bar {
+      background: linear-gradient(135deg, #3d3428 0%, var(--charcoal) 100%);
+    }
+    .availability .bar > span {
+      transition: width 0.55s cubic-bezier(0.22, 1, 0.36, 1);
+    }
+    @keyframes btnPulseSuccess {
+      0% { box-shadow: 0 0 0 0 rgba(125, 211, 174, 0.7); transform: scale(1); }
+      60% { box-shadow: 0 0 0 10px rgba(125, 211, 174, 0); transform: scale(1.02); }
+      100% { box-shadow: none; transform: scale(1); }
+    }
+    .book-btn.btn-just-added,
+    .sub-btn.btn-just-added {
+      animation: btnPulseSuccess 0.65s ease-out;
+    }
+    /* ظهور تدريجي */
+    .reveal-on-scroll {
+      opacity: 0;
+      transform: translateY(14px);
+      transition: opacity 0.5s ease, transform 0.5s cubic-bezier(0.22, 1, 0.36, 1);
+    }
+    .reveal-on-scroll.is-revealed {
+      opacity: 1;
+      transform: none;
+    }
+    @media (prefers-reduced-motion: reduce) {
+      .reveal-on-scroll {
+        opacity: 1;
+        transform: none;
+        transition: none;
+      }
+      .book-btn.btn-just-added,
+      .sub-btn.btn-just-added { animation: none; }
+      .session-card::after { display: none; }
+    }
+    /* فواصل تمرير للأقسام */
+    #sessions-section,
+    #center-news-section,
+    #plans-section,
+    #testimonials-section,
+    #faq-section,
+    #loyalty-rewards-section {
+      scroll-margin-top: 88px;
+    }
+    .section-divider {
+      height: 1px;
+      margin: 20px 0;
+      border: 0;
+      background: linear-gradient(90deg, transparent, rgba(197, 160, 89, 0.35), transparent);
+    }
     .feedback-modal { position: fixed; inset: 0; z-index: 901; display: flex; align-items: center; justify-content: center; padding: 16px; }
     .feedback-modal[hidden] { display: none !important; }
     .feedback-modal__backdrop {
@@ -862,11 +1080,28 @@
       box-shadow: 0 8px 28px rgba(45, 52, 54, 0.08);
       display: flex;
       flex-direction: column;
-      transition: box-shadow 0.2s ease, border-color 0.2s ease;
+      position: relative;
+      transition: box-shadow 0.22s ease, border-color 0.22s ease, transform 0.2s ease;
     }
+    .session-card::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      border-radius: inherit;
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity 0.28s ease;
+      background: linear-gradient(145deg, rgba(170, 240, 209, 0.16) 0%, transparent 52%);
+      z-index: 1;
+    }
+    .session-card:hover::after { opacity: 1; }
     .session-card:hover {
       border-color: rgba(197, 160, 89, 0.45);
-      box-shadow: 0 14px 40px rgba(197, 160, 89, 0.12);
+      box-shadow: 0 14px 40px rgba(197, 160, 89, 0.14);
+    }
+    .session-card > * {
+      position: relative;
+      z-index: 2;
     }
     .session-card__bar {
       background: var(--charcoal);
@@ -1998,6 +2233,23 @@
         </div>
     </header>
 
+    {% set hint_post = pinned_public_post or (public_posts_teasers[0] if public_posts_teasers else none) %}
+    {% if hint_post %}
+    <div class="hero-news-hint" role="region" aria-label="آخر نشاط في المركز">
+      <a class="hero-news-hint__link" href="{{ hint_post.detail_url }}">
+        <span class="hero-news-hint__badge">{{ hint_post.type_label }}</span>
+        <span class="hero-news-hint__title">{{ hint_post.title|truncate(78) }}</span>
+        <span class="hero-news-hint__cta">عرض التفاصيل ←</span>
+      </a>
+    </div>
+    {% endif %}
+
+    <div id="cart-live-banner" class="cart-live-banner" hidden role="status" aria-live="polite">
+      <button type="button" class="cart-live-banner__btn" id="cart-live-open">
+        لديك <strong id="cart-live-count">0</strong> عنصر في السلة — اضغط لفتحها وإتمام الطلب
+      </button>
+    </div>
+
     {% if news_ticker_items %}
     <div class="news-ticker-bar" role="region" aria-label="عناوين أخبار سريعة — اضغط للانتقال للخبر">
       <span class="news-ticker-bar__label">آخر الأخبار</span>
@@ -2024,6 +2276,8 @@
       <div class="step"><b>2)</b> سجّل الدخول وفعّل بريدك الإلكتروني.</div>
       <div class="step"><b>3)</b> راجع السلة وأكمل الطلب منها.</div>
     </div>
+
+    <hr class="section-divider" aria-hidden="true" />
 
     <section id="loyalty-rewards-section" class="loyalty-program" aria-label="برنامج المكافآت والولاء">
       <h2>برنامج المكافآت والولاء</h2>
@@ -2082,10 +2336,10 @@
     <main id="main-content" class="grid-two">
       <div class="grid-two__main">
       <section id="sessions-section" class="card sessions-panel" aria-label="قائمة الجلسات">
-        <h2 class="section-heading section-heading--primary">الجلسات المتاحة للحجز الفوري</h2>
+        <h2 class="section-heading section-heading--primary"><span class="section-heading__ico" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg></span><span class="section-heading__label">الجلسات المتاحة للحجز الفوري</span></h2>
         <p class="sessions-lead">صفِّ الجلسات حسب الوقت والسعر والمستوى، ثم أضِف ما تريد إلى السلة واكمل الطلب منها بعد تسجيل الدخول.</p>
         <div class="sessions-filters">
-          <h3 class="sessions-filters-title section-heading section-heading--sub">تصفية وترتيب الجلسات</h3>
+          <h3 class="sessions-filters-title section-heading section-heading--sub"><span class="section-heading__ico" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg></span><span class="section-heading__label">تصفية وترتيب الجلسات</span></h3>
           <div class="sessions-filters-grid">
             <div class="field">
               <label for="session-search">بحث بالعنوان أو المدرب</label>
@@ -2124,10 +2378,20 @@
           </div>
         </div>
 
+        <div id="upcoming-sessions-wrap" class="upcoming-sessions" hidden aria-live="polite">
+          <p class="upcoming-sessions__title">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+            أقرب جلسات متاحة
+          </p>
+          <div id="upcoming-sessions-list" class="upcoming-sessions__list"></div>
+        </div>
+
         <div class="sessions-cards" id="sessions-cards">
               {% for s in sessions %}
               <article
-                class="session-card session-row"
+                id="session-{{ s.id }}"
+                class="session-card session-row{% if s.spots_available > 0 and s.spots_available <= 3 %} session-card--scarce{% endif %} reveal-on-scroll"
+                data-session-id="{{ s.id }}"
                 data-title="{{ s.title }} {{ s.trainer_name }}"
                 data-level="{{ s.level_label }}"
                 data-available="{{ s.spots_available }}"
@@ -2181,13 +2445,13 @@
       {% if pinned_public_post or public_posts_teasers %}
       <section id="center-news-section" class="card index-news-showcase" aria-label="ما الجديد في المركز">
         <div class="index-news-showcase__head">
-          <h2 class="section-heading">ما الجديد في المركز</h2>
+          <h2 class="section-heading"><span class="section-heading__ico" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 22h16a2 2 0 0 0 2-2V4a2 2 0 0 0-2-2H8a2 2 0 0 0-2 2v16a2 2 0 0 1-2 2Zm0 0a2 2 0 0 1-2-2v-9c0-1.1.9-2 2-2h2"/><path d="M18 14h-8"/><path d="M15 18h-5"/><path d="M10 6h8v4h-8V6Z"/></svg></span><span class="section-heading__label">ما الجديد في المركز</span></h2>
           <a class="btn ghost index-news-showcase__all" href="{{ public_news_list_url }}">جميع الأخبار</a>
         </div>
         <p class="index-news-showcase__lead">آخر المنشورات والإعلانات بعد الجلسات — اختر بطاقة للتفاصيل والصور.</p>
         <div class="index-news-showcase__grid">
           {% if pinned_public_post %}
-          <a class="index-news-card index-news-card--featured" href="{{ pinned_public_post.detail_url }}">
+          <a class="index-news-card index-news-card--featured reveal-on-scroll" href="{{ pinned_public_post.detail_url }}">
             <div class="index-news-card__media">
               {% if pinned_public_post.cover_image_url %}
               <img src="{{ pinned_public_post.cover_image_url }}" alt="" decoding="async" loading="lazy" />
@@ -2203,7 +2467,7 @@
           </a>
           {% endif %}
           {% for t in public_posts_teasers %}
-          <a class="index-news-card" href="{{ t.detail_url }}">
+          <a class="index-news-card reveal-on-scroll" href="{{ t.detail_url }}">
             <div class="index-news-card__media">
               {% if t.cover_image_url %}
               <img src="{{ t.cover_image_url }}" alt="" decoding="async" loading="lazy" />
@@ -2233,11 +2497,11 @@
 
       <aside>
         <section id="plans-section" class="card" aria-label="مقارنة الخطط">
-          <h2 class="section-heading">مقارنة الاشتراكات (أسبوعي / شهري / سنوي)</h2>
+          <h2 class="section-heading"><span class="section-heading__ico" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg></span><span class="section-heading__label">مقارنة الاشتراكات (أسبوعي / شهري / سنوي)</span></h2>
           <div class="plans-shell">
             <div class="plans-cards">
               {% for plan in plans %}
-              <article class="plan-card plan-{{ plan.plan_type }}">
+              <article class="plan-card plan-{{ plan.plan_type }} reveal-on-scroll">
                 <div class="plan-head">
                   <h3>{{ plan.name }}</h3>
                   <span class="plan-badge {{ plan.plan_type }}">
@@ -2290,19 +2554,19 @@
           </div>
         </section>
 
-        <section class="card" aria-label="آراء العملاء">
-          <h2 class="section-heading">آراء العملاء</h2>
-          <div class="testimonial">"تجربة ممتازة وتنظيم احترافي للجلسات." <span class="small">— سارة</span></div>
-          <div class="testimonial">"الاشتراك الشهري ساعدني على الالتزام بالرياضة." <span class="small">— نورة</span></div>
-          <div class="testimonial">"الدفع والحجز سهل جدًا من الجوال." <span class="small">— ريم</span></div>
+        <section id="testimonials-section" class="card" aria-label="آراء العملاء">
+          <h2 class="section-heading"><span class="section-heading__ico" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></span><span class="section-heading__label">آراء العملاء</span></h2>
+          <div class="testimonial reveal-on-scroll">"تجربة ممتازة وتنظيم احترافي للجلسات." <span class="small">— سارة</span></div>
+          <div class="testimonial reveal-on-scroll">"الاشتراك الشهري ساعدني على الالتزام بالرياضة." <span class="small">— نورة</span></div>
+          <div class="testimonial reveal-on-scroll">"الدفع والحجز سهل جدًا من الجوال." <span class="small">— ريم</span></div>
         </section>
 
-        <section class="card" aria-label="الأسئلة الشائعة">
-          <h2 class="section-heading">أسئلة شائعة</h2>
+        <section id="faq-section" class="card" aria-label="الأسئلة الشائعة">
+          <h2 class="section-heading"><span class="section-heading__ico" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg></span><span class="section-heading__label">أسئلة شائعة</span></h2>
           {% for faq in faq_items %}
-            <div class="faq-item"><b>{{ faq.question }}</b><br/><span class="small">{{ faq.answer }}</span></div>
+            <div class="faq-item reveal-on-scroll"><b>{{ faq.question }}</b><br/><span class="small">{{ faq.answer }}</span></div>
           {% else %}
-            <div class="faq-item"><span class="small">لا توجد أسئلة شائعة متاحة حاليًا.</span></div>
+            <div class="faq-item reveal-on-scroll"><span class="small">لا توجد أسئلة شائعة متاحة حاليًا.</span></div>
           {% endfor %}
         </section>
       </aside>
@@ -2539,6 +2803,10 @@
             stickyCartCount.hidden = true;
           }
         }
+        var cartLiveBanner = document.getElementById("cart-live-banner");
+        var cartLiveCount = document.getElementById("cart-live-count");
+        if (cartLiveBanner) cartLiveBanner.hidden = items.length === 0;
+        if (cartLiveCount) cartLiveCount.textContent = String(items.length);
       }
       function escapeHtml(s) {
         const d = document.createElement("div");
@@ -2547,6 +2815,42 @@
       }
 
       renderCart();
+
+      document.getElementById("cart-live-open")?.addEventListener("click", function () {
+        openCartDrawer();
+      });
+
+      (function () {
+        var fab = document.getElementById("fab-book");
+        if (!fab) return;
+        fab.addEventListener("click", function () {
+          var sec = document.getElementById("sessions-section");
+          if (sec) sec.scrollIntoView({ behavior: "smooth", block: "start" });
+          var av = document.getElementById("session-availability");
+          if (av) {
+            av.value = "available";
+            av.dispatchEvent(new Event("change", { bubbles: true }));
+          }
+        });
+      })();
+
+      (function setupRevealOnScroll() {
+        var nodes = document.querySelectorAll(".reveal-on-scroll");
+        if (!nodes.length) return;
+        if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+          nodes.forEach(function (el) { el.classList.add("is-revealed"); });
+          return;
+        }
+        var io = new IntersectionObserver(function (entries) {
+          entries.forEach(function (en) {
+            if (en.isIntersecting) {
+              en.target.classList.add("is-revealed");
+              io.unobserve(en.target);
+            }
+          });
+        }, { rootMargin: "0px 0px -6% 0px", threshold: 0.06 });
+        nodes.forEach(function (el) { io.observe(el); });
+      })();
 
       document.querySelectorAll(".js-add-session").forEach(function (btn) {
         btn.addEventListener("click", function () {
@@ -2568,6 +2872,8 @@
           });
           saveCart(cart);
           if (cartDrawerMsg) cartDrawerMsg.textContent = "";
+          btn.classList.add("btn-just-added");
+          setTimeout(function () { btn.classList.remove("btn-just-added"); }, 720);
           track("add_to_cart", { item_category: "session", session_id: sid });
           openCartDrawer();
         });
@@ -2587,6 +2893,8 @@
           });
           saveCart(cart);
           if (cartDrawerMsg) cartDrawerMsg.textContent = "";
+          btn.classList.add("btn-just-added");
+          setTimeout(function () { btn.classList.remove("btn-just-added"); }, 720);
           track("add_to_cart", { item_category: "plan", plan_id: pid });
           openCartDrawer();
         });
@@ -2640,6 +2948,60 @@
 
       if (sessionsRoot) {
         const rows = Array.from(sessionsRoot.querySelectorAll("article.session-row"));
+        const upcomingWrap = document.getElementById("upcoming-sessions-wrap");
+        const upcomingList = document.getElementById("upcoming-sessions-list");
+        function updateUpcomingStrip() {
+          if (!upcomingWrap || !upcomingList) return;
+          const visible = rows.filter(function (a) {
+            return a.style.display !== "none" && parseInt(a.dataset.available || "0", 10) > 0;
+          });
+          visible.sort(function (a, b) {
+            return (Date.parse(a.dataset.time || "") || 0) - (Date.parse(b.dataset.time || "") || 0);
+          });
+          const top = visible.slice(0, 3);
+          if (!top.length) {
+            upcomingWrap.hidden = true;
+            upcomingList.innerHTML = "";
+            return;
+          }
+          upcomingWrap.hidden = false;
+          upcomingList.innerHTML = "";
+          top.forEach(function (art) {
+            const titleEl = art.querySelector(".session-card__bar");
+            const whenEl = art.querySelector(".session-card__when-main");
+            const priceEl = art.querySelector(".session-card__price");
+            const item = document.createElement("div");
+            item.className = "upcoming-sessions__item";
+            const t = document.createElement("div");
+            t.className = "upcoming-sessions__item-title";
+            t.textContent = titleEl ? titleEl.textContent.trim() : "";
+            const m = document.createElement("div");
+            m.className = "upcoming-sessions__item-meta";
+            var parts = [];
+            if (whenEl) parts.push(whenEl.textContent.trim());
+            if (priceEl) parts.push(priceEl.textContent.replace(/\s+/g, " ").trim());
+            m.textContent = parts.join(" · ");
+            const actions = document.createElement("div");
+            actions.className = "upcoming-sessions__item-actions";
+            const go = document.createElement("button");
+            go.type = "button";
+            go.className = "upcoming-sessions__link";
+            go.textContent = "الانتقال للبطاقة";
+            go.addEventListener("click", function () {
+              art.scrollIntoView({ behavior: "smooth", block: "center" });
+              art.style.transition = "box-shadow 0.3s ease";
+              art.style.boxShadow = "0 0 0 3px rgba(197, 160, 89, 0.55)";
+              setTimeout(function () {
+                art.style.boxShadow = "";
+              }, 1400);
+            });
+            actions.appendChild(go);
+            item.appendChild(t);
+            item.appendChild(m);
+            item.appendChild(actions);
+            upcomingList.appendChild(item);
+          });
+        }
         function applyFilters() {
           const q = (search?.value || "").trim().toLowerCase();
           const lv = level?.value || "";
@@ -2659,6 +3021,7 @@
             row.style.display = show ? "" : "none";
           });
           applySort();
+          updateUpcomingStrip();
         }
         function applySort() {
           const mode = sort?.value || "time_asc";
@@ -2722,6 +3085,10 @@
       }
     })();
   </script>
+  <button type="button" class="fab-book" id="fab-book" title="الانتقال إلى الجلسات المتاحة" aria-controls="sessions-section">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 2v4"/><path d="M16 2v4"/><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M3 10h18"/><path d="m9 16 2 2 4-4"/></svg>
+    احجز الآن
+  </button>
   {% if feedback_enabled and public_user %}
   <button type="button" class="feedback-fab" id="feedback-fab" aria-haspopup="dialog" aria-controls="feedback-modal" title="مساعدة — مشاكل، شكاوى، اقتراحات">
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
