@@ -86,6 +86,9 @@ class User(Base):
     email = Column(String, nullable=False, unique=True, index=True)
     password_hash = Column(String, nullable=False)
     role = Column(String, nullable=False, default="center_staff")
+    # عند role == custom_staff: اسم العرض العربي وقائمة الصلاحيات (JSON array)
+    custom_role_label = Column(String(120), nullable=True)
+    permissions_json = Column(Text, nullable=True)
     is_active = Column(Boolean, default=True)
     created_at = Column(DateTime, default=utcnow_naive)
 

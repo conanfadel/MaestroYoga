@@ -129,6 +129,13 @@ def migrate_schema() -> None:
         needs_center_loyalty_rg = "loyalty_reward_gold" not in center_cols
         needs_center_index_config_json = "index_config_json" not in center_cols
 
+    needs_users_custom_role_label = False
+    needs_users_permissions_json = False
+    if insp.has_table("users"):
+        user_cols = {c["name"] for c in insp.get_columns("users")}
+        needs_users_custom_role_label = "custom_role_label" not in user_cols
+        needs_users_permissions_json = "permissions_json" not in user_cols
+
     if (
         not needs_payment_booking_id
         and not needs_public_user_phone
@@ -148,6 +155,8 @@ def migrate_schema() -> None:
         and not needs_center_loyalty_rs
         and not needs_center_loyalty_rg
         and not needs_center_index_config_json
+        and not needs_users_custom_role_label
+        and not needs_users_permissions_json
     ):
         with engine.begin() as conn:
             _cleanup_stale_center_logo_urls_sql(conn)
@@ -201,6 +210,10 @@ def migrate_schema() -> None:
             conn.execute(text("ALTER TABLE centers ADD COLUMN loyalty_reward_gold TEXT"))
         if needs_center_index_config_json:
             conn.execute(text("ALTER TABLE centers ADD COLUMN index_config_json TEXT"))
+        if needs_users_custom_role_label:
+            conn.execute(text("ALTER TABLE users ADD COLUMN custom_role_label VARCHAR(120)"))
+        if needs_users_permissions_json:
+            conn.execute(text("ALTER TABLE users ADD COLUMN permissions_json TEXT"))
         _cleanup_stale_center_logo_urls_sql(conn)
         _clear_legacy_default_hero_url(conn, inspect(conn))
         _ensure_performance_indexes(conn, insp)

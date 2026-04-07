@@ -24,7 +24,9 @@ from .role_definitions import (
     CENTER_ADMIN_LOGIN_ROLES,
     PERMISSION_CATALOG,
     STAFF_ROLE_CATALOG,
+    STAFF_ROLE_UI_SECTIONS_HINT,
     handbook_matrix_rows,
+    permission_catalog_grouped_for_custom_staff,
 )
 from .booking_utils import ACTIVE_BOOKING_STATUSES, spots_available
 from .bootstrap import DEMO_CENTER_NAME, ensure_demo_data, ensure_demo_news_posts
@@ -3404,6 +3406,8 @@ def admin_dashboard(
             "assignable_staff_roles": tuple(
                 r for r in STAFF_ROLE_CATALOG if r["id"] in ASSIGNABLE_BY_CENTER_OWNER
             ),
+            "staff_role_sections_hints_json": json.dumps(STAFF_ROLE_UI_SECTIONS_HINT, ensure_ascii=False),
+            "staff_permission_groups": permission_catalog_grouped_for_custom_staff(),
             "role_permission_matrix": handbook_matrix_rows(),
             "center_post_admin_rows": center_post_admin_rows,
             "editing_post": editing_post,
@@ -3420,6 +3424,8 @@ def admin_create_staff_user(
     email: str = Form(...),
     password: str = Form(...),
     role: str = Form(...),
+    custom_role_label: str = Form(default=""),
+    permissions: list[str] = Form(default_factory=list),
     scroll_y: str = Form(default=""),
     return_section: str = Form("section-staff-invite"),
     db: Session = Depends(get_db),
@@ -3431,12 +3437,15 @@ def admin_create_staff_user(
     if user.role != "center_owner":
         return _admin_redirect(ADMIN_MSG_STAFF_NOT_OWNER, scroll_y, return_section)
 
+    role_s = (role or "").strip()
     try:
         payload = schemas.UserCreateByOwner(
             full_name=(full_name or "").strip(),
             email=(email or "").strip(),
             password=password or "",
-            role=(role or "").strip(),
+            role=role_s,
+            custom_role_label=(custom_role_label or "").strip() or None,
+            permission_ids=list(permissions) if role_s == "custom_staff" else None,
         )
     except ValidationError:
         return _admin_redirect(ADMIN_MSG_STAFF_INVALID, scroll_y, return_section)
@@ -3446,12 +3455,17 @@ def admin_create_staff_user(
         return _admin_redirect(ADMIN_MSG_STAFF_EMAIL_EXISTS, scroll_y, return_section)
 
     cid = require_user_center_id(user)
+    perm_json: str | None = None
+    if payload.role == "custom_staff" and payload.permission_ids:
+        perm_json = json.dumps(payload.permission_ids, ensure_ascii=False)
     new_user = models.User(
         center_id=cid,
         full_name=payload.full_name,
         email=payload.email.lower(),
         password_hash=hash_password(payload.password),
         role=payload.role,
+        custom_role_label=payload.custom_role_label if payload.role == "custom_staff" else None,
+        permissions_json=perm_json,
     )
     db.add(new_user)
     db.commit()

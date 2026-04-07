@@ -1,5 +1,6 @@
 import csv
 import io
+import json
 from contextlib import asynccontextmanager
 from datetime import datetime, timezone
 from io import BytesIO
@@ -311,12 +312,17 @@ def create_user_by_owner(
     exists = db.query(models.User).filter(models.User.email == payload.email.lower()).first()
     if exists:
         raise HTTPException(status_code=409, detail="Email already registered")
+    perm_json: str | None = None
+    if payload.role == "custom_staff" and payload.permission_ids:
+        perm_json = json.dumps(payload.permission_ids, ensure_ascii=False)
     new_user = models.User(
         center_id=user.center_id,
         full_name=payload.full_name,
         email=payload.email.lower(),
         password_hash=hash_password(payload.password),
         role=payload.role,
+        custom_role_label=payload.custom_role_label if payload.role == "custom_staff" else None,
+        permissions_json=perm_json,
     )
     db.add(new_user)
     db.commit()

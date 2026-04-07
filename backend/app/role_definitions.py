@@ -6,6 +6,7 @@
 
 from __future__ import annotations
 
+import json
 from typing import Any
 
 # --- الصلاحيات (معرّفات مستقرة للكود) ---
@@ -201,9 +202,57 @@ STAFF_ROLE_CATALOG: tuple[dict[str, Any], ...] = (
         "description": "نشر جلساته والغرف المرتبطة بالتشغيل؛ لا يدير مستخدمي الموقع أو المحتوى العام.",
         "optional": False,
     },
+    {
+        "id": "custom_staff",
+        "label": "جديد — دور مخصّص بالصلاحيات",
+        "description": "يحدد المالك اسماً عربياً ومجموعة صلاحيات من القائمة.",
+        "optional": False,
+    },
 )
 
 STAFF_ROLE_IDS: frozenset[str] = frozenset(r["id"] for r in STAFF_ROLE_CATALOG)
+
+# نصوص تظهر في لوحة «إضافة عضو فريق» عند اختيار دور جاهز (أقسام لوحة الإدارة المعنيّة)
+STAFF_ROLE_UI_SECTIONS_HINT: dict[str, str] = {
+    "center_staff": (
+        "يصل تقريباً إلى كل أقسام لوحة الإدارة لهذا المركز: لوحة المؤشرات، الهوية وصفحة الحجز، "
+        "الغرف والجلسات والخطط، العملاء والولاء والمستخدمون العامّون، المدفوعات والتصدير، الأمان والفريق — "
+        "ما عدا تعيين أدوار الفريق الآخرين."
+    ),
+    "operations_manager": (
+        "صلاحياته تغطي: لوحة المؤشرات والتنبيهات، إعدادات المركز (عرض)، الغرف والجلسات وخطط الاشتراك، "
+        "عملاء المركز وبرنامج الولاء، عرض سجلات المدفوعات والتقارير التشغيلية وتصدير الحجوزات/العملاء. "
+        "لا يصل إلى: دعوة أعضاء فريق جدد، سجل الأمان وحظر العناوين، أو إدارة أدوار الفريق."
+    ),
+    "session_coordinator": (
+        "يركّز على: لوحة المؤشرات، الغرف والجلسات والخطط، العملاء والولاء، عرض المدفوعات والتصدير التشغيلي، "
+        "وعرض إعدادات المركز. لا يدير مستخدمي الموقع العامّين بالكامل كقسم الاستقبال، ولا المحتوى التسويقي الكامل."
+    ),
+    "reception": (
+        "صلاحياته في: لوحة المؤشرات، الجلسات والخطط، العملاء والولاء، مستخدمو صفحة الحجز العامة، عرض المدفوعات. "
+        "لا يعدّل الغرف ولا المحتوى العام (هوية/صفحة حجز/أخبار) بشكل كامل كدور المحتوى."
+    ),
+    "content_marketing": (
+        "صلاحياته في: لوحة المؤشرات (محدودة)، الهوية وإعدادات المركز الظاهرة، تعديل محتوى صفحة الحجز، "
+        "أخبار ومنشورات المركز، والأسئلة الشائعة. لا يصل إلى إدارة الجلسات والغرف التشغيلية الكاملة "
+        "ولا التقارير المالية التفصيلية ولا الأمان."
+    ),
+    "support_limited": (
+        "دور مساعد: لوحة المؤشرات، مساعدة مستخدمي الموقع، أدوات دعم محدودة، عرض سجلات المدفوعات (قراءة). "
+        "لا يغيّر الجدول ولا الإعدادات الحساسة."
+    ),
+    "accountant": (
+        "صلاحياته في: المؤشرات المالية، التقارير والتصدير، المدفوعات والاسترداد، خطط الاشتراك (للأسعار المرتبطة بالمالية)، "
+        "وعرض إعدادات المركز. لا يدير الجلسات اليومية ولا محتوى الموقع التسويقي."
+    ),
+    "trainer": (
+        "واجهة مدرب: لوحة مبسّطة تركّز على الغرف والجلسات ذات الصلة، مع مؤشرات تشغيلية وعرض مدفوعات محدود. "
+        "لا يدير مستخدمي الموقع العامّين ولا المحتوى العام للمركز."
+    ),
+}
+
+# صلاحيات يمكن للمالك تضمينها في «دور مخصّص» (يُستبعد إسناد إدارة أدوار الفريق)
+CUSTOM_STAFF_ALLOWED_PERMISSIONS: frozenset[str] = ALL_PERMISSION_KEYS - frozenset({"staff.manage_roles"})
 
 # أدوار يمكن للمالك إنشاؤها عبر API (لا يُنشئ مالكاً آخر عبر هذا المسار)
 ASSIGNABLE_BY_CENTER_OWNER: frozenset[str] = frozenset(
@@ -216,6 +265,7 @@ ASSIGNABLE_BY_CENTER_OWNER: frozenset[str] = frozenset(
         "support_limited",
         "accountant",
         "trainer",
+        "custom_staff",
     }
 )
 
@@ -231,6 +281,7 @@ CENTER_ADMIN_LOGIN_ROLES: frozenset[str] = frozenset(
         "support_limited",
         "accountant",
         "trainer",
+        "custom_staff",
     }
 )
 
@@ -316,6 +367,8 @@ _ROLE_PERMISSIONS_RAW: dict[str, frozenset[str]] = {
             "payments.records",
         }
     ),
+    # الصلاحيات الفعلية تُخزَّن في users.permissions_json
+    "custom_staff": frozenset(),
 }
 
 
@@ -323,6 +376,31 @@ def permissions_for_role(role: str | None) -> frozenset[str]:
     if not role:
         return frozenset()
     return _ROLE_PERMISSIONS_RAW.get(role, frozenset())
+
+
+def custom_permissions_from_json(raw: str | None) -> frozenset[str]:
+    """صلاحيات مستخدم بدور custom_staff من عمود JSON."""
+    if not raw or not str(raw).strip():
+        return frozenset()
+    try:
+        data = json.loads(raw)
+    except (TypeError, ValueError):
+        return frozenset()
+    if not isinstance(data, list):
+        return frozenset()
+    return frozenset(x for x in data if isinstance(x, str) and x in CUSTOM_STAFF_ALLOWED_PERMISSIONS)
+
+
+def permission_catalog_grouped_for_custom_staff() -> list[dict[str, Any]]:
+    """مجموعات الصلاحيات لعرض خانات الاختيار عند إنشاء دور مخصّص."""
+    by: dict[str, list[dict[str, str]]] = {}
+    for p in PERMISSION_CATALOG:
+        pid = p["id"]
+        if pid not in CUSTOM_STAFF_ALLOWED_PERMISSIONS:
+            continue
+        g = p["group"]
+        by.setdefault(g, []).append({"id": pid, "label": p["label"]})
+    return [{"group": g, "perms": by[g]} for g in sorted(by.keys())]
 
 
 def handbook_matrix_rows() -> list[dict[str, Any]]:

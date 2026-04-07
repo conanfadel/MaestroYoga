@@ -5,6 +5,7 @@ from __future__ import annotations
 from . import models
 from .role_definitions import (
     ALL_PERMISSION_KEYS,
+    custom_permissions_from_json,
     permissions_for_role,
 )
 
@@ -12,6 +13,8 @@ from .role_definitions import (
 def permissions_for_user(user: models.User) -> frozenset[str]:
     if user.role == "center_owner":
         return ALL_PERMISSION_KEYS
+    if user.role == "custom_staff":
+        return custom_permissions_from_json(getattr(user, "permissions_json", None))
     return permissions_for_role(user.role)
 
 
