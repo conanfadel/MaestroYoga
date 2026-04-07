@@ -1713,7 +1713,7 @@
           <p class="small" style="margin:0 0 14px;line-height:1.65;">
             أنشئ حساباً لموظف أو مدرب في نفس مركزك. يستلم العضو بيانات الدخول منك خارج النظام. اختر الدور المناسب؛ للتفاصيل راجع <a class="soft-link" href="#section-staff-roles">جدول الصلاحيات</a> أدناه.
           </p>
-          <form method="post" action="/admin/staff/create" data-preserve-scroll="1" class="form" style="max-width:520px;">
+          <form method="post" action="/admin/staff/create" data-preserve-scroll="1" class="form staff-invite-form">
             <input type="hidden" name="return_section" value="section-staff-invite" />
             <label for="staff_full_name">الاسم الكامل</label>
             <input id="staff_full_name" name="full_name" type="text" required autocomplete="name" maxlength="200" placeholder="مثال: سارة المنسقة" />
@@ -1727,27 +1727,35 @@
               <option value="{{ r.id }}">{{ r.label }}{% if r.optional %} (اختياري){% endif %}{% if r.id != 'custom_staff' %} — {{ r.id }}{% endif %}</option>
               {% endfor %}
             </select>
-            <div id="staff-role-hint-panel" class="staff-role-hint-panel" role="region" aria-live="polite" style="margin-top:12px;padding:12px 14px;border-radius:12px;border:1px solid rgba(197,160,89,0.35);background:rgba(197,160,89,0.08);line-height:1.65;">
-              <p class="small" id="staff-role-hint-text" style="margin:0;"></p>
+            <div id="staff-role-hint-panel" class="staff-role-hint-panel" role="region" aria-live="polite">
+              <p class="small staff-role-hint-panel__text" id="staff-role-hint-text"></p>
             </div>
-            <div id="staff-custom-staff-panel" class="staff-custom-staff-panel" hidden style="margin-top:14px;">
+            <div id="staff-custom-staff-panel" class="staff-custom-staff-panel" hidden>
               <label for="staff_custom_role_label">اسم الدور الجديد (يظهر لك وللعضو)</label>
               <input id="staff_custom_role_label" name="custom_role_label" type="text" maxlength="120" autocomplete="off" placeholder="مثال: مسؤول فرع" />
-              <p class="small" style="margin:10px 0 8px;line-height:1.55;color:var(--charcoal-muted);">اختر الصلاحيات المناسبة (مجموعات مرتّبة). لا يمكن منح «تعيين أدوار الفريق» من هنا.</p>
-              <div class="staff-perm-groups" style="display:flex;flex-direction:column;gap:12px;max-height:min(52vh,420px);overflow:auto;padding:4px 0;">
-                {% for grp in staff_permission_groups %}
-                <fieldset class="staff-perm-fieldset" style="margin:0;padding:10px 12px;border-radius:10px;border:1px solid rgba(0,0,0,0.1);">
-                  <legend style="font-weight:700;font-size:0.9rem;padding:0 6px;">{{ grp.group }}</legend>
-                  <div style="display:flex;flex-direction:column;gap:6px;margin-top:6px;">
-                    {% for it in grp.perms %}
-                    <label class="staff-perm-label" style="display:flex;align-items:flex-start;gap:8px;cursor:pointer;font-size:0.88rem;line-height:1.45;">
-                      <input class="staff-perm-cb" type="checkbox" name="permissions" value="{{ it.id }}" />
-                      <span>{{ it.label }} <span class="small" style="color:var(--charcoal-muted);">({{ it.id }})</span></span>
-                    </label>
-                    {% endfor %}
-                  </div>
-                </fieldset>
-                {% endfor %}
+              <div class="staff-perm-shell" aria-labelledby="staff-perm-shell-title">
+                <div class="staff-perm-shell__head">
+                  <span id="staff-perm-shell-title" class="staff-perm-shell__title">صلاحيات الدور</span>
+                  <span class="staff-perm-shell__subtitle">مجموعات مرتّبة — لا يُمنَح «تعيين أدوار الفريق» من هذه الشاشة</span>
+                </div>
+                <div class="staff-perm-groups">
+                  {% for grp in staff_permission_groups %}
+                  <fieldset class="staff-perm-group">
+                    <legend class="staff-perm-group__legend">{{ grp.group }}</legend>
+                    <div class="staff-perm-group__grid">
+                      {% for it in grp.perms %}
+                      <label class="staff-perm-item">
+                        <input class="staff-perm-cb" type="checkbox" name="permissions" value="{{ it.id }}" />
+                        <span class="staff-perm-item__body">
+                          <span class="staff-perm-item__label">{{ it.label }}</span>
+                          <code class="staff-perm-item__id">{{ it.id }}</code>
+                        </span>
+                      </label>
+                      {% endfor %}
+                    </div>
+                  </fieldset>
+                  {% endfor %}
+                </div>
               </div>
             </div>
             <p class="small" style="margin:10px 0 0;line-height:1.5;color:var(--charcoal-muted);">للأدوار الجاهزة يظهر المعرف الإنجليزي بجانب الاسم للتمييز التقني. خيار «جديد» يتيح اسمًا عربيًا وصلاحيات يختارها المالك.</p>
