@@ -2561,6 +2561,90 @@
       min-width: 0;
     }
 
+    /* —— هاتف ولوحي: عرض مريح + كثافة أعلى (حواف أضيق، هيرو أخف، أقسام أوضح) —— */
+    @media (min-width: 721px) and (max-width: 1024px) {
+      :root {
+        --content-max: min(960px, 93vw);
+      }
+    }
+    @media (max-width: 720px) {
+      body {
+        padding-block: max(10px, env(safe-area-inset-top, 0px)) max(12px, env(safe-area-inset-bottom, 0px));
+        padding-inline: max(8px, 2.5vw);
+      }
+      .index-trust-bar {
+        margin-bottom: 10px;
+        padding: 10px 12px;
+        font-size: 0.84rem;
+      }
+      .index-trust-bar__list {
+        gap: 8px 14px;
+      }
+      .index-product-clarity {
+        margin-bottom: 14px;
+        padding: 14px 14px 12px;
+        border-radius: 14px;
+      }
+      .index-faq-teaser {
+        margin-top: 16px;
+        padding: 14px;
+        border-radius: 14px;
+      }
+      .hero-toolbar {
+        padding: 8px 10px;
+        gap: 8px 10px;
+      }
+      .hero-toolbar__btn {
+        padding: 8px 12px;
+        font-size: 0.84rem;
+        min-height: 42px;
+      }
+      .hero-toolbar__ico {
+        width: 16px;
+        height: 16px;
+      }
+      .hero-toolbar .chip {
+        font-size: 0.74rem;
+        padding: 5px 9px;
+      }
+      .sessions-cards {
+        gap: 12px;
+      }
+      .session-card__body {
+        padding: 14px;
+      }
+      #sessions-section.sessions-panel {
+        padding: 16px 12px;
+      }
+      .plans-cards {
+        gap: 11px;
+      }
+      .plan-card {
+        padding: 12px 12px 14px;
+      }
+    }
+    @media (max-width: 480px) {
+      .hero {
+        min-height: clamp(215px, 36vh, 320px);
+        margin-bottom: 12px;
+      }
+      .hero__inner {
+        margin: 8px;
+        padding: 12px 11px;
+        border-radius: 14px;
+      }
+      .hero-toolbar--over-cover {
+        padding-inline: 8px;
+        margin-bottom: 8px;
+      }
+      #sessions-section.sessions-panel {
+        padding: 12px 10px;
+      }
+      .sessions-filters {
+        padding: 12px 14px;
+      }
+    }
+
     /* وضع داكن — تكميلات للأسطح والغلاف (المتغيرات أعلاه تغطي أغلب الصفحة) */
     html[data-theme="dark"] .index-trust-bar {
       background: linear-gradient(125deg, rgba(30, 38, 48, 0.96), rgba(22, 42, 36, 0.9));
