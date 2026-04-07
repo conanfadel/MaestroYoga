@@ -69,7 +69,13 @@ try:
     from .bootstrap import DEMO_OWNER_EMAIL, DEMO_OWNER_PASSWORD, ensure_demo_data
     from .checkout_finalize import finalize_checkout_failed, finalize_checkout_paid
     from .database import get_db, init_db
-    from .middleware import ApiClientHeadersMiddleware, MaintenanceMiddleware, RequestIDMiddleware, attach_cors
+    from .middleware import (
+        ApiClientHeadersMiddleware,
+        MaintenanceMiddleware,
+        RateLimitMiddleware,
+        RequestIDMiddleware,
+        attach_cors,
+    )
     from .payments import (
         MoyasarPaymentProvider,
         StripePaymentProvider,
@@ -85,7 +91,13 @@ except ImportError:
     from backend.app.bootstrap import DEMO_OWNER_EMAIL, DEMO_OWNER_PASSWORD, ensure_demo_data
     from backend.app.checkout_finalize import finalize_checkout_failed, finalize_checkout_paid
     from backend.app.database import get_db, init_db
-    from backend.app.middleware import ApiClientHeadersMiddleware, MaintenanceMiddleware, RequestIDMiddleware, attach_cors
+    from backend.app.middleware import (
+        ApiClientHeadersMiddleware,
+        MaintenanceMiddleware,
+        RateLimitMiddleware,
+        RequestIDMiddleware,
+        attach_cors,
+    )
     from backend.app.payments import (
         MoyasarPaymentProvider,
         StripePaymentProvider,
@@ -118,6 +130,7 @@ app.add_middleware(ApiClientHeadersMiddleware)
 app.add_middleware(MaintenanceMiddleware)
 _cors_origins = [x.strip() for x in os.getenv("CORS_ORIGINS", "").split(",") if x.strip()]
 attach_cors(app, _cors_origins)
+app.add_middleware(RateLimitMiddleware)
 app.include_router(web_ui_router)
 _STATIC_DIR = Path(__file__).resolve().parent.parent / "static"
 if _STATIC_DIR.is_dir():

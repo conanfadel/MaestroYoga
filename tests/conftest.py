@@ -11,6 +11,12 @@ if str(PROJECT_ROOT) not in sys.path:
 from backend.app.main import app  # noqa: E402
 
 
+@pytest.fixture(autouse=True)
+def _disable_rate_limit_for_tests(monkeypatch) -> None:
+    """تفادي فشل الاختبارات بسبب وسيط حد الطلبات (يُفعّل يدوياً في اختبار مخصّص)."""
+    monkeypatch.setenv("RATE_LIMIT_ENABLED", "0")
+
+
 @pytest.fixture()
 def client() -> TestClient:
     return TestClient(app)
