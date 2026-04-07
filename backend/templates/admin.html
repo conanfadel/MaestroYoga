@@ -1713,7 +1713,7 @@
           <p class="small" style="margin:0 0 14px;line-height:1.65;">
             أنشئ حساباً لموظف أو مدرب في نفس مركزك. يستلم العضو بيانات الدخول منك خارج النظام. اختر الدور المناسب؛ للتفاصيل راجع <a class="soft-link" href="#section-staff-roles">جدول الصلاحيات</a> أدناه.
           </p>
-          <form method="post" action="/admin/staff/create" data-preserve-scroll="1" class="form staff-invite-form">
+          <form method="post" action="/admin/staff/create" data-preserve-scroll="1" class="form admin-staff-invite-form">
             <input type="hidden" name="return_section" value="section-staff-invite" />
             <label for="staff_full_name">الاسم الكامل</label>
             <input id="staff_full_name" name="full_name" type="text" required autocomplete="name" maxlength="200" placeholder="مثال: سارة المنسقة" />
@@ -1727,28 +1727,28 @@
               <option value="{{ r.id }}">{{ r.label }}{% if r.optional %} (اختياري){% endif %}{% if r.id != 'custom_staff' %} — {{ r.id }}{% endif %}</option>
               {% endfor %}
             </select>
-            <div id="staff-role-hint-panel" class="staff-role-hint-panel" role="region" aria-live="polite">
-              <p class="small staff-role-hint-panel__text" id="staff-role-hint-text"></p>
+            <div id="admin-staff-role-hint-panel" class="admin-staff-role-hint-panel" role="region" aria-live="polite">
+              <p class="small admin-staff-role-hint-panel__text" id="staff-role-hint-text"></p>
             </div>
-            <div id="staff-custom-staff-panel" class="staff-custom-staff-panel" hidden>
+            <div id="admin-staff-custom-role-panel" class="admin-staff-custom-role-panel" hidden>
               <label for="staff_custom_role_label">اسم الدور الجديد (يظهر لك وللعضو)</label>
               <input id="staff_custom_role_label" name="custom_role_label" type="text" maxlength="120" autocomplete="off" placeholder="مثال: مسؤول فرع" />
-              <div class="staff-perm-shell" aria-labelledby="staff-perm-shell-title">
-                <div class="staff-perm-shell__head">
-                  <span id="staff-perm-shell-title" class="staff-perm-shell__title">صلاحيات الدور</span>
-                  <span class="staff-perm-shell__subtitle">مجموعات مرتّبة — لا يُمنَح «تعيين أدوار الفريق» من هذه الشاشة</span>
+              <div class="admin-staff-permissions-block" aria-labelledby="admin-staff-permissions-block-title">
+                <div class="admin-staff-permissions-block__head">
+                  <span id="admin-staff-permissions-block-title" class="admin-staff-permissions-block__title">صلاحيات الدور</span>
+                  <span class="admin-staff-permissions-block__subtitle">مجموعات مرتّبة — لا يُمنَح «تعيين أدوار الفريق» من هذه الشاشة</span>
                 </div>
-                <div class="staff-perm-groups">
+                <div class="admin-staff-permissions-block__scroll">
                   {% for grp in staff_permission_groups %}
-                  <fieldset class="staff-perm-group">
-                    <legend class="staff-perm-group__legend">{{ grp.group }}</legend>
-                    <div class="staff-perm-group__grid">
+                  <fieldset class="admin-staff-permissions-block__group">
+                    <legend class="admin-staff-permissions-block__group-title">{{ grp.group }}</legend>
+                    <div class="admin-staff-permissions-block__group-grid">
                       {% for it in grp.perms %}
-                      <label class="staff-perm-item">
-                        <input class="staff-perm-cb" type="checkbox" name="permissions" value="{{ it.id }}" />
-                        <span class="staff-perm-item__body">
-                          <span class="staff-perm-item__label">{{ it.label }}</span>
-                          <code class="staff-perm-item__id">{{ it.id }}</code>
+                      <label class="admin-staff-permissions-block__item">
+                        <input class="admin-staff-permissions-block__checkbox" type="checkbox" name="permissions" value="{{ it.id }}" />
+                        <span class="admin-staff-permissions-block__item-body">
+                          <span class="admin-staff-permissions-block__item-label">{{ it.label }}</span>
+                          <code class="admin-staff-permissions-block__item-id">{{ it.id }}</code>
                         </span>
                       </label>
                       {% endfor %}
@@ -1764,9 +1764,9 @@
             <script>
               (function () {
                 var sel = document.getElementById("staff_role");
-                var hintPanel = document.getElementById("staff-role-hint-panel");
+                var hintPanel = document.getElementById("admin-staff-role-hint-panel");
                 var hintText = document.getElementById("staff-role-hint-text");
-                var customPanel = document.getElementById("staff-custom-staff-panel");
+                var customPanel = document.getElementById("admin-staff-custom-role-panel");
                 var customName = document.getElementById("staff_custom_role_label");
                 var raw = document.getElementById("staff-role-hints-json");
                 var hints = {};
@@ -1777,7 +1777,7 @@
                   customPanel.hidden = !on;
                   customName.disabled = !on;
                   customName.required = !!on;
-                  var cbs = customPanel.querySelectorAll(".staff-perm-cb");
+                  var cbs = customPanel.querySelectorAll(".admin-staff-permissions-block__checkbox");
                   for (var i = 0; i < cbs.length; i++) {
                     cbs[i].disabled = !on;
                     if (!on) cbs[i].checked = false;

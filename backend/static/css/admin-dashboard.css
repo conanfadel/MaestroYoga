@@ -1613,12 +1613,17 @@ html[data-theme="dark"] .security-block__head .admin-booking-block-heading--in-s
   min-width: min(100%, 280px);
 }
 
-/* —— نموذج دعوة عضو فريق: صندوق الصلاحيات —— */
-.staff-invite-form {
+/*
+ * كتلة صلاحيات دعوة الفريق — تنسيق موحّد لصندوق اختيار صلاحيات «دور مخصّص» (مثل فلسفة كتلة الحجز في الواجهة العامة).
+ * الجذر: admin-staff-permissions-block
+ * العناصر: __head، __title، __subtitle، __scroll، __group، __group-title، __group-grid، __item، __checkbox، __item-body، __item-label، __item-id
+ * مرافق: admin-staff-role-hint-panel (وصف الدور الجاهز) | admin-staff-invite-form (عرض النموذج) | admin-staff-custom-role-panel (حاوية الدور المخصّص)
+ */
+.admin-staff-invite-form {
   max-width: min(100%, 720px);
 }
 
-.staff-role-hint-panel {
+.admin-staff-role-hint-panel {
   margin-top: 12px;
   padding: 14px 16px;
   border-radius: 14px;
@@ -1631,17 +1636,17 @@ html[data-theme="dark"] .security-block__head .admin-booking-block-heading--in-s
   line-height: 1.65;
   box-shadow: 0 4px 18px rgba(45, 52, 54, 0.06);
 }
-.staff-role-hint-panel__text {
+.admin-staff-role-hint-panel__text {
   margin: 0;
   color: var(--charcoal);
   font-size: 0.92rem;
 }
 
-.staff-custom-staff-panel {
+.admin-staff-custom-role-panel {
   margin-top: 16px;
 }
 
-.staff-perm-shell {
+.admin-staff-permissions-block {
   margin-top: 14px;
   padding: 0;
   border-radius: 16px;
@@ -1658,7 +1663,7 @@ html[data-theme="dark"] .security-block__head .admin-booking-block-heading--in-s
   overflow: hidden;
 }
 
-.staff-perm-shell__head {
+.admin-staff-permissions-block__head {
   display: flex;
   flex-direction: column;
   gap: 4px;
@@ -1670,20 +1675,20 @@ html[data-theme="dark"] .security-block__head .admin-booking-block-heading--in-s
     transparent 55%
   );
 }
-.staff-perm-shell__title {
+.admin-staff-permissions-block__title {
   font-family: "Amiri", "Tajawal", serif;
   font-weight: 700;
   font-size: 1.05rem;
   color: var(--gold-dark);
   letter-spacing: -0.02em;
 }
-.staff-perm-shell__subtitle {
+.admin-staff-permissions-block__subtitle {
   font-size: 0.82rem;
   color: var(--charcoal-muted);
   line-height: 1.45;
 }
 
-.staff-perm-groups {
+.admin-staff-permissions-block__scroll {
   max-height: min(52vh, 440px);
   overflow-y: auto;
   overflow-x: hidden;
@@ -1693,22 +1698,22 @@ html[data-theme="dark"] .security-block__head .admin-booking-block-heading--in-s
   gap: 14px;
   scrollbar-gutter: stable;
 }
-.staff-perm-groups::-webkit-scrollbar {
+.admin-staff-permissions-block__scroll::-webkit-scrollbar {
   width: 8px;
 }
-.staff-perm-groups::-webkit-scrollbar-track {
+.admin-staff-permissions-block__scroll::-webkit-scrollbar-track {
   background: rgba(197, 160, 89, 0.08);
   border-radius: 999px;
 }
-.staff-perm-groups::-webkit-scrollbar-thumb {
+.admin-staff-permissions-block__scroll::-webkit-scrollbar-thumb {
   background: rgba(197, 160, 89, 0.45);
   border-radius: 999px;
 }
-.staff-perm-groups::-webkit-scrollbar-thumb:hover {
+.admin-staff-permissions-block__scroll::-webkit-scrollbar-thumb:hover {
   background: rgba(154, 123, 60, 0.65);
 }
 
-.staff-perm-group {
+.admin-staff-permissions-block__group {
   margin: 0;
   padding: 12px 14px 14px;
   border: 1px solid rgba(45, 52, 54, 0.1);
@@ -1716,7 +1721,7 @@ html[data-theme="dark"] .security-block__head .admin-booking-block-heading--in-s
   background: var(--white);
   box-shadow: 0 2px 12px rgba(45, 52, 54, 0.04);
 }
-.staff-perm-group__legend {
+.admin-staff-permissions-block__group-title {
   float: none;
   width: auto;
   padding: 6px 12px;
@@ -1732,20 +1737,20 @@ html[data-theme="dark"] .security-block__head .admin-booking-block-heading--in-s
   gap: 6px;
 }
 
-.staff-perm-group__grid {
+.admin-staff-permissions-block__group-grid {
   display: grid;
   grid-template-columns: 1fr;
   gap: 8px;
   clear: both;
 }
 @media (min-width: 560px) {
-  .staff-perm-group__grid {
+  .admin-staff-permissions-block__group-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 10px;
   }
 }
 
-.staff-perm-item {
+.admin-staff-permissions-block__item {
   display: flex;
   align-items: flex-start;
   gap: 12px;
@@ -1760,23 +1765,23 @@ html[data-theme="dark"] .security-block__head .admin-booking-block-heading--in-s
     border-color 0.18s ease,
     box-shadow 0.18s ease;
 }
-.staff-perm-item:hover {
+.admin-staff-permissions-block__item:hover {
   background: rgba(170, 240, 209, 0.2);
   border-color: rgba(125, 211, 174, 0.45);
   box-shadow: 0 4px 14px rgba(45, 52, 54, 0.06);
 }
-.staff-perm-item:has(.staff-perm-cb:checked) {
+.admin-staff-permissions-block__item:has(.admin-staff-permissions-block__checkbox:checked) {
   background: rgba(197, 160, 89, 0.1);
   border-color: rgba(197, 160, 89, 0.35);
   box-shadow: inset 0 0 0 1px rgba(197, 160, 89, 0.15);
 }
-.staff-perm-item:focus-within {
+.admin-staff-permissions-block__item:focus-within {
   outline: none;
   border-color: var(--gold);
   box-shadow: 0 0 0 3px rgba(197, 160, 89, 0.22);
 }
 
-.staff-perm-cb {
+.admin-staff-permissions-block__checkbox {
   appearance: none;
   -webkit-appearance: none;
   width: 1.28rem;
@@ -1794,10 +1799,10 @@ html[data-theme="dark"] .security-block__head .admin-booking-block-heading--in-s
     background 0.15s ease,
     box-shadow 0.15s ease;
 }
-.staff-perm-cb:hover {
+.admin-staff-permissions-block__checkbox:hover {
   border-color: var(--gold-dark);
 }
-.staff-perm-cb:checked {
+.admin-staff-permissions-block__checkbox:checked {
   background-color: transparent;
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Crect width='16' height='16' rx='5' fill='%23c5a059'/%3E%3Cpath fill='none' stroke='%231a1a1a' stroke-width='2' stroke-linecap='round' stroke-linejoin='round' d='M4.2 8.2l2.4 2.3 5.2-5.5'/%3E%3C/svg%3E");
   background-size: 100% 100%;
@@ -1806,25 +1811,25 @@ html[data-theme="dark"] .security-block__head .admin-booking-block-heading--in-s
   border-color: var(--gold-dark);
   box-shadow: 0 2px 10px rgba(197, 160, 89, 0.35);
 }
-.staff-perm-cb:focus-visible {
+.admin-staff-permissions-block__checkbox:focus-visible {
   outline: none;
   box-shadow: 0 0 0 3px rgba(197, 160, 89, 0.35);
 }
 
-.staff-perm-item__body {
+.admin-staff-permissions-block__item-body {
   display: flex;
   flex-direction: column;
   gap: 4px;
   min-width: 0;
   flex: 1;
 }
-.staff-perm-item__label {
+.admin-staff-permissions-block__item-label {
   font-size: 0.9rem;
   font-weight: 600;
   line-height: 1.45;
   color: var(--charcoal);
 }
-.staff-perm-item__id {
+.admin-staff-permissions-block__item-id {
   font-family: ui-monospace, "Cascadia Code", "Segoe UI Mono", monospace;
   font-size: 0.72rem;
   font-weight: 500;
@@ -1839,7 +1844,7 @@ html[data-theme="dark"] .security-block__head .admin-booking-block-heading--in-s
   white-space: nowrap;
 }
 
-html[data-theme="dark"] .staff-role-hint-panel {
+html[data-theme="dark"] .admin-staff-role-hint-panel {
   border-color: rgba(197, 160, 89, 0.35);
   background: linear-gradient(
     135deg,
@@ -1848,11 +1853,11 @@ html[data-theme="dark"] .staff-role-hint-panel {
   );
   box-shadow: 0 8px 28px rgba(0, 0, 0, 0.35);
 }
-html[data-theme="dark"] .staff-role-hint-panel__text {
+html[data-theme="dark"] .admin-staff-role-hint-panel__text {
   color: #e8edf2;
 }
 
-html[data-theme="dark"] .staff-perm-shell {
+html[data-theme="dark"] .admin-staff-permissions-block {
   border-color: rgba(197, 160, 89, 0.28);
   background: linear-gradient(
     180deg,
@@ -1861,58 +1866,58 @@ html[data-theme="dark"] .staff-perm-shell {
   );
   box-shadow: 0 12px 40px rgba(0, 0, 0, 0.45);
 }
-html[data-theme="dark"] .staff-perm-shell__head {
+html[data-theme="dark"] .admin-staff-permissions-block__head {
   border-bottom-color: rgba(197, 160, 89, 0.22);
 }
-html[data-theme="dark"] .staff-perm-shell__title {
+html[data-theme="dark"] .admin-staff-permissions-block__title {
   color: #e8c97a;
 }
-html[data-theme="dark"] .staff-perm-shell__subtitle {
+html[data-theme="dark"] .admin-staff-permissions-block__subtitle {
   color: #94a3b8;
 }
 
-html[data-theme="dark"] .staff-perm-groups::-webkit-scrollbar-track {
+html[data-theme="dark"] .admin-staff-permissions-block__scroll::-webkit-scrollbar-track {
   background: rgba(255, 255, 255, 0.06);
 }
-html[data-theme="dark"] .staff-perm-groups::-webkit-scrollbar-thumb {
+html[data-theme="dark"] .admin-staff-permissions-block__scroll::-webkit-scrollbar-thumb {
   background: rgba(197, 160, 89, 0.4);
 }
 
-html[data-theme="dark"] .staff-perm-group {
+html[data-theme="dark"] .admin-staff-permissions-block__group {
   background: rgba(20, 24, 31, 0.92);
   border-color: rgba(255, 255, 255, 0.08);
 }
-html[data-theme="dark"] .staff-perm-group__legend {
+html[data-theme="dark"] .admin-staff-permissions-block__group-title {
   color: #f1f5f9;
   background: linear-gradient(135deg, rgba(197, 160, 89, 0.18) 0%, rgba(30, 40, 48, 0.9) 100%);
   border-color: rgba(197, 160, 89, 0.28);
 }
 
-html[data-theme="dark"] .staff-perm-item {
+html[data-theme="dark"] .admin-staff-permissions-block__item {
   background: rgba(24, 28, 36, 0.75);
   border-color: rgba(255, 255, 255, 0.07);
 }
-html[data-theme="dark"] .staff-perm-item:hover {
+html[data-theme="dark"] .admin-staff-permissions-block__item:hover {
   background: rgba(197, 160, 89, 0.1);
   border-color: rgba(197, 160, 89, 0.25);
 }
-html[data-theme="dark"] .staff-perm-item:has(.staff-perm-cb:checked) {
+html[data-theme="dark"] .admin-staff-permissions-block__item:has(.admin-staff-permissions-block__checkbox:checked) {
   background: rgba(197, 160, 89, 0.14);
   border-color: rgba(197, 160, 89, 0.35);
 }
 
-html[data-theme="dark"] .staff-perm-item__label {
+html[data-theme="dark"] .admin-staff-permissions-block__item-label {
   color: #e8edf2;
 }
-html[data-theme="dark"] .staff-perm-item__id {
+html[data-theme="dark"] .admin-staff-permissions-block__item-id {
   color: #94a3b8;
   background: rgba(0, 0, 0, 0.35);
 }
 
-html[data-theme="dark"] .staff-perm-cb {
+html[data-theme="dark"] .admin-staff-permissions-block__checkbox {
   background: rgba(20, 24, 31, 0.95);
   border-color: rgba(197, 160, 89, 0.45);
 }
-html[data-theme="dark"] .staff-perm-cb:checked {
+html[data-theme="dark"] .admin-staff-permissions-block__checkbox:checked {
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Crect width='16' height='16' rx='5' fill='%23c5a059'/%3E%3Cpath fill='none' stroke='%23141820' stroke-width='2' stroke-linecap='round' stroke-linejoin='round' d='M4.2 8.2l2.4 2.3 5.2-5.5'/%3E%3C/svg%3E");
 }
