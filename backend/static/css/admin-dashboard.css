@@ -1537,6 +1537,14 @@ html[data-theme="dark"] .table-fluid table.table-card-rwd tbody td {
 .admin-booking-block-heading--flush-top {
   margin-top: 0;
 }
+h2.admin-booking-block-heading {
+  font-size: 1.14rem;
+}
+.branding-hero-dimensions-hint .admin-booking-block-heading {
+  font-size: 0.98rem;
+  margin-top: 0;
+  margin-bottom: 10px;
+}
 @media (max-width: 720px) {
   .admin-booking-block-heading {
     font-size: 1rem;

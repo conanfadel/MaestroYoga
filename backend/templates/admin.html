@@ -186,7 +186,7 @@
           <p class="small" style="margin:0 0 14px;">القسم الأول: <strong>صورة الغلاف</strong> بجانب العناوين. القسم الثاني بعد الفاصل: <strong>هوية المركز</strong> (التلميح النصي والشعار).</p>
 
           <form method="post" action="/admin/center/branding" enctype="multipart/form-data" data-preserve-scroll="1">
-            <h3 class="branding-subhead">صورة الغلاف (أعلى صفحة الحجز)</h3>
+            <h3 class="admin-booking-block-heading admin-booking-block-heading--flush-top">صورة الغلاف (أعلى صفحة الحجز)</h3>
             <p class="small" style="margin:0 0 10px;line-height:1.55;">
               تظهر بجانب عنوان المركز في الواجهة العامة. بدون رفع صورة يمكنك اختيار <strong>صورة يوغا توضيحية</strong> (افتراضي) أو <strong>تدرج ألوان فقط</strong>. عند رفع غلاف مخصص يُستبدل العرض بالكامل. <strong>الصورة التوضيحية الافتراضية الحالية: 1024×434 بكسل</strong> (نسبة تقريبية ~<strong>2.4∶1</strong>). يُفضّل غلاف أفقي بعرض حوالي <strong>1000–1600 بكسل</strong> وارتفاع يتناسب مع نسبة <strong>~2.4∶1</strong> أو <strong>16∶9</strong> أو <strong>3∶2</strong> (مثال لـ16∶9: 1600×900)، بصيغة PNG أو JPG أو WebP أو GIF — حتى <strong>2 ميجابايت</strong> لكل ملف.
             </p>
@@ -224,7 +224,7 @@
             {% endif %}
 
             <div class="branding-hero-dimensions-hint" style="margin-top:16px;padding:12px 14px;border-radius:12px;background:rgba(170,240,209,0.12);border:1px solid rgba(197,160,89,0.28);">
-              <p class="small" style="margin:0 0 8px;font-weight:700;">قياسات وأبعاد الغلاف في الواجهة العامة</p>
+              <h4 class="admin-booking-block-heading">قياسات وأبعاد الغلاف في الواجهة العامة</h4>
               <ul class="small" style="margin:0;padding-inline-start:1.25em;line-height:1.65;">
                 <li><strong>ملف الصورة التوضيحية الافتراضية (المخزّن):</strong> ‎1024×434‎ بكسل، نسبة تقريبية ‎~2.4∶1‎.</li>
                 <li><strong>عرض العرض على الشاشة:</strong> يتبع عرض <strong>حاوية الصفحة</strong> (حتى ‎1680‎ بكسل أو ‎80%‎ من عرض نافذة المتصفح). الصورة تُمدَّد لملء عرض بطاقة الهيدر؛ <strong>لا يوجد عرض ثابت بالبكسل</strong> على كل الأجهزة.</li>
@@ -239,7 +239,7 @@
               <span class="branding-identity-divider__line" aria-hidden="true"></span>
             </div>
 
-            <h3 class="branding-subhead">التلميح والشعار</h3>
+            <h3 class="admin-booking-block-heading">التلميح والشعار</h3>
             <label for="brand_tagline">تلميح تحت العنوان (اختياري)</label>
             <textarea id="brand_tagline" name="brand_tagline" rows="2" maxlength="500" placeholder="مثال: مساحة للتنفس والحركة — يوغا لجميع المستويات في أجواء هادئة" title="نص قصير يظهر كتلميح تحت عنوان الصفحة">{{ center.brand_tagline or '' }}</textarea>
             {% if center and center.logo_url %}
@@ -1147,7 +1147,7 @@
             <button type="submit">{{ 'حفظ التعديلات' if editing_post else 'إنشاء المنشور' }}</button>
           </form>
 
-          <h3 style="margin:0 0 10px;font-size:1.1rem;">كل المنشورات</h3>
+          <h3 class="admin-booking-block-heading" style="margin-bottom:10px;">كل المنشورات</h3>
           <div class="table-fluid">
             <table class="table-card-rwd">
               <thead>
@@ -1366,7 +1366,7 @@
     <section id="section-faq" class="accordion">
       <div class="accordion-body">
     <div class="card" style="margin-top:0;">
-      <h2>إدارة الأسئلة الشائعة</h2>
+      <h2 class="admin-booking-block-heading admin-booking-block-heading--flush-top">إدارة الأسئلة الشائعة</h2>
       <div class="filters" style="margin-bottom:10px;">
         <input id="faq-search-input" placeholder="بحث داخل السؤال أو الإجابة..." />
       </div>
