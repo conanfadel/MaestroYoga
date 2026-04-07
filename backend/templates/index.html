@@ -20,6 +20,9 @@
   <meta property="og:locale" content="ar_SA" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  {% for po in index_preconnect_origins %}
+  <link rel="preconnect" href="{{ po }}" />
+  {% endfor %}
   {% if hero_show_stock_preload %}
   <link rel="preload" as="image" href="{{ hero_stock_src }}" fetchpriority="high" />
   {% endif %}
@@ -2829,7 +2832,15 @@
       const stickySelection = document.getElementById("sticky-selection");
       const CART_KEY = "maestro_cart_v1";
       const PAGE_CENTER_ID = {{ center_id|tojson }};
-      var prevCartAnnounceCount = undefined;
+
+      function announceCartItemAdded() {
+        var cart = loadCart();
+        var n = cart.items.length;
+        var announcer = document.getElementById("index-a11y-announcer");
+        if (!announcer || n < 1) return;
+        announcer.textContent =
+          "تمت الإضافة للسلة، " + n + (n === 1 ? " عنصر" : " عناصر");
+      }
 
       function fillSessionRelativeTimes() {
         var rtf;
@@ -2987,16 +2998,6 @@
         var cartLiveCount = document.getElementById("cart-live-count");
         if (cartLiveBanner) cartLiveBanner.hidden = items.length === 0;
         if (cartLiveCount) cartLiveCount.textContent = String(items.length);
-        var announcer = document.getElementById("index-a11y-announcer");
-        if (announcer && prevCartAnnounceCount !== undefined && prevCartAnnounceCount !== items.length) {
-          announcer.textContent =
-            items.length === 0
-              ? "تم إفراغ السلة"
-              : "تم تحديث السلة، " +
-                items.length +
-                (items.length === 1 ? " عنصر" : " عناصر");
-        }
-        prevCartAnnounceCount = items.length;
       }
       function escapeHtml(s) {
         const d = document.createElement("div");
@@ -3061,6 +3062,7 @@
             key: "s-" + sid,
           });
           saveCart(cart);
+          announceCartItemAdded();
           if (cartDrawerMsg) cartDrawerMsg.textContent = "";
           btn.classList.add("btn-just-added");
           setTimeout(function () { btn.classList.remove("btn-just-added"); }, 720);
@@ -3082,6 +3084,7 @@
             key: "p-" + pid,
           });
           saveCart(cart);
+          announceCartItemAdded();
           if (cartDrawerMsg) cartDrawerMsg.textContent = "";
           btn.classList.add("btn-just-added");
           setTimeout(function () { btn.classList.remove("btn-just-added"); }, 720);
@@ -3357,5 +3360,38 @@
   </script>
   {% endif %}
   {% include '_mobile_landscape_hint.html' %}
+  {% if analytics_enabled and ga4_measurement_id %}
+  <script type="module">
+    (async function () {
+      try {
+        var mod = await import("https://unpkg.com/web-vitals@4.2.4/dist/web-vitals.js");
+        var onCLS = mod.onCLS;
+        var onINP = mod.onINP;
+        var onLCP = mod.onLCP;
+        if (!onCLS || !onINP || !onLCP) return;
+        function sendWebVital(m) {
+          if (typeof gtag !== "function") return;
+          var val = m.name === "CLS" ? Math.round(m.value * 1000) : Math.round(m.value);
+          gtag("event", m.name, {
+            event_category: "web_vitals",
+            value: val,
+            metric_rating: m.rating || "",
+            non_interaction: true,
+          });
+          window.dataLayer = window.dataLayer || [];
+          window.dataLayer.push({
+            event: "web_vital",
+            metric_name: m.name,
+            metric_value: val,
+            metric_rating: m.rating || "",
+          });
+        }
+        onCLS(sendWebVital);
+        onINP(sendWebVital);
+        onLCP(sendWebVital);
+      } catch (e) {}
+    })();
+  </script>
+  {% endif %}
 </body>
 </html>

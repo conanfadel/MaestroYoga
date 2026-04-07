@@ -623,6 +623,52 @@ def _preview_text(text: str | None, max_len: int = 100) -> str:
     return t[: max_len - 1].rstrip() + "…"
 
 
+def _index_preconnect_origins(
+    request: Request,
+    center: models.Center,
+    pinned_public_post: dict | None,
+    public_posts_teasers: list[dict],
+) -> list[str]:
+    """Origins for external image/asset URLs (not the current page host) — for link rel=preconnect."""
+    seen: set[str] = set()
+    out: list[str] = []
+
+    try:
+        cur = urlparse(str(request.url))
+        current_host = (cur.hostname or "").lower()
+    except Exception:
+        current_host = ""
+
+    def add_url(url: str | None) -> None:
+        if not url or not isinstance(url, str):
+            return
+        u = url.strip()
+        if not u.startswith(("http://", "https://")):
+            return
+        try:
+            p = urlparse(u)
+            if p.scheme not in ("http", "https") or not p.netloc:
+                return
+            host = (p.hostname or "").lower()
+            if host == current_host:
+                return
+            origin = f"{p.scheme}://{p.netloc}"
+            if origin not in seen:
+                seen.add(origin)
+                out.append(origin)
+        except Exception:
+            return
+
+    add_url(getattr(center, "hero_image_url", None))
+    add_url(getattr(center, "logo_url", None))
+    if pinned_public_post:
+        add_url(pinned_public_post.get("cover_image_url"))
+    for t in public_posts_teasers or []:
+        add_url(t.get("cover_image_url"))
+
+    return out
+
+
 @router.get("/index", response_class=HTMLResponse)
 def public_index(
     request: Request,
@@ -827,6 +873,9 @@ def public_index(
             "news_ticker_items": news_ticker_items,
             "public_news_has_more": public_news_has_more,
             "public_news_list_url": public_news_list_url,
+            "index_preconnect_origins": _index_preconnect_origins(
+                request, center, pinned_public_post, public_posts_teasers
+            ),
             "loyalty_program_rows": loyalty_program_table_rows(center),
             "feedback_enabled": bool(feedback_destination_email()) and validate_mailer_settings()[0],
             **loyalty_ctx,
