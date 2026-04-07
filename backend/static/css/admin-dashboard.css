@@ -1955,6 +1955,176 @@ html[data-theme="dark"] .report-catalog-list code {
   color: #e8eaed;
 }
 
+/* مركز التقارير — مجموعات وبطاقات */
+.report-hub {
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+  margin-top: 6px;
+}
+.report-hub__group {
+  padding: 14px 16px 16px;
+  border-radius: 14px;
+  border: 1px solid rgba(197, 160, 89, 0.22);
+  background: rgba(255, 255, 255, 0.55);
+  box-shadow: 0 2px 12px rgba(45, 52, 54, 0.04);
+}
+.report-hub__group-title {
+  margin: 0 0 6px;
+  font-size: 1.02rem;
+  font-weight: 800;
+  color: var(--charcoal);
+  padding-inline-start: 12px;
+  border-inline-start: 4px solid var(--gold);
+  line-height: 1.35;
+}
+.report-hub__group-desc {
+  margin: 0 0 14px;
+  font-size: 0.82rem;
+  color: var(--charcoal-muted);
+  line-height: 1.55;
+  padding-inline-start: 16px;
+}
+.report-hub__group--ops {
+  border-color: rgba(45, 104, 116, 0.22);
+}
+.report-hub__group--ops .report-hub__group-title {
+  border-inline-start-color: #2d6874;
+}
+.report-hub__group--money {
+  border-color: rgba(197, 160, 89, 0.28);
+}
+.report-hub__group--export {
+  border-color: rgba(125, 211, 174, 0.32);
+}
+.report-hub__group--export .report-hub__group-title {
+  border-inline-start-color: #3d8f73;
+}
+.report-hub__group--security {
+  border-color: rgba(180, 90, 90, 0.22);
+}
+.report-hub__group--security .report-hub__group-title {
+  border-inline-start-color: #b45a5a;
+}
+.report-hub__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(152px, 1fr));
+  gap: 10px;
+}
+.report-hub__grid--compact {
+  grid-template-columns: repeat(auto-fill, minmax(168px, 1fr));
+  max-width: 760px;
+}
+@media (min-width: 720px) {
+  .report-hub__grid {
+    grid-template-columns: repeat(auto-fill, minmax(168px, 1fr));
+  }
+}
+.report-hub__tile {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  min-height: 52px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  border: 1px solid rgba(45, 52, 54, 0.08);
+  background: rgba(250, 252, 251, 0.96);
+  color: var(--charcoal);
+  text-decoration: none;
+  font-weight: 700;
+  font-size: 0.88rem;
+  line-height: 1.35;
+  transition:
+    transform 0.15s ease,
+    box-shadow 0.15s ease,
+    border-color 0.15s ease,
+    background 0.15s ease;
+}
+.report-hub__tile:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 18px rgba(45, 52, 54, 0.09);
+  border-color: rgba(197, 160, 89, 0.42);
+  background: #fff;
+}
+.report-hub__tile:focus-visible {
+  outline: 2px solid var(--gold);
+  outline-offset: 2px;
+}
+.report-hub__tile--accent {
+  border-color: rgba(45, 104, 116, 0.38);
+  background: linear-gradient(135deg, rgba(45, 104, 116, 0.1), rgba(255, 255, 255, 0.92));
+}
+.report-hub__tile-icon {
+  flex-shrink: 0;
+  width: 40px;
+  height: 40px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 11px;
+  background: rgba(197, 160, 89, 0.14);
+  color: #2a3f35;
+}
+.report-hub__group--ops .report-hub__tile-icon {
+  background: rgba(45, 104, 116, 0.14);
+  color: #2d6874;
+}
+.report-hub__group--money .report-hub__tile-icon {
+  background: rgba(197, 160, 89, 0.22);
+  color: #6b5420;
+}
+.report-hub__group--export .report-hub__tile-icon {
+  background: rgba(125, 211, 174, 0.24);
+  color: #1f5c45;
+}
+.report-hub__group--security .report-hub__tile-icon {
+  background: rgba(180, 90, 90, 0.16);
+  color: #7a3030;
+}
+.report-hub__svg {
+  width: 22px;
+  height: 22px;
+  display: block;
+}
+.report-hub__tile-text {
+  flex: 1;
+  min-width: 0;
+}
+html[data-theme="dark"] .report-hub__group {
+  background: rgba(20, 24, 31, 0.72);
+  border-color: rgba(197, 160, 89, 0.2);
+  box-shadow: none;
+}
+html[data-theme="dark"] .report-hub__tile {
+  background: rgba(28, 33, 42, 0.85);
+  border-color: rgba(255, 255, 255, 0.08);
+  color: #e8eaed;
+}
+html[data-theme="dark"] .report-hub__tile:hover {
+  background: rgba(36, 42, 52, 0.95);
+  border-color: rgba(197, 160, 89, 0.35);
+}
+html[data-theme="dark"] .report-hub__tile--accent {
+  background: linear-gradient(135deg, rgba(45, 104, 116, 0.22), rgba(28, 33, 42, 0.9));
+  border-color: rgba(45, 104, 116, 0.4);
+}
+html[data-theme="dark"] .report-hub__group--ops .report-hub__tile-icon {
+  background: rgba(45, 104, 116, 0.28);
+  color: #a8d4dc;
+}
+html[data-theme="dark"] .report-hub__group--money .report-hub__tile-icon {
+  background: rgba(197, 160, 89, 0.22);
+  color: #e8d4a8;
+}
+html[data-theme="dark"] .report-hub__group--export .report-hub__tile-icon {
+  background: rgba(125, 211, 174, 0.18);
+  color: #9dccb8;
+}
+html[data-theme="dark"] .report-hub__group--security .report-hub__tile-icon {
+  background: rgba(180, 90, 90, 0.22);
+  color: #e0a8a8;
+}
+
 .staff-perm-group__grid {
   display: grid;
   grid-template-columns: 1fr;
