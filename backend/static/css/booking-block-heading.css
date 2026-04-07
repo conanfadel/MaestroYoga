@@ -84,3 +84,19 @@ h1.booking-block-heading {
     line-height: 1.42;
   }
 }
+
+@media (max-width: 400px) {
+  .booking-block-heading {
+    font-size: 0.92rem;
+    padding: 8px 10px 8px 9px;
+    gap: 8px;
+    margin: 20px 0 12px;
+    border-radius: 13px;
+  }
+  h2.booking-block-heading {
+    font-size: 0.98rem;
+  }
+  h1.booking-block-heading {
+    font-size: clamp(1.05rem, 3.2vw + 0.45rem, 1.28rem);
+  }
+}
