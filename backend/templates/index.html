@@ -222,6 +222,23 @@
       text-decoration: underline;
       text-underline-offset: 3px;
     }
+    @media (max-width: 720px) {
+      .index-trust-bar__list {
+        flex-wrap: nowrap;
+        justify-content: flex-start;
+        overflow-x: auto;
+        gap: 14px;
+        padding-bottom: 8px;
+        scroll-snap-type: x proximity;
+        -webkit-overflow-scrolling: touch;
+        scrollbar-width: thin;
+      }
+      .index-trust-bar__list li {
+        flex: 0 0 auto;
+        max-width: min(92vw, 340px);
+        scroll-snap-align: start;
+      }
+    }
     .index-product-clarity {
       margin: 0 0 18px;
       padding: 18px 18px 16px;
@@ -853,6 +870,11 @@
     }
     .fab-book:hover { transform: translateY(-2px); box-shadow: 0 12px 32px rgba(197, 160, 89, 0.28); }
     .fab-book svg { width: 20px; height: 20px; flex-shrink: 0; }
+    @media (max-width: 720px) {
+      .fab-book {
+        bottom: calc(58px + env(safe-area-inset-bottom, 0px));
+      }
+    }
     @media (min-width: 981px) {
       .fab-book { bottom: max(24px, env(safe-area-inset-bottom, 0px) + 12px); }
     }
@@ -1450,6 +1472,53 @@
       border-radius: 16px;
       box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.8);
     }
+    .sessions-filters__summary {
+      list-style: none;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-weight: 800;
+      font-size: 0.95rem;
+      color: var(--charcoal);
+      margin: 0;
+      padding: 0 0 4px;
+    }
+    .sessions-filters__summary::-webkit-details-marker {
+      display: none;
+    }
+    .sessions-filters__summary::marker {
+      content: "";
+    }
+    .sessions-filters__summary-ico {
+      display: inline-flex;
+      align-items: center;
+      color: var(--gold-dark);
+    }
+    .sessions-filters__body {
+      padding-top: 2px;
+    }
+    .sessions-filters-title--desktop {
+      display: none;
+      margin-bottom: 14px;
+      width: 100%;
+      box-sizing: border-box;
+    }
+    @media (min-width: 721px) {
+      .sessions-filters > .sessions-filters__summary {
+        display: none;
+      }
+      .sessions-filters-title--desktop {
+        display: flex;
+      }
+    }
+    @media (max-width: 720px) {
+      .sessions-filters[open] .sessions-filters__summary {
+        padding-bottom: 12px;
+        margin-bottom: 4px;
+        border-bottom: 1px dashed rgba(170, 240, 209, 0.75);
+      }
+    }
     .sessions-filters-grid {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(min(100%, 200px), 1fr));
@@ -1620,6 +1689,26 @@
       flex-direction: column;
       gap: 12px;
     }
+    @media (max-width: 720px) {
+      .session-card__footer {
+        padding: 0 12px 14px;
+        gap: 10px;
+      }
+      .session-card__bar {
+        padding: 12px 14px;
+        font-size: 1rem;
+      }
+      .session-card__body {
+        padding: 14px 12px;
+      }
+      .session-card__price {
+        font-size: 1.45rem;
+      }
+      .book-btn.book-btn-lg,
+      .sub-btn.book-btn-lg {
+        min-height: 48px;
+      }
+    }
     .session-card__row {
       display: flex;
       justify-content: space-between;
@@ -1740,6 +1829,16 @@
       box-shadow: 0 6px 22px rgba(45, 52, 54, 0.06);
       position: relative;
       overflow: hidden;
+    }
+    @media (max-width: 900px) {
+      .plan-card {
+        display: flex;
+        flex-direction: column;
+        min-height: 260px;
+      }
+      .plan-card .sub-btn {
+        margin-top: auto;
+      }
     }
     .plan-card::before {
       content: "";
@@ -1888,6 +1987,99 @@
       line-height: 1;
     }
     .sticky-cart-btn__badge[hidden] { display: none !important; }
+    @keyframes cartBadgePulse {
+      0% { transform: scale(1); }
+      35% { transform: scale(1.18); }
+      100% { transform: scale(1); }
+    }
+    .sticky-cart-btn__badge.is-pulse,
+    .mobile-quick-nav__badge.is-pulse {
+      animation: cartBadgePulse 0.55s ease;
+    }
+    @media (prefers-reduced-motion: reduce) {
+      .sticky-cart-btn__badge.is-pulse,
+      .mobile-quick-nav__badge.is-pulse {
+        animation: none;
+      }
+    }
+    .mobile-quick-nav {
+      display: none;
+    }
+    @media (max-width: 720px) {
+      .mobile-quick-nav {
+        display: flex;
+        position: fixed;
+        inset-inline: 0;
+        bottom: 0;
+        z-index: 78;
+        justify-content: stretch;
+        align-items: stretch;
+        gap: 0;
+        min-height: calc(52px + env(safe-area-inset-bottom, 0px));
+        padding: 6px 8px max(8px, env(safe-area-inset-bottom, 0px));
+        background: linear-gradient(180deg, rgba(45, 52, 54, 0.06), rgba(45, 52, 54, 0.14));
+        backdrop-filter: blur(10px);
+        -webkit-backdrop-filter: blur(10px);
+        border-top: 1px solid rgba(197, 160, 89, 0.35);
+        box-shadow: 0 -8px 28px rgba(45, 52, 54, 0.12);
+      }
+      .sticky-booking {
+        display: none !important;
+      }
+      .mobile-quick-nav__link,
+      .mobile-quick-nav__cart {
+        flex: 1;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 6px;
+        min-height: 46px;
+        padding: 8px 10px;
+        border-radius: 12px;
+        font-weight: 800;
+        font-size: 0.88rem;
+        text-decoration: none;
+        font-family: inherit;
+        border: 1px solid transparent;
+        cursor: pointer;
+        color: var(--charcoal);
+        background: rgba(255, 255, 255, 0.92);
+        border-color: rgba(197, 160, 89, 0.35);
+      }
+      .mobile-quick-nav__link--plans {
+        background: linear-gradient(135deg, rgba(197, 160, 89, 0.22), rgba(170, 240, 209, 0.35));
+        border-color: rgba(197, 160, 89, 0.45);
+        font-weight: 900;
+      }
+      .mobile-quick-nav__cart {
+        position: relative;
+        color: #1a1a1a;
+        background: linear-gradient(135deg, var(--gold) 0%, #e0c989 100%);
+        border-color: rgba(197, 160, 89, 0.55);
+      }
+      .mobile-quick-nav__cart-ico {
+        display: inline-flex;
+      }
+      .mobile-quick-nav__badge {
+        position: absolute;
+        top: 4px;
+        inset-inline-end: 8px;
+        min-width: 1.25em;
+        height: 1.25em;
+        padding: 0 5px;
+        border-radius: 999px;
+        background: #1a1a1a;
+        color: #fff;
+        font-size: 0.65rem;
+        font-weight: 900;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+      }
+      .mobile-quick-nav__badge[hidden] {
+        display: none !important;
+      }
+    }
     .cart-drawer-backdrop {
       position: fixed;
       inset: 0;
@@ -2684,6 +2876,11 @@
         padding: 12px 12px 14px;
       }
     }
+    @media (max-width: 400px) {
+      .hero {
+        min-height: clamp(200px, 32vh, 300px);
+      }
+    }
     @media (max-width: 480px) {
       .hero {
         min-height: clamp(215px, 36vh, 320px);
@@ -2745,6 +2942,11 @@
         clip: rect(0, 0, 0, 0);
         white-space: nowrap;
         border: 0;
+      }
+    }
+    @media (max-width: 720px) {
+      main#main-content {
+        padding-bottom: max(28px, calc(96px + env(safe-area-inset-bottom, 0px))) !important;
       }
     }
 
@@ -2828,6 +3030,27 @@
     }
     html[data-theme="dark"] .loyalty-program__summary-hint {
       color: var(--gold-dark);
+    }
+    html[data-theme="dark"] .mobile-quick-nav {
+      background: linear-gradient(180deg, rgba(8, 10, 14, 0.94), rgba(18, 22, 28, 0.98));
+      border-top-color: rgba(212, 184, 120, 0.28);
+    }
+    html[data-theme="dark"] .mobile-quick-nav__link {
+      background: rgba(28, 34, 42, 0.96);
+      color: #e8eaed;
+      border-color: rgba(212, 184, 120, 0.28);
+    }
+    html[data-theme="dark"] .mobile-quick-nav__link--plans {
+      background: linear-gradient(135deg, rgba(212, 184, 120, 0.2), rgba(90, 175, 142, 0.22));
+      border-color: rgba(212, 184, 120, 0.4);
+    }
+    html[data-theme="dark"] .mobile-quick-nav__cart {
+      background: linear-gradient(135deg, #c5a059, #9a7b3c);
+      color: #1a1a1a;
+      border-color: rgba(212, 184, 120, 0.45);
+    }
+    html[data-theme="dark"] .sessions-filters__summary {
+      color: var(--charcoal);
     }
   </style>
 </head>
@@ -3212,45 +3435,53 @@
       <section id="sessions-section" class="card sessions-panel" aria-label="قائمة الجلسات">
         <h2 class="booking-block-heading booking-block-heading--flush-top">الجلسات المتاحة للحجز الفوري</h2>
         <p class="sessions-lead">صفِّ الجلسات حسب الوقت والسعر والمستوى (بما فيها جلسات <strong>المبتدئين</strong>)، ثم أضِف ما تريد إلى السلة وأكمل الطلب بعد تسجيل الدخول.</p>
-        <div class="sessions-filters">
-          <h3 class="booking-block-heading sessions-filters-title">تصفية وترتيب الجلسات</h3>
-          <div class="sessions-filters-grid">
-            <div class="field">
-              <label for="session-search">بحث بالعنوان أو المدرب</label>
-              <input id="session-search" type="search" placeholder="مثال: Flow أو Maya" autocomplete="off" />
-            </div>
-            <div class="field">
-              <label for="session-level">مستوى الجلسة</label>
-              <select id="session-level" aria-label="فلتر المستوى">
-                <option value="">كل المستويات</option>
-                <option value="مبتدئ">مبتدئ</option>
-                <option value="متوسط">متوسط</option>
-                <option value="متقدم">متقدم</option>
-              </select>
-            </div>
-            <div class="field">
-              <label for="session-availability">توفر المقاعد</label>
-              <select id="session-availability" aria-label="فلتر المقاعد">
-                <option value="">كل الحالات</option>
-                <option value="available">المتاح فقط</option>
-                <option value="full">الممتلئة فقط</option>
-              </select>
-            </div>
-            <div class="field">
-              <label for="session-max-price">حد أعلى للسعر (ر.س)</label>
-              <input id="session-max-price" type="number" min="0" step="1" placeholder="اتركه فارغًا لعرض الكل" inputmode="numeric" />
-            </div>
-            <div class="field">
-              <label for="session-sort">ترتيب العرض</label>
-              <select id="session-sort" aria-label="الترتيب">
-                <option value="time_asc">الأقرب وقتًا</option>
-                <option value="price_asc">الأرخص سعرًا</option>
-                <option value="price_desc">الأعلى سعرًا</option>
-                <option value="availability_desc">الأكثر توفرًا</option>
-              </select>
+        <details class="sessions-filters" id="sessions-filters-details">
+          <summary class="sessions-filters__summary">
+            <span class="sessions-filters__summary-ico" aria-hidden="true">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>
+            </span>
+            <span>تصفية وترتيب الجلسات</span>
+          </summary>
+          <div class="sessions-filters__body">
+            <h3 class="booking-block-heading sessions-filters-title sessions-filters-title--desktop">تصفية وترتيب الجلسات</h3>
+            <div class="sessions-filters-grid">
+              <div class="field">
+                <label for="session-search">بحث بالعنوان أو المدرب</label>
+                <input id="session-search" type="search" placeholder="مثال: Flow أو Maya" autocomplete="off" />
+              </div>
+              <div class="field">
+                <label for="session-level">مستوى الجلسة</label>
+                <select id="session-level" aria-label="فلتر المستوى">
+                  <option value="">كل المستويات</option>
+                  <option value="مبتدئ">مبتدئ</option>
+                  <option value="متوسط">متوسط</option>
+                  <option value="متقدم">متقدم</option>
+                </select>
+              </div>
+              <div class="field">
+                <label for="session-availability">توفر المقاعد</label>
+                <select id="session-availability" aria-label="فلتر المقاعد">
+                  <option value="">كل الحالات</option>
+                  <option value="available">المتاح فقط</option>
+                  <option value="full">الممتلئة فقط</option>
+                </select>
+              </div>
+              <div class="field">
+                <label for="session-max-price">حد أعلى للسعر (ر.س)</label>
+                <input id="session-max-price" type="number" min="0" step="1" placeholder="اتركه فارغًا لعرض الكل" inputmode="numeric" />
+              </div>
+              <div class="field">
+                <label for="session-sort">ترتيب العرض</label>
+                <select id="session-sort" aria-label="الترتيب">
+                  <option value="time_asc">الأقرب وقتًا</option>
+                  <option value="price_asc">الأرخص سعرًا</option>
+                  <option value="price_desc">الأعلى سعرًا</option>
+                  <option value="availability_desc">الأكثر توفرًا</option>
+                </select>
+              </div>
             </div>
           </div>
-        </div>
+        </details>
 
         <div id="upcoming-sessions-wrap" class="upcoming-sessions" hidden aria-live="polite">
           <h3 class="booking-block-heading booking-block-heading--compact upcoming-sessions__title">أقرب جلسات متاحة</h3>
@@ -3500,6 +3731,18 @@
         <span class="sticky-cart-btn__badge" id="sticky-cart-count" hidden>0</span>
       </button>
     </div>
+
+    <nav class="mobile-quick-nav" id="mobile-quick-nav" aria-label="تنقّل سريع — جلسات وخطط وسلة">
+      <a class="mobile-quick-nav__link" href="#sessions-section">جلسات</a>
+      <a class="mobile-quick-nav__link mobile-quick-nav__link--plans" href="#plans-section">خطط</a>
+      <button type="button" class="mobile-quick-nav__cart" id="mobile-quick-open-cart" aria-controls="cart-drawer" aria-expanded="false" aria-label="فتح سلة المشتريات">
+        <span class="mobile-quick-nav__cart-ico" aria-hidden="true">
+          <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><circle cx="9" cy="20" r="1.5" fill="currentColor"/><circle cx="17" cy="20" r="1.5" fill="currentColor"/><path d="M3 4h2l2 12h11l2-9H7" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </span>
+        <span>سلة</span>
+        <span class="mobile-quick-nav__badge" id="mobile-quick-cart-count" hidden>0</span>
+      </button>
+    </nav>
   </div>
 
   <div class="cart-drawer-backdrop" id="cart-drawer-backdrop" hidden aria-hidden="true"></div>
@@ -3681,6 +3924,8 @@
       const cartCompleteBtn = document.getElementById("cart-complete-btn");
       const stickyOpenCart = document.getElementById("sticky-open-cart");
       const stickyCartCount = document.getElementById("sticky-cart-count");
+      const mobileQuickOpenCart = document.getElementById("mobile-quick-open-cart");
+      const mobileQuickCartCount = document.getElementById("mobile-quick-cart-count");
 
       function loadCart() {
         try {
@@ -3705,6 +3950,7 @@
         cartDrawer.setAttribute("aria-hidden", "false");
         cartBackdrop.setAttribute("aria-hidden", "false");
         if (stickyOpenCart) stickyOpenCart.setAttribute("aria-expanded", "true");
+        if (mobileQuickOpenCart) mobileQuickOpenCart.setAttribute("aria-expanded", "true");
       }
       function closeCartDrawer() {
         if (!cartDrawer || !cartBackdrop) return;
@@ -3713,7 +3959,25 @@
         cartDrawer.setAttribute("aria-hidden", "true");
         cartBackdrop.setAttribute("aria-hidden", "true");
         if (stickyOpenCart) stickyOpenCart.setAttribute("aria-expanded", "false");
+        if (mobileQuickOpenCart) mobileQuickOpenCart.setAttribute("aria-expanded", "false");
         setTimeout(function () { cartBackdrop.hidden = true; }, 220);
+      }
+      function pulseCartBadges() {
+        if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+        [stickyCartCount, mobileQuickCartCount].forEach(function (el) {
+          if (!el || el.hidden) return;
+          el.classList.remove("is-pulse");
+          void el.offsetWidth;
+          el.classList.add("is-pulse");
+          el.addEventListener(
+            "animationend",
+            function onEnd() {
+              el.removeEventListener("animationend", onEnd);
+              el.classList.remove("is-pulse");
+            },
+            { once: true }
+          );
+        });
       }
       function renderCart() {
         const cart = loadCart();
@@ -3775,6 +4039,14 @@
             stickyCartCount.textContent = String(items.length);
           } else {
             stickyCartCount.hidden = true;
+          }
+        }
+        if (mobileQuickCartCount) {
+          if (items.length > 0) {
+            mobileQuickCartCount.hidden = false;
+            mobileQuickCartCount.textContent = String(items.length);
+          } else {
+            mobileQuickCartCount.hidden = true;
           }
         }
         var cartLiveBanner = document.getElementById("cart-live-banner");
@@ -3851,6 +4123,7 @@
           setTimeout(function () { btn.classList.remove("btn-just-added"); }, 720);
           track("add_to_cart", { item_category: "session", session_id: sid });
           openCartDrawer();
+          pulseCartBadges();
         });
       });
       document.querySelectorAll(".js-add-plan").forEach(function (btn) {
@@ -3873,11 +4146,19 @@
           setTimeout(function () { btn.classList.remove("btn-just-added"); }, 720);
           track("add_to_cart", { item_category: "plan", plan_id: pid });
           openCartDrawer();
+          pulseCartBadges();
         });
       });
 
       if (stickyOpenCart) {
         stickyOpenCart.addEventListener("click", function (e) {
+          e.preventDefault();
+          e.stopPropagation();
+          openCartDrawer();
+        });
+      }
+      if (mobileQuickOpenCart) {
+        mobileQuickOpenCart.addEventListener("click", function (e) {
           e.preventDefault();
           e.stopPropagation();
           openCartDrawer();
@@ -4195,6 +4476,19 @@
   <script>
     (function initLoyaltyTableDetails() {
       var d = document.getElementById("loyalty-table-details");
+      if (!d) return;
+      var mq = window.matchMedia("(min-width: 721px)");
+      function sync() {
+        try {
+          d.open = mq.matches;
+        } catch (e) {}
+      }
+      sync();
+      if (mq.addEventListener) mq.addEventListener("change", sync);
+      else if (mq.addListener) mq.addListener(sync);
+    })();
+    (function initSessionsFiltersDetails() {
+      var d = document.getElementById("sessions-filters-details");
       if (!d) return;
       var mq = window.matchMedia("(min-width: 721px)");
       function sync() {
