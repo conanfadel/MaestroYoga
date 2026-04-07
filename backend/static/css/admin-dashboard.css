@@ -2224,6 +2224,46 @@ body.report-run-sheet {
   margin-top: 14px;
   color: var(--charcoal-muted);
 }
+.report-insights__kpis {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin: 14px 0 18px;
+}
+.report-insights__charts {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  margin-bottom: 22px;
+}
+.report-insights__chart-card {
+  padding: 12px 14px;
+  border-radius: 14px;
+  border: 1px solid rgba(197, 160, 89, 0.22);
+  background: rgba(255, 255, 255, 0.92);
+  box-shadow: 0 4px 16px rgba(45, 52, 54, 0.05);
+}
+.report-insights__chart-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+}
+@media (max-width: 900px) {
+  .report-insights__chart-row {
+    grid-template-columns: 1fr;
+  }
+}
+.report-insights__chart-card--half {
+  min-width: 0;
+}
+html[data-theme="dark"] .report-insights__chart-card {
+  background: rgba(20, 24, 31, 0.92);
+  border-color: rgba(197, 160, 89, 0.28);
+}
+body.report-insights .print-only-note {
+  display: none;
+}
+
 @media print {
   .no-print {
     display: none !important;
@@ -2235,5 +2275,8 @@ body.report-run-sheet {
   .report-run-sheet__main h1.admin-booking-block-heading {
     box-shadow: none;
     border: 1px solid #ccc;
+  }
+  body.report-insights .print-only-note {
+    display: block !important;
   }
 }

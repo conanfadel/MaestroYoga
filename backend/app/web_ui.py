@@ -14,7 +14,7 @@ from pydantic import ValidationError
 from fastapi import APIRouter, Depends, File, Form, HTTPException, Query, Request, UploadFile
 from fastapi.responses import HTMLResponse, RedirectResponse, StreamingResponse
 from fastapi.templating import Jinja2Templates
-from sqlalchemy import and_, case, func, nullslast, or_
+from sqlalchemy import and_, case, desc, func, nullslast, or_
 from sqlalchemy.orm import Session
 
 from . import models, schemas
@@ -3544,6 +3544,9 @@ def _report_period_to_range(
         else:
             last = date(first.year, first.month + 1, 1) - timedelta(days=1)
         return first, last, "هذا الشهر", None
+    if p == "year":
+        y = today.year
+        return date(y, 1, 1), date(y, 12, 31), f"السنة {y}", None
     if p == "custom":
         a = _parse_optional_date_str(date_from_s)
         b = _parse_optional_date_str(date_to_s)
@@ -3772,6 +3775,227 @@ def admin_report_revenue(
             "method_rows": method_rows,
             "status_rows": status_rows,
             "export_payments_csv_url": export_q,
+            "generated_at": _fmt_dt(utcnow_naive()),
+        },
+    )
+
+
+@router.get("/admin/reports/insights", response_class=HTMLResponse)
+def admin_report_insights(
+    request: Request,
+    period: str = "month",
+    date_from: str = "",
+    date_to: str = "",
+    db: Session = Depends(get_db),
+):
+    """رؤى تشغيلية: أكثر الجلسات حجزاً، نشاط المدربين، توزيع الأيام والساعات والغرف، ومخططات."""
+    user, redirect = _require_admin_user_or_redirect(request, db)
+    if redirect:
+        return redirect
+    assert user is not None
+    if (user.role or "") == "trainer":
+        return RedirectResponse(
+            url=_url_with_params("/admin", msg=ADMIN_MSG_TRAINER_ADMIN_FORBIDDEN),
+            status_code=303,
+        )
+    if not _user_can_report_sessions(user):
+        return RedirectResponse(
+            url=_url_with_params("/admin", msg=ADMIN_MSG_REPORT_FORBIDDEN),
+            status_code=303,
+        )
+    cid = require_user_center_id(user)
+    center = db.get(models.Center, cid)
+    d0, d1, range_label, range_err = _report_period_to_range(period, date_from, date_to)
+    sess_filters = [
+        models.YogaSession.center_id == cid,
+        func.date(models.YogaSession.starts_at) >= d0,
+        func.date(models.YogaSession.starts_at) <= d1,
+    ]
+    rooms_by_id = {r.id: r for r in db.query(models.Room).filter(models.Room.center_id == cid).all()}
+
+    total_sessions = int(
+        db.query(func.count(models.YogaSession.id)).filter(*sess_filters).scalar() or 0
+    )
+    total_active_bookings = int(
+        db.query(func.count(models.Booking.id))
+        .join(models.YogaSession, models.YogaSession.id == models.Booking.session_id)
+        .filter(*sess_filters, models.Booking.status.in_(ACTIVE_BOOKING_STATUSES))
+        .scalar()
+        or 0
+    )
+    total_bookings_all = int(
+        db.query(func.count(models.Booking.id))
+        .join(models.YogaSession, models.YogaSession.id == models.Booking.session_id)
+        .filter(*sess_filters)
+        .scalar()
+        or 0
+    )
+    cancelled_bookings = int(
+        db.query(func.count(models.Booking.id))
+        .join(models.YogaSession, models.YogaSession.id == models.Booking.session_id)
+        .filter(*sess_filters, models.Booking.status == "cancelled")
+        .scalar()
+        or 0
+    )
+    cancel_rate = round(100.0 * cancelled_bookings / total_bookings_all, 1) if total_bookings_all else 0.0
+
+    top_sessions_raw = (
+        db.query(
+            models.YogaSession.id,
+            models.YogaSession.title,
+            models.YogaSession.trainer_name,
+            models.YogaSession.starts_at,
+            models.YogaSession.room_id,
+            func.count(models.Booking.id).label("bk"),
+        )
+        .outerjoin(
+            models.Booking,
+            and_(
+                models.Booking.session_id == models.YogaSession.id,
+                models.Booking.status.in_(ACTIVE_BOOKING_STATUSES),
+            ),
+        )
+        .filter(*sess_filters)
+        .group_by(
+            models.YogaSession.id,
+            models.YogaSession.title,
+            models.YogaSession.trainer_name,
+            models.YogaSession.starts_at,
+            models.YogaSession.room_id,
+        )
+        .order_by(desc("bk"))
+        .limit(15)
+        .all()
+    )
+    top_session_rows: list[dict[str, Any]] = []
+    for row in top_sessions_raw:
+        rid, title, tr, starts, room_id, bk = row
+        rm = rooms_by_id.get(room_id)
+        top_session_rows.append(
+            {
+                "id": rid,
+                "title": title,
+                "trainer_name": tr,
+                "starts_at_display": _fmt_dt(starts),
+                "room_name": rm.name if rm else "—",
+                "bookings": int(bk or 0),
+            }
+        )
+
+    tr_sess = {
+        name: int(n or 0)
+        for name, n in db.query(models.YogaSession.trainer_name, func.count(models.YogaSession.id))
+        .filter(*sess_filters)
+        .group_by(models.YogaSession.trainer_name)
+        .all()
+    }
+    tr_book = {
+        name: int(n or 0)
+        for name, n in (
+            db.query(models.YogaSession.trainer_name, func.count(models.Booking.id))
+            .join(
+                models.Booking,
+                and_(
+                    models.Booking.session_id == models.YogaSession.id,
+                    models.Booking.status.in_(ACTIVE_BOOKING_STATUSES),
+                ),
+            )
+            .filter(*sess_filters)
+            .group_by(models.YogaSession.trainer_name)
+            .all()
+        )
+    }
+    trainer_names = set(tr_sess.keys()) | set(tr_book.keys())
+    trainer_merged: list[dict[str, Any]] = []
+    for name in trainer_names:
+        sn = tr_sess.get(name, 0)
+        bn = tr_book.get(name, 0)
+        trainer_merged.append(
+            {
+                "name": name or "—",
+                "sessions": sn,
+                "bookings": bn,
+            }
+        )
+    trainer_merged.sort(key=lambda x: (x["bookings"], x["sessions"]), reverse=True)
+
+    room_rows_raw = (
+        db.query(models.Room.name, func.count(models.YogaSession.id))
+        .join(models.YogaSession, models.YogaSession.room_id == models.Room.id)
+        .filter(*sess_filters)
+        .group_by(models.Room.id, models.Room.name)
+        .order_by(func.count(models.YogaSession.id).desc())
+        .all()
+    )
+    room_rows = [{"name": rn or "—", "count": int(c or 0)} for rn, c in room_rows_raw]
+
+    wd_sql = func.strftime("%w", models.YogaSession.starts_at)
+    wd_raw = {
+        str(wd): int(n or 0)
+        for wd, n in db.query(wd_sql, func.count(models.YogaSession.id))
+        .filter(*sess_filters)
+        .group_by(wd_sql)
+        .all()
+    }
+    weekday_ar = ["الأحد", "الإثنين", "الثلاثاء", "الأربعاء", "الخميس", "الجمعة", "السبت"]
+    weekday_labels = []
+    weekday_data = []
+    for i in range(7):
+        weekday_labels.append(weekday_ar[i])
+        weekday_data.append(int(wd_raw.get(str(i), 0)))
+
+    hr_sql = func.strftime("%H", models.YogaSession.starts_at)
+    hr_raw = {
+        str(h): int(n or 0)
+        for h, n in db.query(hr_sql, func.count(models.YogaSession.id))
+        .filter(*sess_filters)
+        .group_by(hr_sql)
+        .all()
+    }
+    hour_labels = [f"{h:02d}:00" for h in range(24)]
+    hour_data = [int(hr_raw.get(f"{h:02d}", 0)) for h in range(24)]
+
+    avg_bookings_per_session = (
+        round(total_active_bookings / total_sessions, 2) if total_sessions else 0.0
+    )
+
+    charts_payload = {
+        "trainers": {
+            "labels": [t["name"][:28] for t in trainer_merged[:12]],
+            "data": [t["bookings"] for t in trainer_merged[:12]],
+        },
+        "sessions": {
+            "labels": [((t["title"] or "")[:22] + f" #{t['id']}") for t in top_session_rows[:10]],
+            "data": [t["bookings"] for t in top_session_rows[:10]],
+        },
+        "weekday": {"labels": weekday_labels, "data": weekday_data},
+        "hour": {"labels": hour_labels, "data": hour_data},
+        "rooms": {
+            "labels": [r["name"][:24] for r in room_rows[:10]],
+            "data": [r["count"] for r in room_rows[:10]],
+        },
+    }
+    charts_json = json.dumps(charts_payload, ensure_ascii=False)
+
+    return templates.TemplateResponse(
+        request,
+        "admin_report_insights.html",
+        {
+            "center": center,
+            "range_label": range_label or "الفترة",
+            "range_error": range_err,
+            "period": (period or "month").strip().lower(),
+            "date_from_val": (date_from or "")[:10],
+            "date_to_val": (date_to or "")[:10],
+            "total_sessions": total_sessions,
+            "total_active_bookings": total_active_bookings,
+            "cancel_rate": cancel_rate,
+            "cancelled_bookings": cancelled_bookings,
+            "avg_bookings_per_session": avg_bookings_per_session,
+            "top_session_rows": top_session_rows,
+            "trainer_rows": trainer_merged[:20],
+            "room_rows": room_rows,
+            "charts_json": charts_json,
             "generated_at": _fmt_dt(utcnow_naive()),
         },
     )

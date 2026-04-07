@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>رؤى تشغيلية — {{ center.name if center else 'المركز' }}</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/static/css/admin-dashboard.css" />
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js" crossorigin="anonymous"></script>
+</head>
+<body class="report-run-sheet report-insights">
+  <header class="report-run-sheet__toolbar no-print">
+    <a class="soft-link" href="/admin#section-reports">← العودة إلى التقارير</a>
+    <span class="report-run-sheet__toolbar-gap"></span>
+    <a class="soft-link" href="/admin/reports/insights?period=today">اليوم</a>
+    <a class="soft-link" href="/admin/reports/insights?period=week">الأسبوع</a>
+    <a class="soft-link" href="/admin/reports/insights?period=month">الشهر</a>
+    <a class="soft-link" href="/admin/reports/insights?period=year">السنة</a>
+    <button type="button" class="secondary" id="report-print-btn">طباعة / حفظ PDF</button>
+  </header>
+
+  <main class="report-run-sheet__main">
+    <h1 class="admin-booking-block-heading admin-booking-block-heading--flush-top">رؤى تشغيلية</h1>
+    <p class="report-run-sheet__meta"><strong>{{ center.name if center else 'المركز' }}</strong> — {{ range_label }} — أُنشئ في {{ generated_at }}</p>
+    {% if range_error %}
+    <p class="alert warn">{{ range_error }}</p>
+    {% endif %}
+
+    <form method="get" action="/admin/reports/insights" class="report-run-sheet__filter no-print">
+      <input type="hidden" name="period" value="custom" />
+      <label>من <input type="date" name="date_from" value="{{ date_from_val }}" required /></label>
+      <label>إلى <input type="date" name="date_to" value="{{ date_to_val }}" required /></label>
+      <button type="submit">عرض النطاق</button>
+    </form>
+
+    <div class="report-insights__kpis">
+      <div class="stat"><div class="k">جلسات في الفترة</div><div class="v">{{ total_sessions }}</div></div>
+      <div class="stat"><div class="k">حجوزات نشطة (في جلسات الفترة)</div><div class="v">{{ total_active_bookings }}</div></div>
+      <div class="stat"><div class="k">متوسط حجز/جلسة</div><div class="v">{{ '%.2f'|format(avg_bookings_per_session) }}</div></div>
+      <div class="stat"><div class="k">نسبة الإلغاء</div><div class="v">{{ cancel_rate }}% <span class="small">({{ cancelled_bookings }} ملغاة)</span></div></div>
+    </div>
+
+    <div class="report-insights__charts no-print">
+      <div class="report-insights__chart-card">
+        <h2 class="admin-booking-block-heading admin-booking-block-heading--compact">نشاط المدربين (حجوزات نشطة في جلسات الفترة)</h2>
+        <canvas id="chartTrainers" height="120" aria-label="مخطط المدربين"></canvas>
+      </div>
+      <div class="report-insights__chart-card">
+        <h2 class="admin-booking-block-heading admin-booking-block-heading--compact">أكثر الجلسات حجزاً</h2>
+        <canvas id="chartSessions" height="120" aria-label="مخطط الجلسات"></canvas>
+      </div>
+      <div class="report-insights__chart-row">
+        <div class="report-insights__chart-card report-insights__chart-card--half">
+          <h2 class="admin-booking-block-heading admin-booking-block-heading--compact">الجلسات حسب يوم الأسبوع</h2>
+          <canvas id="chartWeekday" height="180" aria-label="مخطط أيام الأسبوع"></canvas>
+        </div>
+        <div class="report-insights__chart-card report-insights__chart-card--half">
+          <h2 class="admin-booking-block-heading admin-booking-block-heading--compact">الجلسات حسب ساعة البداية</h2>
+          <canvas id="chartHour" height="180" aria-label="مخطط الساعات"></canvas>
+        </div>
+      </div>
+      <div class="report-insights__chart-card">
+        <h2 class="admin-booking-block-heading admin-booking-block-heading--compact">توزيع الجلسات على الغرف</h2>
+        <canvas id="chartRooms" height="100" aria-label="مخطط الغرف"></canvas>
+      </div>
+    </div>
+
+    <h2 class="admin-booking-block-heading">جدول: أكثر الجلسات حجزاً</h2>
+    <div class="table-fluid">
+      <table>
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>العنوان</th>
+            <th>المدرّب</th>
+            <th>الوقت</th>
+            <th>الغرفة</th>
+            <th>حجوزات نشطة</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for row in top_session_rows %}
+          <tr>
+            <td>{{ row.id }}</td>
+            <td>{{ row.title }}</td>
+            <td>{{ row.trainer_name }}</td>
+            <td>{{ row.starts_at_display }}</td>
+            <td>{{ row.room_name }}</td>
+            <td>{{ row.bookings }}</td>
+          </tr>
+          {% else %}
+          <tr><td colspan="6">لا توجد جلسات في هذه الفترة.</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+
+    <h2 class="admin-booking-block-heading">جدول: نشاط المدربين</h2>
+    <div class="table-fluid">
+      <table>
+        <thead>
+          <tr>
+            <th>المدرّب</th>
+            <th>عدد الجلسات</th>
+            <th>مجموع الحجوزات النشطة</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for row in trainer_rows %}
+          <tr>
+            <td>{{ row.name }}</td>
+            <td>{{ row.sessions }}</td>
+            <td>{{ row.bookings }}</td>
+          </tr>
+          {% else %}
+          <tr><td colspan="3">لا بيانات.</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+
+    <p class="small report-run-sheet__footnote print-only-note">المخططات البيانية تظهر على الشاشة؛ للطباعة راجع الجداول أعلاه.</p>
+  </main>
+
+  <script type="application/json" id="insights-data">{{ charts_json | safe }}</script>
+  <script>
+    (function () {
+      document.getElementById("report-print-btn").addEventListener("click", function () { window.print(); });
+      var raw = document.getElementById("insights-data");
+      var D = {};
+      try { D = JSON.parse(raw.textContent || "{}"); } catch (e) {}
+      var gold = "rgba(197, 160, 89, 0.85)";
+      var mint = "rgba(125, 211, 174, 0.75)";
+      var common = {
+        responsive: true,
+        maintainAspectRatio: true,
+        plugins: { legend: { display: false } },
+      };
+      if (D.trainers && D.trainers.labels && D.trainers.labels.length) {
+        new Chart(document.getElementById("chartTrainers"), {
+          type: "bar",
+          data: {
+            labels: D.trainers.labels,
+            datasets: [{ label: "حجوزات", data: D.trainers.data, backgroundColor: gold }],
+          },
+          options: { indexAxis: "y", ...common, scales: { x: { beginAtZero: true } } },
+        });
+      }
+      if (D.sessions && D.sessions.labels && D.sessions.labels.length) {
+        new Chart(document.getElementById("chartSessions"), {
+          type: "bar",
+          data: {
+            labels: D.sessions.labels,
+            datasets: [{ label: "حجوزات", data: D.sessions.data, backgroundColor: mint }],
+          },
+          options: { ...common, scales: { y: { beginAtZero: true } } },
+        });
+      }
+      if (D.weekday && D.weekday.labels) {
+        new Chart(document.getElementById("chartWeekday"), {
+          type: "bar",
+          data: {
+            labels: D.weekday.labels,
+            datasets: [{ label: "جلسات", data: D.weekday.data, backgroundColor: gold }],
+          },
+          options: { ...common, scales: { y: { beginAtZero: true } } },
+        });
+      }
+      if (D.hour && D.hour.labels) {
+        new Chart(document.getElementById("chartHour"), {
+          type: "line",
+          data: {
+            labels: D.hour.labels,
+            datasets: [{ label: "جلسات", data: D.hour.data, borderColor: gold, backgroundColor: "rgba(197,160,89,0.15)", fill: true, tension: 0.25 }],
+          },
+          options: { ...common, scales: { y: { beginAtZero: true } } },
+        });
+      }
+      if (D.rooms && D.rooms.labels && D.rooms.labels.length) {
+        new Chart(document.getElementById("chartRooms"), {
+          type: "bar",
+          data: {
+            labels: D.rooms.labels,
+            datasets: [{ label: "جلسات", data: D.rooms.data, backgroundColor: mint }],
+          },
+          options: { indexAxis: "y", ...common, scales: { x: { beginAtZero: true } } },
+        });
+      }
+    })();
+  </script>
+</body>
+</html>
