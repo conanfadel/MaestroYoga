@@ -3863,7 +3863,7 @@ def admin_report_insights(
             models.YogaSession.starts_at,
             models.YogaSession.room_id,
         )
-        .order_by(desc("bk"))
+        .order_by(desc(func.count(models.Booking.id)))
         .limit(15)
         .all()
     )
@@ -3929,31 +3929,20 @@ def admin_report_insights(
     )
     room_rows = [{"name": rn or "—", "count": int(c or 0)} for rn, c in room_rows_raw]
 
-    wd_sql = func.strftime("%w", models.YogaSession.starts_at)
-    wd_raw = {
-        str(wd): int(n or 0)
-        for wd, n in db.query(wd_sql, func.count(models.YogaSession.id))
-        .filter(*sess_filters)
-        .group_by(wd_sql)
-        .all()
-    }
+    # Count by weekday/hour in Python so SQLite + PostgreSQL both work (strftime is SQLite-only).
+    wd_counts = [0] * 7
+    hr_counts = [0] * 24
+    for (starts_at,) in db.query(models.YogaSession.starts_at).filter(*sess_filters).all():
+        if starts_at is None:
+            continue
+        dow = (starts_at.weekday() + 1) % 7  # Sunday=0 .. Saturday=6 (matches SQLite %w)
+        wd_counts[dow] += 1
+        hr_counts[starts_at.hour] += 1
     weekday_ar = ["الأحد", "الإثنين", "الثلاثاء", "الأربعاء", "الخميس", "الجمعة", "السبت"]
-    weekday_labels = []
-    weekday_data = []
-    for i in range(7):
-        weekday_labels.append(weekday_ar[i])
-        weekday_data.append(int(wd_raw.get(str(i), 0)))
-
-    hr_sql = func.strftime("%H", models.YogaSession.starts_at)
-    hr_raw = {
-        str(h): int(n or 0)
-        for h, n in db.query(hr_sql, func.count(models.YogaSession.id))
-        .filter(*sess_filters)
-        .group_by(hr_sql)
-        .all()
-    }
+    weekday_labels = list(weekday_ar)
+    weekday_data = wd_counts
     hour_labels = [f"{h:02d}:00" for h in range(24)]
-    hour_data = [int(hr_raw.get(f"{h:02d}", 0)) for h in range(24)]
+    hour_data = hr_counts
 
     avg_bookings_per_session = (
         round(total_active_bookings / total_sessions, 2) if total_sessions else 0.0
