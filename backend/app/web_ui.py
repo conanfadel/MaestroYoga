@@ -668,6 +668,9 @@ def public_index(
     }
     for s in sessions:
         room = rooms_by_id.get(s.room_id)
+        starts = s.starts_at
+        dur = int(s.duration_minutes or 0)
+        ends = (starts + timedelta(minutes=dur)) if starts else None
         rows.append(
             {
                 "id": s.id,
@@ -677,6 +680,8 @@ def public_index(
                 "level_label": level_labels.get(s.level, s.level),
                 "starts_at": s.starts_at,
                 "starts_at_display": _fmt_dt_weekday_ar(s.starts_at),
+                "starts_at_iso": starts.isoformat() if starts else "",
+                "ends_at_iso": ends.isoformat() if ends else "",
                 "duration_minutes": s.duration_minutes,
                 "price_drop_in": s.price_drop_in,
                 "room_name": room.name if room else "-",
