@@ -766,17 +766,38 @@
     .mono { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: .78rem; color: #334155; }
     .controls-wrap {
       display: flex;
-      gap: 6px;
-      flex-wrap: wrap;
+      flex-direction: row;
+      flex-wrap: nowrap;
       align-items: center;
-      overflow-x: visible;
+      justify-content: flex-start;
+      gap: 8px;
+      min-width: 0;
+      max-width: 100%;
+      overflow-x: auto;
+      overflow-y: hidden;
+      -webkit-overflow-scrolling: touch;
+      padding: 2px 0 4px;
+      scrollbar-width: thin;
     }
-    .controls-wrap form { margin: 0; }
+    .controls-wrap::-webkit-scrollbar {
+      height: 5px;
+    }
+    .controls-wrap::-webkit-scrollbar-thumb {
+      background: rgba(197, 160, 89, 0.4);
+      border-radius: 999px;
+    }
+    .controls-wrap form {
+      margin: 0;
+      display: inline-flex;
+      flex: 0 0 auto;
+      align-items: center;
+    }
     .controls-wrap button {
       margin-top: 0;
-      padding: 7px 10px;
-      font-size: .8rem;
+      padding: 7px 11px;
+      font-size: 0.78rem;
       border-radius: 10px;
+      white-space: nowrap;
     }
     .controls-wrap .soft {
       background: linear-gradient(135deg, var(--charcoal) 0%, #454d50 100%);
@@ -788,6 +809,15 @@
       color: #fff;
       border: 0;
       box-shadow: none;
+    }
+    .controls-wrap > a.soft-link {
+      flex: 0 0 auto;
+      white-space: nowrap;
+    }
+    @media (min-width: 901px) {
+      .table-fluid table tbody td:has(.controls-wrap) {
+        vertical-align: middle;
+      }
     }
     .accordion {
       border: 1px solid rgba(197, 160, 89, 0.3);
@@ -1567,7 +1597,12 @@ html[data-theme="dark"] .index-spotlight-heading__text {
     display: none;
     content: none;
   }
-  .table-fluid table.table-card-rwd .controls-wrap,
+  .table-fluid table.table-card-rwd .controls-wrap {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    gap: 8px;
+    padding-bottom: 6px;
+  }
   .table-fluid table.table-card-rwd .inline-form {
     flex-wrap: wrap;
     gap: 8px;
