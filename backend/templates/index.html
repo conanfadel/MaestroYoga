@@ -12,10 +12,10 @@
   <link rel="manifest" href="/static/manifest.json" />
   <link rel="apple-touch-icon" href="/static/icons/pwa-icon.svg" />
   <link rel="stylesheet" href="/static/css/mobile-enhancements.css" />
-  <title>حجز الجلسات | {{ center.name }} | Maestro Yoga</title>
-  <meta name="description" content="احجز جلسات اليوغا أو اشترك في باقات أسبوعية وشهرية وسنوية مع دفع آمن وسريع." />
-  <meta property="og:title" content="Maestro Yoga - {{ center.name }}" />
-  <meta property="og:description" content="جلسات يومية، مدربون محترفون، اشتراكات مرنة، ودفع إلكتروني آمن." />
+  <title>{{ index_seo_title }}</title>
+  <meta name="description" content="{{ index_meta_description }}" />
+  <meta property="og:title" content="{{ index_seo_title }}" />
+  <meta property="og:description" content="{{ index_meta_description }}" />
   <meta property="og:type" content="website" />
   <meta property="og:locale" content="ar_SA" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -46,7 +46,7 @@
           "@type": "HealthClub",
           "@id": {{ healthclub_id|tojson }},
           "name": {{ center.name|tojson }},
-          "description": {{ ("جلسات يومية واشتراكات يوغا في " ~ center.name)|tojson }},
+          "description": {{ index_meta_description|tojson }},
           "url": {{ index_page_url|tojson }}
         }
         {%- for s in sessions -%}
@@ -94,6 +94,9 @@
       --page-tint: transparent;
       --ease-out-soft: cubic-bezier(0.22, 1, 0.36, 1);
       --t-interactive: 0.32s;
+      --shadow-brand: 0 8px 28px rgba(45, 52, 54, 0.08), 0 2px 12px rgba(197, 160, 89, 0.12);
+      --shadow-brand-hover: 0 18px 44px rgba(197, 160, 89, 0.16), 0 6px 20px rgba(45, 52, 54, 0.08);
+      --ring-focus: 0 0 0 3px rgba(197, 160, 89, 0.42);
     }
     body.time-morning { --page-tint: rgba(255, 250, 235, 0.55); }
     body.time-afternoon { --page-tint: rgba(232, 252, 244, 0.45); }
@@ -139,6 +142,217 @@
       z-index: 999;
     }
     .skip-link:focus { inset-inline-start: 12px; top: 12px; }
+    #index-offline-banner {
+      position: fixed;
+      top: 0;
+      inset-inline: 0;
+      z-index: 10000;
+      padding: 10px 14px;
+      text-align: center;
+      font-weight: 800;
+      font-size: 0.9rem;
+      background: linear-gradient(135deg, #fef3c7, #fde68a);
+      color: #92400e;
+      border-bottom: 1px solid #f59e0b;
+      box-shadow: 0 4px 16px rgba(146, 64, 14, 0.15);
+    }
+    #index-offline-banner[hidden] { display: none !important; }
+    .index-trust-bar {
+      margin: 0 0 14px;
+      padding: 12px 16px;
+      border-radius: 16px;
+      background: linear-gradient(125deg, rgba(255, 255, 255, 0.95), rgba(232, 252, 244, 0.9));
+      border: 1px solid rgba(197, 160, 89, 0.32);
+      box-shadow: var(--shadow-brand);
+    }
+    .index-trust-bar__list {
+      list-style: none;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: center;
+      gap: 10px 18px;
+      font-size: 0.86rem;
+      font-weight: 700;
+      color: var(--charcoal-muted);
+    }
+    .index-trust-bar__list li {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .index-trust-bar__list strong { color: var(--gold-dark); font-weight: 800; }
+    .index-trust-bar__ico {
+      width: 18px;
+      height: 18px;
+      flex-shrink: 0;
+      color: var(--mint-mid);
+    }
+    .index-trust-bar a {
+      color: var(--gold-dark);
+      font-weight: 800;
+      text-decoration: underline;
+      text-underline-offset: 3px;
+    }
+    .index-product-clarity {
+      margin: 0 0 18px;
+      padding: 18px 18px 16px;
+      border-radius: 18px;
+      background: linear-gradient(168deg, #ffffff 0%, var(--mint-bg) 42%, #ffffff 100%);
+      border: 1px solid rgba(197, 160, 89, 0.28);
+      box-shadow: var(--shadow-brand);
+    }
+    .index-product-clarity__grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(min(100%, 240px), 1fr));
+      gap: 14px;
+      margin-bottom: 12px;
+    }
+    .index-product-clarity__card {
+      padding: 14px 16px;
+      border-radius: 14px;
+      background: var(--white);
+      border: 1px solid rgba(170, 240, 209, 0.75);
+      box-shadow: 0 4px 16px rgba(45, 52, 54, 0.04);
+    }
+    .index-product-clarity__card--plan {
+      border-color: rgba(197, 160, 89, 0.4);
+      background: linear-gradient(180deg, #fffefb 0%, #fff 100%);
+    }
+    .index-product-clarity__card h3 {
+      margin: 0 0 8px;
+      font-size: 1.02rem;
+      font-weight: 800;
+      color: var(--charcoal);
+    }
+    .index-product-clarity__card p {
+      margin: 0;
+      font-size: 0.9rem;
+      line-height: 1.6;
+      color: var(--charcoal-muted);
+    }
+    .index-product-clarity__note {
+      margin: 0;
+      padding: 10px 12px;
+      border-radius: 12px;
+      background: rgba(197, 160, 89, 0.1);
+      border: 1px dashed rgba(197, 160, 89, 0.35);
+      font-size: 0.84rem;
+      line-height: 1.55;
+      color: var(--charcoal);
+    }
+    .index-team-strip {
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      margin-top: 14px;
+      padding: 12px 14px;
+      border-radius: 14px;
+      background: rgba(255, 255, 255, 0.75);
+      border: 1px solid rgba(125, 211, 174, 0.45);
+    }
+    .index-team-strip__ico {
+      flex-shrink: 0;
+      width: 44px;
+      height: 44px;
+      border-radius: 12px;
+      background: var(--gold-soft);
+      border: 1px solid rgba(197, 160, 89, 0.35);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--gold-dark);
+    }
+    .index-team-strip__ico svg { width: 26px; height: 26px; }
+    .index-team-strip p {
+      margin: 0;
+      font-size: 0.88rem;
+      line-height: 1.55;
+      color: var(--charcoal-muted);
+    }
+    .index-faq-teaser {
+      margin-top: 22px;
+      padding: 18px;
+      border-radius: 16px;
+      background: var(--white);
+      border: 1px solid rgba(197, 160, 89, 0.28);
+      box-shadow: var(--shadow-brand);
+    }
+    .index-faq-teaser__title {
+      margin: 0 0 12px;
+      font-family: "Amiri", "Tajawal", serif;
+      font-size: 1.08rem;
+      font-weight: 700;
+      color: var(--gold-dark);
+    }
+    .index-faq-teaser__item {
+      margin-bottom: 8px;
+      border: 1px solid rgba(170, 240, 209, 0.65);
+      border-radius: 12px;
+      overflow: hidden;
+      background: rgba(232, 252, 244, 0.35);
+    }
+    .index-faq-teaser__item summary {
+      padding: 10px 14px;
+      cursor: pointer;
+      font-weight: 700;
+      font-size: 0.9rem;
+      color: var(--charcoal);
+      list-style: none;
+    }
+    .index-faq-teaser__item summary::-webkit-details-marker { display: none; }
+    .index-faq-teaser__item[open] summary {
+      border-bottom: 1px solid rgba(170, 240, 209, 0.6);
+    }
+    .index-faq-teaser__item p {
+      margin: 0;
+      padding: 10px 14px 12px;
+      font-size: 0.86rem;
+      line-height: 1.55;
+      color: var(--charcoal-muted);
+    }
+    .index-faq-teaser__more {
+      display: inline-block;
+      margin-top: 10px;
+      font-weight: 800;
+      font-size: 0.88rem;
+      color: var(--gold-dark);
+      text-decoration: none;
+    }
+    .index-faq-teaser__more:hover { text-decoration: underline; }
+    .index-refund-policy {
+      margin: 20px auto 0;
+      max-width: min(1680px, 80vw);
+      padding: 22px 24px;
+    }
+    .index-refund-policy h2 { margin-bottom: 10px; }
+    .index-refund-policy p {
+      margin: 0 0 10px;
+      font-size: 0.95rem;
+      line-height: 1.65;
+      color: var(--charcoal-muted);
+    }
+    #sessions-cards.is-filtering .session-card {
+      opacity: 0.78;
+      transition: opacity 0.18s ease;
+    }
+    .fab-book:focus-visible,
+    .sticky-cart-btn:focus-visible,
+    .book-btn:focus-visible,
+    .sub-btn:focus-visible,
+    .cart-live-banner__btn:focus-visible,
+    .hero-toolbar .btn:focus-visible,
+    #session-search:focus-visible,
+    #session-level:focus-visible,
+    #session-availability:focus-visible,
+    #session-max-price:focus-visible,
+    #session-sort:focus-visible {
+      outline: 2px solid var(--gold);
+      outline-offset: 3px;
+      box-shadow: var(--ring-focus);
+    }
     .hero {
       border-radius: 22px;
       color: var(--charcoal);
@@ -610,7 +824,7 @@
       font-size: 0.9rem;
       color: #1a1a1a;
       background: linear-gradient(135deg, var(--mint) 0%, #8fe8c4 100%);
-      box-shadow: 0 8px 28px rgba(45, 52, 54, 0.18), 0 0 0 2px rgba(197, 160, 89, 0.35) inset;
+      box-shadow: var(--shadow-brand), 0 0 0 2px rgba(197, 160, 89, 0.35) inset;
       transition:
         transform var(--t-interactive) var(--ease-out-soft),
         box-shadow var(--t-interactive) var(--ease-out-soft);
@@ -665,6 +879,7 @@
       border-radius: 14px;
       background: linear-gradient(135deg, rgba(197, 160, 89, 0.18), rgba(170, 240, 209, 0.35));
       border: 1px solid rgba(197, 160, 89, 0.4);
+      box-shadow: var(--shadow-brand);
     }
     .cart-live-banner[hidden] { display: none !important; }
     .cart-live-banner__btn {
@@ -794,7 +1009,7 @@
       .session-card::after { display: none; }
       .session-card:hover {
         transform: none;
-        box-shadow: 0 8px 28px rgba(45, 52, 54, 0.08);
+        box-shadow: var(--shadow-brand);
       }
     }
     /* فواصل تمرير للأقسام */
@@ -803,7 +1018,8 @@
     #plans-section,
     #testimonials-section,
     #faq-section,
-    #loyalty-rewards-section {
+    #loyalty-rewards-section,
+    #refund-policy {
       scroll-margin-top: 88px;
     }
     .section-divider {
@@ -1219,7 +1435,7 @@
       border-radius: 16px;
       overflow: hidden;
       border: 1px solid rgba(45, 52, 54, 0.12);
-      box-shadow: 0 8px 28px rgba(45, 52, 54, 0.08);
+      box-shadow: var(--shadow-brand);
       display: flex;
       flex-direction: column;
       position: relative;
@@ -1243,7 +1459,7 @@
     .session-card:hover::after { opacity: 1; }
     .session-card:hover {
       border-color: rgba(197, 160, 89, 0.45);
-      box-shadow: 0 18px 44px rgba(197, 160, 89, 0.18), 0 6px 20px rgba(45, 52, 54, 0.08);
+      box-shadow: var(--shadow-brand-hover);
       transform: translateY(-6px) scale(1.014) rotate(-0.4deg);
     }
     html[dir="rtl"] .session-card:hover {
@@ -1550,7 +1766,7 @@
       border-radius: 16px;
       padding: 14px 18px;
       border: 2px solid rgba(197, 160, 89, 0.4);
-      box-shadow: 0 12px 36px rgba(45, 52, 54, 0.2);
+      box-shadow: var(--shadow-brand), 0 14px 40px rgba(45, 52, 54, 0.22);
     }
     .sticky-booking .label { font-size: 0.88rem; color: var(--mint); }
     .sticky-booking .value { font-weight: 800; }
@@ -2253,6 +2469,7 @@
   </script>
   <a class="skip-link" href="#main-content">تخطي إلى المحتوى</a>
   <div id="index-a11y-announcer" class="sr-only" role="status" aria-live="polite" aria-atomic="true"></div>
+  <div id="index-offline-banner" role="status" aria-live="polite" hidden>لا يوجد اتصال بالإنترنت — تحقق من الشبكة ثم أعد المحاولة.</div>
   <div class="container">
     <header class="hero" aria-label="واجهة البداية">
       <div
@@ -2270,6 +2487,7 @@
           fetchpriority="high"
           decoding="async"
           sizes="(max-width: 720px) 100vw, min(1680px, 80vw)"
+          onerror="this.onerror=null;this.src='{{ hero_stock_src }}';var m=this.closest('.hero__media');if(m){m.classList.remove('hero-media--custom');m.classList.add('hero-media--stock');}"
         />
         {% elif center.hero_show_stock_photo | default(true) %}
         <img
@@ -2447,6 +2665,29 @@
         </div>
     </header>
 
+    <div class="index-trust-bar" role="region" aria-label="ثقة ومعلومات سريعة">
+      <ul class="index-trust-bar__list">
+        <li>
+          <svg class="index-trust-bar__ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+          دفع إلكتروني آمن
+        </li>
+        <li>
+          <svg class="index-trust-bar__ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+          مدربون بمستويات واضحة
+        </li>
+        {% if sessions|length > 0 %}
+        <li><strong>{{ sessions|length }}</strong> جلسة معروضة للحجز</li>
+        {% endif %}
+        {% if center.city %}
+        <li>
+          <svg class="index-trust-bar__ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+          {{ center.city }}
+        </li>
+        {% endif %}
+        <li><a href="#refund-policy">سياسة الإلغاء والاسترداد</a></li>
+      </ul>
+    </div>
+
     {% set hint_post = pinned_public_post or (public_posts_teasers[0] if public_posts_teasers else none) %}
     {% if hint_post %}
     <div class="hero-news-hint" role="region" aria-label="آخر نشاط في المركز">
@@ -2463,6 +2704,26 @@
         لديك <strong id="cart-live-count">0</strong> عنصر في السلة — اضغط لفتحها وإتمام الطلب
       </button>
     </div>
+
+    <section class="index-product-clarity" aria-label="الفرق بين الجلسة المفردة والاشتراك">
+      <div class="index-product-clarity__grid">
+        <div class="index-product-clarity__card">
+          <h3>جلسة بالحصة (دروب إن)</h3>
+          <p>ادفع ثمن جلسة واحدة واختر الموعد من الجدول أدناه — مناسب للتجربة أو المرونة.</p>
+        </div>
+        <div class="index-product-clarity__card index-product-clarity__card--plan">
+          <h3>اشتراك أسبوعي أو شهري أو سنوي</h3>
+          <p>وفّر التكلفة عند الالتزام بمجموعة جلسات ضمن باقة من قسم <a href="#plans-section">مقارنة الاشتراكات</a> في العمود الجانبي.</p>
+        </div>
+      </div>
+      <p class="index-product-clarity__note">في كل طلب يمكن إضافة <strong>إما جلسات فقط أو خطة اشتراك واحدة</strong> — لا يُدمج النوعان في دفعة واحدة.</p>
+      <div class="index-team-strip">
+        <div class="index-team-strip__ico" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+        </div>
+        <p>جلسات لمستويات <strong>مبتدئ ومتوسط ومتقدم</strong> — يحدد المدرب والجدول ما يناسبك عند الحجز.</p>
+      </div>
+    </section>
 
     {% if news_ticker_items %}
     <div class="news-ticker-bar" role="region" aria-label="عناوين أخبار سريعة — اضغط للانتقال للخبر">
@@ -2556,7 +2817,7 @@
       <div class="grid-two__main">
       <section id="sessions-section" class="card sessions-panel" aria-label="قائمة الجلسات">
         <h2 class="section-heading section-heading--primary"><span class="section-heading__ico" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg></span><span class="section-heading__label">الجلسات المتاحة للحجز الفوري</span></h2>
-        <p class="sessions-lead">صفِّ الجلسات حسب الوقت والسعر والمستوى، ثم أضِف ما تريد إلى السلة واكمل الطلب منها بعد تسجيل الدخول.</p>
+        <p class="sessions-lead">صفِّ الجلسات حسب الوقت والسعر والمستوى (بما فيها جلسات <strong>المبتدئين</strong>)، ثم أضِف ما تريد إلى السلة وأكمل الطلب بعد تسجيل الدخول.</p>
         <div class="sessions-filters">
           <h3 class="sessions-filters-title section-heading section-heading--sub index-spotlight-heading--ribbon"><span class="section-heading__ico" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg></span><span class="section-heading__label">تصفية وترتيب الجلسات</span></h3>
           <div class="sessions-filters-grid">
@@ -2672,6 +2933,18 @@
               </div>
               {% endfor %}
         </div>
+        {% if faq_teaser_items %}
+        <div class="index-faq-teaser" aria-label="أسئلة سريعة">
+          <h3 class="index-faq-teaser__title">أسئلة سريعة قبل الحجز</h3>
+          {% for faq in faq_teaser_items %}
+          <details class="index-faq-teaser__item reveal-on-scroll">
+            <summary>{{ faq.question }}</summary>
+            <p>{{ faq.answer }}</p>
+          </details>
+          {% endfor %}
+          <a class="index-faq-teaser__more" href="#faq-section">عرض كل الأسئلة الشائعة ←</a>
+        </div>
+        {% endif %}
       </section>
 
       {% if pinned_public_post or public_posts_teasers %}
@@ -2803,6 +3076,12 @@
         </section>
       </aside>
     </main>
+
+    <section id="refund-policy" class="index-refund-policy card" aria-labelledby="refund-policy-title">
+      <h2 id="refund-policy-title" class="section-heading"><span class="section-heading__ico" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg></span><span class="section-heading__label">الإلغاء والاسترداد</span></h2>
+      <p>تفاصيل إلغاء الحجز أو الاشتراك واسترداد المبالغ تُحدّدها <strong>إدارة {{ center.name }}</strong> وفق سياسة المركز وسياسة مزوّد الدفع. راجع الشروط مع المركز عند الحاجة.</p>
+      <p>عند إلغاء عملية دفع إلكتروني من بوابة الدفع يمكنك إعادة المحاولة من السلة. لأي استفسار تواصل مباشرة مع المركز قبل أو بعد الحجز.</p>
+    </section>
 
     <div class="sticky-booking" id="sticky-booking" aria-live="polite">
       <div>
@@ -2978,6 +3257,16 @@
         }
         document.addEventListener("click", go, { once: true, passive: true });
         document.addEventListener("scroll", go, { once: true, passive: true });
+      })();
+      (function setupOfflineBanner() {
+        var b = document.getElementById("index-offline-banner");
+        if (!b) return;
+        function sync() {
+          b.hidden = navigator.onLine;
+        }
+        window.addEventListener("online", sync);
+        window.addEventListener("offline", sync);
+        sync();
       })();
       const cartDrawer = document.getElementById("cart-drawer");
       const cartBackdrop = document.getElementById("cart-drawer-backdrop");
@@ -3290,6 +3579,7 @@
           });
         }
         function applyFilters() {
+          if (sessionsRoot) sessionsRoot.classList.add("is-filtering");
           const q = (search?.value || "").trim().toLowerCase();
           const lv = level?.value || "";
           const av = availability?.value || "";
@@ -3310,6 +3600,11 @@
           applySort();
           updateUpcomingStrip();
           fillSessionRelativeTimes();
+          window.requestAnimationFrame(function () {
+            window.requestAnimationFrame(function () {
+              if (sessionsRoot) sessionsRoot.classList.remove("is-filtering");
+            });
+          });
         }
         function applySort() {
           const mode = sort?.value || "time_asc";

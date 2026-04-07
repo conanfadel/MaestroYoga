@@ -623,6 +623,33 @@ def _preview_text(text: str | None, max_len: int = 100) -> str:
     return t[: max_len - 1].rstrip() + "…"
 
 
+def _index_seo_title(center: models.Center) -> str:
+    tag = (center.brand_tagline or "").strip()
+    if tag:
+        if len(tag) > 52:
+            tag = tag[:51].rstrip() + "…"
+        return f"{center.name} — {tag} | Maestro Yoga"
+    return f"حجز جلسات يوغا — {center.name} | Maestro Yoga"
+
+
+def _index_meta_description(center: models.Center, session_count: int, plan_count: int) -> str:
+    parts: list[str] = []
+    t = (center.brand_tagline or "").strip()
+    if t:
+        parts.append(t + "،")
+    city = (center.city or "").strip()
+    core = f"احجز جلسات يوغا أو اشتراكًا في {center.name}"
+    if city:
+        core += f" ({city})"
+    parts.append(core + ". دفع إلكتروني آمن، وتصفية الجلسات بالمستوى والسعر.")
+    if session_count > 0:
+        parts.append(f"يعرض الموقع {session_count} جلسة للحجز.")
+    elif plan_count > 0:
+        parts.append("تصفّح باقات الاشتراك المتاحة.")
+    out = " ".join(parts)
+    return out if len(out) <= 320 else out[:319].rstrip() + "…"
+
+
 def _index_preconnect_origins(
     request: Request,
     center: models.Center,
@@ -873,6 +900,9 @@ def public_index(
             "news_ticker_items": news_ticker_items,
             "public_news_has_more": public_news_has_more,
             "public_news_list_url": public_news_list_url,
+            "index_seo_title": _index_seo_title(center),
+            "index_meta_description": _index_meta_description(center, len(rows), len(plans)),
+            "faq_teaser_items": faq_items[:3],
             "index_preconnect_origins": _index_preconnect_origins(
                 request, center, pinned_public_post, public_posts_teasers
             ),
