@@ -46,6 +46,20 @@
     </div>
     {% endif %}
 
+    {% if morning_brief %}
+    <div class="card morning-brief-strip" style="margin-bottom:14px;" aria-label="ملخص سريع لليوم">
+      <h2 class="admin-booking-block-heading admin-booking-block-heading--compact" style="margin-bottom:10px;">لمحة اليوم</h2>
+      <div class="stats" style="flex-wrap:wrap;">
+        <div class="stat"><div class="k">جلسات مجدولة</div><div class="v">{{ morning_brief.sessions_today }}</div></div>
+        <div class="stat"><div class="k">حجوزات نشطة</div><div class="v">{{ morning_brief.bookings_today }}</div></div>
+        <div class="stat"><div class="k">إيراد مدفوع</div><div class="v">{{ '%.2f'|format(morning_brief.revenue_today) }} SAR</div></div>
+        <div class="stat"><div class="k">معلّقات قديمة (+8 يوم)</div><div class="v">{{ morning_brief.pending_stale_8d }}</div></div>
+        <div class="stat"><div class="k">فاشلة (7 أيام)</div><div class="v">{{ morning_brief.failed_7d }}</div></div>
+        <div class="stat"><div class="k">اشتراكات تنتهي (7 أيام)</div><div class="v">{{ morning_brief.subs_expiring_7d }}</div></div>
+      </div>
+    </div>
+    {% endif %}
+
     {% if revenue_7d_bars and perm_dashboard_financial %}
     <div class="revenue-7d-wrap" aria-label="إيراد آخر 7 أيام">
       <div class="revenue-7d-head">
@@ -1281,6 +1295,7 @@
               <th>المدة</th>
               <th>السعر</th>
               <th>المتاح</th>
+              <th>حضور</th>
               <th></th>
             </tr>
           </thead>
@@ -1295,6 +1310,13 @@
               <td>{{ s.price_drop_in }} SAR</td>
               <td><span class="badge">{{ s.spots_available }} / {{ s.capacity }}</span></td>
               <td>
+                {% if s.is_past and perm_sessions_manage %}
+                <a class="soft-link" data-preserve-scroll-link="1" href="/admin/session/{{ s.id }}/attendance">تسجيل</a>
+                {% else %}
+                —
+                {% endif %}
+              </td>
+              <td>
                 {% if perm_sessions_manage %}
                 <form method="post" action="/admin/sessions/delete" data-preserve-scroll="1" onsubmit="return confirm('حذف هذه الجلسة؟');">
                   <input type="hidden" name="session_id" value="{{ s.id }}" />
@@ -1306,7 +1328,7 @@
               </td>
             </tr>
             {% else %}
-            <tr><td colspan="8">لا توجد جلسات للعرض في هذه الصفحة حاليًا.<span class="admin-empty-cta"><a href="#section-sessions">قسم الجلسات</a></span></td></tr>
+            <tr><td colspan="9">لا توجد جلسات للعرض في هذه الصفحة حاليًا.<span class="admin-empty-cta"><a href="#section-sessions">قسم الجلسات</a></span></td></tr>
             {% endfor %}
           </tbody>
         </table>
@@ -1398,6 +1420,40 @@
     {% if perm_reports_hub %}
     <section id="section-reports" class="accordion">
       <div class="accordion-body">
+        {% if perm_branding %}
+        <div class="card" style="margin-top:0;margin-bottom:14px;">
+          <h2 class="admin-booking-block-heading admin-booking-block-heading--flush-top">إعدادات التقارير والأهداف</h2>
+          <p class="small" style="margin:0 0 12px;">أهداف شهرية للمقارنة في تقارير الإيراد والرؤى، ونسبة ضريبة تقديرية للمركز، وبريد لإرسال الملخص اليومي.</p>
+          <form method="post" action="/admin/center/report-settings" class="form" data-preserve-scroll="1" style="display:grid;gap:10px;max-width:520px;">
+            <input type="hidden" name="return_section" value="section-reports" />
+            <label>هدف إيراد شهري (SAR، اختياري)
+              <input name="monthly_revenue_goal" type="number" step="0.01" min="0" placeholder="مثال: 50000" value="{% if center and center.monthly_revenue_goal is not none %}{{ center.monthly_revenue_goal }}{% endif %}" />
+            </label>
+            <label>هدف حجوزات نشطة شهرياً (عدد، اختياري)
+              <input name="monthly_bookings_goal" type="number" step="1" min="0" placeholder="مثال: 120" value="{% if center and center.monthly_bookings_goal is not none %}{{ center.monthly_bookings_goal }}{% endif %}" />
+            </label>
+            <label>ضريبة تقديرية للمركز % (فارغ = استخدام البيئة الافتراضية)
+              <input name="vat_rate_percent" type="number" step="0.1" min="0" max="100" placeholder="مثال: 15" value="{% if center and center.vat_rate_percent is not none %}{{ center.vat_rate_percent }}{% endif %}" />
+            </label>
+            <label>بريد ملخص يومي (فارغ = بريد حسابك عند الإرسال)
+              <input name="report_digest_email" type="email" maxlength="220" autocomplete="email" placeholder="ops@example.com" value="{{ center.report_digest_email if center and center.report_digest_email else '' }}" />
+            </label>
+            <button type="submit">حفظ الإعدادات</button>
+          </form>
+        </div>
+        {% endif %}
+        {% if perm_report_sessions or perm_report_revenue %}
+        <div class="card" style="margin-bottom:14px;">
+          <h2 class="admin-booking-block-heading admin-booking-block-heading--flush-top">ملخص سريع للطباعة والبريد</h2>
+          <p class="small" style="margin:0 0 10px;">صفحة واحدة بأرقام اليوم؛ يمكن إرسالها إلى البريد المحدد أعلاه (أو بريدك إن لم يُضبط).</p>
+          <div style="display:flex;flex-wrap:wrap;gap:12px;align-items:center;">
+            <a class="soft-link" href="/admin/reports/print-summary" target="_blank" rel="noopener noreferrer">فتح صفحة الطباعة</a>
+            <form method="post" action="/admin/reports/email-summary" data-preserve-scroll="1" style="display:inline;">
+              <button type="submit">إرسال الملخص بالبريد الآن</button>
+            </form>
+          </div>
+        </div>
+        {% endif %}
         <div class="card" style="margin-top:0;">
           <h2 class="admin-booking-block-heading admin-booking-block-heading--flush-top">التقارير</h2>
           <div class="staff-perm-shell report-catalog-shell" style="margin-bottom:16px;" aria-labelledby="report-live-title">

@@ -348,6 +348,9 @@ ADMIN_FLASH_MESSAGES: dict[str, tuple[str, str]] = {
     ADMIN_MSG_STAFF_EMAIL_EXISTS: ("هذا البريد مسجّل مسبقاً. استخدم بريداً آخر أو تحقق من الحسابات الحالية.", "warn"),
     ADMIN_MSG_STAFF_INVALID: ("تعذر إنشاء الحساب: تحقق من الاسم والبريد وكلمة المرور (8 أحرف على الأقل) والدور.", "warn"),
     ADMIN_MSG_STAFF_NOT_OWNER: ("إضافة أعضاء الفريق متاحة لمالك المركز فقط.", "warn"),
+    "report_settings_saved": ("تم حفظ أهداف التقارير وإعدادات الضريبة والبريد.", "info"),
+    "digest_email_sent": ("تم إرسال الملخص إلى البريد المحدد.", "info"),
+    "digest_email_failed": ("تعذر إرسال البريد. تحقق من SMTP والعنوان.", "warn"),
 }
 
 
@@ -2675,6 +2678,7 @@ def admin_dashboard(
         "intermediate": "متوسط",
         "advanced": "متقدم",
     }
+    now_for_sessions = utcnow_naive()
     for s in sessions:
         room = rooms_by_id.get(s.room_id)
         session_rows.append(
@@ -2692,6 +2696,7 @@ def admin_dashboard(
                 "room_id": s.room_id,
                 "spots_available": spots_available(db, s),
                 "capacity": room.capacity if room else 0,
+                "is_past": bool(s.starts_at < now_for_sessions),
             }
         )
     plan_labels = {
@@ -2745,6 +2750,46 @@ def admin_dashboard(
             models.ClientSubscription.end_date <= now_na + timedelta(days=7),
         )
         .count()
+    )
+    pending_payments_stale_8d = 0
+    for pr in (
+        db.query(models.Payment)
+        .filter(
+            models.Payment.center_id == cid,
+            models.Payment.status.in_(("pending", "pending_payment")),
+        )
+        .all()
+    ):
+        anchor = pr.created_at or pr.paid_at or now_na
+        if (now_na - anchor).days >= 8:
+            pending_payments_stale_8d += 1
+    failed_payments_7d = int(
+        db.query(func.count(models.Payment.id))
+        .filter(
+            models.Payment.center_id == cid,
+            models.Payment.status == "failed",
+            func.date(models.Payment.paid_at) >= today - timedelta(days=7),
+            func.date(models.Payment.paid_at) <= today,
+        )
+        .scalar()
+        or 0
+    )
+    sessions_scheduled_today = int(
+        db.query(func.count(models.YogaSession.id))
+        .filter(models.YogaSession.center_id == cid, func.date(models.YogaSession.starts_at) == today)
+        .scalar()
+        or 0
+    )
+    bookings_active_today = int(
+        db.query(func.count(models.Booking.id))
+        .join(models.YogaSession, models.YogaSession.id == models.Booking.session_id)
+        .filter(
+            models.YogaSession.center_id == cid,
+            func.date(models.YogaSession.starts_at) == today,
+            models.Booking.status.in_(ACTIVE_BOOKING_STATUSES),
+        )
+        .scalar()
+        or 0
     )
     public_users_unverified_count = (
         db.query(models.PublicUser)
@@ -3280,6 +3325,31 @@ def admin_dashboard(
                 "kind": "warn",
             }
         )
+    if pending_payments_stale_8d:
+        admin_insights.append(
+            {
+                "label": f"معلّقات قديمة (+8 أيام): {pending_payments_stale_8d}",
+                "href": "/admin/reports/health",
+                "kind": "warn",
+            }
+        )
+    if failed_payments_7d:
+        admin_insights.append(
+            {
+                "label": f"مدفوعات فاشلة في آخر 7 أيام: {failed_payments_7d}",
+                "href": "/admin/reports/health",
+                "kind": "warn",
+            }
+        )
+
+    morning_brief = {
+        "sessions_today": sessions_scheduled_today,
+        "bookings_today": bookings_active_today,
+        "revenue_today": float(paid_revenue_today or 0),
+        "pending_stale_8d": pending_payments_stale_8d,
+        "failed_7d": failed_payments_7d,
+        "subs_expiring_7d": subs_expiring_7d,
+    }
 
     export_pay_params: dict[str, str] = {}
     pf = (payment_date_from or "").strip()[:32]
@@ -3398,6 +3468,7 @@ def admin_dashboard(
             "center_id": cid,
             "admin_public_index_url": _url_with_params("/index", center_id=str(cid)),
             "admin_insights": admin_insights,
+            "morning_brief": morning_brief,
             "revenue_7d_bars": revenue_7d_bars,
             "ops_today_rows": ops_today_rows,
             "ops_tomorrow_rows": ops_tomorrow_rows,
@@ -3579,6 +3650,18 @@ def _vat_inclusive_breakdown(gross_total: float, vat_rate_percent: float) -> dic
     return {"gross": gross_total, "net": net, "vat": vat_amt}
 
 
+def _effective_vat_percent_for_center(center: models.Center | None) -> float:
+    if center is not None and center.vat_rate_percent is not None:
+        try:
+            return float(center.vat_rate_percent)
+        except (TypeError, ValueError):
+            pass
+    try:
+        return float((os.getenv("VAT_RATE_PERCENT") or "15").strip() or "15")
+    except ValueError:
+        return 15.0
+
+
 def _payment_method_label_ar(method: str | None) -> str:
     m = (method or "").strip()
     return {
@@ -3642,6 +3725,7 @@ def admin_report_sessions(
         "intermediate": "متوسط",
         "advanced": "متقدم",
     }
+    now_sess = utcnow_naive()
     session_rows: list[dict[str, Any]] = []
     for s in sessions:
         room = rooms_by_id.get(s.room_id)
@@ -3664,8 +3748,33 @@ def admin_report_sessions(
                 "spots_free": spots,
                 "utilization_pct": util_pct,
                 "price_drop_in": s.price_drop_in,
+                "is_past": bool(s.starts_at and s.starts_at < now_sess),
             }
         )
+    curr_session_count = len(sessions)
+    curr_active_bookings = sum(booking_counts[sid]["active"] for sid in session_ids)
+    pp0, pp1, prev_sess_label = _report_previous_period_range(d0, d1)
+    prev_sess_filters = [
+        models.YogaSession.center_id == cid,
+        func.date(models.YogaSession.starts_at) >= pp0,
+        func.date(models.YogaSession.starts_at) <= pp1,
+    ]
+    prev_session_count = int(
+        db.query(func.count(models.YogaSession.id)).filter(*prev_sess_filters).scalar() or 0
+    )
+    prev_ids = [r[0] for r in db.query(models.YogaSession.id).filter(*prev_sess_filters).all()]
+    prev_active_bookings = 0
+    if prev_ids:
+        prev_active_bookings = int(
+            db.query(func.count(models.Booking.id))
+            .filter(
+                models.Booking.session_id.in_(prev_ids),
+                models.Booking.status.in_(ACTIVE_BOOKING_STATUSES),
+            )
+            .scalar()
+            or 0
+        )
+
     return templates.TemplateResponse(
         request,
         "admin_report_sessions.html",
@@ -3677,6 +3786,11 @@ def admin_report_sessions(
             "date_from_val": (date_from or "")[:10],
             "date_to_val": (date_to or "")[:10],
             "session_rows": session_rows,
+            "curr_session_count": curr_session_count,
+            "curr_active_bookings": curr_active_bookings,
+            "prev_sess_label": prev_sess_label,
+            "prev_session_count": prev_session_count,
+            "prev_active_bookings": prev_active_bookings,
             "generated_at": _fmt_dt(utcnow_naive()),
         },
     )
@@ -3707,10 +3821,7 @@ def admin_report_revenue(
     cid = require_user_center_id(user)
     center = db.get(models.Center, cid)
     d0, d1, range_label, range_err = _report_period_to_range(period, date_from, date_to)
-    try:
-        vat_pct = float((os.getenv("VAT_RATE_PERCENT") or "15").strip() or "15")
-    except ValueError:
-        vat_pct = 15.0
+    vat_pct = _effective_vat_percent_for_center(center)
 
     base_pf = [
         models.Payment.center_id == cid,
@@ -3839,6 +3950,22 @@ def admin_report_revenue(
         pend_age_buckets[k]["amt"] += amt
     pending_total_amt = sum(float(p.amount or 0) for p in pending_open)
 
+    refund_count, refund_sum = (
+        db.query(
+            func.count(models.Payment.id),
+            func.coalesce(func.sum(models.Payment.amount), 0.0),
+        )
+        .filter(*base_pf, models.Payment.status == "refunded")
+        .one()
+    )
+    refund_count = int(refund_count or 0)
+    refund_sum = float(refund_sum or 0.0)
+
+    revenue_goal_pct: float | None = None
+    monthly_rev_goal = float(center.monthly_revenue_goal) if center and center.monthly_revenue_goal is not None else None
+    if monthly_rev_goal and monthly_rev_goal > 0 and (period or "").strip().lower() == "month":
+        revenue_goal_pct = round(100.0 * paid_total / monthly_rev_goal, 1)
+
     day_rows = [{"d": row[0], "amount": float(row[1] or 0)} for row in by_day]
     method_rows = [
         {
@@ -3854,6 +3981,7 @@ def admin_report_revenue(
         "pending": "معلّق",
         "pending_payment": "بانتظار الدفع",
         "failed": "فاشل",
+        "refunded": "مسترد",
     }
     status_rows = [
         {
@@ -3914,6 +4042,10 @@ def admin_report_revenue(
             "status_rows": status_rows,
             "revenue_charts_json": revenue_charts_json,
             "export_payments_csv_url": export_q,
+            "refund_count": refund_count,
+            "refund_sum": refund_sum,
+            "revenue_goal_pct": revenue_goal_pct,
+            "monthly_revenue_goal": monthly_rev_goal,
             "generated_at": _fmt_dt(utcnow_naive()),
         },
     )
@@ -4147,6 +4279,27 @@ def admin_report_insights(
             else:
                 attend_counts["unknown"] += cni
 
+    ip0, ip1, prev_insights_label = _report_previous_period_range(d0, d1)
+    prev_sess_filters_ins = [
+        models.YogaSession.center_id == cid,
+        func.date(models.YogaSession.starts_at) >= ip0,
+        func.date(models.YogaSession.starts_at) <= ip1,
+    ]
+    prev_total_sessions = int(
+        db.query(func.count(models.YogaSession.id)).filter(*prev_sess_filters_ins).scalar() or 0
+    )
+    prev_total_active_bookings = int(
+        db.query(func.count(models.Booking.id))
+        .join(models.YogaSession, models.YogaSession.id == models.Booking.session_id)
+        .filter(*prev_sess_filters_ins, models.Booking.status.in_(ACTIVE_BOOKING_STATUSES))
+        .scalar()
+        or 0
+    )
+    bookings_goal_pct: float | None = None
+    mb_goal = int(center.monthly_bookings_goal) if center and center.monthly_bookings_goal is not None else None
+    if mb_goal and mb_goal > 0 and (period or "").strip().lower() == "month":
+        bookings_goal_pct = round(100.0 * total_active_bookings / mb_goal, 1)
+
     charts_payload = {
         "trainers": {
             "labels": [t["name"][:28] for t in trainer_merged[:12]],
@@ -4187,6 +4340,11 @@ def admin_report_insights(
             "avg_utilization_pct": avg_utilization_pct,
             "room_util_rows": room_util_rows,
             "attend_counts": attend_counts,
+            "prev_insights_label": prev_insights_label,
+            "prev_total_sessions": prev_total_sessions,
+            "prev_total_active_bookings": prev_total_active_bookings,
+            "bookings_goal_pct": bookings_goal_pct,
+            "monthly_bookings_goal": mb_goal,
             "generated_at": _fmt_dt(utcnow_naive()),
         },
     )
@@ -4196,32 +4354,9 @@ def _user_can_report_health(user: models.User) -> bool:
     return _user_can_report_sessions(user) or _user_can_report_revenue(user)
 
 
-@router.get("/admin/reports/clients", response_class=HTMLResponse)
-def admin_report_clients(
-    request: Request,
-    period: str = "month",
-    date_from: str = "",
-    date_to: str = "",
-    db: Session = Depends(get_db),
-):
-    """عملاء جدد مقابل عائدون ضمن حجوزات الجلسات في الفترة."""
-    user, redirect = _require_admin_user_or_redirect(request, db)
-    if redirect:
-        return redirect
-    assert user is not None
-    if (user.role or "") == "trainer":
-        return RedirectResponse(
-            url=_url_with_params("/admin", msg=ADMIN_MSG_TRAINER_ADMIN_FORBIDDEN),
-            status_code=303,
-        )
-    if not _user_can_report_sessions(user):
-        return RedirectResponse(
-            url=_url_with_params("/admin", msg=ADMIN_MSG_REPORT_FORBIDDEN),
-            status_code=303,
-        )
-    cid = require_user_center_id(user)
-    center = db.get(models.Center, cid)
-    d0, d1, range_label, range_err = _report_period_to_range(period, date_from, date_to)
+def _clients_new_returning_for_range(
+    db: Session, cid: int, d0: date, d1: date
+) -> tuple[int, int, int]:
     sess_filters = [
         models.YogaSession.center_id == cid,
         func.date(models.YogaSession.starts_at) >= d0,
@@ -4256,6 +4391,38 @@ def admin_report_clients(
         else:
             returning_clients += 1
     distinct_booking_clients = len(set(cids_period))
+    return new_clients, returning_clients, distinct_booking_clients
+
+
+@router.get("/admin/reports/clients", response_class=HTMLResponse)
+def admin_report_clients(
+    request: Request,
+    period: str = "month",
+    date_from: str = "",
+    date_to: str = "",
+    db: Session = Depends(get_db),
+):
+    """عملاء جدد مقابل عائدون ضمن حجوزات الجلسات في الفترة."""
+    user, redirect = _require_admin_user_or_redirect(request, db)
+    if redirect:
+        return redirect
+    assert user is not None
+    if (user.role or "") == "trainer":
+        return RedirectResponse(
+            url=_url_with_params("/admin", msg=ADMIN_MSG_TRAINER_ADMIN_FORBIDDEN),
+            status_code=303,
+        )
+    if not _user_can_report_sessions(user):
+        return RedirectResponse(
+            url=_url_with_params("/admin", msg=ADMIN_MSG_REPORT_FORBIDDEN),
+            status_code=303,
+        )
+    cid = require_user_center_id(user)
+    center = db.get(models.Center, cid)
+    d0, d1, range_label, range_err = _report_period_to_range(period, date_from, date_to)
+    new_clients, returning_clients, distinct_booking_clients = _clients_new_returning_for_range(db, cid, d0, d1)
+    pp0, pp1, prev_clients_label = _report_previous_period_range(d0, d1)
+    prev_new, prev_returning, prev_distinct = _clients_new_returning_for_range(db, cid, pp0, pp1)
 
     return templates.TemplateResponse(
         request,
@@ -4270,6 +4437,10 @@ def admin_report_clients(
             "new_clients": new_clients,
             "returning_clients": returning_clients,
             "distinct_booking_clients": distinct_booking_clients,
+            "prev_clients_label": prev_clients_label,
+            "prev_new_clients": prev_new,
+            "prev_returning_clients": prev_returning,
+            "prev_distinct_booking_clients": prev_distinct,
             "generated_at": _fmt_dt(utcnow_naive()),
         },
     )
@@ -4457,6 +4628,321 @@ def admin_report_security_audit(
             "generated_at": _fmt_dt(utcnow_naive()),
         },
     )
+
+
+def _parse_optional_non_negative_float(raw: str | None) -> float | None:
+    s = (raw or "").strip().replace(",", ".")
+    if not s:
+        return None
+    try:
+        v = float(s)
+        return v if v >= 0 else None
+    except ValueError:
+        return None
+
+
+def _parse_optional_non_negative_int(raw: str | None) -> int | None:
+    s = (raw or "").strip()
+    if not s:
+        return None
+    try:
+        v = int(s)
+        return v if v >= 0 else None
+    except ValueError:
+        return None
+
+
+@router.post("/admin/center/report-settings")
+def admin_center_report_settings(
+    request: Request,
+    monthly_revenue_goal: str = Form(""),
+    monthly_bookings_goal: str = Form(""),
+    vat_rate_percent: str = Form(""),
+    report_digest_email: str = Form(""),
+    return_section: str = Form("section-reports"),
+    db: Session = Depends(get_db),
+):
+    user, redirect = _require_admin_user_or_redirect(request, db)
+    if redirect:
+        return redirect
+    assert user is not None
+    if not user_has_permission(user, "center.settings.edit"):
+        return _admin_redirect(ADMIN_MSG_REPORT_FORBIDDEN, return_section=return_section)
+    cid = require_user_center_id(user)
+    center = db.get(models.Center, cid)
+    if not center:
+        return _admin_redirect(ADMIN_MSG_CENTER_BRANDING_CENTER_MISSING, return_section=return_section)
+    center.monthly_revenue_goal = _parse_optional_non_negative_float(monthly_revenue_goal)
+    center.monthly_bookings_goal = _parse_optional_non_negative_int(monthly_bookings_goal)
+    s_vat = (vat_rate_percent or "").strip()
+    if not s_vat:
+        center.vat_rate_percent = None
+    else:
+        vr = _parse_optional_non_negative_float(s_vat)
+        center.vat_rate_percent = vr if vr is not None and vr <= 100 else None
+    em = (report_digest_email or "").strip()[:220]
+    center.report_digest_email = em or None
+    db.commit()
+    log_security_event(
+        "admin_center_report_settings_saved",
+        request,
+        "success",
+        email=user.email,
+        details={"center_id": cid},
+    )
+    return _admin_redirect("report_settings_saved", return_section=return_section)
+
+
+@router.get("/admin/session/{session_id}/attendance", response_class=HTMLResponse)
+def admin_session_attendance(
+    session_id: int,
+    request: Request,
+    db: Session = Depends(get_db),
+):
+    user, redirect = _require_admin_user_or_redirect(request, db)
+    if redirect:
+        return redirect
+    assert user is not None
+    if not user_has_permission(user, "sessions.manage"):
+        return _trainer_forbidden_redirect("section-sessions")
+    cid = require_user_center_id(user)
+    ys = db.get(models.YogaSession, session_id)
+    if not ys or ys.center_id != cid:
+        raise HTTPException(status_code=404, detail="Session not found")
+    center = db.get(models.Center, cid)
+    rows_raw = (
+        db.query(models.Booking, models.Client)
+        .join(models.Client, models.Client.id == models.Booking.client_id)
+        .filter(models.Booking.session_id == session_id)
+        .order_by(models.Booking.id.asc())
+        .all()
+    )
+    booking_rows: list[dict[str, Any]] = []
+    for bk, cl in rows_raw:
+        booking_rows.append(
+            {
+                "booking_id": bk.id,
+                "client_name": cl.full_name,
+                "status": bk.status,
+                "checked_in": bk.checked_in,
+            }
+        )
+    return templates.TemplateResponse(
+        request,
+        "admin_session_attendance.html",
+        {
+            "center": center,
+            "session": ys,
+            "starts_display": _fmt_dt(ys.starts_at),
+            "booking_rows": booking_rows,
+        },
+    )
+
+
+@router.post("/admin/booking/attendance")
+def admin_booking_attendance_post(
+    request: Request,
+    booking_id: int = Form(...),
+    mark: str = Form(...),
+    db: Session = Depends(get_db),
+):
+    user, redirect = _require_admin_user_or_redirect(request, db)
+    if redirect:
+        return redirect
+    assert user is not None
+    if not user_has_permission(user, "sessions.manage"):
+        return _trainer_forbidden_redirect("section-sessions")
+    cid = require_user_center_id(user)
+    bk = db.get(models.Booking, booking_id)
+    if not bk or bk.center_id != cid:
+        raise HTTPException(status_code=404, detail="Booking not found")
+    m = (mark or "").strip().lower()
+    if m == "present":
+        bk.checked_in = True
+    elif m == "absent":
+        bk.checked_in = False
+    elif m in {"clear", "unknown"}:
+        bk.checked_in = None
+    else:
+        return RedirectResponse(url=f"/admin/session/{bk.session_id}/attendance", status_code=303)
+    db.commit()
+    log_security_event(
+        "booking_attendance_set",
+        request,
+        "success",
+        email=user.email,
+        details={"booking_id": booking_id, "mark": m},
+    )
+    return RedirectResponse(url=f"/admin/session/{bk.session_id}/attendance", status_code=303)
+
+
+@router.get("/admin/reports/print-summary", response_class=HTMLResponse)
+def admin_reports_print_summary(request: Request, db: Session = Depends(get_db)):
+    user, redirect = _require_admin_user_or_redirect(request, db)
+    if redirect:
+        return redirect
+    assert user is not None
+    if not _user_can_report_health(user):
+        return RedirectResponse(
+            url=_url_with_params("/admin", msg=ADMIN_MSG_REPORT_FORBIDDEN),
+            status_code=303,
+        )
+    cid = require_user_center_id(user)
+    center = db.get(models.Center, cid)
+    today = utcnow_naive().date()
+    now_na = utcnow_naive()
+    paid_revenue_today = float(
+        db.query(func.coalesce(func.sum(models.Payment.amount), 0.0))
+        .filter(
+            models.Payment.center_id == cid,
+            models.Payment.status == "paid",
+            func.date(models.Payment.paid_at) == today,
+        )
+        .scalar()
+        or 0.0
+    )
+    sessions_scheduled_today = int(
+        db.query(func.count(models.YogaSession.id))
+        .filter(models.YogaSession.center_id == cid, func.date(models.YogaSession.starts_at) == today)
+        .scalar()
+        or 0
+    )
+    bookings_active_today = int(
+        db.query(func.count(models.Booking.id))
+        .join(models.YogaSession, models.YogaSession.id == models.Booking.session_id)
+        .filter(
+            models.YogaSession.center_id == cid,
+            func.date(models.YogaSession.starts_at) == today,
+            models.Booking.status.in_(ACTIVE_BOOKING_STATUSES),
+        )
+        .scalar()
+        or 0
+    )
+    subs_7 = (
+        db.query(models.ClientSubscription)
+        .join(models.Client, models.Client.id == models.ClientSubscription.client_id)
+        .filter(
+            models.Client.center_id == cid,
+            models.ClientSubscription.status == "active",
+            models.ClientSubscription.end_date >= now_na,
+            models.ClientSubscription.end_date <= now_na + timedelta(days=7),
+        )
+        .count()
+    )
+    pending_stale = 0
+    for pr in (
+        db.query(models.Payment)
+        .filter(
+            models.Payment.center_id == cid,
+            models.Payment.status.in_(("pending", "pending_payment")),
+        )
+        .all()
+    ):
+        anchor = pr.created_at or pr.paid_at or now_na
+        if (now_na - anchor).days >= 8:
+            pending_stale += 1
+    failed_7d = int(
+        db.query(func.count(models.Payment.id))
+        .filter(
+            models.Payment.center_id == cid,
+            models.Payment.status == "failed",
+            func.date(models.Payment.paid_at) >= today - timedelta(days=7),
+            func.date(models.Payment.paid_at) <= today,
+        )
+        .scalar()
+        or 0
+    )
+    return templates.TemplateResponse(
+        request,
+        "admin_report_print_summary.html",
+        {
+            "center": center,
+            "paid_revenue_today": paid_revenue_today,
+            "sessions_scheduled_today": sessions_scheduled_today,
+            "bookings_active_today": bookings_active_today,
+            "subs_expiring_7d": int(subs_7),
+            "pending_stale_8d": pending_stale,
+            "failed_7d": failed_7d,
+            "generated_at": _fmt_dt(utcnow_naive()),
+        },
+    )
+
+
+@router.post("/admin/reports/email-summary")
+def admin_reports_email_summary(request: Request, db: Session = Depends(get_db)):
+    user, redirect = _require_admin_user_or_redirect(request, db)
+    if redirect:
+        return redirect
+    assert user is not None
+    if not _user_can_report_health(user):
+        return _admin_redirect(ADMIN_MSG_REPORT_FORBIDDEN, return_section="section-reports")
+    cid = require_user_center_id(user)
+    center = db.get(models.Center, cid)
+    target = (center.report_digest_email or "").strip() if center else ""
+    if not target:
+        target = (user.email or "").strip()
+    if not target:
+        return _admin_redirect("digest_email_failed", return_section="section-reports")
+    today = utcnow_naive().date()
+    now_na = utcnow_naive()
+    rev = float(
+        db.query(func.coalesce(func.sum(models.Payment.amount), 0.0))
+        .filter(
+            models.Payment.center_id == cid,
+            models.Payment.status == "paid",
+            func.date(models.Payment.paid_at) == today,
+        )
+        .scalar()
+        or 0.0
+    )
+    st = (
+        int(
+            db.query(func.count(models.YogaSession.id))
+            .filter(models.YogaSession.center_id == cid, func.date(models.YogaSession.starts_at) == today)
+            .scalar()
+            or 0
+        )
+    )
+    bk = (
+        int(
+            db.query(func.count(models.Booking.id))
+            .join(models.YogaSession, models.YogaSession.id == models.Booking.session_id)
+            .filter(
+                models.YogaSession.center_id == cid,
+                func.date(models.YogaSession.starts_at) == today,
+                models.Booking.status.in_(ACTIVE_BOOKING_STATUSES),
+            )
+            .scalar()
+            or 0
+        )
+    )
+    html = (
+        f"<html><body dir='rtl' style='font-family:Tahoma,sans-serif'>"
+        f"<h2>ملخص يومي — {html_escape(center.name if center else '')}</h2>"
+        f"<p>التاريخ: {today.isoformat()}</p>"
+        f"<ul>"
+        f"<li>جلسات مجدولة اليوم: {st}</li>"
+        f"<li>حجوزات نشطة اليوم: {bk}</li>"
+        f"<li>إيراد مدفوع اليوم: {rev:.2f} SAR</li>"
+        f"</ul>"
+        f"<p><a href='/admin/reports/print-summary'>صفحة ملخص للطباعة</a></p>"
+        f"</body></html>"
+    )
+    plain = f"ملخص {center.name if center else ''}\nجلسات: {st}\nحجوزات: {bk}\nإيراد: {rev:.2f} SAR\n"
+    ok, err = send_mail_with_attachments(
+        to_email=target,
+        subject=f"ملخص تشغيلي — {center.name if center else 'Maestro'} — {today.isoformat()}",
+        body=plain,
+        html_body=html,
+    )
+    log_security_event(
+        "admin_digest_email",
+        request,
+        "success" if ok else "failed",
+        email=user.email,
+        details={"target": target, "err": err[:120] if err else ""},
+    )
+    return _admin_redirect("digest_email_sent" if ok else "digest_email_failed", return_section="section-reports")
 
 
 @router.get("/admin/export/clients.csv")

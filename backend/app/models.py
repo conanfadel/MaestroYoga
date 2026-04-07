@@ -28,6 +28,11 @@ class Center(Base):
     loyalty_reward_gold = Column(Text, nullable=True)
     # إعدادات محتوى صفحة الحجز العامة (JSON): أقسام، إظهار/إخفاء، نصوص مخصصة
     index_config_json = Column(Text, nullable=True)
+    # أهداف تقارير شهرية (اختياري) وضريبة العرض لكل مركز ووجهة ملخص بريدي
+    monthly_revenue_goal = Column(Float, nullable=True)
+    monthly_bookings_goal = Column(Integer, nullable=True)
+    vat_rate_percent = Column(Float, nullable=True)
+    report_digest_email = Column(String(220), nullable=True)
 
     clients = relationship("Client", back_populates="center")
     plans = relationship("SubscriptionPlan", back_populates="center")

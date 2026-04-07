@@ -47,14 +47,20 @@
     <div class="report-run-sheet__kpis">
       <div class="stat"><div class="k">إجمالي مدفوع (حالة: مدفوع)</div><div class="v">{{ '%.2f'|format(paid_total) }} SAR</div></div>
       <div class="stat"><div class="k">عدد عمليات مدفوعة</div><div class="v">{{ paid_count }}</div></div>
+      {% if period == 'month' and monthly_revenue_goal %}
+      <div class="stat"><div class="k">هدف إيراد شهري (المركز)</div><div class="v">{{ '%.2f'|format(monthly_revenue_goal) }} SAR</div></div>
+      <div class="stat"><div class="k">نسبة تحقيق الهدف</div><div class="v">{% if revenue_goal_pct is not none %}{{ revenue_goal_pct }}%{% else %}—{% endif %}</div></div>
+      {% endif %}
       <div class="stat"><div class="k">الفترة السابقة (نفس الطول)</div><div class="v small">{{ prev_period_label }}</div></div>
       <div class="stat"><div class="k">مدفوع سابق</div><div class="v">{{ '%.2f'|format(prev_paid_total) }} SAR</div></div>
       <div class="stat"><div class="k">تغيّر الإيراد</div><div class="v">{% if paid_delta_pct is not none %}{{ paid_delta_pct }}%{% else %}—{% endif %}</div></div>
       <div class="stat"><div class="k">فرق العدد</div><div class="v">{{ count_delta }}</div></div>
+      <div class="stat"><div class="k">مستردات (عدد)</div><div class="v">{{ refund_count }}</div></div>
+      <div class="stat"><div class="k">مجموع مسترد في الفترة</div><div class="v">{{ '%.2f'|format(refund_sum) }} SAR</div></div>
     </div>
 
     <h2 class="admin-booking-block-heading admin-booking-block-heading--compact">تقدير ضريبة القيمة المضافة (السعر يُفترض شاملاً للضريبة)</h2>
-    <p class="small" style="margin:0 0 10px;">اضبط النسبة عبر متغير البيئة <code>VAT_RATE_PERCENT</code> (الحالية {{ '%.1f'|format(vat_rate_percent) }}٪)؛ هذا عرض محاسبي وليس إقراراً ضريبياً.</p>
+    <p class="small" style="margin:0 0 10px;">النسبة الفعّالة {{ '%.1f'|format(vat_rate_percent) }}٪ (من إعدادات المركز إن وُجدت، وإلا من <code>VAT_RATE_PERCENT</code> في البيئة). يمكن ضبطها من لوحة الإدارة → التقارير → إعدادات التقارير. هذا عرض محاسبي وليس إقراراً ضريبياً.</p>
     <div class="report-run-sheet__kpis">
       <div class="stat"><div class="k">صافٍ تقديري</div><div class="v">{{ '%.2f'|format(vat_net) }} SAR</div></div>
       <div class="stat"><div class="k">ضريبة تقديرية</div><div class="v">{{ '%.2f'|format(vat_amount) }} SAR</div></div>

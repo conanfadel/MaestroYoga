@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>حضور الجلسة — {{ center.name if center else 'المركز' }}</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/static/css/admin-dashboard.css" />
+</head>
+<body class="report-run-sheet">
+  <header class="report-run-sheet__toolbar no-print">
+    <a class="soft-link" href="/admin#section-sessions">← العودة إلى الجلسات</a>
+    <span class="report-run-sheet__toolbar-gap"></span>
+    <a class="soft-link" href="/admin/reports/sessions?period=month">تقرير الجلسات</a>
+  </header>
+
+  <main class="report-run-sheet__main">
+    <div class="report-run-sheet__brand">
+      <div>
+        <p class="report-run-sheet__brand-title">{{ center.name if center else 'المركز' }}</p>
+        <p class="report-run-sheet__brand-sub">تسجيل حضور — {{ session.title if session else '' }}</p>
+      </div>
+    </div>
+    <h1 class="admin-booking-block-heading admin-booking-block-heading--flush-top">حضور الجلسة</h1>
+    <p class="report-run-sheet__meta">بداية الجلسة: {{ starts_display }} · #{{ session.id if session else '' }}</p>
+
+    <div class="table-fluid" style="margin-top:12px;">
+      <table class="table-card-rwd">
+        <thead>
+          <tr>
+            <th>الحجز</th>
+            <th>العميل</th>
+            <th>حالة الحجز</th>
+            <th>الحضور الحالي</th>
+            <th class="no-print">تسجيل</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for row in booking_rows %}
+          <tr>
+            <td>{{ row.booking_id }}</td>
+            <td>{{ row.client_name }}</td>
+            <td>
+              {% if row.status == 'cancelled' %}ملغى
+              {% elif row.status == 'confirmed' %}مؤكد
+              {% elif row.status == 'booked' %}محجوز
+              {% elif row.status == 'pending_payment' %}بانتظار الدفع
+              {% else %}{{ row.status }}{% endif %}
+            </td>
+            <td>
+              {% if row.checked_in is true %}حضر
+              {% elif row.checked_in is false %}تغيّب
+              {% else %}لم يُسجَّل{% endif %}
+            </td>
+            <td class="no-print">
+              <div style="display:flex;flex-wrap:wrap;gap:6px;align-items:center;">
+                <form method="post" action="/admin/booking/attendance" style="display:inline;">
+                  <input type="hidden" name="booking_id" value="{{ row.booking_id }}" />
+                  <input type="hidden" name="mark" value="present" />
+                  <button type="submit" class="btn-inline">حضر</button>
+                </form>
+                <form method="post" action="/admin/booking/attendance" style="display:inline;">
+                  <input type="hidden" name="booking_id" value="{{ row.booking_id }}" />
+                  <input type="hidden" name="mark" value="absent" />
+                  <button type="submit" class="secondary btn-inline">تغيّب</button>
+                </form>
+                <form method="post" action="/admin/booking/attendance" style="display:inline;">
+                  <input type="hidden" name="booking_id" value="{{ row.booking_id }}" />
+                  <input type="hidden" name="mark" value="clear" />
+                  <button type="submit" class="secondary btn-inline">مسح</button>
+                </form>
+              </div>
+            </td>
+          </tr>
+          {% else %}
+          <tr><td colspan="5">لا توجد حجوزات لهذه الجلسة.</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    <p class="small report-run-sheet__footnote">يُنصح بتسجيل الحضور بعد انتهاء الجلسة. «مسح» يعيد الحالة إلى غير مسجّل.</p>
+  </main>
+</body>
+</html>

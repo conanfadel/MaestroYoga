@@ -44,12 +44,21 @@
     <div class="report-insights__kpis">
       <div class="stat"><div class="k">جلسات في الفترة</div><div class="v">{{ total_sessions }}</div></div>
       <div class="stat"><div class="k">حجوزات نشطة (في جلسات الفترة)</div><div class="v">{{ total_active_bookings }}</div></div>
+      {% if period == 'month' and monthly_bookings_goal %}
+      <div class="stat"><div class="k">هدف حجوزات شهري</div><div class="v">{{ monthly_bookings_goal }}</div></div>
+      <div class="stat"><div class="k">نسبة تحقيق الهدف</div><div class="v">{% if bookings_goal_pct is not none %}{{ bookings_goal_pct }}%{% else %}—{% endif %}</div></div>
+      {% endif %}
       <div class="stat"><div class="k">متوسط حجز/جلسة</div><div class="v">{{ '%.2f'|format(avg_bookings_per_session) }}</div></div>
       <div class="stat"><div class="k">نسبة الإلغاء</div><div class="v">{{ cancel_rate }}% <span class="small">({{ cancelled_bookings }} ملغاة)</span></div></div>
       <div class="stat"><div class="k">متوسط إشغال السعة (جلسات بسعة &gt; 0)</div><div class="v">{{ '%.1f'|format(avg_utilization_pct) }}%</div></div>
     </div>
+    <div class="report-insights__kpis" style="margin-top:4px;">
+      <div class="stat"><div class="k">الفترة السابقة</div><div class="v small">{{ prev_insights_label }}</div></div>
+      <div class="stat"><div class="k">جلسات سابقة</div><div class="v">{{ prev_total_sessions }}</div></div>
+      <div class="stat"><div class="k">حجوزات نشطة سابقة</div><div class="v">{{ prev_total_active_bookings }}</div></div>
+    </div>
     <h2 class="admin-booking-block-heading admin-booking-block-heading--compact">حضور الجلسات الماضية (حجوزات نشطة)</h2>
-    <p class="small" style="margin:0 0 10px;">حضر: <strong>{{ attend_counts.attended }}</strong> — تغيّب مسجّل: <strong>{{ attend_counts.no_show }}</strong> — غير مسجّل: <strong>{{ attend_counts.unknown }}</strong> (سجّل الحضور من واجهة الإدارة عند توفرها).</p>
+    <p class="small" style="margin:0 0 10px;">حضر: <strong>{{ attend_counts.attended }}</strong> — تغيّب مسجّل: <strong>{{ attend_counts.no_show }}</strong> — غير مسجّل: <strong>{{ attend_counts.unknown }}</strong>. سجّل الحضور من <a class="soft-link" href="/admin/reports/sessions?period=month">تقرير الجلسات</a> (عمود حضور للجلسات الماضية).</p>
     <h2 class="admin-booking-block-heading admin-booking-block-heading--compact">متوسط الإشغال حسب الغرفة</h2>
     <div class="table-fluid">
       <table>

@@ -135,6 +135,10 @@ def migrate_schema() -> None:
         needs_center_loyalty_rs = "loyalty_reward_silver" not in center_cols
         needs_center_loyalty_rg = "loyalty_reward_gold" not in center_cols
         needs_center_index_config_json = "index_config_json" not in center_cols
+        needs_center_monthly_revenue_goal = "monthly_revenue_goal" not in center_cols
+        needs_center_monthly_bookings_goal = "monthly_bookings_goal" not in center_cols
+        needs_center_vat_rate_percent = "vat_rate_percent" not in center_cols
+        needs_center_report_digest_email = "report_digest_email" not in center_cols
 
     needs_users_custom_role_label = False
     needs_users_permissions_json = False
@@ -162,6 +166,10 @@ def migrate_schema() -> None:
         and not needs_center_loyalty_rs
         and not needs_center_loyalty_rg
         and not needs_center_index_config_json
+        and not needs_center_monthly_revenue_goal
+        and not needs_center_monthly_bookings_goal
+        and not needs_center_vat_rate_percent
+        and not needs_center_report_digest_email
         and not needs_users_custom_role_label
         and not needs_users_permissions_json
         and not needs_booking_checked_in
@@ -219,6 +227,20 @@ def migrate_schema() -> None:
             conn.execute(text("ALTER TABLE centers ADD COLUMN loyalty_reward_gold TEXT"))
         if needs_center_index_config_json:
             conn.execute(text("ALTER TABLE centers ADD COLUMN index_config_json TEXT"))
+        if needs_center_monthly_revenue_goal:
+            if dialect == "postgresql":
+                conn.execute(text("ALTER TABLE centers ADD COLUMN monthly_revenue_goal DOUBLE PRECISION"))
+            else:
+                conn.execute(text("ALTER TABLE centers ADD COLUMN monthly_revenue_goal REAL"))
+        if needs_center_monthly_bookings_goal:
+            conn.execute(text("ALTER TABLE centers ADD COLUMN monthly_bookings_goal INTEGER"))
+        if needs_center_vat_rate_percent:
+            if dialect == "postgresql":
+                conn.execute(text("ALTER TABLE centers ADD COLUMN vat_rate_percent DOUBLE PRECISION"))
+            else:
+                conn.execute(text("ALTER TABLE centers ADD COLUMN vat_rate_percent REAL"))
+        if needs_center_report_digest_email:
+            conn.execute(text("ALTER TABLE centers ADD COLUMN report_digest_email VARCHAR(220)"))
         if needs_users_custom_role_label:
             conn.execute(text("ALTER TABLE users ADD COLUMN custom_role_label VARCHAR(120)"))
         if needs_users_permissions_json:

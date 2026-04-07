@@ -40,6 +40,14 @@
       <button type="submit">عرض النطاق</button>
     </form>
 
+    <div class="report-run-sheet__kpis no-print" style="margin-top:12px;">
+      <div class="stat"><div class="k">جلسات هذه الفترة</div><div class="v">{{ curr_session_count }}</div></div>
+      <div class="stat"><div class="k">حجوزات نشطة (هذه الفترة)</div><div class="v">{{ curr_active_bookings }}</div></div>
+      <div class="stat"><div class="k">الفترة السابقة</div><div class="v small">{{ prev_sess_label }}</div></div>
+      <div class="stat"><div class="k">جلسات سابقة</div><div class="v">{{ prev_session_count }}</div></div>
+      <div class="stat"><div class="k">حجوزات نشطة سابقة</div><div class="v">{{ prev_active_bookings }}</div></div>
+    </div>
+
     <div class="table-fluid" style="margin-top:12px;">
       <table class="table-card-rwd">
         <thead>
@@ -57,6 +65,7 @@
             <th>ملغاة</th>
             <th>متبقٍ</th>
             <th>سعر الحضور</th>
+            <th class="no-print">حضور</th>
           </tr>
         </thead>
         <tbody>
@@ -75,9 +84,10 @@
             <td>{{ row.bookings_cancelled }}</td>
             <td>{{ row.spots_free }}</td>
             <td>{{ '%.2f'|format(row.price_drop_in) }}</td>
+            <td class="no-print">{% if row.is_past %}<a class="soft-link" href="/admin/session/{{ row.id }}/attendance">تسجيل</a>{% else %}—{% endif %}</td>
           </tr>
           {% else %}
-          <tr><td colspan="13">لا توجد جلسات في هذه الفترة.</td></tr>
+          <tr><td colspan="14">لا توجد جلسات في هذه الفترة.</td></tr>
           {% endfor %}
         </tbody>
       </table>

@@ -45,6 +45,12 @@
       <div class="stat"><div class="k">جدد (أول حجز لهم ضمن الفترة)</div><div class="v">{{ new_clients }}</div></div>
       <div class="stat"><div class="k">عائدون (سبق لهم حجز قبل الفترة)</div><div class="v">{{ returning_clients }}</div></div>
     </div>
+    <div class="report-run-sheet__kpis" style="margin-top:8px;">
+      <div class="stat"><div class="k">الفترة السابقة (للمقارنة)</div><div class="v small">{{ prev_clients_label }}</div></div>
+      <div class="stat"><div class="k">فريدون سابقون</div><div class="v">{{ prev_distinct_booking_clients }}</div></div>
+      <div class="stat"><div class="k">جدد سابقون</div><div class="v">{{ prev_new_clients }}</div></div>
+      <div class="stat"><div class="k">عائدون سابقون</div><div class="v">{{ prev_returning_clients }}</div></div>
+    </div>
     <p class="small report-run-sheet__footnote">يُستند إلى أقل تاريخ <code>booked_at</code> لكل عميل في المركز، مقابل جلسات ضمن الفترة المختارة.</p>
   </main>
   <script>
