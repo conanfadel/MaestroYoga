@@ -1,7 +1,9 @@
 from datetime import datetime
 from typing import Optional
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, field_validator
+
+from .role_definitions import ASSIGNABLE_BY_CENTER_OWNER
 
 
 class UserRegister(BaseModel):
@@ -21,7 +23,14 @@ class UserCreateByOwner(BaseModel):
     full_name: str
     email: str
     password: str = Field(min_length=8)
-    role: str = Field(pattern="^(center_staff|trainer)$")
+    role: str
+
+    @field_validator("role")
+    @classmethod
+    def _role_assignable(cls, v: str) -> str:
+        if v not in ASSIGNABLE_BY_CENTER_OWNER:
+            raise ValueError("unsupported staff role")
+        return v
 
 
 class UserOut(BaseModel):

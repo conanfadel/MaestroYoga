@@ -95,6 +95,32 @@ def require_roles_cookie_or_bearer(*roles: str):
     return checker
 
 
+def require_permissions_cookie_or_bearer(*permission_ids: str):
+    """يجب أن يمتلك المستخدم جميع الصلاحيات المذكورة (المالك يملك الكل عبر rbac)."""
+
+    def checker(user: models.User = Depends(get_current_user_cookie_or_bearer)) -> models.User:
+        from .rbac import user_has_all_permissions
+
+        if not user_has_all_permissions(user, permission_ids):
+            raise HTTPException(status_code=403, detail="Insufficient permissions")
+        return user
+
+    return checker
+
+
+def require_any_permission_cookie_or_bearer(*permission_ids: str):
+    """امتلاك أي صلاحية من القائمة يكفي."""
+
+    def checker(user: models.User = Depends(get_current_user_cookie_or_bearer)) -> models.User:
+        from .rbac import user_has_any_permission
+
+        if not user_has_any_permission(user, permission_ids):
+            raise HTTPException(status_code=403, detail="Insufficient permissions")
+        return user
+
+    return checker
+
+
 def hash_password(password: str) -> str:
     salt = secrets.token_hex(16)
     digest = hashlib.pbkdf2_hmac("sha256", password.encode("utf-8"), salt.encode("utf-8"), 100_000)
@@ -218,6 +244,28 @@ def get_current_user(
 def require_roles(*roles: str):
     def checker(user: models.User = Depends(get_current_user)) -> models.User:
         if user.role not in roles:
+            raise HTTPException(status_code=403, detail="Insufficient permissions")
+        return user
+
+    return checker
+
+
+def require_permissions(*permission_ids: str):
+    def checker(user: models.User = Depends(get_current_user)) -> models.User:
+        from .rbac import user_has_all_permissions
+
+        if not user_has_all_permissions(user, permission_ids):
+            raise HTTPException(status_code=403, detail="Insufficient permissions")
+        return user
+
+    return checker
+
+
+def require_any_permission(*permission_ids: str):
+    def checker(user: models.User = Depends(get_current_user)) -> models.User:
+        from .rbac import user_has_any_permission
+
+        if not user_has_any_permission(user, permission_ids):
             raise HTTPException(status_code=403, detail="Insufficient permissions")
         return user
 

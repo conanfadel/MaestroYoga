@@ -82,7 +82,15 @@ try:
         get_payment_provider,
         payment_provider_supports_hosted_checkout,
     )
-    from .security import create_access_token, get_current_user, hash_password, require_roles, verify_password
+    from .security import (
+        create_access_token,
+        get_current_user,
+        hash_password,
+        require_any_permission,
+        require_permissions,
+        require_roles,
+        verify_password,
+    )
     from .web_ui import router as web_ui_router
     from .tenant_utils import require_user_center_id
 except ImportError:
@@ -104,7 +112,15 @@ except ImportError:
         get_payment_provider,
         payment_provider_supports_hosted_checkout,
     )
-    from backend.app.security import create_access_token, get_current_user, hash_password, require_roles, verify_password
+    from backend.app.security import (
+        create_access_token,
+        get_current_user,
+        hash_password,
+        require_any_permission,
+        require_permissions,
+        require_roles,
+        verify_password,
+    )
     from backend.app.web_ui import router as web_ui_router
     from backend.app.tenant_utils import require_user_center_id
 
@@ -337,7 +353,7 @@ def list_centers(
 def create_client(
     payload: schemas.ClientCreate,
     db: Session = Depends(get_db),
-    user: models.User = Depends(require_roles("center_owner", "center_staff")),
+    user: models.User = Depends(require_permissions("clients.manage")),
 ):
     client = models.Client(center_id=require_user_center_id(user), **payload.model_dump())
     db.add(client)
@@ -349,7 +365,7 @@ def create_client(
 @api_router.get("/clients", response_model=list[schemas.ClientOut])
 def list_clients(
     db: Session = Depends(get_db),
-    user: models.User = Depends(get_current_user),
+    user: models.User = Depends(require_any_permission("clients.manage")),
 ):
     return db.query(models.Client).filter(models.Client.center_id == require_user_center_id(user)).all()
 
@@ -358,7 +374,7 @@ def list_clients(
 def create_plan(
     payload: schemas.SubscriptionPlanCreate,
     db: Session = Depends(get_db),
-    user: models.User = Depends(require_roles("center_owner", "center_staff")),
+    user: models.User = Depends(require_permissions("plans.manage")),
 ):
     plan = models.SubscriptionPlan(center_id=require_user_center_id(user), **payload.model_dump())
     db.add(plan)
@@ -370,7 +386,7 @@ def create_plan(
 @api_router.get("/plans", response_model=list[schemas.SubscriptionPlanOut])
 def list_plans(
     db: Session = Depends(get_db),
-    user: models.User = Depends(get_current_user),
+    user: models.User = Depends(require_any_permission("plans.manage", "sessions.manage")),
 ):
     return db.query(models.SubscriptionPlan).filter(models.SubscriptionPlan.center_id == require_user_center_id(user)).all()
 
@@ -379,7 +395,7 @@ def list_plans(
 def create_room(
     payload: schemas.RoomCreate,
     db: Session = Depends(get_db),
-    user: models.User = Depends(require_roles("center_owner", "center_staff")),
+    user: models.User = Depends(require_permissions("rooms.manage")),
 ):
     room = models.Room(center_id=require_user_center_id(user), **payload.model_dump())
     db.add(room)
@@ -392,7 +408,7 @@ def create_room(
 def create_session(
     payload: schemas.YogaSessionCreate,
     db: Session = Depends(get_db),
-    user: models.User = Depends(require_roles("center_owner", "center_staff", "trainer")),
+    user: models.User = Depends(require_permissions("sessions.manage")),
 ):
     center_id = require_user_center_id(user)
     room = db.get(models.Room, payload.room_id)
@@ -408,7 +424,9 @@ def create_session(
 @api_router.get("/sessions", response_model=list[schemas.YogaSessionOut])
 def list_sessions(
     db: Session = Depends(get_db),
-    user: models.User = Depends(get_current_user),
+    user: models.User = Depends(
+        require_any_permission("sessions.manage", "plans.manage", "reports.financial")
+    ),
 ):
     return db.query(models.YogaSession).filter(models.YogaSession.center_id == require_user_center_id(user)).all()
 
@@ -417,7 +435,9 @@ def list_sessions(
 def create_booking(
     payload: schemas.BookingCreate,
     db: Session = Depends(get_db),
-    user: models.User = Depends(get_current_user),
+    user: models.User = Depends(
+        require_any_permission("sessions.manage", "clients.manage", "public_users.manage")
+    ),
 ):
     center_id = require_user_center_id(user)
     session = db.get(models.YogaSession, payload.session_id)
@@ -444,7 +464,7 @@ def create_booking(
 def create_payment(
     payload: schemas.PaymentCreate,
     db: Session = Depends(get_db),
-    user: models.User = Depends(get_current_user),
+    user: models.User = Depends(require_any_permission("payments.records", "payments.refund")),
 ):
     center_id = require_user_center_id(user)
     client = db.get(models.Client, payload.client_id)
@@ -480,7 +500,7 @@ def create_payment(
 def create_checkout_session(
     payload: schemas.PaymentCheckoutCreate,
     db: Session = Depends(get_db),
-    user: models.User = Depends(get_current_user),
+    user: models.User = Depends(require_any_permission("payments.records", "payments.refund")),
 ):
     center_id = require_user_center_id(user)
     client = db.get(models.Client, payload.client_id)
@@ -544,7 +564,7 @@ def create_checkout_session(
 def get_payment_status(
     payment_id: int,
     db: Session = Depends(get_db),
-    user: models.User = Depends(get_current_user),
+    user: models.User = Depends(require_any_permission("payments.records", "reports.financial", "exports.payments")),
 ):
     center_id = require_user_center_id(user)
     payment = db.get(models.Payment, payment_id)
@@ -558,7 +578,7 @@ def list_payments(
     client_id: int | None = None,
     status: str | None = None,
     db: Session = Depends(get_db),
-    user: models.User = Depends(get_current_user),
+    user: models.User = Depends(require_any_permission("payments.records", "reports.financial")),
 ):
     center_id = require_user_center_id(user)
     query = _payments_query(db, center_id=center_id, client_id=client_id, status=status)
@@ -570,7 +590,7 @@ def export_payments_csv(
     client_id: int | None = None,
     status: str | None = None,
     db: Session = Depends(get_db),
-    user: models.User = Depends(get_current_user),
+    user: models.User = Depends(require_any_permission("exports.payments", "reports.financial")),
 ):
     center_id = require_user_center_id(user)
     query = _payments_query(db, center_id=center_id, client_id=client_id, status=status)
@@ -619,7 +639,7 @@ def export_payments_xlsx(
     client_id: int | None = None,
     status: str | None = None,
     db: Session = Depends(get_db),
-    user: models.User = Depends(get_current_user),
+    user: models.User = Depends(require_any_permission("exports.payments", "reports.financial")),
 ):
     center_id = require_user_center_id(user)
     query = _payments_query(db, center_id=center_id, client_id=client_id, status=status)

@@ -17,6 +17,8 @@ from sqlalchemy import and_, case, func, nullslast, or_
 from sqlalchemy.orm import Session
 
 from . import models
+from .rbac import admin_ui_flags, user_has_permission
+from .role_definitions import CENTER_ADMIN_LOGIN_ROLES, PERMISSION_CATALOG, handbook_matrix_rows
 from .booking_utils import ACTIVE_BOOKING_STATUSES, spots_available
 from .bootstrap import DEMO_CENTER_NAME, ensure_demo_data, ensure_demo_news_posts
 from .database import get_db
@@ -53,7 +55,7 @@ from .security import (
     get_public_user_from_token_string,
     get_user_from_token_string,
     hash_password,
-    require_roles_cookie_or_bearer,
+    require_permissions_cookie_or_bearer,
     verify_password,
 )
 from .tenant_utils import require_user_center_id
@@ -526,7 +528,7 @@ def _admin_user_from_request(request: Request, db: Session) -> models.User | Non
         user = get_user_from_token_string(token, db)
     except HTTPException:
         return None
-    if user.role not in ("center_owner", "center_staff", "trainer"):
+    if user.role not in CENTER_ADMIN_LOGIN_ROLES:
         return None
     return user
 
@@ -2446,7 +2448,7 @@ def admin_login(
             email=email_norm,
         )
         return RedirectResponse(url="/admin/login?error=1", status_code=303)
-    if user.role not in ("center_owner", "center_staff", "trainer"):
+    if user.role not in CENTER_ADMIN_LOGIN_ROLES:
         log_security_event(
             "admin_login",
             request,
@@ -3380,9 +3382,10 @@ def admin_dashboard(
             "payment_date_from_value": pf,
             "payment_date_to_value": pt,
             "loyalty_admin": loyalty_admin,
-            "is_trainer": user.role == "trainer",
-            "is_center_owner": user.role == "center_owner",
-            "show_security_section": user.role == "center_owner",
+            **admin_ui_flags(user),
+            "permission_catalog": PERMISSION_CATALOG,
+            "staff_role_catalog": STAFF_ROLE_CATALOG,
+            "role_permission_matrix": handbook_matrix_rows(),
             "center_post_admin_rows": center_post_admin_rows,
             "editing_post": editing_post,
             "center_post_type_choices": center_post_type_choices,
@@ -3391,14 +3394,14 @@ def admin_dashboard(
     )
 
 
-def _admin_user_for_data_export(
-    request: Request, db: Session
+def _admin_user_for_export_permission(
+    request: Request, db: Session, permission_id: str
 ) -> tuple[models.User | None, RedirectResponse | None]:
     user, redirect = _require_admin_user_or_redirect(request, db)
     if redirect:
         return None, redirect
     assert user is not None
-    if user.role == "trainer":
+    if not user_has_permission(user, permission_id):
         return None, _trainer_forbidden_redirect()
     return user, None
 
@@ -3410,7 +3413,7 @@ def _utf8_bom_csv_content(output: io.StringIO) -> str:
 
 @router.get("/admin/export/clients.csv")
 def export_clients_csv(request: Request, db: Session = Depends(get_db)):
-    user, redirect = _admin_user_for_data_export(request, db)
+    user, redirect = _admin_user_for_export_permission(request, db, "exports.clients")
     if redirect:
         return redirect
     assert user is not None
@@ -3446,7 +3449,7 @@ def export_clients_csv(request: Request, db: Session = Depends(get_db)):
 
 @router.get("/admin/export/bookings.csv")
 def export_bookings_csv(request: Request, db: Session = Depends(get_db)):
-    user, redirect = _admin_user_for_data_export(request, db)
+    user, redirect = _admin_user_for_export_permission(request, db, "exports.bookings")
     if redirect:
         return redirect
     assert user is not None
@@ -3506,7 +3509,7 @@ def export_payments_csv(
     payment_date_to: str = "",
     db: Session = Depends(get_db),
 ):
-    user, redirect = _admin_user_for_data_export(request, db)
+    user, redirect = _admin_user_for_export_permission(request, db, "exports.payments")
     if redirect:
         return redirect
     assert user is not None
@@ -3567,7 +3570,7 @@ def export_security_events_csv(
     if redirect:
         return redirect
     assert user is not None
-    if user.role != "center_owner":
+    if not user_has_permission(user, "security.audit"):
         return _security_owner_forbidden_redirect()
 
     query = db.query(models.SecurityAuditEvent)
@@ -3617,7 +3620,7 @@ def admin_block_ip(
     if redirect:
         return redirect
     assert user is not None
-    if user.role != "center_owner":
+    if not user_has_permission(user, "security.audit"):
         return _security_owner_forbidden_redirect(return_section)
 
     target_ip = ip.strip()
@@ -3664,7 +3667,7 @@ def admin_unblock_ip(
     if redirect:
         return redirect
     assert user is not None
-    if user.role != "center_owner":
+    if not user_has_permission(user, "security.audit"):
         return _security_owner_forbidden_redirect(return_section)
     target_ip = ip.strip()
     if not target_ip:
@@ -3696,7 +3699,7 @@ def admin_toggle_public_user_active(
     if redirect:
         return redirect
     assert user is not None
-    if user.role == "trainer":
+    if not user_has_permission(user, "public_users.manage"):
         return _trainer_forbidden_redirect(return_section)
     row, redirect = _get_public_user_or_redirect(db, public_user_id, scroll_y, return_section=return_section)
     if redirect:
@@ -3719,7 +3722,7 @@ def admin_toggle_public_user_verified(
     if redirect:
         return redirect
     assert user is not None
-    if user.role == "trainer":
+    if not user_has_permission(user, "public_users.manage"):
         return _trainer_forbidden_redirect(return_section)
     row, redirect = _get_public_user_or_redirect(db, public_user_id, scroll_y, return_section=return_section)
     if redirect:
@@ -3742,7 +3745,7 @@ def admin_delete_public_user(
     if redirect:
         return redirect
     assert user is not None
-    if user.role == "trainer":
+    if not user_has_permission(user, "public_users.manage"):
         return _trainer_forbidden_redirect(return_section)
     row, redirect = _get_public_user_or_redirect(db, public_user_id, scroll_y, return_section=return_section)
     if redirect:
@@ -3777,7 +3780,7 @@ def admin_resend_public_user_verification(
     if redirect:
         return redirect
     assert admin_user is not None
-    if admin_user.role == "trainer":
+    if not user_has_permission(admin_user, "public_users.manage"):
         return _trainer_forbidden_redirect(return_section)
     row, redirect = _get_public_user_or_redirect(db, public_user_id, scroll_y, return_section=return_section)
     if redirect:
@@ -3825,7 +3828,7 @@ def admin_restore_public_user(
     if redirect:
         return redirect
     assert admin_user is not None
-    if admin_user.role == "trainer":
+    if not user_has_permission(admin_user, "public_users.manage"):
         return _trainer_forbidden_redirect(return_section)
     row, redirect = _get_public_user_or_redirect(
         db, public_user_id, scroll_y, allow_deleted=True, return_section=return_section
@@ -3861,7 +3864,7 @@ def admin_permanent_delete_public_user(
     if redirect:
         return redirect
     assert admin_user is not None
-    if admin_user.role == "trainer":
+    if not user_has_permission(admin_user, "public_users.manage"):
         return _trainer_forbidden_redirect(return_section)
     row, redirect = _get_public_user_or_redirect(
         db, public_user_id, scroll_y, allow_deleted=True, return_section=return_section
@@ -3898,7 +3901,7 @@ def admin_public_users_bulk_action(
     if redirect:
         return redirect
     assert admin_user is not None
-    if admin_user.role == "trainer":
+    if not user_has_permission(admin_user, "public_users.manage"):
         return _trainer_forbidden_redirect(return_section)
     ids = sorted(set(public_user_ids))
     if not ids:
@@ -3940,7 +3943,7 @@ def admin_create_room(
     scroll_y: str = Form(default=""),
     return_section: str = Form(""),
     db: Session = Depends(get_db),
-    user: models.User = Depends(require_roles_cookie_or_bearer("center_owner", "center_staff")),
+    user: models.User = Depends(require_permissions_cookie_or_bearer("rooms.manage")),
 ):
     cid = require_user_center_id(user)
     room = models.Room(center_id=cid, name=name, capacity=capacity)
@@ -3957,7 +3960,7 @@ def admin_update_room(
     scroll_y: str = Form(default=""),
     return_section: str = Form(""),
     db: Session = Depends(get_db),
-    user: models.User = Depends(require_roles_cookie_or_bearer("center_owner", "center_staff")),
+    user: models.User = Depends(require_permissions_cookie_or_bearer("rooms.manage")),
 ):
     cid = require_user_center_id(user)
     room = db.get(models.Room, room_id)
@@ -3977,7 +3980,7 @@ def admin_delete_room(
     scroll_y: str = Form(default=""),
     return_section: str = Form(""),
     db: Session = Depends(get_db),
-    user: models.User = Depends(require_roles_cookie_or_bearer("center_owner", "center_staff")),
+    user: models.User = Depends(require_permissions_cookie_or_bearer("rooms.manage")),
 ):
     cid = require_user_center_id(user)
     room = db.get(models.Room, room_id)
@@ -4012,7 +4015,7 @@ def admin_delete_rooms_bulk(
     scroll_y: str = Form(default=""),
     return_section: str = Form(""),
     db: Session = Depends(get_db),
-    user: models.User = Depends(require_roles_cookie_or_bearer("center_owner", "center_staff")),
+    user: models.User = Depends(require_permissions_cookie_or_bearer("rooms.manage")),
 ):
     cid = require_user_center_id(user)
     selected_ids = sorted(set(room_ids))
@@ -4083,7 +4086,7 @@ def admin_create_session(
     scroll_y: str = Form(default=""),
     return_section: str = Form(""),
     db: Session = Depends(get_db),
-    user: models.User = Depends(require_roles_cookie_or_bearer("center_owner", "center_staff", "trainer")),
+    user: models.User = Depends(require_permissions_cookie_or_bearer("sessions.manage")),
 ):
     cid = require_user_center_id(user)
     room = db.get(models.Room, room_id)
@@ -4116,7 +4119,7 @@ def admin_delete_session(
     scroll_y: str = Form(default=""),
     return_section: str = Form(""),
     db: Session = Depends(get_db),
-    user: models.User = Depends(require_roles_cookie_or_bearer("center_owner", "center_staff", "trainer")),
+    user: models.User = Depends(require_permissions_cookie_or_bearer("sessions.manage")),
 ):
     cid = require_user_center_id(user)
     yoga_session = db.get(models.YogaSession, session_id)
@@ -4143,7 +4146,7 @@ def admin_create_plan(
     scroll_y: str = Form(default=""),
     return_section: str = Form(""),
     db: Session = Depends(get_db),
-    user: models.User = Depends(require_roles_cookie_or_bearer("center_owner", "center_staff")),
+    user: models.User = Depends(require_permissions_cookie_or_bearer("plans.manage")),
 ):
     cid = require_user_center_id(user)
     if plan_type not in ("weekly", "monthly", "yearly"):
@@ -4178,7 +4181,7 @@ def admin_update_plan_name(
     scroll_y: str = Form(default=""),
     return_section: str = Form(""),
     db: Session = Depends(get_db),
-    user: models.User = Depends(require_roles_cookie_or_bearer("center_owner", "center_staff")),
+    user: models.User = Depends(require_permissions_cookie_or_bearer("plans.manage")),
 ):
     cid = require_user_center_id(user)
     plan = db.get(models.SubscriptionPlan, plan_id)
@@ -4201,7 +4204,7 @@ def admin_update_plan_details(
     scroll_y: str = Form(default=""),
     return_section: str = Form(""),
     db: Session = Depends(get_db),
-    user: models.User = Depends(require_roles_cookie_or_bearer("center_owner", "center_staff")),
+    user: models.User = Depends(require_permissions_cookie_or_bearer("plans.manage")),
 ):
     cid = require_user_center_id(user)
     plan = db.get(models.SubscriptionPlan, plan_id)
@@ -4236,7 +4239,7 @@ def admin_delete_plan(
     scroll_y: str = Form(default=""),
     return_section: str = Form(""),
     db: Session = Depends(get_db),
-    user: models.User = Depends(require_roles_cookie_or_bearer("center_owner", "center_staff")),
+    user: models.User = Depends(require_permissions_cookie_or_bearer("plans.manage")),
 ):
     cid = require_user_center_id(user)
     plan = db.get(models.SubscriptionPlan, plan_id)
@@ -4259,7 +4262,7 @@ def admin_create_faq(
     scroll_y: str = Form(default=""),
     return_section: str = Form(""),
     db: Session = Depends(get_db),
-    user: models.User = Depends(require_roles_cookie_or_bearer("center_owner", "center_staff")),
+    user: models.User = Depends(require_permissions_cookie_or_bearer("content.faq")),
 ):
     cid = require_user_center_id(user)
     q = question.strip()
@@ -4288,7 +4291,7 @@ def admin_update_faq(
     scroll_y: str = Form(default=""),
     return_section: str = Form(""),
     db: Session = Depends(get_db),
-    user: models.User = Depends(require_roles_cookie_or_bearer("center_owner", "center_staff")),
+    user: models.User = Depends(require_permissions_cookie_or_bearer("content.faq")),
 ):
     cid = require_user_center_id(user)
     row = db.get(models.FAQItem, faq_id)
@@ -4312,7 +4315,7 @@ def admin_delete_faq(
     scroll_y: str = Form(default=""),
     return_section: str = Form(""),
     db: Session = Depends(get_db),
-    user: models.User = Depends(require_roles_cookie_or_bearer("center_owner", "center_staff")),
+    user: models.User = Depends(require_permissions_cookie_or_bearer("content.faq")),
 ):
     cid = require_user_center_id(user)
     row = db.get(models.FAQItem, faq_id)
@@ -4329,7 +4332,7 @@ def admin_reorder_faqs(
     scroll_y: str = Form(default=""),
     return_section: str = Form(""),
     db: Session = Depends(get_db),
-    user: models.User = Depends(require_roles_cookie_or_bearer("center_owner", "center_staff")),
+    user: models.User = Depends(require_permissions_cookie_or_bearer("content.faq")),
 ):
     cid = require_user_center_id(user)
     raw = [x.strip() for x in ordered_ids_csv.split(",") if x.strip()]
@@ -4382,7 +4385,7 @@ def admin_center_loyalty(
     scroll_y: str = Form(default=""),
     return_section: str = Form(""),
     db: Session = Depends(get_db),
-    user: models.User = Depends(require_roles_cookie_or_bearer("center_owner", "center_staff")),
+    user: models.User = Depends(require_permissions_cookie_or_bearer("loyalty.manage")),
 ):
     cid = require_user_center_id(user)
     center = db.get(models.Center, cid)
@@ -4444,7 +4447,7 @@ async def admin_center_branding(
     scroll_y: str = Form(default=""),
     return_section: str = Form(""),
     db: Session = Depends(get_db),
-    user: models.User = Depends(require_roles_cookie_or_bearer("center_owner", "center_staff")),
+    user: models.User = Depends(require_permissions_cookie_or_bearer("center.settings.edit")),
 ):
     cid = require_user_center_id(user)
     center = db.get(models.Center, cid)
@@ -4522,7 +4525,7 @@ async def admin_center_branding(
 async def admin_center_index_page_save(
     request: Request,
     db: Session = Depends(get_db),
-    user: models.User = Depends(require_roles_cookie_or_bearer("center_owner", "center_staff")),
+    user: models.User = Depends(require_permissions_cookie_or_bearer("content.index")),
 ):
     cid = require_user_center_id(user)
     center = db.get(models.Center, cid)
@@ -4599,7 +4602,7 @@ async def admin_save_center_post(
     scroll_y: str = Form(default=""),
     return_section: str = Form(""),
     db: Session = Depends(get_db),
-    user: models.User = Depends(require_roles_cookie_or_bearer("center_owner", "center_staff")),
+    user: models.User = Depends(require_permissions_cookie_or_bearer("content.posts")),
 ):
     cid = require_user_center_id(user)
     ptype = (post_type or "").strip().lower()
@@ -4744,7 +4747,7 @@ def admin_delete_center_post(
     scroll_y: str = Form(default=""),
     return_section: str = Form(""),
     db: Session = Depends(get_db),
-    user: models.User = Depends(require_roles_cookie_or_bearer("center_owner", "center_staff")),
+    user: models.User = Depends(require_permissions_cookie_or_bearer("content.posts")),
 ):
     cid = require_user_center_id(user)
     row = db.get(models.CenterPost, post_id)
