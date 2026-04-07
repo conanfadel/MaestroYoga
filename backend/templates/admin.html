@@ -147,6 +147,17 @@
         </div>
       </div>
       {% endif %}
+      {% if not use_trainer_layout and perm_reports_hub %}
+      <div class="section-tab-cluster" data-tab-cluster>
+        <button type="button" class="section-tab section-tab--cluster-toggle" id="admin-cluster-reports-btn" aria-expanded="false" aria-controls="admin-cluster-reports-panel" aria-haspopup="true">
+          <span class="section-tab__icon" aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M3 3v18h18"/><path d="M7 16l4-4 3 3 5-6"/></svg></span>
+          التقارير
+        </button>
+        <div class="section-tab-cluster__dropdown" id="admin-cluster-reports-panel" role="group" aria-label="التقارير">
+          <a class="section-tab section-tab--subitem" data-target="section-reports" href="#section-reports" id="tab-section-reports">مركز التقارير والمقترحات</a>
+        </div>
+      </div>
+      {% endif %}
       {% if use_trainer_layout %}
       <div class="section-tab-cluster" data-tab-cluster>
         <button type="button" class="section-tab section-tab--cluster-toggle" id="admin-cluster-trainer-btn" aria-expanded="false" aria-controls="admin-cluster-trainer-panel" aria-haspopup="true">
@@ -1384,6 +1395,99 @@
     {% endif %}
 
     {% if perm_faq %}
+    {% if perm_reports_hub %}
+    <section id="section-reports" class="accordion">
+      <div class="accordion-body">
+        <div class="card" style="margin-top:0;">
+          <h2 class="admin-booking-block-heading admin-booking-block-heading--flush-top">التقارير</h2>
+          <p class="small" style="margin:0 0 16px;line-height:1.65;">
+            خارطة طريق مقترحة لتقارير الطباعة وتصدير PDF ولوحات زمنية (اليوم / الأسبوع / الشهر). التنفيذ التدريجي يبدأ بالأعلى قيمة تشغيلياً: <strong>المالية والحجوزات</strong>، ثم <strong>العملاء والولاء</strong>، ثم <strong>الأمان للأرشفة</strong>. استخدم مجموعات أدناه كمرجع موحّد دون تكرار أيقونة لكل فرع فرعي؛ الفلتر الزمني (اليوم / هذا الأسبوع / هذا الشهر / من–إلى) يغطي الفروع داخل كل نوع تقرير.
+          </p>
+
+          <div class="staff-perm-shell report-catalog-shell" aria-labelledby="report-catalog-main-title">
+            <div class="staff-perm-shell__head">
+              <span id="report-catalog-main-title" class="staff-perm-shell__title">مخطط التقارير المقترحة</span>
+              <span class="staff-perm-shell__subtitle">هيكل واحد تحت مسمّى «التقارير»؛ روابط سريعة للأقسام الحالية في لوحة الإدارة حيث وُجدت.</span>
+            </div>
+            <div class="staff-perm-groups report-catalog-groups">
+
+              <div class="staff-perm-group report-catalog-group" role="group" aria-labelledby="rep-cat-sessions">
+                <h3 class="staff-perm-group__legend" id="rep-cat-sessions">الجلسات والمواعيد والحجوزات</h3>
+                <ul class="report-catalog-list">
+                  <li>جدول جلسات <strong>هذا اليوم</strong> مع الغرفة والمدرّب والسعة والأماكن المتبقية.</li>
+                  <li>عرض <strong>أسبوع تقويمي</strong> أو <strong>يوم معيّن</strong> أو <strong>نطاق تاريخ (من–إلى)</strong> لجدولة الحصص وتفادي الازدحام.</li>
+                  <li>تلخيص <strong>الشهر</strong>: عدد الجلسات، توزيعها على الغرف، أوقات الذروة.</li>
+                  <li>مؤشرات تشغيل: <strong>إشغال الغرف</strong>، <strong>الإلغاءات</strong>، <strong>عدم الحضور (no-show)</strong> عند توفر البيانات.</li>
+                  <li>الالتزام بـ<strong>المنطقة الزمنية</strong> للمركز حتى «يوم واحد» لا يختلط بين UTC والتقويم المحلي.</li>
+                  <li>ربط سريع: {% if show_admin_sessions_area %}<a class="soft-link" href="#section-sessions">الجلسات والمدفوعات</a>{% else %}قسم الجلسات والمدفوعات (يظهر حسب صلاحياتك){% endif %} وبطاقة «أقرب الجلسات» أعلى الصفحة حيث تُعرض.</li>
+                </ul>
+              </div>
+
+              <div class="staff-perm-group report-catalog-group" role="group" aria-labelledby="rep-cat-money">
+                <h3 class="staff-perm-group__legend" id="rep-cat-money">المدفوعات والإيرادات</h3>
+                <ul class="report-catalog-list">
+                  <li><strong>مدخولات اليوم</strong> و<strong>الأسبوع</strong> و<strong>الشهر</strong> لحالة «مدفوع»، مع تمييز ما سُجّل في الفترة عن «إيراد معلّق».</li>
+                  <li>فلترة <strong>من تاريخ – إلى تاريخ</strong> لجدول المدفوعات (متاح في القسم الحالي) وتوسيعها لتقارير ملخّصة.</li>
+                  <li>تفصيل حسب <strong>طريقة الدفع</strong>؛ إبراز <strong>المعلّق</strong> و<strong>الفاشل</strong> لمراجعة التحصيل.</li>
+                  <li>مقارنة <strong>فترة بفترة</strong> (مثلاً هذا الشهر مقابل الشهر الماضي) للاتجاه العام.</li>
+                  <li>استغلال <strong>رسم إيراد آخر 7 أيام</strong> أعلى اللوحة كمؤشر بصري سريع؛ تقرير أسبوع/شهر يكمّله أرقاماً مجمّعة.</li>
+                  <li>ربط سريع: {% if show_admin_sessions_area %}<a class="soft-link" href="#section-sessions">الجلسات والمدفوعات</a> (جدول المدفوعات والفلاتر الزمنية){% else %}نفس القسم عند تفعيل صلاحية عرض الجلسات/المدفوعات{% endif %}.</li>
+                </ul>
+              </div>
+
+              <div class="staff-perm-group report-catalog-group" role="group" aria-labelledby="rep-cat-clients">
+                <h3 class="staff-perm-group__legend" id="rep-cat-clients">العملاء والولاء والتشغيل</h3>
+                <ul class="report-catalog-list">
+                  <li>قوائم للتشغيل اليومي: <strong>عملاء نشطون</strong>، <strong>مستخدمون جدد</strong>، حالة <strong>توثيق البريد</strong>.</li>
+                  <li>تقارير <strong>برنامج الولاء</strong>: شرائح الوسام، عتبات الجلسات المؤكّدة، حملات متابعة.</li>
+                  <li>تصدير CSV للعملاء/الحجوزات/المدفوعات حيث تسمح الصلاحيات (روابط التصدير الحالية).</li>
+                  <li>ربط سريع: {% if perm_public_users %}<a class="soft-link" href="#section-public-users">إدارة المستخدمين</a>{% else %}إدارة المستخدمين (غير متاحة لصلاحيتك){% endif %}{% if perm_loyalty %} — <a class="soft-link" href="#section-loyalty">برنامج الولاء</a>{% endif %}</li>
+                </ul>
+              </div>
+
+              <div class="staff-perm-group report-catalog-group" role="group" aria-labelledby="rep-cat-site">
+                <h3 class="staff-perm-group__legend" id="rep-cat-site">الموقع والمحتوى (مؤشرات لاحقة)</h3>
+                <ul class="report-catalog-list">
+                  <li>لاحقاً: مقاييس تفاعل بسيطة مع <strong>صفحة الحجز</strong> والمنشورات والأسئلة الشائعة (عروض، نقرات، إن رُبطت بالتحليلات).</li>
+                  <li>ربط سريع: {% if perm_index %}<a class="soft-link" href="#section-index-page">محتوى صفحة الحجز</a>{% else %}محتوى صفحة الحجز{% endif %}، {% if perm_posts %}<a class="soft-link" href="#section-center-posts">المنشورات</a>{% else %}المنشورات{% endif %}، {% if perm_faq %}<a class="soft-link" href="#section-faq">الأسئلة الشائعة</a>{% else %}الأسئلة الشائعة{% endif %}.</li>
+                </ul>
+              </div>
+
+              <div class="staff-perm-group report-catalog-group" role="group" aria-labelledby="rep-cat-staff">
+                <h3 class="staff-perm-group__legend" id="rep-cat-staff">الفريق والصلاحيات</h3>
+                <ul class="report-catalog-list">
+                  <li>تقرير خفيف: من يملك أي صلاحية؛ أولوية أقل للطباعة اليومية، مفيد للتدقيق الداخلي.</li>
+                  <li>ربط سريع: {% if show_staff_roles_handbook %}<a class="soft-link" href="#section-staff-invite">إضافة عضو فريق</a>، <a class="soft-link" href="#section-staff-roles">مرجع الأدوار والصلاحيات</a>{% else %}إدارة الفريق من اختصاص مالك المركز في هذه اللوحة{% endif %}.</li>
+                </ul>
+              </div>
+
+              <div class="staff-perm-group report-catalog-group" role="group" aria-labelledby="rep-cat-security">
+                <h3 class="staff-perm-group__legend" id="rep-cat-security">الأمان والتدقيق والامتثال</h3>
+                <ul class="report-catalog-list">
+                  <li>تصدير/أرشفة <strong>سجل التدقيق</strong> (أحداث حساسة، دخول، تغييرات إعدادات) للمراجعة أو الجهات الرقابية.</li>
+                  <li>تسجيل من نفّذ <strong>طباعة أو تصدير PDF</strong> لمستندات حساسة عند التفعيل لاحقاً.</li>
+                  <li>ربط سريع: {% if show_security_section %}<a class="soft-link" href="#section-security">الأمان والمخاطر</a>{% else %}قسم الأمان والتدقيق (يظهر عند صلاحية التدقيق){% endif %} — نظرة عامة، تدقيق، عناوين محظورة، سجل الحظر.</li>
+                </ul>
+              </div>
+
+              <div class="staff-perm-group report-catalog-group" role="group" aria-labelledby="rep-cat-export">
+                <h3 class="staff-perm-group__legend" id="rep-cat-export">الطباعة وPDF والتنفيذ التقني</h3>
+                <ul class="report-catalog-list">
+                  <li><strong>طباعة المتصفح</strong> عبر صفحة تقرير نظيفة (<code>@media print</code>) بدون شريط تنقل؛ أسرع وأخف تكلفة.</li>
+                  <li><strong>حفظ PDF</strong> من المتصفح حيث يكفي؛ أو توليد PDF من الخادم عند الحاجة لقالب رسمي أو أرقام مضمونة من قاعدة البيانات.</li>
+                  <li><strong>الأمان</strong>: نفس صلاحيات لوحة الإدارة للتقارير التي تحوي بيانات شخصية أو مالية.</li>
+                  <li>أولوية التنفيذ المقترحة: <strong>1)</strong> مالية + حجوزات، <strong>2)</strong> قوائم تشغيل عملاء، <strong>3)</strong> ولاء/تسويق، <strong>4)</strong> أمان للأرشفة.</li>
+                </ul>
+                <p class="report-catalog-note">هذا القسم وصفٌ للمنتج المستهدف؛ التنفيذ البرمجي يضيف تدريجياً الصفحات والفلاتر والتصدير وفق هذه القائمة.</p>
+              </div>
+
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+    {% endif %}
+
     <section id="section-faq" class="accordion">
       <div class="accordion-body">
     <div class="card" style="margin-top:0;">

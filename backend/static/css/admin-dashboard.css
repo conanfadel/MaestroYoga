@@ -1921,6 +1921,40 @@ html[data-theme="dark"] .security-block__head .admin-booking-block-heading--in-s
   gap: 6px;
 }
 
+/* كتالوج التقارير — نفس غلاف staff-perm-shell، قوائم مرجعية */
+.report-catalog-shell .staff-perm-groups {
+  max-height: min(70vh, 720px);
+}
+.report-catalog-list {
+  margin: 0;
+  padding: 0 1.15rem 0 0;
+  list-style: disc;
+  line-height: 1.65;
+  font-size: 0.9rem;
+  color: var(--charcoal);
+}
+.report-catalog-list li {
+  margin: 0.4em 0;
+}
+.report-catalog-list code {
+  font-size: 0.82em;
+  background: rgba(197, 160, 89, 0.12);
+  padding: 1px 6px;
+  border-radius: 6px;
+}
+.report-catalog-note {
+  margin: 12px 0 0;
+  padding-top: 12px;
+  border-top: 1px dashed rgba(197, 160, 89, 0.35);
+  font-size: 0.82rem;
+  color: var(--charcoal-muted);
+  line-height: 1.55;
+}
+html[data-theme="dark"] .report-catalog-list code {
+  background: rgba(197, 160, 89, 0.18);
+  color: #e8eaed;
+}
+
 .staff-perm-group__grid {
   display: grid;
   grid-template-columns: 1fr;

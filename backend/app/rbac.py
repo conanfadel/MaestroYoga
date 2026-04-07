@@ -54,11 +54,14 @@ def admin_ui_flags(user: models.User) -> dict[str, bool | str]:
     )
     perm_clients_cluster = any(x in p for x in ("public_users.manage", "loyalty.manage", "clients.manage"))
 
+    perm_reports_hub = not use_trainer_layout
+
     return {
         "use_trainer_layout": use_trainer_layout,
         "perm_site_cluster": perm_site_cluster,
         "perm_ops_cluster": perm_ops_cluster,
         "perm_clients_cluster": perm_clients_cluster,
+        "perm_reports_hub": perm_reports_hub,
         "perm_dashboard": "dashboard.view" in p,
         "perm_dashboard_financial": "dashboard.financial" in p,
         "perm_reminder_card": "sessions.manage" in p or "public_users.manage" in p,
