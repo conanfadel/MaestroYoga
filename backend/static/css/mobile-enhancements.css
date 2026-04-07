@@ -1,10 +1,12 @@
 /**
  * Maestro Yoga — تحسينات عرض للهاتف واللوحي (جميع الصفحات التي تربط هذا الملف)
+ *
+ * يشمل: منع التكبير غير المرغوب، لمس أوضح، تباعد آمن، وتماسك بصري على الشاشات الصغيرة والمتوسطة.
  */
 html {
   -webkit-text-size-adjust: 100%;
   text-size-adjust: 100%;
-  scroll-padding-top: 10px;
+  scroll-padding-top: max(10px, env(safe-area-inset-top, 0px));
 }
 body {
   -webkit-tap-highlight-color: rgba(197, 160, 89, 0.22);
@@ -12,6 +14,7 @@ body {
   -moz-osx-font-smoothing: grayscale;
   touch-action: manipulation;
 }
+
 /* يمنع iOS من تكبير الحقول عند التركيز إذا كان حجم الخط أقل من 16px */
 @media (max-width: 720px) {
   input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="color"]):not([type="file"]):not([type="hidden"]),
@@ -19,4 +22,27 @@ body {
   textarea {
     font-size: max(16px, 1em);
   }
+}
+
+/* —— عمومي: صور المحتوى لا تخرج عن العرض —— */
+main img,
+article img,
+.card img,
+.post-body img {
+  max-width: 100%;
+  height: auto;
+}
+
+/* —— لوحي (عادةً عرض 721–1024): تباعد أوضح دون إرهاق سطح المكتب —— */
+@media (min-width: 721px) and (max-width: 1024px) {
+  body {
+    padding-inline: max(14px, env(safe-area-inset-left, 0px), env(safe-area-inset-right, 0px));
+  }
+}
+
+/* —— تقليل «الوميض» عند التمرير الأفقي العرضي في الجداول —— */
+.table-fluid,
+.loyalty-program__table-wrap {
+  -webkit-overflow-scrolling: touch;
+  scrollbar-gutter: stable;
 }

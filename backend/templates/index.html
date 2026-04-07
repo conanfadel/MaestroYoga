@@ -2431,6 +2431,74 @@
       #sessions-section.sessions-panel { padding: 18px 14px; }
       .sessions-filters { padding: 16px; }
     }
+    /* —— تحسينات جوال/لوحي: عمق بصري، عناوين مقروءة، تفاعل لمس من دون قفزات hover —— */
+    @media (max-width: 980px) {
+      .session-card {
+        box-shadow:
+          0 14px 40px rgba(45, 52, 54, 0.1),
+          0 4px 16px rgba(197, 160, 89, 0.12);
+        border-color: rgba(197, 160, 89, 0.2);
+      }
+      .card {
+        box-shadow: 0 14px 38px rgba(45, 52, 54, 0.08);
+      }
+      .index-product-clarity {
+        padding: 16px 16px 14px;
+        border-radius: 16px;
+      }
+      .index-trust-bar {
+        padding: 14px 14px;
+        border-radius: 14px;
+      }
+      .muted {
+        font-size: 1rem;
+        line-height: 1.7;
+      }
+    }
+    @media (max-width: 640px) {
+      .section-heading {
+        white-space: normal;
+        overflow-x: visible;
+        line-height: 1.35;
+        align-items: flex-start;
+      }
+      .hero {
+        border-radius: 18px;
+      }
+      .hero__inner {
+        margin: 10px;
+        padding: 16px 14px;
+        border-radius: 16px;
+      }
+      .hero h1 {
+        font-size: clamp(1.2rem, 5vw + 0.55rem, 1.85rem);
+      }
+      .sessions-cards {
+        grid-template-columns: minmax(0, 1fr);
+        gap: 16px;
+      }
+    }
+    @media (hover: none), (pointer: coarse) {
+      .session-card:hover {
+        transform: none;
+        box-shadow:
+          0 14px 40px rgba(45, 52, 54, 0.1),
+          0 4px 16px rgba(197, 160, 89, 0.12);
+      }
+      html[dir="rtl"] .session-card:hover {
+        transform: none;
+      }
+      .session-card:hover::after {
+        opacity: 0;
+      }
+      .session-card:active {
+        transform: scale(0.985);
+        transition: transform 0.12s ease, box-shadow 0.12s ease;
+      }
+      html[dir="rtl"] .session-card:active {
+        transform: scale(0.985);
+      }
+    }
     /* ترويسة كتلة الحجز — مكملات سياق الصفحة */
     .hero h1.booking-block-heading {
       text-shadow: none;

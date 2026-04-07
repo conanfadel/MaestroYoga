@@ -1920,3 +1920,21 @@ html[data-theme="dark"] .staff-perm-cb {
 html[data-theme="dark"] .staff-perm-cb:checked {
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Crect width='16' height='16' rx='5' fill='%23c5a059'/%3E%3Cpath fill='none' stroke='%23141820' stroke-width='2' stroke-linecap='round' stroke-linejoin='round' d='M4.2 8.2l2.4 2.3 5.2-5.5'/%3E%3C/svg%3E");
 }
+
+/* —— لوحة الإدارة: هاتف ولوحي (عمق أوضح، تباعد آمن) —— */
+@media (max-width: 900px) {
+  .top {
+    border-radius: 16px;
+    padding: 14px 16px;
+  }
+  .top-brand h1 {
+    font-size: clamp(1.05rem, 3.8vw, 1.42rem);
+    line-height: 1.28;
+  }
+  .card {
+    border-radius: 16px;
+  }
+  .accordion-body {
+    padding: 12px;
+  }
+}
