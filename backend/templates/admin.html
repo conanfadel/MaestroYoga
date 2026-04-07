@@ -1130,6 +1130,7 @@
         </button>
         <div class="section-tab-cluster__dropdown" id="admin-cluster-site-panel" role="group" aria-label="الموقع والمحتوى">
           <a class="section-tab section-tab--subitem" data-target="section-branding" href="#section-branding" id="tab-section-branding">هوية المركز والغلاف</a>
+          <a class="section-tab section-tab--subitem" data-target="section-index-page" href="#section-index-page" id="tab-section-index-page">محتوى صفحة الحجز</a>
           <a class="section-tab section-tab--subitem" data-target="section-center-posts" href="#section-center-posts" id="tab-section-center-posts">أخبار ومنشورات</a>
           <a class="section-tab section-tab--subitem" data-target="section-faq" href="#section-faq" id="tab-section-faq">الأسئلة الشائعة</a>
         </div>
@@ -1151,19 +1152,10 @@
           العملاء والولاء
         </button>
         <div class="section-tab-cluster__dropdown" id="admin-cluster-clients-panel" role="group" aria-label="العملاء والولاء">
-          <a class="section-tab section-tab--subitem" data-target="section-public-users" href="#section-public-users" id="tab-section-public-users" title="إدارة المستخدمين">
-            <span class="section-tab__icon section-tab__icon--users" aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></span>
-            إدارة المستخدمين
-          </a>
-          <a class="section-tab section-tab--subitem" data-target="section-loyalty" href="#section-loyalty" id="tab-section-loyalty" title="برنامج الولاء">
-            <span class="section-tab__icon section-tab__icon--star" aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg></span>
-            برنامج الولاء
-          </a>
+          <a class="section-tab section-tab--subitem" data-target="section-public-users" href="#section-public-users" id="tab-section-public-users" title="إدارة المستخدمين">إدارة المستخدمين</a>
+          <a class="section-tab section-tab--subitem" data-target="section-loyalty" href="#section-loyalty" id="tab-section-loyalty" title="برنامج الولاء">برنامج الولاء</a>
           {% if not is_trainer %}
-          <a class="section-tab section-tab--subitem" data-target="section-public-users-trash" href="#section-public-users-trash" id="tab-section-public-users-trash" title="سلة المحذوفات">
-            <span class="section-tab__icon" aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg></span>
-            سلة المحذوفات
-          </a>
+          <a class="section-tab section-tab--subitem" data-target="section-public-users-trash" href="#section-public-users-trash" id="tab-section-public-users-trash" title="سلة المحذوفات">سلة المحذوفات</a>
           {% endif %}
         </div>
       </div>
@@ -1171,12 +1163,12 @@
       {% if is_trainer %}
       <div class="section-tab-cluster" data-tab-cluster>
         <button type="button" class="section-tab section-tab--cluster-toggle" id="admin-cluster-trainer-btn" aria-expanded="false" aria-controls="admin-cluster-trainer-panel" aria-haspopup="true">
-          <span class="section-tab__icon" aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" aria-hidden="true"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg></span>
+          <span class="section-tab__icon" aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg></span>
           الجلسات والغرف
         </button>
         <div class="section-tab-cluster__dropdown" id="admin-cluster-trainer-panel" role="group" aria-label="الجلسات والغرف">
           <a class="section-tab section-tab--subitem" data-target="section-rooms" href="#section-rooms" id="tab-section-rooms-trainer">الغرف ونشر الجلسات</a>
-          <a class="section-tab section-tab--subitem" data-target="section-sessions" href="#section-sessions" id="tab-section-sessions">الجلسات والمدفوعات</a>
+          <a class="section-tab section-tab--subitem" data-target="section-sessions" href="#section-sessions" id="tab-section-sessions-trainer">الجلسات والمدفوعات</a>
         </div>
       </div>
       {% endif %}
@@ -1298,6 +1290,189 @@
             {% endif %}
             <button type="submit">حفظ هوية المركز</button>
           </form>
+        </div>
+      </div>
+    </section>
+
+    <section id="section-index-page" class="accordion">
+      <div class="accordion-body">
+        <div class="card">
+          <h2>محتوى صفحة الحجز العامة</h2>
+          <p class="small" style="margin:0 0 14px;line-height:1.65;">
+            تحكّم باسم المدينة و<strong>اسم المركز</strong> كما يظهر للزائر، وبإظهار أو إخفاء أقسام الصفحة (شريط الثقة، شرح الجلسة/الاشتراك، شريط الفريق، الأخبار، الخطوات، الولاء، آراء العملاء، الاسترداد، إلخ). يمكنك استخدام <code>{name}</code> في فقرة الاسترداد الأولى لعرض اسم المركز داخل النص.
+          </p>
+          {% if center and index_page %}
+          <form method="post" action="/admin/center/index-page" data-preserve-scroll="1">
+            <input type="hidden" name="scroll_y" id="index-page-scroll-y" value="" />
+            <input type="hidden" name="return_section" value="section-index-page" />
+
+            <h3 class="branding-subhead" style="margin-top:0;">الاسم والموقع</h3>
+            <label for="index_center_name">اسم المركز (يظهر في العنوان وSEO)</label>
+            <input id="index_center_name" name="center_name" type="text" required maxlength="200" value="{{ center.name }}" />
+            <label for="index_city">المدينة (اختياري — شريط الثقة)</label>
+            <input id="index_city" name="city" type="text" maxlength="120" placeholder="مثال: الرياض" value="{{ center.city or '' }}" />
+
+            <h3 class="branding-subhead">شريط الثقة أسفل الغلاف</h3>
+            <label for="trust_show">القسم</label>
+            <select id="trust_show" name="trust_show" aria-label="إظهار شريط الثقة">
+              <option value="1" {% if index_page.trust_bar.show %}selected{% endif %}>إظهار</option>
+              <option value="0" {% if not index_page.trust_bar.show %}selected{% endif %}>إخفاء</option>
+            </select>
+            <label for="trust_payment_text">سطر الدفع</label>
+            <input id="trust_payment_text" name="trust_payment_text" type="text" maxlength="160" value="{{ index_page.trust_bar.payment_text }}" />
+            <label for="trust_trainers_text">سطر المدربين</label>
+            <input id="trust_trainers_text" name="trust_trainers_text" type="text" maxlength="160" value="{{ index_page.trust_bar.trainers_text }}" />
+            <label for="trust_show_session_count">عدد الجلسات المعروضة</label>
+            <select id="trust_show_session_count" name="trust_show_session_count">
+              <option value="1" {% if index_page.trust_bar.show_session_count %}selected{% endif %}>إظهار عند وجود جلسات</option>
+              <option value="0" {% if not index_page.trust_bar.show_session_count %}selected{% endif %}>إخفاء</option>
+            </select>
+            <label for="trust_show_city">سطر المدينة</label>
+            <select id="trust_show_city" name="trust_show_city">
+              <option value="1" {% if index_page.trust_bar.show_city %}selected{% endif %}>إظهار عند تعبئة المدينة</option>
+              <option value="0" {% if not index_page.trust_bar.show_city %}selected{% endif %}>إخفاء</option>
+            </select>
+            <label for="trust_refund_link_text">نص رابط الاسترداد</label>
+            <input id="trust_refund_link_text" name="trust_refund_link_text" type="text" maxlength="120" value="{{ index_page.trust_bar.refund_link_text }}" />
+
+            <h3 class="branding-subhead">شرائح الهيرو (بجانب أزرار الحجز)</h3>
+            <label for="hero_chips_show">الشرائح</label>
+            <select id="hero_chips_show" name="hero_chips_show">
+              <option value="1" {% if index_page.hero_chips.show %}selected{% endif %}>إظهار</option>
+              <option value="0" {% if not index_page.hero_chips.show %}selected{% endif %}>إخفاء</option>
+            </select>
+            <label for="hero_c1">شريحة 1</label>
+            <input id="hero_c1" name="hero_c1" type="text" maxlength="80" value="{{ index_page.hero_chips.c1 }}" />
+            <label for="hero_c2">شريحة 2</label>
+            <input id="hero_c2" name="hero_c2" type="text" maxlength="80" value="{{ index_page.hero_chips.c2 }}" />
+            <label for="hero_c3">شريحة 3</label>
+            <input id="hero_c3" name="hero_c3" type="text" maxlength="80" value="{{ index_page.hero_chips.c3 }}" />
+
+            <h3 class="branding-subhead">شرح الجلسة مقابل الاشتراك</h3>
+            <label for="pc_show">القسم</label>
+            <select id="pc_show" name="pc_show">
+              <option value="1" {% if index_page.product_clarity.show %}selected{% endif %}>إظهار</option>
+              <option value="0" {% if not index_page.product_clarity.show %}selected{% endif %}>إخفاء</option>
+            </select>
+            <label for="pc_dropin_title">عنوان دروب إن</label>
+            <input id="pc_dropin_title" name="pc_dropin_title" type="text" maxlength="120" value="{{ index_page.product_clarity.dropin_title }}" />
+            <label for="pc_dropin_body">نص دروب إن</label>
+            <textarea id="pc_dropin_body" name="pc_dropin_body" rows="2" maxlength="600">{{ index_page.product_clarity.dropin_body }}</textarea>
+            <label for="pc_plan_title">عنوان الاشتراك</label>
+            <input id="pc_plan_title" name="pc_plan_title" type="text" maxlength="120" value="{{ index_page.product_clarity.plan_title }}" />
+            <label for="pc_plan_body">نص الاشتراك (يُسمح بوسوم HTML بسيطة مثل &lt;a&gt;)</label>
+            <textarea id="pc_plan_body" name="pc_plan_body" rows="3" maxlength="1200">{{ index_page.product_clarity.plan_body }}</textarea>
+            <label for="pc_note">ملاحظة أسفل البطاقتين (HTML مسموح)</label>
+            <textarea id="pc_note" name="pc_note" rows="2" maxlength="800">{{ index_page.product_clarity.note }}</textarea>
+
+            <h3 class="branding-subhead">شريط الفريق / المستويات</h3>
+            <label for="team_show">القسم</label>
+            <select id="team_show" name="team_show">
+              <option value="1" {% if index_page.team_strip.show %}selected{% endif %}>إظهار</option>
+              <option value="0" {% if not index_page.team_strip.show %}selected{% endif %}>إخفاء</option>
+            </select>
+            <label for="team_text">النص (HTML مسموح)</label>
+            <textarea id="team_text" name="team_text" rows="2" maxlength="600">{{ index_page.team_strip.text }}</textarea>
+
+            <h3 class="branding-subhead">شريط أخبار متحرك</h3>
+            <label for="news_ticker_show">الشريط</label>
+            <select id="news_ticker_show" name="news_ticker_show">
+              <option value="1" {% if index_page.news_ticker.show %}selected{% endif %}>إظهار عند وجود أخبار</option>
+              <option value="0" {% if not index_page.news_ticker.show %}selected{% endif %}>إخفاء</option>
+            </select>
+
+            <h3 class="branding-subhead">خطوات الدفع (1–2–3)</h3>
+            <label for="steps_show">القسم</label>
+            <select id="steps_show" name="steps_show">
+              <option value="1" {% if index_page.steps.show %}selected{% endif %}>إظهار</option>
+              <option value="0" {% if not index_page.steps.show %}selected{% endif %}>إخفاء</option>
+            </select>
+            <label for="steps_s1">الخطوة 1 (بدون رقم، يُضاف تلقائياً)</label>
+            <input id="steps_s1" name="steps_s1" type="text" maxlength="220" value="{{ index_page.steps.s1 }}" />
+            <label for="steps_s2">الخطوة 2</label>
+            <input id="steps_s2" name="steps_s2" type="text" maxlength="220" value="{{ index_page.steps.s2 }}" />
+            <label for="steps_s3">الخطوة 3</label>
+            <input id="steps_s3" name="steps_s3" type="text" maxlength="220" value="{{ index_page.steps.s3 }}" />
+
+            <h3 class="branding-subhead">قسم الولاء في الصفحة</h3>
+            <label for="loyalty_block_show">القسم</label>
+            <select id="loyalty_block_show" name="loyalty_block_show">
+              <option value="1" {% if index_page.loyalty_block.show %}selected{% endif %}>إظهار</option>
+              <option value="0" {% if not index_page.loyalty_block.show %}selected{% endif %}>إخفاء</option>
+            </select>
+            <label for="loyalty_block_title">العنوان</label>
+            <input id="loyalty_block_title" name="loyalty_block_title" type="text" maxlength="120" value="{{ index_page.loyalty_block.title }}" />
+            <label for="loyalty_block_lead">المقدمة (HTML مسموح)</label>
+            <textarea id="loyalty_block_lead" name="loyalty_block_lead" rows="3" maxlength="1200">{{ index_page.loyalty_block.lead }}</textarea>
+
+            <h3 class="branding-subhead">أسئلة سريعة داخل قسم الجلسات</h3>
+            <label for="faq_teaser_show">القسم</label>
+            <select id="faq_teaser_show" name="faq_teaser_show">
+              <option value="1" {% if index_page.faq_teaser.show %}selected{% endif %}>إظهار عند وجود أسئلة</option>
+              <option value="0" {% if not index_page.faq_teaser.show %}selected{% endif %}>إخفاء</option>
+            </select>
+            <label for="faq_teaser_title">عنوان الكتلة</label>
+            <input id="faq_teaser_title" name="faq_teaser_title" type="text" maxlength="160" value="{{ index_page.faq_teaser.title }}" />
+            <label for="faq_teaser_more">نص رابط «عرض الكل»</label>
+            <input id="faq_teaser_more" name="faq_teaser_more" type="text" maxlength="120" value="{{ index_page.faq_teaser.more_text }}" />
+
+            <h3 class="branding-subhead">العمود الجانبي — مقارنة الخطط</h3>
+            <label for="plans_section_show">قسم الخطط</label>
+            <select id="plans_section_show" name="plans_section_show">
+              <option value="1" {% if index_page.plans_section.show %}selected{% endif %}>إظهار</option>
+              <option value="0" {% if not index_page.plans_section.show %}selected{% endif %}>إخفاء</option>
+            </select>
+            <label for="plans_section_heading">عنوان القسم</label>
+            <input id="plans_section_heading" name="plans_section_heading" type="text" maxlength="200" value="{{ index_page.plans_section.heading }}" />
+
+            <h3 class="branding-subhead">آراء العملاء</h3>
+            <label for="testimonials_show">القسم</label>
+            <select id="testimonials_show" name="testimonials_show">
+              <option value="1" {% if index_page.testimonials.show %}selected{% endif %}>إظهار</option>
+              <option value="0" {% if not index_page.testimonials.show %}selected{% endif %}>إخفاء</option>
+            </select>
+            <label for="tm1">رأي 1 (HTML مسموح)</label>
+            <textarea id="tm1" name="tm1" rows="2" maxlength="400">{{ index_page.testimonials.t1 }}</textarea>
+            <label for="tm2">رأي 2</label>
+            <textarea id="tm2" name="tm2" rows="2" maxlength="400">{{ index_page.testimonials.t2 }}</textarea>
+            <label for="tm3">رأي 3</label>
+            <textarea id="tm3" name="tm3" rows="2" maxlength="400">{{ index_page.testimonials.t3 }}</textarea>
+
+            <h3 class="branding-subhead">الأسئلة الشائعة (العمود الجانبي)</h3>
+            <label for="faq_section_show">القسم</label>
+            <select id="faq_section_show" name="faq_section_show">
+              <option value="1" {% if index_page.faq_section.show %}selected{% endif %}>إظهار</option>
+              <option value="0" {% if not index_page.faq_section.show %}selected{% endif %}>إخفاء</option>
+            </select>
+            <label for="faq_section_heading">عنوان القسم</label>
+            <input id="faq_section_heading" name="faq_section_heading" type="text" maxlength="120" value="{{ index_page.faq_section.heading }}" />
+
+            <h3 class="branding-subhead">الإلغاء والاسترداد (أسفل الصفحة)</h3>
+            <label for="refund_show">القسم</label>
+            <select id="refund_show" name="refund_show">
+              <option value="1" {% if index_page.refund.show %}selected{% endif %}>إظهار</option>
+              <option value="0" {% if not index_page.refund.show %}selected{% endif %}>إخفاء</option>
+            </select>
+            <label for="refund_title">عنوان القسم</label>
+            <input id="refund_title" name="refund_title" type="text" maxlength="120" value="{{ index_page.refund.title }}" />
+            <label for="refund_p1">الفقرة الأولى (استخدم <code>{name}</code> لاسم المركز؛ HTML مسموح)</label>
+            <textarea id="refund_p1" name="refund_p1" rows="4" maxlength="2000">{{ index_page.refund.p1 }}</textarea>
+            <label for="refund_p2">الفقرة الثانية</label>
+            <textarea id="refund_p2" name="refund_p2" rows="3" maxlength="2000">{{ index_page.refund.p2 }}</textarea>
+
+            <div class="branding-remove-zone" role="group" aria-labelledby="reset-index-label" style="margin-top:18px;">
+              <div class="branding-remove-zone__head">
+                <input type="checkbox" id="reset_index_defaults_chk" class="branding-remove-zone__checkbox" name="reset_index_defaults" value="1" />
+                <label id="reset-index-label" class="branding-remove-zone__title" for="reset_index_defaults_chk">إعادة نصوص الأقسام إلى الافتراضي (لا يمس الاسم أعلاه)</label>
+              </div>
+              <p class="branding-remove-zone__help">يُصفّر التخصيصات المخزّنة ويعيد النصوص الافتراضية للواجهة العامة. حقوق الاسم والمدينة أعلاه تُحفظ كما أدخلتها مع نفس الإرسال.</p>
+            </div>
+
+            <button type="submit" style="margin-top:14px;">حفظ محتوى صفحة الحجز</button>
+          </form>
+          {% else %}
+          <p class="small">تعذر تحميل إعدادات المحتوى.</p>
+          {% endif %}
         </div>
       </div>
     </section>

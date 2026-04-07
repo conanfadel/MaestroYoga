@@ -2640,11 +2640,13 @@
           </div>
           <span class="hero-toolbar__divider" aria-hidden="true"></span>
           {% endif %}
+          {% if index_page.hero_chips.show %}
           <div class="hero-toolbar__group hero-toolbar__group--chips">
-            <span class="chip">جلسات يومية</span>
-            <span class="chip">مدربون محترفون</span>
-            <span class="chip">دفع إلكتروني آمن</span>
+            <span class="chip">{{ index_page.hero_chips.c1 }}</span>
+            <span class="chip">{{ index_page.hero_chips.c2 }}</span>
+            <span class="chip">{{ index_page.hero_chips.c3 }}</span>
           </div>
+          {% endif %}
           <span class="hero-toolbar__divider" aria-hidden="true"></span>
           <div class="hero-toolbar__group hero-toolbar__group--cta">
             <a class="btn primary hero-toolbar__btn" href="#sessions-section">
@@ -2665,28 +2667,32 @@
         </div>
     </header>
 
+    {% if index_page.trust_bar.show %}
     <div class="index-trust-bar" role="region" aria-label="ثقة ومعلومات سريعة">
       <ul class="index-trust-bar__list">
         <li>
           <svg class="index-trust-bar__ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
-          دفع إلكتروني آمن
+          {{ index_page.trust_bar.payment_text }}
         </li>
         <li>
           <svg class="index-trust-bar__ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
-          مدربون بمستويات واضحة
+          {{ index_page.trust_bar.trainers_text }}
         </li>
-        {% if sessions|length > 0 %}
+        {% if index_page.trust_bar.show_session_count and sessions|length > 0 %}
         <li><strong>{{ sessions|length }}</strong> جلسة معروضة للحجز</li>
         {% endif %}
-        {% if center.city %}
+        {% if index_page.trust_bar.show_city and center.city %}
         <li>
           <svg class="index-trust-bar__ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
           {{ center.city }}
         </li>
         {% endif %}
-        <li><a href="#refund-policy">سياسة الإلغاء والاسترداد</a></li>
+        {% if index_page.refund.show %}
+        <li><a href="#refund-policy">{{ index_page.trust_bar.refund_link_text }}</a></li>
+        {% endif %}
       </ul>
     </div>
+    {% endif %}
 
     {% set hint_post = pinned_public_post or (public_posts_teasers[0] if public_posts_teasers else none) %}
     {% if hint_post %}
@@ -2705,27 +2711,31 @@
       </button>
     </div>
 
+    {% if index_page.product_clarity.show %}
     <section class="index-product-clarity" aria-label="الفرق بين الجلسة المفردة والاشتراك">
       <div class="index-product-clarity__grid">
         <div class="index-product-clarity__card">
-          <h3>جلسة بالحصة (دروب إن)</h3>
-          <p>ادفع ثمن جلسة واحدة واختر الموعد من الجدول أدناه — مناسب للتجربة أو المرونة.</p>
+          <h3>{{ index_page.product_clarity.dropin_title }}</h3>
+          <p>{{ index_page.product_clarity.dropin_body }}</p>
         </div>
         <div class="index-product-clarity__card index-product-clarity__card--plan">
-          <h3>اشتراك أسبوعي أو شهري أو سنوي</h3>
-          <p>وفّر التكلفة عند الالتزام بمجموعة جلسات ضمن باقة من قسم <a href="#plans-section">مقارنة الاشتراكات</a> في العمود الجانبي.</p>
+          <h3>{{ index_page.product_clarity.plan_title }}</h3>
+          <p>{{ index_page.product_clarity.plan_body | safe }}</p>
         </div>
       </div>
-      <p class="index-product-clarity__note">في كل طلب يمكن إضافة <strong>إما جلسات فقط أو خطة اشتراك واحدة</strong> — لا يُدمج النوعان في دفعة واحدة.</p>
+      <p class="index-product-clarity__note">{{ index_page.product_clarity.note | safe }}</p>
+      {% if index_page.team_strip.show %}
       <div class="index-team-strip">
         <div class="index-team-strip__ico" aria-hidden="true">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
         </div>
-        <p>جلسات لمستويات <strong>مبتدئ ومتوسط ومتقدم</strong> — يحدد المدرب والجدول ما يناسبك عند الحجز.</p>
+        <p>{{ index_page.team_strip.text | safe }}</p>
       </div>
+      {% endif %}
     </section>
+    {% endif %}
 
-    {% if news_ticker_items %}
+    {% if index_page.news_ticker.show and news_ticker_items %}
     <div class="news-ticker-bar" role="region" aria-label="عناوين أخبار سريعة — اضغط للانتقال للخبر">
       <span class="news-ticker-bar__label">آخر الأخبار</span>
       <div class="news-ticker">
@@ -2746,23 +2756,26 @@
     </div>
     {% endif %}
 
+    {% if index_page.steps.show %}
     <div class="steps" aria-label="خطوات الدفع">
-      <div class="step"><b>1)</b> اختر الجلسة أو الخطة المناسبة.</div>
-      <div class="step"><b>2)</b> سجّل الدخول وفعّل بريدك الإلكتروني.</div>
-      <div class="step"><b>3)</b> راجع السلة وأكمل الطلب منها.</div>
+      <div class="step"><b>1)</b> {{ index_page.steps.s1 }}</div>
+      <div class="step"><b>2)</b> {{ index_page.steps.s2 }}</div>
+      <div class="step"><b>3)</b> {{ index_page.steps.s3 }}</div>
     </div>
+    {% endif %}
 
     <hr class="section-divider" aria-hidden="true" />
 
+    {% if index_page.loyalty_block.show %}
     <section id="loyalty-rewards-section" class="loyalty-program" aria-label="برنامج المكافآت والولاء">
       <h2 class="index-spotlight-heading">
         <span class="index-spotlight-heading__badge" aria-hidden="true">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round"><path d="M12 15c-3.3 0-6-2.7-6-6V5a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v4c0 3.3-2.7 6-6 6Z"/><path d="M8 21h8"/><path d="M12 15v6"/></svg>
         </span>
-        <span class="index-spotlight-heading__text">برنامج المكافآت والولاء</span>
+        <span class="index-spotlight-heading__text">{{ index_page.loyalty_block.title }}</span>
       </h2>
       <p class="loyalty-program__lead">
-        اجمع <strong>جلساتاً مؤكدة</strong> في هذا المركز (بعد إتمام الحجز والدفع) لتنتقل بين مستويات الأوسمة والمكافآت. يحدّد المركز نصوص المكافآت من لوحة الإدارة.
+        {{ index_page.loyalty_block.lead | safe }}
       </p>
       <div class="loyalty-program__table-wrap">
         <table>
@@ -2787,6 +2800,7 @@
         </table>
       </div>
     </section>
+    {% endif %}
 
     {% if payment == 'success' %}<div class="alert">تم إتمام الدفع بنجاح. تم تأكيد طلبك.</div>{% endif %}
     {% if payment == 'cancelled' %}<div class="alert warn">تم إلغاء عملية الدفع. يمكنك المحاولة مرة أخرى.</div>{% endif %}
@@ -2933,16 +2947,16 @@
               </div>
               {% endfor %}
         </div>
-        {% if faq_teaser_items %}
+        {% if index_page.faq_teaser.show and faq_teaser_items %}
         <div class="index-faq-teaser" aria-label="أسئلة سريعة">
-          <h3 class="index-faq-teaser__title">أسئلة سريعة قبل الحجز</h3>
+          <h3 class="index-faq-teaser__title">{{ index_page.faq_teaser.title }}</h3>
           {% for faq in faq_teaser_items %}
           <details class="index-faq-teaser__item reveal-on-scroll">
             <summary>{{ faq.question }}</summary>
             <p>{{ faq.answer }}</p>
           </details>
           {% endfor %}
-          <a class="index-faq-teaser__more" href="#faq-section">عرض كل الأسئلة الشائعة ←</a>
+          <a class="index-faq-teaser__more" href="#faq-section">{{ index_page.faq_teaser.more_text }}</a>
         </div>
         {% endif %}
       </section>
@@ -3001,8 +3015,12 @@
       </div>
 
       <aside>
+        {% if not index_page.plans_section.show %}
+        <div id="plans-section" style="position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0;" aria-hidden="true"></div>
+        {% endif %}
+        {% if index_page.plans_section.show %}
         <section id="plans-section" class="card" aria-label="مقارنة الخطط">
-          <h2 class="section-heading"><span class="section-heading__ico" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg></span><span class="section-heading__label">مقارنة الاشتراكات (أسبوعي / شهري / سنوي)</span></h2>
+          <h2 class="section-heading"><span class="section-heading__ico" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg></span><span class="section-heading__label">{{ index_page.plans_section.heading }}</span></h2>
           <div class="plans-shell">
             <div class="plans-cards">
               {% for plan in plans %}
@@ -3058,30 +3076,37 @@
             </div>
           </div>
         </section>
+        {% endif %}
 
+        {% if index_page.testimonials.show %}
         <section id="testimonials-section" class="card" aria-label="آراء العملاء">
           <h2 class="section-heading"><span class="section-heading__ico" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></span><span class="section-heading__label">آراء العملاء</span></h2>
-          <div class="testimonial reveal-on-scroll">"تجربة ممتازة وتنظيم احترافي للجلسات." <span class="small">— سارة</span></div>
-          <div class="testimonial reveal-on-scroll">"الاشتراك الشهري ساعدني على الالتزام بالرياضة." <span class="small">— نورة</span></div>
-          <div class="testimonial reveal-on-scroll">"الدفع والحجز سهل جدًا من الجوال." <span class="small">— ريم</span></div>
+          <div class="testimonial reveal-on-scroll">{{ index_page.testimonials.t1 | safe }}</div>
+          <div class="testimonial reveal-on-scroll">{{ index_page.testimonials.t2 | safe }}</div>
+          <div class="testimonial reveal-on-scroll">{{ index_page.testimonials.t3 | safe }}</div>
         </section>
+        {% endif %}
 
+        {% if index_page.faq_section.show %}
         <section id="faq-section" class="card" aria-label="الأسئلة الشائعة">
-          <h2 class="section-heading"><span class="section-heading__ico" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg></span><span class="section-heading__label">أسئلة شائعة</span></h2>
+          <h2 class="section-heading"><span class="section-heading__ico" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg></span><span class="section-heading__label">{{ index_page.faq_section.heading }}</span></h2>
           {% for faq in faq_items %}
             <div class="faq-item reveal-on-scroll"><b>{{ faq.question }}</b><br/><span class="small">{{ faq.answer }}</span></div>
           {% else %}
             <div class="faq-item reveal-on-scroll"><span class="small">لا توجد أسئلة شائعة متاحة حاليًا.</span></div>
           {% endfor %}
         </section>
+        {% endif %}
       </aside>
     </main>
 
+    {% if index_page.refund.show %}
     <section id="refund-policy" class="index-refund-policy card" aria-labelledby="refund-policy-title">
-      <h2 id="refund-policy-title" class="section-heading"><span class="section-heading__ico" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg></span><span class="section-heading__label">الإلغاء والاسترداد</span></h2>
-      <p>تفاصيل إلغاء الحجز أو الاشتراك واسترداد المبالغ تُحدّدها <strong>إدارة {{ center.name }}</strong> وفق سياسة المركز وسياسة مزوّد الدفع. راجع الشروط مع المركز عند الحاجة.</p>
-      <p>عند إلغاء عملية دفع إلكتروني من بوابة الدفع يمكنك إعادة المحاولة من السلة. لأي استفسار تواصل مباشرة مع المركز قبل أو بعد الحجز.</p>
+      <h2 id="refund-policy-title" class="section-heading"><span class="section-heading__ico" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg></span><span class="section-heading__label">{{ index_page.refund.title }}</span></h2>
+      <p>{{ index_refund_p1_html | safe }}</p>
+      <p>{{ index_page.refund.p2 }}</p>
     </section>
+    {% endif %}
 
     <div class="sticky-booking" id="sticky-booking" aria-live="polite">
       <div>

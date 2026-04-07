@@ -26,6 +26,8 @@ class Center(Base):
     loyalty_reward_bronze = Column(Text, nullable=True)
     loyalty_reward_silver = Column(Text, nullable=True)
     loyalty_reward_gold = Column(Text, nullable=True)
+    # إعدادات محتوى صفحة الحجز العامة (JSON): أقسام، إظهار/إخفاء، نصوص مخصصة
+    index_config_json = Column(Text, nullable=True)
 
     clients = relationship("Client", back_populates="center")
     plans = relationship("SubscriptionPlan", back_populates="center")

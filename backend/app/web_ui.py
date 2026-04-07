@@ -1,3 +1,4 @@
+import copy
 import csv
 import io
 import json
@@ -126,6 +127,7 @@ ADMIN_QP_POST_EDIT = "post_edit"
 ALLOWED_ADMIN_RETURN_SECTIONS = frozenset(
     {
         "section-branding",
+        "section-index-page",
         "section-rooms",
         "section-plans",
         "section-public-users",
@@ -134,6 +136,7 @@ ALLOWED_ADMIN_RETURN_SECTIONS = frozenset(
         "section-faq",
         "section-security",
         "section-center-posts",
+        "section-loyalty",
     }
 )
 
@@ -195,6 +198,10 @@ ADMIN_MSG_CENTER_POST_SAVED = "center_post_saved"
 ADMIN_MSG_CENTER_POST_DELETED = "center_post_deleted"
 ADMIN_MSG_CENTER_POST_NOT_FOUND = "center_post_not_found"
 ADMIN_MSG_CENTER_POST_INVALID = "center_post_invalid"
+ADMIN_MSG_CENTER_INDEX_SAVED = "center_index_saved"
+ADMIN_MSG_CENTER_INDEX_NAME_INVALID = "center_index_name_invalid"
+ADMIN_MSG_CENTER_INDEX_NAME_TAKEN = "center_index_name_taken"
+ADMIN_MSG_CENTER_INDEX_TOO_LARGE = "center_index_too_large"
 
 CENTER_LOGO_UPLOAD_DIR = Path(__file__).resolve().parent.parent / "static" / "uploads" / "centers"
 CENTER_POST_UPLOAD_DIR = CENTER_LOGO_UPLOAD_DIR / "posts"
@@ -312,6 +319,10 @@ ADMIN_FLASH_MESSAGES: dict[str, tuple[str, str]] = {
     ADMIN_MSG_CENTER_POST_DELETED: ("تم حذف المنشور.", "info"),
     ADMIN_MSG_CENTER_POST_NOT_FOUND: ("المنشور غير موجود أو لا يتبع مركزك.", "warn"),
     ADMIN_MSG_CENTER_POST_INVALID: ("بيانات المنشور غير صالحة أو الصورة غير مقبولة.", "warn"),
+    ADMIN_MSG_CENTER_INDEX_SAVED: ("تم حفظ محتوى صفحة الحجز واسم المركز.", "info"),
+    ADMIN_MSG_CENTER_INDEX_NAME_INVALID: ("اسم المركز مطلوب ولا يمكن أن يكون فارغًا.", "warn"),
+    ADMIN_MSG_CENTER_INDEX_NAME_TAKEN: ("هذا الاسم مستخدم لمركز آخر. اختر اسمًا مختلفًا.", "warn"),
+    ADMIN_MSG_CENTER_INDEX_TOO_LARGE: ("حجم نصوص صفحة الحجز كبير جدًا. قلّل طول بعض الحقول ثم أعد المحاولة.", "warn"),
 }
 
 
@@ -650,6 +661,214 @@ def _index_meta_description(center: models.Center, session_count: int, plan_coun
     return out if len(out) <= 320 else out[:319].rstrip() + "…"
 
 
+INDEX_PAGE_MAX_JSON_CHARS = 120_000
+
+
+def _default_index_page_config() -> dict[str, Any]:
+    return {
+        "trust_bar": {
+            "show": True,
+            "payment_text": "دفع إلكتروني آمن",
+            "trainers_text": "مدربون بمستويات واضحة",
+            "show_session_count": True,
+            "show_city": True,
+            "refund_link_text": "سياسة الإلغاء والاسترداد",
+        },
+        "hero_chips": {
+            "show": True,
+            "c1": "جلسات يومية",
+            "c2": "مدربون محترفون",
+            "c3": "دفع إلكتروني آمن",
+        },
+        "product_clarity": {
+            "show": True,
+            "dropin_title": "جلسة بالحصة (دروب إن)",
+            "dropin_body": "ادفع ثمن جلسة واحدة واختر الموعد من الجدول أدناه — مناسب للتجربة أو المرونة.",
+            "plan_title": "اشتراك أسبوعي أو شهري أو سنوي",
+            "plan_body": (
+                'وفّر التكلفة عند الالتزام بمجموعة جلسات ضمن باقة من قسم '
+                '<a href="#plans-section">مقارنة الاشتراكات</a> في العمود الجانبي.'
+            ),
+            "note": (
+                'في كل طلب يمكن إضافة <strong>إما جلسات فقط أو خطة اشتراك واحدة</strong> '
+                "— لا يُدمج النوعان في دفعة واحدة."
+            ),
+        },
+        "team_strip": {
+            "show": True,
+            "text": "جلسات لمستويات <strong>مبتدئ ومتوسط ومتقدم</strong> — يحدد المدرب والجدول ما يناسبك عند الحجز.",
+        },
+        "loyalty_block": {
+            "show": True,
+            "title": "برنامج المكافآت والولاء",
+            "lead": (
+                "اجمع <strong>جلساتاً مؤكدة</strong> في هذا المركز (بعد إتمام الحجز والدفع) لتنتقل بين مستويات "
+                "الأوسمة والمكافآت. يحدّد المركز نصوص المكافآت من لوحة الإدارة."
+            ),
+        },
+        "news_ticker": {"show": True},
+        "steps": {
+            "show": True,
+            "s1": "اختر الجلسة أو الخطة المناسبة.",
+            "s2": "سجّل الدخول وفعّل بريدك الإلكتروني.",
+            "s3": "راجع السلة وأكمل الطلب منها.",
+        },
+        "faq_teaser": {
+            "show": True,
+            "title": "أسئلة سريعة قبل الحجز",
+            "more_text": "عرض كل الأسئلة الشائعة ←",
+        },
+        "plans_section": {
+            "show": True,
+            "heading": "مقارنة الاشتراكات (أسبوعي / شهري / سنوي)",
+        },
+        "testimonials": {
+            "show": True,
+            "t1": '"تجربة ممتازة وتنظيم احترافي للجلسات." <span class="small">— سارة</span>',
+            "t2": '"الاشتراك الشهري ساعدني على الالتزام بالرياضة." <span class="small">— نورة</span>',
+            "t3": '"الدفع والحجز سهل جدًا من الجوال." <span class="small">— ريم</span>',
+        },
+        "faq_section": {"show": True, "heading": "أسئلة شائعة"},
+        "refund": {
+            "show": True,
+            "title": "الإلغاء والاسترداد",
+            "p1": (
+                "تفاصيل إلغاء الحجز أو الاشتراك واسترداد المبالغ تُحدّدها <strong>إدارة {name}</strong> "
+                "وفق سياسة المركز وسياسة مزوّد الدفع. راجع الشروط مع المركز عند الحاجة."
+            ),
+            "p2": (
+                "عند إلغاء عملية دفع إلكتروني من بوابة الدفع يمكنك إعادة المحاولة من السلة. "
+                "لأي استفسار تواصل مباشرة مع المركز قبل أو بعد الحجز."
+            ),
+        },
+    }
+
+
+def _deep_merge_index_defaults(defaults: dict[str, Any], saved: Any) -> dict[str, Any]:
+    if not isinstance(saved, dict):
+        return copy.deepcopy(defaults)
+    out: dict[str, Any] = copy.deepcopy(defaults)
+    for k, v in saved.items():
+        if k in out and isinstance(out[k], dict) and isinstance(v, dict):
+            out[k] = _deep_merge_index_defaults(out[k], v)
+        elif k in out:
+            out[k] = v
+    return out
+
+
+def merge_index_page_config(center: models.Center) -> dict[str, Any]:
+    defaults = _default_index_page_config()
+    raw = (getattr(center, "index_config_json", None) or "").strip()
+    if not raw:
+        return defaults
+    try:
+        saved = json.loads(raw)
+    except json.JSONDecodeError:
+        return defaults
+    return _deep_merge_index_defaults(defaults, saved)
+
+
+def _form_str_index(form_data: Any, key: str, max_len: int) -> str:
+    v = form_data.get(key)
+    if v is None:
+        return ""
+    if hasattr(v, "read"):
+        return ""
+    s = str(v).strip()
+    return s[:max_len]
+
+
+def _form_bool01(form_data: Any, key: str, default: bool = True) -> bool:
+    v = form_data.get(key)
+    if v is None:
+        return default
+    if hasattr(v, "read"):
+        return default
+    s = str(v).strip().lower()
+    if s in ("0", "false", "off", "no", ""):
+        return False
+    if s in ("1", "true", "on", "yes"):
+        return True
+    return default
+
+
+def _index_config_build_from_form(form_data: Any) -> dict[str, Any]:
+    """Build nested config dict from POST fields (see admin form names)."""
+    return {
+        "trust_bar": {
+            "show": _form_bool01(form_data, "trust_show", True),
+            "payment_text": _form_str_index(form_data, "trust_payment_text", 160),
+            "trainers_text": _form_str_index(form_data, "trust_trainers_text", 160),
+            "show_session_count": _form_bool01(form_data, "trust_show_session_count", True),
+            "show_city": _form_bool01(form_data, "trust_show_city", True),
+            "refund_link_text": _form_str_index(form_data, "trust_refund_link_text", 120),
+        },
+        "hero_chips": {
+            "show": _form_bool01(form_data, "hero_chips_show", True),
+            "c1": _form_str_index(form_data, "hero_c1", 80),
+            "c2": _form_str_index(form_data, "hero_c2", 80),
+            "c3": _form_str_index(form_data, "hero_c3", 80),
+        },
+        "product_clarity": {
+            "show": _form_bool01(form_data, "pc_show", True),
+            "dropin_title": _form_str_index(form_data, "pc_dropin_title", 120),
+            "dropin_body": _form_str_index(form_data, "pc_dropin_body", 600),
+            "plan_title": _form_str_index(form_data, "pc_plan_title", 120),
+            "plan_body": _form_str_index(form_data, "pc_plan_body", 1200),
+            "note": _form_str_index(form_data, "pc_note", 800),
+        },
+        "team_strip": {
+            "show": _form_bool01(form_data, "team_show", True),
+            "text": _form_str_index(form_data, "team_text", 600),
+        },
+        "loyalty_block": {
+            "show": _form_bool01(form_data, "loyalty_block_show", True),
+            "title": _form_str_index(form_data, "loyalty_block_title", 120),
+            "lead": _form_str_index(form_data, "loyalty_block_lead", 1200),
+        },
+        "news_ticker": {"show": _form_bool01(form_data, "news_ticker_show", True)},
+        "steps": {
+            "show": _form_bool01(form_data, "steps_show", True),
+            "s1": _form_str_index(form_data, "steps_s1", 220),
+            "s2": _form_str_index(form_data, "steps_s2", 220),
+            "s3": _form_str_index(form_data, "steps_s3", 220),
+        },
+        "faq_teaser": {
+            "show": _form_bool01(form_data, "faq_teaser_show", True),
+            "title": _form_str_index(form_data, "faq_teaser_title", 160),
+            "more_text": _form_str_index(form_data, "faq_teaser_more", 120),
+        },
+        "plans_section": {
+            "show": _form_bool01(form_data, "plans_section_show", True),
+            "heading": _form_str_index(form_data, "plans_section_heading", 200),
+        },
+        "testimonials": {
+            "show": _form_bool01(form_data, "testimonials_show", True),
+            "t1": _form_str_index(form_data, "tm1", 400),
+            "t2": _form_str_index(form_data, "tm2", 400),
+            "t3": _form_str_index(form_data, "tm3", 400),
+        },
+        "faq_section": {
+            "show": _form_bool01(form_data, "faq_section_show", True),
+            "heading": _form_str_index(form_data, "faq_section_heading", 120),
+        },
+        "refund": {
+            "show": _form_bool01(form_data, "refund_show", True),
+            "title": _form_str_index(form_data, "refund_title", 120),
+            "p1": _form_str_index(form_data, "refund_p1", 2000),
+            "p2": _form_str_index(form_data, "refund_p2", 2000),
+        },
+    }
+
+
+def _index_refund_p1_rendered(p1_template: str, center_name: str) -> str:
+    t = (p1_template or "").strip()
+    if not t:
+        return ""
+    name = (center_name or "").strip() or "المركز"
+    return t.replace("{name}", name)
+
+
 def _index_preconnect_origins(
     request: Request,
     center: models.Center,
@@ -872,12 +1091,17 @@ def public_index(
         "yearly": "سنوي",
     }
 
+    index_page = merge_index_page_config(center)
+    idx_refund_p1 = _index_refund_p1_rendered(str(index_page.get("refund", {}).get("p1", "")), center.name)
+
     return templates.TemplateResponse(
         request,
         "index.html",
         {
             "center": center,
             "center_id": center_id,
+            "index_page": index_page,
+            "index_refund_p1_html": idx_refund_p1,
             "sessions": rows,
             "plans": [
                 {
@@ -3052,12 +3276,15 @@ def admin_dashboard(
         "effective": {"bronze": _eff_b, "silver": _eff_s, "gold": _eff_g},
     }
 
+    index_page_cfg = merge_index_page_config(center) if center else _default_index_page_config()
+
     return templates.TemplateResponse(
         request,
         "admin.html",
         {
             "user": user,
             "center": center,
+            "index_page": index_page_cfg,
             "msg": msg,
             "admin_flash": admin_flash,
             "dashboard": dashboard,
@@ -4289,6 +4516,69 @@ async def admin_center_branding(
 
     db.commit()
     return _admin_redirect(ADMIN_MSG_CENTER_BRANDING_UPDATED, scroll_y, return_section)
+
+
+@router.post("/admin/center/index-page")
+async def admin_center_index_page_save(
+    request: Request,
+    db: Session = Depends(get_db),
+    user: models.User = Depends(require_roles_cookie_or_bearer("center_owner", "center_staff")),
+):
+    cid = require_user_center_id(user)
+    center = db.get(models.Center, cid)
+    if not center:
+        return _admin_redirect(ADMIN_MSG_CENTER_BRANDING_CENTER_MISSING, None, "section-index-page")
+
+    form = await request.form()
+    scroll_y = _form_str_index(form, "scroll_y", 32)
+    return_section = _form_str_index(form, "return_section", 96)
+
+    name = _form_str_index(form, "center_name", 200)
+    city_raw = _form_str_index(form, "city", 120)
+    if not name:
+        return _admin_redirect(ADMIN_MSG_CENTER_INDEX_NAME_INVALID, scroll_y, return_section or "section-index-page")
+
+    taken = (
+        db.query(models.Center)
+        .filter(models.Center.name == name, models.Center.id != cid)
+        .first()
+    )
+    if taken:
+        return _admin_redirect(ADMIN_MSG_CENTER_INDEX_NAME_TAKEN, scroll_y, return_section or "section-index-page")
+
+    reset_defaults = _is_truthy_env(_form_str_index(form, "reset_index_defaults", 8))
+    if reset_defaults:
+        center.index_config_json = None
+        center.name = name
+        center.city = city_raw or None
+        db.commit()
+        log_security_event(
+            "admin_center_index_page",
+            request,
+            "reset_defaults",
+            email=user.email,
+            details={"center_id": cid},
+        )
+        return _admin_redirect(ADMIN_MSG_CENTER_INDEX_SAVED, scroll_y, return_section or "section-index-page")
+
+    cfg = _index_config_build_from_form(form)
+    cfg = _deep_merge_index_defaults(_default_index_page_config(), cfg)
+    blob = json.dumps(cfg, ensure_ascii=False)
+    if len(blob) > INDEX_PAGE_MAX_JSON_CHARS:
+        return _admin_redirect(ADMIN_MSG_CENTER_INDEX_TOO_LARGE, scroll_y, return_section or "section-index-page")
+
+    center.index_config_json = blob
+    center.name = name
+    center.city = city_raw or None
+    db.commit()
+    log_security_event(
+        "admin_center_index_page",
+        request,
+        "success",
+        email=user.email,
+        details={"center_id": cid},
+    )
+    return _admin_redirect(ADMIN_MSG_CENTER_INDEX_SAVED, scroll_y, return_section or "section-index-page")
 
 
 @router.post("/admin/center/posts/save")
