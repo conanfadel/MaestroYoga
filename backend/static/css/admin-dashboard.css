@@ -819,6 +819,33 @@
         vertical-align: middle;
       }
     }
+    /* جدول مستخدمي الواجهة / سلة المحذوفات: كل الخلايا في سطر واحد على الشاشات العريضة */
+    @media (min-width: 901px) {
+      .admin-users-datagrid {
+        font-size: 0.82rem;
+      }
+      .admin-users-datagrid thead th,
+      .admin-users-datagrid tbody td {
+        white-space: nowrap;
+        overflow-wrap: normal;
+        word-break: normal;
+        vertical-align: middle;
+        line-height: 1.3;
+        padding: 7px 6px;
+      }
+      .admin-users-datagrid thead th {
+        font-size: 0.8rem;
+      }
+      .admin-users-datagrid tbody td[colspan] {
+        white-space: normal;
+        text-align: center;
+        line-height: 1.55;
+      }
+      .admin-users-datagrid .badge,
+      .admin-users-datagrid .loyalty-tier {
+        white-space: nowrap;
+      }
+    }
     .accordion {
       border: 1px solid rgba(197, 160, 89, 0.3);
       border-radius: 16px;
