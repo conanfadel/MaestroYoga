@@ -837,6 +837,20 @@
     }
     .accordion-body { padding: 14px; display: none; min-width: 0; }
     .accordion.open .accordion-body { display: block; }
+    /*
+      أقسام بدون «open»: المحتوى مخفي لكن الحدود/الظل/الهامش كانت لا تزال تُرسم —
+      فيبدو تحت التبويب كعدة خطوط أفقية رفيعة. إخفاء الإطار بالكامل للقسم المغلق.
+    */
+    .accordion:not(.open) {
+      border: none;
+      box-shadow: none;
+      margin: 0;
+      padding: 0;
+      min-height: 0;
+      background: transparent;
+      overflow: hidden;
+      scroll-margin-top: 0;
+    }
     .drag-handle {
       cursor: grab;
       user-select: none;
@@ -1509,6 +1523,11 @@ html[data-theme="dark"] .security-block {
   background: var(--white);
   border-color: rgba(197, 160, 89, 0.28);
   box-shadow: 0 10px 28px rgba(0, 0, 0, 0.35);
+}
+html[data-theme="dark"] .accordion:not(.open) {
+  border: none;
+  box-shadow: none;
+  background: transparent;
 }
 html[data-theme="dark"] input,
 html[data-theme="dark"] select,
