@@ -10,15 +10,22 @@ from pathlib import Path
 from typing import Any
 from urllib.parse import urlencode, urlparse
 
+from pydantic import ValidationError
 from fastapi import APIRouter, Depends, File, Form, HTTPException, Query, Request, UploadFile
 from fastapi.responses import HTMLResponse, RedirectResponse, StreamingResponse
 from fastapi.templating import Jinja2Templates
 from sqlalchemy import and_, case, func, nullslast, or_
 from sqlalchemy.orm import Session
 
-from . import models
+from . import models, schemas
 from .rbac import admin_ui_flags, user_has_permission
-from .role_definitions import CENTER_ADMIN_LOGIN_ROLES, PERMISSION_CATALOG, handbook_matrix_rows
+from .role_definitions import (
+    ASSIGNABLE_BY_CENTER_OWNER,
+    CENTER_ADMIN_LOGIN_ROLES,
+    PERMISSION_CATALOG,
+    STAFF_ROLE_CATALOG,
+    handbook_matrix_rows,
+)
 from .booking_utils import ACTIVE_BOOKING_STATUSES, spots_available
 from .bootstrap import DEMO_CENTER_NAME, ensure_demo_data, ensure_demo_news_posts
 from .database import get_db
@@ -139,6 +146,8 @@ ALLOWED_ADMIN_RETURN_SECTIONS = frozenset(
         "section-security",
         "section-center-posts",
         "section-loyalty",
+        "section-staff-invite",
+        "section-staff-roles",
     }
 )
 
@@ -204,6 +213,10 @@ ADMIN_MSG_CENTER_INDEX_SAVED = "center_index_saved"
 ADMIN_MSG_CENTER_INDEX_NAME_INVALID = "center_index_name_invalid"
 ADMIN_MSG_CENTER_INDEX_NAME_TAKEN = "center_index_name_taken"
 ADMIN_MSG_CENTER_INDEX_TOO_LARGE = "center_index_too_large"
+ADMIN_MSG_STAFF_CREATED = "staff_user_created"
+ADMIN_MSG_STAFF_EMAIL_EXISTS = "staff_email_exists"
+ADMIN_MSG_STAFF_INVALID = "staff_invalid"
+ADMIN_MSG_STAFF_NOT_OWNER = "staff_not_owner"
 
 CENTER_LOGO_UPLOAD_DIR = Path(__file__).resolve().parent.parent / "static" / "uploads" / "centers"
 CENTER_POST_UPLOAD_DIR = CENTER_LOGO_UPLOAD_DIR / "posts"
@@ -325,6 +338,10 @@ ADMIN_FLASH_MESSAGES: dict[str, tuple[str, str]] = {
     ADMIN_MSG_CENTER_INDEX_NAME_INVALID: ("اسم المركز مطلوب ولا يمكن أن يكون فارغًا.", "warn"),
     ADMIN_MSG_CENTER_INDEX_NAME_TAKEN: ("هذا الاسم مستخدم لمركز آخر. اختر اسمًا مختلفًا.", "warn"),
     ADMIN_MSG_CENTER_INDEX_TOO_LARGE: ("حجم نصوص صفحة الحجز كبير جدًا. قلّل طول بعض الحقول ثم أعد المحاولة.", "warn"),
+    ADMIN_MSG_STAFF_CREATED: ("تم إنشاء حساب عضو الفريق. يمكنه تسجيل الدخول من صفحة تسجيل الدخول للإدارة.", "info"),
+    ADMIN_MSG_STAFF_EMAIL_EXISTS: ("هذا البريد مسجّل مسبقاً. استخدم بريداً آخر أو تحقق من الحسابات الحالية.", "warn"),
+    ADMIN_MSG_STAFF_INVALID: ("تعذر إنشاء الحساب: تحقق من الاسم والبريد وكلمة المرور (8 أحرف على الأقل) والدور.", "warn"),
+    ADMIN_MSG_STAFF_NOT_OWNER: ("إضافة أعضاء الفريق متاحة لمالك المركز فقط.", "warn"),
 }
 
 
@@ -3384,7 +3401,9 @@ def admin_dashboard(
             "loyalty_admin": loyalty_admin,
             **admin_ui_flags(user),
             "permission_catalog": PERMISSION_CATALOG,
-            "staff_role_catalog": STAFF_ROLE_CATALOG,
+            "assignable_staff_roles": tuple(
+                r for r in STAFF_ROLE_CATALOG if r["id"] in ASSIGNABLE_BY_CENTER_OWNER
+            ),
             "role_permission_matrix": handbook_matrix_rows(),
             "center_post_admin_rows": center_post_admin_rows,
             "editing_post": editing_post,
@@ -3392,6 +3411,59 @@ def admin_dashboard(
             "post_edit_id": safe_post_edit,
         },
     )
+
+
+@router.post("/admin/staff/create")
+def admin_create_staff_user(
+    request: Request,
+    full_name: str = Form(...),
+    email: str = Form(...),
+    password: str = Form(...),
+    role: str = Form(...),
+    scroll_y: str = Form(default=""),
+    return_section: str = Form("section-staff-invite"),
+    db: Session = Depends(get_db),
+):
+    user, redirect = _require_admin_user_or_redirect(request, db)
+    if redirect:
+        return redirect
+    assert user is not None
+    if user.role != "center_owner":
+        return _admin_redirect(ADMIN_MSG_STAFF_NOT_OWNER, scroll_y, return_section)
+
+    try:
+        payload = schemas.UserCreateByOwner(
+            full_name=(full_name or "").strip(),
+            email=(email or "").strip(),
+            password=password or "",
+            role=(role or "").strip(),
+        )
+    except ValidationError:
+        return _admin_redirect(ADMIN_MSG_STAFF_INVALID, scroll_y, return_section)
+
+    exists = db.query(models.User).filter(models.User.email == payload.email.lower()).first()
+    if exists:
+        return _admin_redirect(ADMIN_MSG_STAFF_EMAIL_EXISTS, scroll_y, return_section)
+
+    cid = require_user_center_id(user)
+    new_user = models.User(
+        center_id=cid,
+        full_name=payload.full_name,
+        email=payload.email.lower(),
+        password_hash=hash_password(payload.password),
+        role=payload.role,
+    )
+    db.add(new_user)
+    db.commit()
+    db.refresh(new_user)
+    log_security_event(
+        "admin_staff_user_created",
+        request,
+        "success",
+        email=user.email,
+        details={"new_user_id": new_user.id, "new_role": new_user.role, "target_email": new_user.email},
+    )
+    return _admin_redirect(ADMIN_MSG_STAFF_CREATED, scroll_y, return_section)
 
 
 def _admin_user_for_export_permission(

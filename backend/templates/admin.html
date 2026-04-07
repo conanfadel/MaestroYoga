@@ -109,6 +109,7 @@
           <a class="section-tab section-tab--subitem" data-target="section-center-posts" href="#section-center-posts" id="tab-section-center-posts">أخبار ومنشورات</a>
           <a class="section-tab section-tab--subitem" data-target="section-faq" href="#section-faq" id="tab-section-faq">الأسئلة الشائعة</a>
           {% if show_staff_roles_handbook %}
+          <a class="section-tab section-tab--subitem" data-target="section-staff-invite" href="#section-staff-invite" id="tab-section-staff-invite">إضافة عضو فريق</a>
           <a class="section-tab section-tab--subitem" data-target="section-staff-roles" href="#section-staff-roles" id="tab-section-staff-roles">مرجع الأدوار والصلاحيات</a>
           {% endif %}
         </div>
@@ -1704,12 +1705,40 @@
     {% endif %}
 
     {% if show_staff_roles_handbook %}
+    <section id="section-staff-invite" class="accordion" style="margin-top:20px;">
+      <div class="accordion-body">
+        <div class="card" style="margin-top:0;">
+          <h2 class="admin-booking-block-heading admin-booking-block-heading--flush-top">إضافة عضو فريق</h2>
+          <p class="small" style="margin:0 0 14px;line-height:1.65;">
+            أنشئ حساباً لموظف أو مدرب في نفس مركزك. يستلم العضو بيانات الدخول منك خارج النظام. اختر الدور المناسب؛ للتفاصيل راجع <a class="soft-link" href="#section-staff-roles">جدول الصلاحيات</a> أدناه.
+          </p>
+          <form method="post" action="/admin/staff/create" data-preserve-scroll="1" class="form" style="max-width:520px;">
+            <input type="hidden" name="return_section" value="section-staff-invite" />
+            <label for="staff_full_name">الاسم الكامل</label>
+            <input id="staff_full_name" name="full_name" type="text" required autocomplete="name" maxlength="200" placeholder="مثال: سارة المنسقة" />
+            <label for="staff_email">البريد الإلكتروني (اسم المستخدم)</label>
+            <input id="staff_email" name="email" type="email" required autocomplete="email" inputmode="email" placeholder="name@example.com" />
+            <label for="staff_password">كلمة المرور</label>
+            <input id="staff_password" name="password" type="password" required autocomplete="new-password" minlength="8" placeholder="8 أحرف على الأقل" />
+            <label for="staff_role">الدور</label>
+            <select id="staff_role" name="role" required aria-label="دور عضو الفريق">
+              {% for r in assignable_staff_roles %}
+              <option value="{{ r.id }}">{{ r.label }}{% if r.optional %} (اختياري){% endif %} — {{ r.id }}</option>
+              {% endfor %}
+            </select>
+            <p class="small" style="margin:8px 0 0;line-height:1.5;color:var(--charcoal-muted);">يظهر المعرف الإنجليزي بجانب الاسم للتمييز في الإعدادات التقنية.</p>
+            <button type="submit" style="margin-top:14px;">إنشاء الحساب</button>
+          </form>
+        </div>
+      </div>
+    </section>
+
     <section id="section-staff-roles" class="accordion" style="margin-top:20px;">
       <div class="accordion-body">
         <div class="card" style="margin-top:0;">
           <h2 class="admin-booking-block-heading admin-booking-block-heading--flush-top">مرجع أدوار الفريق والصلاحيات</h2>
           <p class="small" style="margin:0 0 14px;line-height:1.65;">
-            يوضح الجدول أدناه الصلاحيات المرتبطة بكل نوع مستخدم في لوحة الإدارة. عند إنشاء حسابات عبر واجهة البرمجة (<code>/auth/users</code>) يختار المالك أحد الأدوار المعيّنة. الأدوار المعلّمة بـ «اختياري» هي أدوار مساعدة (دعم مالي أو دعم فني محدود) حسب حاجة المركز.
+            يوضح الجدول أدناه الصلاحيات المرتبطة بكل نوع مستخدم في لوحة الإدارة. يمكن للمالك إنشاء الحسابات من القسم «إضافة عضو فريق» أعلاه أو عبر واجهة البرمجة (<code>/auth/users</code>). الأدوار المعلّمة بـ «اختياري» في القائمة أعلاه هي أدوار مساعدة (دعم مالي أو دعم فني محدود) حسب حاجة المركز.
           </p>
           <div class="table-fluid" style="overflow:auto;max-height:70vh;border-radius:12px;border:1px solid rgba(197,160,89,0.25);">
             <table class="plans-table table-card-rwd" style="font-size:0.82rem;min-width:720px;">
