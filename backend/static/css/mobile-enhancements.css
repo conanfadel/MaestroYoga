@@ -33,13 +33,6 @@ article img,
   height: auto;
 }
 
-/* —— لوحي (عادةً عرض 721–1024): تباعد أوضح دون إرهاق سطح المكتب —— */
-@media (min-width: 721px) and (max-width: 1024px) {
-  body {
-    padding-inline: max(14px, env(safe-area-inset-left, 0px), env(safe-area-inset-right, 0px));
-  }
-}
-
 /* —— تقليل «الوميض» عند التمرير الأفقي العرضي في الجداول —— */
 .table-fluid,
 .loyalty-program__table-wrap {

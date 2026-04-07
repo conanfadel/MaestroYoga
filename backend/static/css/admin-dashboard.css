@@ -9,6 +9,7 @@
       --charcoal-muted: #636e72;
       --white: #ffffff;
       --page-bg: #fafcfb;
+      --content-max: min(1280px, 87.5vw);
     }
     * { box-sizing: border-box; }
     html {
@@ -20,7 +21,8 @@
         radial-gradient(ellipse 100% 70% at 100% 0%, var(--mint-bg) 0%, transparent 50%),
         var(--page-bg);
       margin: 0;
-      padding: 8px max(10px, (100% - 80vw) / 2) 20px;
+      padding-block: 8px 20px;
+      padding-inline: max(10px, calc((100% - var(--content-max)) / 2), env(safe-area-inset-left, 0px), env(safe-area-inset-right, 0px));
       color: var(--charcoal);
       overflow-x: clip;
       width: 100%;
@@ -31,7 +33,7 @@
     }
     .container {
       width: 100%;
-      max-width: min(1680px, 80vw);
+      max-width: var(--content-max);
       margin-inline: auto;
     }
     @media (max-width: 720px) {

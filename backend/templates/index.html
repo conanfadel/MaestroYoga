@@ -98,6 +98,8 @@
       --shadow-brand: 0 8px 28px rgba(45, 52, 54, 0.08), 0 2px 12px rgba(197, 160, 89, 0.12);
       --shadow-brand-hover: 0 18px 44px rgba(197, 160, 89, 0.16), 0 6px 20px rgba(45, 52, 54, 0.08);
       --ring-focus: 0 0 0 3px rgba(197, 160, 89, 0.42);
+      /* حاوية المحتوى على الشاشات الواسعة: أقصى ~1280px أو ~87.5% من العرض — أيهما أصغر */
+      --content-max: min(1280px, 87.5vw);
     }
     body.time-morning { --page-tint: rgba(255, 250, 235, 0.55); }
     body.time-afternoon { --page-tint: rgba(232, 252, 244, 0.45); }
@@ -111,7 +113,7 @@
     body {
       margin: 0;
       padding-block: max(22px, env(safe-area-inset-top, 0px)) max(22px, env(safe-area-inset-bottom, 0px));
-      padding-inline: max(12px, (100% - 80vw) / 2, env(safe-area-inset-left, 0px), env(safe-area-inset-right, 0px));
+      padding-inline: max(12px, calc((100% - var(--content-max)) / 2), env(safe-area-inset-left, 0px), env(safe-area-inset-right, 0px));
       font-family: "Tajawal", system-ui, sans-serif;
       color: var(--charcoal);
       background:
@@ -124,18 +126,11 @@
     }
     .container {
       width: 100%;
-      max-width: min(1680px, 80vw);
+      max-width: var(--content-max);
       margin-inline: auto;
     }
     @media (max-width: 720px) {
       .container { max-width: 100%; }
-    }
-    /* لوحي: استغلال أفضل لعرض الشاشة */
-    @media (min-width: 721px) and (max-width: 1024px) {
-      .container { max-width: min(1680px, 94vw); }
-      body {
-        padding-inline: max(14px, 2.5vw, env(safe-area-inset-left, 0px), env(safe-area-inset-right, 0px));
-      }
     }
     .skip-link {
       position: absolute; inset-inline-start: -9999px; top: 0;
@@ -321,7 +316,7 @@
     .index-faq-teaser__more:hover { text-decoration: underline; }
     .index-refund-policy {
       margin: 20px auto 0;
-      max-width: min(1680px, 80vw);
+      max-width: var(--content-max);
       padding: 22px 24px;
     }
     .index-refund-policy h2 { margin-bottom: 10px; }
@@ -2564,7 +2559,7 @@
           loading="eager"
           fetchpriority="high"
           decoding="async"
-          sizes="(max-width: 720px) 100vw, min(1680px, 80vw)"
+          sizes="(max-width: 720px) 100vw, min(1280px, 87.5vw)"
           onerror="this.onerror=null;this.src='{{ hero_stock_src }}';var m=this.closest('.hero__media');if(m){m.classList.remove('hero-media--custom');m.classList.add('hero-media--stock');}"
         />
         {% elif center.hero_show_stock_photo | default(true) %}
@@ -2577,7 +2572,7 @@
           loading="eager"
           fetchpriority="high"
           decoding="async"
-          sizes="(max-width: 720px) 100vw, min(1680px, 80vw)"
+          sizes="(max-width: 720px) 100vw, min(1280px, 87.5vw)"
         />
         {% endif %}
         {% if center.hero_image_url or (center.hero_show_stock_photo | default(true) and not center.hero_image_url) %}
