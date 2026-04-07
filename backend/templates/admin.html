@@ -890,7 +890,6 @@
               <th>البريد</th>
               <th>رقم الجوال</th>
               <th>تاريخ التسجيل</th>
-              <th>تاريخ الحذف</th>
               <th>الحالة</th>
               <th>توثيق البريد</th>
               <th>الولاء</th>
@@ -914,7 +913,6 @@
               <td>{{ pu.email }}</td>
               <td>{{ pu.phone }}</td>
               <td>{{ pu.created_at_display }}</td>
-              <td>{{ pu.deleted_at_display }}</td>
               <td>
                 <span class="badge {{ 'completed' if pu.is_active else 'pending' }}">
                   {{ 'نشط' if pu.is_active else 'معطل' }}
@@ -956,7 +954,7 @@
               </td>
             </tr>
             {% else %}
-            <tr><td colspan="11">لا توجد نتائج في هذه الصفحة. غيّر الفلاتر أو عد للصفحة الأولى.<span class="admin-empty-cta"><a href="#section-public-users">قسم المستخدمين</a></span></td></tr>
+            <tr><td colspan="10">لا توجد نتائج في هذه الصفحة. غيّر الفلاتر أو عد للصفحة الأولى.<span class="admin-empty-cta"><a href="#section-public-users">قسم المستخدمين</a></span></td></tr>
             {% endfor %}
           </tbody>
         </table>

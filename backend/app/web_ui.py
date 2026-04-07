@@ -643,7 +643,8 @@ def _soft_delete_public_user(row: models.PublicUser) -> tuple[str, str]:
     row.is_active = False
     row.email_verified = False
     row.is_deleted = True
-    row.deleted_at = utcnow_naive()
+    if row.deleted_at is None:
+        row.deleted_at = utcnow_naive()
     return original_email, original_phone
 
 
@@ -2976,7 +2977,6 @@ def admin_dashboard(
                 "is_active": u.is_active,
                 "email_verified": u.email_verified,
                 "is_deleted": bool(u.is_deleted),
-                "deleted_at_display": _fmt_dt(u.deleted_at),
                 "created_at_display": _fmt_dt(u.created_at),
                 "loyalty_confirmed_count": cnt,
                 "loyalty_tier": lt["loyalty_tier"],
