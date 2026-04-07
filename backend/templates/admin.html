@@ -850,27 +850,27 @@
       {% if perm_public_users %}
       <p class="small" style="margin:0 0 12px;line-height:1.55;">المستخدمون المحذوفون ناعماً (Soft) يظهرون في سلة المحذوفات للاستعادة أو الحذف النهائي.</p>
       {% endif %}
-      <form method="get" action="/admin" class="filters" style="margin-bottom:10px;">
+      <form method="get" action="/admin" class="filters filters--public-users-row">
         <input type="hidden" name="public_user_page" value="1" />
         <input type="hidden" name="trash_page" value="{{ trash_pagination.page }}" />
         <input type="hidden" name="trash_q" value="{{ trash_filters.q }}" />
         <input type="hidden" name="audit_page" value="{{ security_pagination.page }}" />
         <input type="hidden" name="sessions_page" value="{{ sessions_pagination.page }}" />
         <input type="hidden" name="payments_page" value="{{ payments_pagination.page }}" />
-        <input name="public_user_q" placeholder="بحث بالاسم/البريد/الجوال" value="{{ public_user_filters.q }}" />
-        <select name="public_user_status">
+        <input class="filters--public-users-row__q" name="public_user_q" type="search" autocomplete="off" placeholder="بحث بالاسم/البريد/الجوال" value="{{ public_user_filters.q }}" />
+        <select class="filters--public-users-row__select" name="public_user_status" aria-label="حالة الحساب">
           <option value="active" {{ 'selected' if public_user_filters.status == 'active' else '' }}>نشطون</option>
           <option value="inactive" {{ 'selected' if public_user_filters.status == 'inactive' else '' }}>غير نشطين</option>
         </select>
-        <select name="public_user_verified">
+        <select class="filters--public-users-row__select" name="public_user_verified" aria-label="التوثيق">
           <option value="all" {{ 'selected' if public_user_filters.verified == 'all' else '' }}>الكل</option>
           <option value="verified" {{ 'selected' if public_user_filters.verified == 'verified' else '' }}>موثق</option>
           <option value="unverified" {{ 'selected' if public_user_filters.verified == 'unverified' else '' }}>غير موثق</option>
         </select>
-        <button type="submit">فلترة المستخدمين</button>
+        <button class="filters--public-users-row__submit" type="submit">فلترة</button>
       </form>
-      <form id="public-users-bulk-form" method="post" action="/admin/public-users/bulk-action" data-preserve-scroll="1" style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:10px;">
-        <select name="action" style="max-width:280px;">
+      <form id="public-users-bulk-form" class="public-users-bulk-bar" method="post" action="/admin/public-users/bulk-action" data-preserve-scroll="1">
+        <select name="action" class="public-users-bulk-bar__action" aria-label="إجراء جماعي">
           <option value="activate">تفعيل المحدد</option>
           <option value="deactivate">تعطيل المحدد</option>
           <option value="verify">توثيق بريد المحدد</option>
@@ -878,7 +878,7 @@
           <option value="resend_verification">إعادة إرسال تحقق للمحدد</option>
           <option value="soft_delete">حذف Soft للمحدد</option>
         </select>
-        <button type="submit">تنفيذ جماعي</button>
+        <button type="submit" class="public-users-bulk-bar__submit">تنفيذ جماعي</button>
       </form>
       <div class="table-fluid">
         <table class="table-card-rwd">
