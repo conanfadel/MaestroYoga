@@ -453,12 +453,7 @@
     <section id="section-loyalty" class="accordion">
       <div class="accordion-body">
         <div class="card">
-          <h2 class="index-spotlight-heading">
-            <span class="index-spotlight-heading__badge" aria-hidden="true">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round"><path d="M12 15c-3.3 0-6-2.7-6-6V5a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v4c0 3.3-2.7 6-6 6Z"/><path d="M8 21h8"/><path d="M12 15v6"/></svg>
-            </span>
-            <span class="index-spotlight-heading__text">برنامج المكافآت والولاء</span>
-          </h2>
+          <h2 class="admin-booking-block-heading admin-booking-block-heading--flush-top">برنامج المكافآت والولاء</h2>
           <p class="small" style="margin:0 0 12px;line-height:1.65;">
             تُحسب الأوسمة من عدد الحجوزات بحالة <strong>مؤكد</strong> لكل بريد عميل في مركزك.
             <strong>التسلسل:</strong> عتبة الفضي تكون دائماً على الأقل <strong>برونزي + 1</strong> جلسة، والذهبي على الأقل <strong>فضي + 1</strong> (يُطبّق تلقائياً عند الحفظ والعرض).
@@ -473,7 +468,7 @@
           {% if center %}
           <form id="admin-loyalty-form" method="post" action="/admin/center/loyalty" data-preserve-scroll="1">
             <input type="hidden" name="return_section" value="section-loyalty" />
-            <h3 class="branding-subhead" style="margin-top:0;">عتبات الجلسات المؤكدة</h3>
+            <h3 class="admin-booking-block-heading admin-booking-block-heading--flush-top">عتبات الجلسات المؤكدة</h3>
             <label for="loyalty_bronze_min">أقل عدد جلسات للوسام البرونزي</label>
             <input id="loyalty_bronze_min" name="loyalty_bronze_min" type="number" min="1" max="5000" placeholder="فارغ = خادم"
               value="{{ center.loyalty_bronze_min if center.loyalty_bronze_min is not none else '' }}" />
@@ -484,7 +479,7 @@
             <input id="loyalty_gold_min" name="loyalty_gold_min" type="number" min="3" max="5000" placeholder="فارغ = خادم"
               value="{{ center.loyalty_gold_min if center.loyalty_gold_min is not none else '' }}" />
             <p id="loyalty-cascade-hint" class="small" style="margin:10px 0 0;padding:8px 10px;background:#f8fafc;border-radius:8px;color:var(--charcoal-muted);line-height:1.5;"></p>
-            <h3 class="branding-subhead">أسماء العرض (اختياري)</h3>
+            <h3 class="admin-booking-block-heading">أسماء العرض (اختياري)</h3>
             <p class="small" style="margin:0 0 10px;">تظهر للزائر بدل «برونزي / فضي / ذهبي» عند التعبئة.</p>
             <label for="loyalty_label_bronze">اسم الوسام البرونزي</label>
             <input id="loyalty_label_bronze" name="loyalty_label_bronze" type="text" maxlength="64" placeholder="برونزي"
@@ -495,7 +490,7 @@
             <label for="loyalty_label_gold">اسم الوسام الذهبي</label>
             <input id="loyalty_label_gold" name="loyalty_label_gold" type="text" maxlength="64" placeholder="ذهبي"
               value="{{ center.loyalty_label_gold or '' }}" />
-            <h3 class="branding-subhead">مكافآت ومزايا كل مستوى (اختياري)</h3>
+            <h3 class="admin-booking-block-heading">مكافآت ومزايا كل مستوى (اختياري)</h3>
             <p class="small" style="margin:0 0 10px;line-height:1.55;">
               تُعرض في <strong>صفحة الجمهور</strong> و<strong>إعدادات الحساب</strong> ضمن جدول برنامج الولاء. اترك الحقل فارغاً لاستخدام النصوص الافتراضية المقترحة (حد أقصى 800 حرف لكل مستوى).
             </p>
@@ -580,7 +575,7 @@
     <div class="grid" style="margin-bottom:14px;">
       {% if not is_trainer %}
       <div class="card">
-        <h2>إضافة غرفة</h2>
+        <h2 class="admin-booking-block-heading admin-booking-block-heading--flush-top">إضافة غرفة</h2>
         <form method="post" action="/admin/rooms" data-preserve-scroll="1">
           <label>اسم الغرفة</label>
           <input name="name" required placeholder="مثال: قاعة التأمل" />
@@ -592,7 +587,7 @@
       {% endif %}
 
       <div class="card">
-        <h2>إضافة جلسة جديدة</h2>
+        <h2 class="admin-booking-block-heading{% if is_trainer %} admin-booking-block-heading--flush-top{% endif %}">إضافة جلسة جديدة</h2>
         <form method="post" action="/admin/sessions" data-preserve-scroll="1">
           <label>الغرفة</label>
           <select name="room_id" required>
@@ -624,7 +619,7 @@
 
       {% if not is_trainer %}
       <div class="card">
-        <h2>إضافة خطة اشتراك</h2>
+        <h2 class="admin-booking-block-heading">إضافة خطة اشتراك</h2>
         <form method="post" action="/admin/plans" data-preserve-scroll="1">
           <label>اسم الخطة</label>
           <input name="name" required placeholder="مثال: باقة التوازن" />
@@ -645,7 +640,7 @@
     </div>
     {% if not is_trainer %}
     <div class="card" style="margin-top:0;">
-      <h2>إدارة الغرف (تعديل الاسم/السعة/الحذف)</h2>
+      <h2 class="admin-booking-block-heading">إدارة الغرف (تعديل الاسم/السعة/الحذف)</h2>
       <form method="get" action="/admin" class="filters" style="margin-bottom:10px;">
         <input type="hidden" name="public_user_q" value="{{ public_user_filters.q }}" />
         <input type="hidden" name="public_user_status" value="{{ public_user_filters.status }}" />
@@ -729,7 +724,7 @@
     <div class="card" style="margin-top:0;">
       <div class="plans-shell">
       <div class="plans-head">
-        <h2 style="margin:0;">خطط الاشتراكات الحالية</h2>
+        <h2 class="admin-booking-block-heading admin-booking-block-heading--flush-top" style="margin:0;">خطط الاشتراكات الحالية</h2>
         <span class="plans-note">تنسيق متكامل لعرض وتعديل كل عناصر الخطة بوضوح.</span>
       </div>
       <div class="plans-cards">
@@ -820,7 +815,7 @@
       <div class="accordion-body">
     <div class="card" style="margin-top:0;">
       <div class="public-users-heading-row">
-        <h2>إدارة المستخدمين</h2>
+        <h2 class="admin-booking-block-heading admin-booking-block-heading--flush-top">إدارة المستخدمين</h2>
         {% if not is_trainer %}
         <a class="public-users-trash-link" href="#section-public-users-trash" title="الانتقال إلى سلة المحذوفات" aria-label="سلة المحذوفات">
           <span class="public-users-trash-icon-wrap" aria-hidden="true">
@@ -961,7 +956,7 @@
     <section id="section-public-users-trash" class="accordion">
       <div class="accordion-body">
         <div class="card admin-trash-card" style="margin-top:0;">
-          <h2>سلة المحذوفات</h2>
+          <h2 class="admin-booking-block-heading admin-booking-block-heading--flush-top">سلة المحذوفات</h2>
           <p class="small" style="margin:0 0 14px;line-height:1.65;">
             حسابات المستخدمين المحذوفة ناعماً (Soft). يمكنك <strong>استعادتها</strong> إلى القائمة النشطة أو <strong>حذفها نهائياً</strong> من قاعدة البيانات. الحذف النهائي لا يمكن التراجع عنه.
           </p>
@@ -1200,15 +1195,10 @@
     <section id="section-sessions" class="accordion">
       <div class="accordion-body">
     {% if ops_today_rows or ops_tomorrow_rows %}
-    <h3 class="admin-upcoming-spotlight index-spotlight-heading index-spotlight-heading--compact">
-      <span class="index-spotlight-heading__badge" aria-hidden="true">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-      </span>
-      <span class="index-spotlight-heading__text">أقرب جلسات متاحة</span>
-    </h3>
+    <h3 class="admin-booking-block-heading">أقرب جلسات متاحة</h3>
     <div class="ops-grid">
       <div class="ops-card">
-        <h3>جلسات اليوم</h3>
+        <h3 class="admin-booking-block-heading admin-booking-block-heading--compact">جلسات اليوم</h3>
         {% if ops_today_rows %}
         <ul class="ops-list">
           {% for o in ops_today_rows %}
@@ -1220,7 +1210,7 @@
         {% endif %}
       </div>
       <div class="ops-card">
-        <h3>جلسات الغد</h3>
+        <h3 class="admin-booking-block-heading admin-booking-block-heading--compact">جلسات الغد</h3>
         {% if ops_tomorrow_rows %}
         <ul class="ops-list">
           {% for o in ops_tomorrow_rows %}
@@ -1244,8 +1234,8 @@
     </div>
     {% endif %}
     <div class="card" style="margin-top:0;">
-      <h2 class="section-heading section-heading--primary"><span class="section-heading__ico" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg></span><span class="section-heading__label">الجلسات الحالية</span></h2>
-      <h3 class="sessions-filters-title section-heading section-heading--sub index-spotlight-heading--ribbon"><span class="section-heading__ico" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg></span><span class="section-heading__label">تصفية وترتيب الجلسات</span></h3>
+      <h2 class="admin-booking-block-heading admin-booking-block-heading--flush-top">الجلسات الحالية</h2>
+      <h3 class="admin-booking-block-heading">تصفية وترتيب الجلسات</h3>
       <div class="table-fluid">
         <table class="table-card-rwd">
           <thead>
@@ -1295,7 +1285,7 @@
     </div>
 
     <div class="card" style="margin-top:14px;">
-      <h2>آخر المدفوعات</h2>
+      <h2 class="admin-booking-block-heading admin-booking-block-heading--flush-top">آخر المدفوعات</h2>
       {% if not is_trainer %}
       <p class="small" style="margin:0 0 10px;">
         <a class="soft-link" href="{{ data_export_urls.clients }}">تصدير العملاء CSV</a>
@@ -1446,7 +1436,7 @@
     <section id="section-security" class="accordion">
       <div class="accordion-body">
         <div class="card" style="margin-top:0;">
-          <h2 style="margin-bottom:6px;">الأمان والتدقيق</h2>
+          <h2 class="admin-booking-block-heading admin-booking-block-heading--flush-top" style="margin-bottom:6px;">الأمان والتدقيق</h2>
           <p class="small" style="margin:0 0 18px;">مؤشرات المخاطر، سجلات الدخول، التدقيق، وحظر العناوين — مرتبة في أقسام واضحة.</p>
 
           <div class="security-layout">
@@ -1454,7 +1444,7 @@
             <div id="sec-security-overview" class="security-block">
               <div class="security-block__head">
                 <span class="security-block__icon" aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg></span>
-                <h3>نظرة عامة والمخاطر</h3>
+                <h3 class="admin-booking-block-heading admin-booking-block-heading--in-security-head">نظرة عامة والمخاطر</h3>
               </div>
               <div class="security-kpi-row">
                 <div class="security-kpi">
@@ -1490,7 +1480,7 @@
             <div id="sec-security-admin" class="security-block">
               <div class="security-block__head">
                 <span class="security-block__icon" aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></span>
-                <h3>دخول لوحة الإدارة</h3>
+                <h3 class="admin-booking-block-heading admin-booking-block-heading--in-security-head">دخول لوحة الإدارة</h3>
               </div>
               <p class="small" style="margin:0 0 12px;">أحدث 20 محاولة دخول إلى لوحة الإدارة.</p>
               <div class="table-fluid">
@@ -1522,15 +1512,15 @@
             <div id="sec-security-audit" class="security-block">
               <div class="security-block__head">
                 <span class="security-block__icon" aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><line x1="10" y1="9" x2="8" y2="9"/></svg></span>
-                <h3>سجل التدقيق</h3>
+                <h3 class="admin-booking-block-heading admin-booking-block-heading--in-security-head">سجل التدقيق</h3>
               </div>
               <div class="security-tools-row">
                 <div class="security-tools-box">
-                  <h4>تصدير وتقرير</h4>
+                  <h4 class="admin-booking-block-heading admin-booking-block-heading--compact">تصدير وتقرير</h4>
                   <a class="btn" href="{{ security_export_url }}" style="margin-inline-start:0;">تصدير CSV (الفلتر الحالي)</a>
                 </div>
                 <div class="security-tools-box">
-                  <h4>حظر يدوي لعنوان</h4>
+                  <h4 class="admin-booking-block-heading admin-booking-block-heading--compact">حظر يدوي لعنوان</h4>
                   <form method="post" action="/admin/security/ip-block" data-preserve-scroll="1" class="filters" style="margin-bottom:0;">
                     <input name="ip" placeholder="عنوان IP" required aria-label="عنوان IP للحظر" />
                     <select name="minutes" aria-label="مدة الحظر">
@@ -1544,7 +1534,7 @@
                   </form>
                 </div>
               </div>
-              <h4 style="margin:18px 0 10px;font-size:0.95rem;">فلترة السجل</h4>
+              <h4 class="admin-booking-block-heading admin-booking-block-heading--compact" style="margin:18px 0 10px;">فلترة السجل</h4>
               <form method="get" action="/admin" class="filters">
                 <input type="hidden" name="public_user_page" value="{{ public_user_pagination.page }}" />
                 <input type="hidden" name="trash_page" value="{{ trash_pagination.page }}" />
@@ -1604,7 +1594,7 @@
             <div id="sec-security-blocked" class="security-block">
               <div class="security-block__head">
                 <span class="security-block__icon" aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 9.9-1"/></svg></span>
-                <h3>العناوين المحظورة حاليًا</h3>
+                <h3 class="admin-booking-block-heading admin-booking-block-heading--in-security-head">العناوين المحظورة حاليًا</h3>
               </div>
               <div class="table-fluid">
                 <table class="table-card-rwd">
@@ -1640,7 +1630,7 @@
             <div id="sec-security-history" class="security-block">
               <div class="security-block__head">
                 <span class="security-block__icon" aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></span>
-                <h3>سجل الحظر وفك الحظر</h3>
+                <h3 class="admin-booking-block-heading admin-booking-block-heading--in-security-head">سجل الحظر وفك الحظر</h3>
               </div>
               <div class="table-fluid">
                 <table class="table-card-rwd">
