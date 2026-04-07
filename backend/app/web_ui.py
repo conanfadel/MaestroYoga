@@ -3922,7 +3922,7 @@ def admin_report_revenue(
 @router.get("/admin/reports/insights", response_class=HTMLResponse)
 def admin_report_insights(
     request: Request,
-    period: str = "month",
+    period: str = "week",
     date_from: str = "",
     date_to: str = "",
     db: Session = Depends(get_db),

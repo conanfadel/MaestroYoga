@@ -1409,13 +1409,14 @@
               {% if perm_report_sessions %}
               <div class="report-hub__group report-hub__group--ops">
                 <h3 class="report-hub__group-title">الجلسات والتشغيل</h3>
-                <p class="report-hub__group-desc">جداول الجلسات، الرؤى، العملاء، الاشتراكات، ومؤشرات النظام</p>
+                <p class="report-hub__group-desc">جداول الجلسات، <strong>رؤى أسبوعية</strong> (مميّزة)، الرؤى الشهرية/السنوية، العملاء، الاشتراكات، ومؤشرات النظام</p>
                 <div class="report-hub__grid">
                   <a class="report-hub__tile" href="/admin/reports/sessions?period=today"><span class="report-hub__tile-icon" aria-hidden="true">{{ svg_calendar() }}</span><span class="report-hub__tile-text">جلسات · اليوم</span></a>
                   <a class="report-hub__tile" href="/admin/reports/sessions?period=week"><span class="report-hub__tile-icon" aria-hidden="true">{{ svg_calendar() }}</span><span class="report-hub__tile-text">جلسات · الأسبوع</span></a>
                   <a class="report-hub__tile" href="/admin/reports/sessions?period=month"><span class="report-hub__tile-icon" aria-hidden="true">{{ svg_calendar() }}</span><span class="report-hub__tile-text">جلسات · الشهر</span></a>
                   <a class="report-hub__tile" href="/admin/reports/sessions?period=year"><span class="report-hub__tile-icon" aria-hidden="true">{{ svg_calendar() }}</span><span class="report-hub__tile-text">جلسات · السنة</span></a>
-                  <a class="report-hub__tile report-hub__tile--accent" href="/admin/reports/insights?period=month"><span class="report-hub__tile-icon" aria-hidden="true">{{ svg_chart() }}</span><span class="report-hub__tile-text">رؤى تشغيلية · شهر</span></a>
+                  <a class="report-hub__tile report-hub__tile--accent" href="/admin/reports/insights?period=week"><span class="report-hub__tile-icon" aria-hidden="true">{{ svg_chart() }}</span><span class="report-hub__tile-text">رؤى تشغيلية · أسبوع</span></a>
+                  <a class="report-hub__tile" href="/admin/reports/insights?period=month"><span class="report-hub__tile-icon" aria-hidden="true">{{ svg_chart() }}</span><span class="report-hub__tile-text">رؤى تشغيلية · شهر</span></a>
                   <a class="report-hub__tile" href="/admin/reports/insights?period=year"><span class="report-hub__tile-icon" aria-hidden="true">{{ svg_chart() }}</span><span class="report-hub__tile-text">رؤى تشغيلية · سنة</span></a>
                   <a class="report-hub__tile" href="/admin/reports/clients?period=month"><span class="report-hub__tile-icon" aria-hidden="true">{{ svg_users() }}</span><span class="report-hub__tile-text">عملاء · جدد وعائدون</span></a>
                   <a class="report-hub__tile" href="/admin/reports/subscriptions?days=30"><span class="report-hub__tile-icon" aria-hidden="true">{{ svg_package() }}</span><span class="report-hub__tile-text">اشتراكات تنتهي · ٣٠ يوماً</span></a>
