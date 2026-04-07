@@ -3,9 +3,16 @@
 {% set hero_stock_src = "/static/branding/hero-stock.png" %}
 {% set hero_show_stock_preload = (not center.hero_image_url) and (center.hero_show_stock_photo | default(true)) %}
 <head>
+  <script>
+    (function () {
+      try {
+        if (localStorage.getItem("maestro_index_theme") === "dark") document.documentElement.setAttribute("data-theme", "dark");
+      } catch (e) {}
+    })();
+  </script>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, interactive-widget=resizes-content" />
-  <meta name="theme-color" content="#c5a059" />
+  <meta name="theme-color" content="#c5a059" id="meta-theme-color" />
   <meta name="mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="default" />
@@ -101,6 +108,29 @@
       /* حاوية المحتوى على الشاشات الواسعة: أقصى ~1280px أو ~87.5% من العرض — أيهما أصغر */
       --content-max: min(1280px, 87.5vw);
     }
+    html[data-theme="dark"] {
+      color-scheme: dark;
+    }
+    html[data-theme="dark"] {
+      --gold: #d4b878;
+      --gold-dark: #e8cc92;
+      --gold-soft: rgba(212, 184, 120, 0.22);
+      --mint: #6fc4a2;
+      --mint-mid: #5aaf8e;
+      --mint-bg: #152a22;
+      --charcoal: #eceff1;
+      --charcoal-muted: #a8b0ba;
+      --white: #1a1f26;
+      --page-bg: #0f1217;
+      --page-tint: transparent;
+      --shadow-brand: 0 8px 28px rgba(0, 0, 0, 0.45), 0 2px 12px rgba(0, 0, 0, 0.25);
+      --shadow-brand-hover: 0 18px 44px rgba(0, 0, 0, 0.38), 0 6px 20px rgba(0, 0, 0, 0.28);
+      --ring-focus: 0 0 0 3px rgba(212, 184, 120, 0.5);
+    }
+    html[data-theme="dark"] body.time-morning { --page-tint: rgba(35, 42, 55, 0.38); }
+    html[data-theme="dark"] body.time-afternoon { --page-tint: rgba(25, 48, 40, 0.38); }
+    html[data-theme="dark"] body.time-evening { --page-tint: rgba(38, 32, 52, 0.32); }
+    html[data-theme="dark"] body.time-night { --page-tint: rgba(28, 36, 52, 0.38); }
     body.time-morning { --page-tint: rgba(255, 250, 235, 0.55); }
     body.time-afternoon { --page-tint: rgba(232, 252, 244, 0.45); }
     body.time-evening { --page-tint: rgba(245, 238, 255, 0.35); }
@@ -2530,6 +2560,80 @@
       flex: 1 1 auto;
       min-width: 0;
     }
+
+    /* وضع داكن — تكميلات للأسطح والغلاف (المتغيرات أعلاه تغطي أغلب الصفحة) */
+    html[data-theme="dark"] .index-trust-bar {
+      background: linear-gradient(125deg, rgba(30, 38, 48, 0.96), rgba(22, 42, 36, 0.9));
+      border-color: rgba(212, 184, 120, 0.35);
+    }
+    html[data-theme="dark"] .index-product-clarity {
+      background: linear-gradient(168deg, var(--white) 0%, var(--mint-bg) 42%, #1e252d 100%);
+      border-color: rgba(212, 184, 120, 0.28);
+    }
+    html[data-theme="dark"] .index-product-clarity__card--plan {
+      background: linear-gradient(180deg, #222a33 0%, var(--white) 100%);
+    }
+    html[data-theme="dark"] .index-team-strip {
+      background: rgba(22, 28, 36, 0.85);
+      border-color: rgba(90, 175, 142, 0.35);
+    }
+    html[data-theme="dark"] .index-faq-teaser {
+      border-color: rgba(212, 184, 120, 0.28);
+    }
+    html[data-theme="dark"] .index-faq-teaser__item {
+      background: rgba(21, 42, 34, 0.35);
+      border-color: rgba(90, 175, 142, 0.35);
+    }
+    html[data-theme="dark"] .hero {
+      border-color: rgba(212, 184, 120, 0.3);
+      box-shadow: 0 12px 40px rgba(0, 0, 0, 0.35);
+    }
+    html[data-theme="dark"] .hero__inner {
+      background: rgba(15, 18, 24, 0.48);
+      border-color: rgba(255, 255, 255, 0.12);
+      box-shadow: 0 4px 28px rgba(0, 0, 0, 0.35);
+    }
+    html[data-theme="dark"] .hero__media-veil {
+      background:
+        linear-gradient(90deg, rgba(60, 100, 90, 0.18) 0%, transparent 45%),
+        linear-gradient(115deg, rgba(0, 0, 0, 0.42) 0%, rgba(0, 0, 0, 0.22) 42%, rgba(15, 18, 24, 0.55) 100%);
+    }
+    html[data-theme="dark"] .hero-toolbar--over-cover {
+      background: rgba(12, 15, 20, 0.58);
+      border-color: rgba(255, 255, 255, 0.1);
+      box-shadow: 0 2px 14px rgba(0, 0, 0, 0.35);
+    }
+    html[data-theme="dark"] .hero-toolbar {
+      background: rgba(12, 15, 20, 0.5);
+      border-color: rgba(212, 184, 120, 0.2);
+    }
+    html[data-theme="dark"] .hero-toolbar .chip {
+      background: rgba(255, 255, 255, 0.1);
+      border-color: rgba(212, 184, 120, 0.28);
+    }
+    html[data-theme="dark"] .hero-toolbar .btn.ghost {
+      background: rgba(255, 255, 255, 0.1);
+    }
+    html[data-theme="dark"] .hero h1,
+    html[data-theme="dark"] .hero .brand-tagline-hint {
+      text-shadow: 0 1px 4px rgba(0, 0, 0, 0.55), 0 0 22px rgba(0, 0, 0, 0.35);
+    }
+    html[data-theme="dark"] .hero h1.booking-block-heading {
+      background: linear-gradient(125deg, rgba(32, 38, 46, 0.95) 0%, rgba(24, 42, 36, 0.92) 55%, rgba(28, 34, 42, 0.92) 100%);
+      border-color: rgba(212, 184, 120, 0.45);
+      box-shadow: 0 4px 22px rgba(0, 0, 0, 0.35);
+    }
+    html[data-theme="dark"] .session-card__bar {
+      background: #222a33;
+      color: #f4f6f8;
+    }
+    html[data-theme="dark"] .cart-drawer__foot {
+      background: linear-gradient(180deg, var(--white) 0%, var(--mint-bg) 100%);
+    }
+    html[data-theme="dark"] .testimonial,
+    html[data-theme="dark"] .faq-item {
+      border-color: rgba(90, 175, 142, 0.4);
+    }
   </style>
 </head>
 <body>
@@ -2593,6 +2697,10 @@
         </div>
       </div>
       <div class="hero-toolbar hero-toolbar--over-cover" role="toolbar" aria-label="إجراءات سريعة">
+          <div class="hero-toolbar__group hero-toolbar__group--theme">
+            <button type="button" class="btn ghost hero-toolbar__btn index-theme-toggle" id="index-theme-toggle" title="تبديل الوضع الفاتح/الداكن">وضع داكن</button>
+          </div>
+          <span class="hero-toolbar__divider" aria-hidden="true"></span>
           {% if public_user %}
           <div class="hero-toolbar__group hero-toolbar__group--account">
             <div class="public-user-menu" id="public-user-menu">
@@ -3837,6 +3945,43 @@
   </script>
   {% endif %}
   {% include '_mobile_landscape_hint.html' %}
+  <script>
+    (function initIndexTheme() {
+      var KEY = "maestro_index_theme";
+      var root = document.documentElement;
+      var btn = document.getElementById("index-theme-toggle");
+      var meta = document.getElementById("meta-theme-color");
+      function applyTheme(mode) {
+        if (mode === "dark") {
+          root.setAttribute("data-theme", "dark");
+          if (meta) meta.setAttribute("content", "#12161c");
+          if (btn) btn.textContent = "وضع فاتح";
+        } else {
+          root.removeAttribute("data-theme");
+          if (meta) meta.setAttribute("content", "#c5a059");
+          if (btn) btn.textContent = "وضع داكن";
+        }
+      }
+      try {
+        if (localStorage.getItem(KEY) === "dark") applyTheme("dark");
+        else applyTheme("light");
+      } catch (e1) {
+        if (btn) {
+          if (root.getAttribute("data-theme") === "dark") btn.textContent = "وضع فاتح";
+          else btn.textContent = "وضع داكن";
+        }
+      }
+      if (btn) {
+        btn.addEventListener("click", function () {
+          var next = root.getAttribute("data-theme") === "dark" ? "light" : "dark";
+          try {
+            localStorage.setItem(KEY, next === "dark" ? "dark" : "light");
+          } catch (e2) {}
+          applyTheme(next === "dark" ? "dark" : "light");
+        });
+      }
+    })();
+  </script>
   {% if analytics_enabled and ga4_measurement_id %}
   <script type="module">
     (async function () {
