@@ -3784,6 +3784,16 @@
 
   <script>
     (function () {
+      // على الهاتف/اللوح: حافظ على الوضع الافتراضي (بداية الصفحة) عند الدخول،
+      // ولا تسمح باستعادة تمرير سابق يقفز تلقائياً لقسم الخطط.
+      try {
+        var isSmall = window.matchMedia && window.matchMedia("(max-width: 1024px)").matches;
+        if (isSmall && !window.location.hash) {
+          if ("scrollRestoration" in history) history.scrollRestoration = "manual";
+          window.scrollTo(0, 0);
+        }
+      } catch (e) {}
+
       const publicUserMenu = document.getElementById("public-user-menu");
       const publicUserMenuBtn = document.getElementById("public-user-menu-trigger");
       const publicUserMenuPanel = document.getElementById("public-user-menu-panel");
