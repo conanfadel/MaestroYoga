@@ -1,4 +1,5 @@
 from datetime import timedelta
+import os
 
 from sqlalchemy import func
 from sqlalchemy.orm import Session
@@ -10,6 +11,15 @@ from .time_utils import utcnow_naive
 DEMO_OWNER_EMAIL = "owner@maestroyoga.local"
 DEMO_OWNER_PASSWORD = "Admin@12345"
 DEMO_CENTER_NAME = "Maestro Yoga Center"
+
+
+def should_auto_seed_demo_data() -> bool:
+    """Gate demo seed to development-like environments unless explicitly enabled."""
+    allow = os.getenv("ALLOW_DEMO_SEED")
+    if allow is not None:
+        return allow.strip().lower() in {"1", "true", "yes", "on"}
+    app_env = os.getenv("APP_ENV", "development").strip().lower()
+    return app_env in {"development", "dev", "local", "test", "testing"}
 
 # أخبار تجريبية منشورة بصور من الإنترنت (picsum — روابط ثابتة حسب البذرة).
 DEMO_NEWS_POSTS: list[dict] = [

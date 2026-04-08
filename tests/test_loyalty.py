@@ -112,17 +112,20 @@ def test_count_confirmed_sessions_matches_client_email():
         room = models.Room(center_id=center.id, name="R1", capacity=10)
         db.add(room)
         db.flush()
-        sess = models.YogaSession(
-            center_id=center.id,
-            room_id=room.id,
-            title="S1",
-            trainer_name="T",
-            level="beginner",
-            starts_at=datetime(2026, 6, 1, 10, 0, 0),
-            duration_minutes=60,
-            price_drop_in=50.0,
-        )
-        db.add(sess)
+        sessions = []
+        for i in range(3):
+            sess = models.YogaSession(
+                center_id=center.id,
+                room_id=room.id,
+                title=f"S{i+1}",
+                trainer_name="T",
+                level="beginner",
+                starts_at=datetime(2026, 6, 1 + i, 10, 0, 0),
+                duration_minutes=60,
+                price_drop_in=50.0,
+            )
+            db.add(sess)
+            sessions.append(sess)
         db.flush()
         client = models.Client(
             center_id=center.id,
@@ -132,7 +135,7 @@ def test_count_confirmed_sessions_matches_client_email():
         )
         db.add(client)
         db.flush()
-        for _ in range(3):
+        for sess in sessions:
             db.add(
                 models.Booking(
                     center_id=center.id,
@@ -144,7 +147,7 @@ def test_count_confirmed_sessions_matches_client_email():
         db.add(
             models.Booking(
                 center_id=center.id,
-                session_id=sess.id,
+                session_id=sessions[0].id,
                 client_id=client.id,
                 status="cancelled",
             )

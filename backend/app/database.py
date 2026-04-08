@@ -77,6 +77,18 @@ def _ensure_performance_indexes(conn, insp) -> None:
     for table_name, index_name, columns in index_specs:
         if insp.has_table(table_name):
             conn.execute(text(f"CREATE INDEX IF NOT EXISTS {index_name} ON {table_name} ({columns})"))
+    if insp.has_table("bookings"):
+        try:
+            conn.execute(
+                text(
+                    "CREATE UNIQUE INDEX IF NOT EXISTS uq_bookings_active_session_client "
+                    "ON bookings (session_id, client_id) "
+                    "WHERE status IN ('booked','confirmed','pending_payment')"
+                )
+            )
+        except Exception:
+            # Existing duplicate active rows can block index creation on old data sets.
+            pass
 
 
 def migrate_schema() -> None:

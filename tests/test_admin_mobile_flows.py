@@ -1,8 +1,12 @@
 import time
+from datetime import timedelta
 
 from backend.app import models
 from backend.app.bootstrap import ensure_demo_data
+from backend.app.checkout_finalize import finalize_checkout_paid
 from backend.app.database import SessionLocal
+from backend.app.security import hash_password
+from backend.app.time_utils import utcnow_naive
 
 
 def test_admin_login_create_delete_room(client):
@@ -226,5 +230,144 @@ def test_mobile_compatible_api_flow(client):
     db.query(models.Payment).filter(models.Payment.client_id == created_client_id).delete(synchronize_session=False)
     db.query(models.Booking).filter(models.Booking.client_id == created_client_id).delete(synchronize_session=False)
     db.query(models.Client).filter(models.Client.id == created_client_id).delete(synchronize_session=False)
+    db.commit()
+    db.close()
+
+
+def test_admin_logout_requires_post_and_clears_cookie(client):
+    login = client.post(
+        "/admin/login",
+        data={"email": "owner@maestroyoga.local", "password": "Admin@12345"},
+        follow_redirects=False,
+    )
+    assert login.status_code == 303
+    assert login.headers["location"] == "/admin"
+
+    get_logout = client.get("/admin/logout", follow_redirects=False)
+    assert get_logout.status_code == 405
+
+    post_logout = client.post("/admin/logout", follow_redirects=False)
+    assert post_logout.status_code == 303
+    assert post_logout.headers["location"] == "/admin/login"
+
+
+def test_finalize_checkout_paid_is_idempotent(client):
+    db = SessionLocal()
+    stamp = int(time.time())
+    center = models.Center(name=f"Pytest Center {stamp}", city="Riyadh")
+    db.add(center)
+    db.flush()
+    room = models.Room(center_id=center.id, name=f"Room {stamp}", capacity=8)
+    db.add(room)
+    db.flush()
+    yoga_session = models.YogaSession(
+        center_id=center.id,
+        room_id=room.id,
+        title="Session",
+        trainer_name="Trainer",
+        level="beginner",
+        starts_at=utcnow_naive() + timedelta(days=1),
+        duration_minutes=60,
+        price_drop_in=50.0,
+    )
+    db.add(yoga_session)
+    db.flush()
+    client_row = models.Client(center_id=center.id, full_name="Pytest User", email=f"pytest_{stamp}@example.com")
+    db.add(client_row)
+    db.flush()
+    booking = models.Booking(
+        center_id=center.id,
+        session_id=yoga_session.id,
+        client_id=client_row.id,
+        status="pending_payment",
+    )
+    db.add(booking)
+    db.flush()
+    payment = models.Payment(
+        center_id=center.id,
+        client_id=client_row.id,
+        booking_id=booking.id,
+        amount=50.0,
+        currency="SAR",
+        payment_method="public_checkout",
+        provider_ref=f"pytest_ref_{stamp}",
+        status="pending",
+        created_at=utcnow_naive(),
+    )
+    db.add(payment)
+    db.commit()
+
+    meta = {"payment_id": str(payment.id), "booking_id": str(booking.id), "center_id": str(center.id)}
+    finalize_checkout_paid(db, meta, payment.provider_ref or "")
+    finalize_checkout_paid(db, meta, payment.provider_ref or "")
+
+    db.refresh(payment)
+    db.refresh(booking)
+    assert payment.status == "paid"
+    assert booking.status == "confirmed"
+
+    db.delete(payment)
+    db.delete(booking)
+    db.delete(client_row)
+    db.delete(yoga_session)
+    db.delete(room)
+    db.delete(center)
+    db.commit()
+    db.close()
+
+
+def test_admin_cannot_manage_public_user_of_another_center(client):
+    db = SessionLocal()
+    demo_center = ensure_demo_data(db)
+    other_center = models.Center(name=f"Other Center {int(time.time())}", city="Jeddah")
+    db.add(other_center)
+    db.flush()
+
+    email = f"pytest_cross_center_{int(time.time())}@example.com"
+    outsider_public_user = models.PublicUser(
+        full_name="Cross Center User",
+        email=email,
+        phone=f"+9665{int(time.time()) % 100000000:08d}",
+        password_hash=hash_password("Admin@12345"),
+        is_active=True,
+        is_deleted=False,
+        email_verified=True,
+    )
+    db.add(outsider_public_user)
+    db.flush()
+
+    # Link the public user only to the other center via Client email mapping.
+    other_client = models.Client(
+        center_id=other_center.id,
+        full_name="Linked Other Client",
+        email=email,
+        phone="+966500000123",
+    )
+    db.add(other_client)
+    db.commit()
+    outsider_id = outsider_public_user.id
+
+    login = client.post(
+        "/admin/login",
+        data={"email": "owner@maestroyoga.local", "password": "Admin@12345"},
+        follow_redirects=False,
+    )
+    assert login.status_code == 303
+    assert login.headers["location"] == "/admin"
+
+    resp = client.post(
+        "/admin/public-users/toggle-active",
+        data={"public_user_id": str(outsider_id), "scroll_y": "0"},
+        follow_redirects=False,
+    )
+    assert resp.status_code == 303
+    assert "msg=public_user_not_found" in (resp.headers.get("location") or "")
+
+    db.refresh(outsider_public_user)
+    assert outsider_public_user.is_active is True
+
+    db.delete(other_client)
+    db.delete(outsider_public_user)
+    db.delete(other_center)
     db.commit()
     db.close()

@@ -30,7 +30,9 @@
         <button type="button" class="admin-help-btn" id="admin-help-open" title="اختصارات لوحة التحكم (؟)">اختصارات</button>
         <button type="button" class="secondary" id="admin-copy-public-url" data-public-url="{{ request.url.scheme }}://{{ request.url.netloc }}{{ admin_public_index_url }}" title="نسخ رابط صفحة الحجز العامة">نسخ رابط صفحة الحجز</button>
         <a class="btn secondary" href="{{ admin_public_index_url }}" target="_blank" rel="noopener noreferrer" title="فتح صفحة الحجز العامة في تبويب جديد">صفحة الحجز العامة</a>
-        <a class="btn" href="/admin/logout">تسجيل الخروج</a>
+        <form method="post" action="/admin/logout" data-preserve-scroll="1" style="display:inline;">
+          <button type="submit" class="btn">تسجيل الخروج</button>
+        </form>
       </div>
     </div>
 
@@ -1233,6 +1235,15 @@
                 {% endfor %}
               </tbody>
             </table>
+          </div>
+          <div class="small" style="margin-top:8px;display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
+            <span>الصفحة {{ center_posts_pagination.page }} من {{ center_posts_pagination.total_pages }} (إجمالي: {{ center_posts_pagination.total }})</span>
+            {% if center_posts_pagination.has_prev %}
+              <a class="soft-link" data-preserve-scroll-link="1" href="{{ center_posts_pagination.prev_url }}">السابق</a>
+            {% endif %}
+            {% if center_posts_pagination.has_next %}
+              <a class="soft-link" data-preserve-scroll-link="1" href="{{ center_posts_pagination.next_url }}">التالي</a>
+            {% endif %}
           </div>
         </div>
       </div>

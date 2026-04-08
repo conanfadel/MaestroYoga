@@ -14,7 +14,8 @@ from pydantic import ValidationError
 from fastapi import APIRouter, Depends, File, Form, HTTPException, Query, Request, UploadFile
 from fastapi.responses import HTMLResponse, RedirectResponse, StreamingResponse
 from fastapi.templating import Jinja2Templates
-from sqlalchemy import and_, case, desc, func, nullslast, or_
+from sqlalchemy import and_, case, desc, func, nullslast, or_, text
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from . import models, schemas
@@ -28,9 +29,9 @@ from .role_definitions import (
     handbook_matrix_rows,
     permission_catalog_grouped_for_custom_staff,
 )
-from .booking_utils import ACTIVE_BOOKING_STATUSES, spots_available
-from .bootstrap import DEMO_CENTER_NAME, ensure_demo_data, ensure_demo_news_posts
-from .database import get_db
+from .booking_utils import ACTIVE_BOOKING_STATUSES, count_active_bookings, spots_available
+from .bootstrap import DEMO_CENTER_NAME, ensure_demo_data, ensure_demo_news_posts, should_auto_seed_demo_data
+from .database import get_db, is_sqlite
 from .loyalty import (
     LOYALTY_REWARD_MAX_LEN,
     count_confirmed_sessions_for_public_user,
@@ -112,6 +113,7 @@ ADMIN_SESSIONS_PAGE_SIZE = 50
 ADMIN_PUBLIC_USERS_PAGE_SIZE = 50
 ADMIN_SECURITY_AUDIT_PAGE_SIZE = 50
 ADMIN_PAYMENTS_PAGE_SIZE = 20
+ADMIN_CENTER_POSTS_PAGE_SIZE = 20
 
 # Admin security policy defaults.
 ADMIN_IP_BLOCK_DEFAULT_MINUTES = 60
@@ -561,18 +563,81 @@ def _admin_user_from_request(request: Request, db: Session) -> models.User | Non
 
 def _get_public_user_or_redirect(
     db: Session,
+    center_id: int,
     public_user_id: int,
     scroll_y: str,
     *,
     allow_deleted: bool = False,
     return_section: str | None = None,
 ) -> tuple[models.PublicUser | None, RedirectResponse | None]:
-    row = db.get(models.PublicUser, public_user_id)
+    row = (
+        db.query(models.PublicUser)
+        .filter(
+            models.PublicUser.id == public_user_id,
+            db.query(models.Client.id)
+            .filter(
+                models.Client.center_id == center_id,
+                func.lower(models.Client.email) == func.lower(models.PublicUser.email),
+            )
+            .exists(),
+        )
+        .first()
+    )
     if not row:
         return None, _admin_redirect(ADMIN_MSG_PUBLIC_USER_NOT_FOUND, scroll_y, return_section)
     if not allow_deleted and row.is_deleted:
         return None, _admin_redirect(ADMIN_MSG_PUBLIC_USER_NOT_FOUND, scroll_y, return_section)
     return row, None
+
+
+def _public_users_query_for_center(db: Session, center_id: int):
+    return db.query(models.PublicUser).filter(
+        db.query(models.Client.id)
+        .filter(
+            models.Client.center_id == center_id,
+            func.lower(models.Client.email) == func.lower(models.PublicUser.email),
+        )
+        .exists()
+    )
+
+
+def _spots_available_map(db: Session, center_id: int, session_ids: list[int]) -> dict[int, int]:
+    if not session_ids:
+        return {}
+    sessions = (
+        db.query(models.YogaSession.id, models.YogaSession.room_id)
+        .filter(models.YogaSession.center_id == center_id, models.YogaSession.id.in_(session_ids))
+        .all()
+    )
+    if not sessions:
+        return {}
+    room_ids = sorted({rid for _, rid in sessions if rid is not None})
+    rooms = (
+        db.query(models.Room.id, models.Room.capacity)
+        .filter(models.Room.center_id == center_id, models.Room.id.in_(room_ids))
+        .all()
+        if room_ids
+        else []
+    )
+    capacity_by_room = {int(rid): int(cap or 0) for rid, cap in rooms}
+    booking_counts = {
+        int(sid): int(cnt)
+        for sid, cnt in (
+            db.query(models.Booking.session_id, func.count(models.Booking.id))
+            .filter(
+                models.Booking.session_id.in_(session_ids),
+                models.Booking.status.in_(ACTIVE_BOOKING_STATUSES),
+            )
+            .group_by(models.Booking.session_id)
+            .all()
+        )
+    }
+    out: dict[int, int] = {}
+    for sid, rid in sessions:
+        cap = capacity_by_room.get(int(rid), 0) if rid is not None else 0
+        active = booking_counts.get(int(sid), 0)
+        out[int(sid)] = max(0, cap - active)
+    return out
 
 
 PUBLIC_USER_BULK_ACTIONS = frozenset(
@@ -981,6 +1046,7 @@ def public_index(
             r.id: r
             for r in db.query(models.Room).filter(models.Room.center_id == center_id, models.Room.id.in_(room_ids)).all()
         }
+    spots_by_session = _spots_available_map(db, center_id, [int(s.id) for s in sessions])
     rows = []
     level_labels = {
         "beginner": "مبتدئ",
@@ -1006,7 +1072,7 @@ def public_index(
                 "duration_minutes": s.duration_minutes,
                 "price_drop_in": s.price_drop_in,
                 "room_name": room.name if room else "-",
-                "spots_available": spots_available(db, s),
+                "spots_available": spots_by_session.get(int(s.id), 0),
             }
         )
 
@@ -1484,11 +1550,28 @@ def public_book(
     if not center:
         raise HTTPException(status_code=404, detail="Center not found")
 
-    yoga_session = db.get(models.YogaSession, session_id)
+    if is_sqlite:
+        # Serialize concurrent writers to reduce race windows on capacity checks.
+        db.execute(text("BEGIN IMMEDIATE"))
+
+    yoga_session_query = db.query(models.YogaSession).filter(models.YogaSession.id == session_id)
+    if not is_sqlite:
+        yoga_session_query = yoga_session_query.with_for_update()
+    yoga_session = yoga_session_query.first()
     if not yoga_session or yoga_session.center_id != center_id:
         raise HTTPException(status_code=404, detail="Session not found")
 
-    if spots_available(db, yoga_session) <= 0:
+    room_query = db.query(models.Room).filter(models.Room.id == yoga_session.room_id)
+    if not is_sqlite:
+        room_query = room_query.with_for_update()
+    room = room_query.first()
+    if not room:
+        return RedirectResponse(
+            url=f"/index?center_id={center_id}&msg=full",
+            status_code=303,
+        )
+    available_spots = max(0, int(room.capacity or 0) - count_active_bookings(db, yoga_session.id))
+    if available_spots <= 0:
         return RedirectResponse(
             url=f"/index?center_id={center_id}&msg=full",
             status_code=303,
@@ -1549,7 +1632,14 @@ def public_book(
         created_at=utcnow_naive(),
     )
     db.add(payment_row)
-    db.commit()
+    try:
+        db.commit()
+    except IntegrityError:
+        db.rollback()
+        return RedirectResponse(
+            url=f"/index?center_id={center_id}&msg=duplicate",
+            status_code=303,
+        )
     db.refresh(payment_row)
 
     provider = get_payment_provider()
@@ -2455,8 +2545,9 @@ def public_reset_password(
 
 @router.get("/admin/login", response_class=HTMLResponse)
 def admin_login_page(request: Request, db: Session = Depends(get_db)):
-    # Ensure there is at least one admin-capable user in fresh installs.
-    ensure_demo_data(db)
+    # Seed demo data only in explicitly allowed environments.
+    if should_auto_seed_demo_data():
+        ensure_demo_data(db)
     return templates.TemplateResponse(request, "admin_login.html", {})
 
 
@@ -2500,7 +2591,7 @@ def admin_login(
     return response
 
 
-@router.get("/admin/logout")
+@router.post("/admin/logout")
 def admin_logout():
     response = RedirectResponse(url="/admin/login", status_code=303)
     response.delete_cookie("access_token")
@@ -2528,6 +2619,7 @@ def admin_dashboard(
     payment_date_from: str = "",
     payment_date_to: str = "",
     post_edit: int = 0,
+    center_posts_page: int = 1,
     db: Session = Depends(get_db),
 ):
     user, redirect = _require_admin_user_or_redirect(request, db)
@@ -2606,13 +2698,15 @@ def admin_dashboard(
         .limit(sessions_page_size)
         .all()
     )
+    session_ids_page = [int(s.id) for s in sessions]
+    spots_by_session_page = _spots_available_map(db, cid, session_ids_page)
     faqs = (
         db.query(models.FAQItem)
         .filter(models.FAQItem.center_id == cid)
         .order_by(models.FAQItem.sort_order.asc(), models.FAQItem.created_at.asc())
         .all()
     )
-    public_users_query = db.query(models.PublicUser)
+    public_users_query = _public_users_query_for_center(db, cid)
     q = public_user_q.strip()
     if q:
         public_users_query = public_users_query.filter(
@@ -2652,7 +2746,7 @@ def admin_dashboard(
         .all()
     )
     trash_q_s = trash_q.strip()
-    trash_base = db.query(models.PublicUser).filter(models.PublicUser.is_deleted.is_(True))
+    trash_base = _public_users_query_for_center(db, cid).filter(models.PublicUser.is_deleted.is_(True))
     if trash_q_s:
         trash_base = trash_base.filter(
             or_(
@@ -2694,7 +2788,7 @@ def admin_dashboard(
                 "price_drop_in": s.price_drop_in,
                 "room_name": room.name if room else "-",
                 "room_id": s.room_id,
-                "spots_available": spots_available(db, s),
+                "spots_available": spots_by_session_page.get(int(s.id), 0),
                 "capacity": room.capacity if room else 0,
                 "is_past": bool(s.starts_at < now_for_sessions),
             }
@@ -2751,18 +2845,17 @@ def admin_dashboard(
         )
         .count()
     )
-    pending_payments_stale_8d = 0
-    for pr in (
-        db.query(models.Payment)
+    pending_cutoff = now_na - timedelta(days=8)
+    pending_payments_stale_8d = int(
+        db.query(func.count(models.Payment.id))
         .filter(
             models.Payment.center_id == cid,
             models.Payment.status.in_(("pending", "pending_payment")),
+            func.coalesce(models.Payment.created_at, models.Payment.paid_at) <= pending_cutoff,
         )
-        .all()
-    ):
-        anchor = pr.created_at or pr.paid_at or now_na
-        if (now_na - anchor).days >= 8:
-            pending_payments_stale_8d += 1
+        .scalar()
+        or 0
+    )
     failed_payments_7d = int(
         db.query(func.count(models.Payment.id))
         .filter(
@@ -2792,7 +2885,7 @@ def admin_dashboard(
         or 0
     )
     public_users_unverified_count = (
-        db.query(models.PublicUser)
+        _public_users_query_for_center(db, cid)
         .filter(
             models.PublicUser.is_deleted.is_(False),
             models.PublicUser.is_active.is_(True),
@@ -2803,18 +2896,22 @@ def admin_dashboard(
 
     revenue_7d_bars: list[dict[str, Any]] = []
     max_rev_7d = 0.01
+    rev_start = today - timedelta(days=6)
+    revenue_7d_rows = (
+        db.query(func.date(models.Payment.paid_at).label("day"), func.coalesce(func.sum(models.Payment.amount), 0.0))
+        .filter(
+            models.Payment.center_id == cid,
+            models.Payment.status == "paid",
+            func.date(models.Payment.paid_at) >= rev_start,
+            func.date(models.Payment.paid_at) <= today,
+        )
+        .group_by(func.date(models.Payment.paid_at))
+        .all()
+    )
+    revenue_by_day = {str(day): float(total or 0.0) for day, total in revenue_7d_rows}
     for i in range(6, -1, -1):
         d = today - timedelta(days=i)
-        amt = float(
-            db.query(func.coalesce(func.sum(models.Payment.amount), 0.0))
-            .filter(
-                models.Payment.center_id == cid,
-                models.Payment.status == "paid",
-                func.date(models.Payment.paid_at) == d,
-            )
-            .scalar()
-            or 0.0
-        )
+        amt = revenue_by_day.get(d.isoformat(), 0.0)
         revenue_7d_bars.append({"date_iso": d.isoformat(), "amount": amt, "label": f"{d.day}/{d.month}"})
         max_rev_7d = max(max_rev_7d, amt)
     for bar in revenue_7d_bars:
@@ -2833,6 +2930,7 @@ def admin_dashboard(
         .limit(36)
         .all()
     )
+    ops_spots = _spots_available_map(db, cid, [int(s.id) for s in ops_sessions_q])
     ops_today_rows: list[dict[str, str | int]] = []
     ops_tomorrow_rows: list[dict[str, str | int]] = []
     for s in ops_sessions_q:
@@ -2843,7 +2941,7 @@ def admin_dashboard(
             "trainer": s.trainer_name,
             "room": room.name if room else "-",
             "starts": _fmt_dt(s.starts_at),
-            "spots": spots_available(db, s),
+            "spots": ops_spots.get(int(s.id), 0),
             "capacity": room.capacity if room else 0,
         }
         if s.starts_at.date() == today:
@@ -2925,11 +3023,12 @@ def admin_dashboard(
         .filter(models.Payment.center_id == cid)
         .one()
     )
+    scoped_public_users = _public_users_query_for_center(db, cid).subquery()
     public_users_count, public_users_deleted_count, public_users_new_7d = (
         db.query(
-            func.count(models.PublicUser.id),
+            func.count(scoped_public_users.c.id),
             func.coalesce(
-                func.sum(case((models.PublicUser.is_deleted.is_(True), 1), else_=0)),
+                func.sum(case((scoped_public_users.c.is_deleted.is_(True), 1), else_=0)),
                 0,
             ),
             func.coalesce(
@@ -2937,8 +3036,8 @@ def admin_dashboard(
                     case(
                         (
                             and_(
-                                models.PublicUser.created_at >= recent_public_cutoff,
-                                models.PublicUser.is_deleted.is_(False),
+                                scoped_public_users.c.created_at >= recent_public_cutoff,
+                                scoped_public_users.c.is_deleted.is_(False),
                             ),
                             1,
                         ),
@@ -3211,6 +3310,7 @@ def admin_dashboard(
         ADMIN_QP_AUDIT_PAGE: str(safe_audit_page),
         ADMIN_QP_PAYMENT_DATE_FROM: (payment_date_from or "").strip()[:32],
         ADMIN_QP_PAYMENT_DATE_TO: (payment_date_to or "").strip()[:32],
+        "center_posts_page": str(max(1, int(center_posts_page or 1))),
     }
 
     def _admin_page_url(**overrides: str) -> str:
@@ -3235,18 +3335,46 @@ def admin_dashboard(
     payments_page_next_url = _admin_page_url(
         **{ADMIN_QP_PAYMENTS_PAGE: str(min(payments_total_pages, safe_payments_page + 1))}
     )
+    center_posts_page_prev_url = _admin_page_url(
+        **{"center_posts_page": str(max(1, safe_center_posts_page - 1))}
+    )
+    center_posts_page_next_url = _admin_page_url(
+        **{"center_posts_page": str(min(center_posts_total_pages, safe_center_posts_page + 1))}
+    )
     trash_page_prev_url = _admin_page_url(**{ADMIN_QP_TRASH_PAGE: str(max(1, safe_trash_page - 1))})
     trash_page_next_url = _admin_page_url(
         **{ADMIN_QP_TRASH_PAGE: str(min(trash_total_pages, safe_trash_page + 1))}
     )
 
     safe_post_edit = max(0, int(post_edit or 0))
-    center_posts_all = (
+    center_posts_page_size = ADMIN_CENTER_POSTS_PAGE_SIZE
+    center_posts_base_query = (
         db.query(models.CenterPost)
         .filter(models.CenterPost.center_id == cid)
         .order_by(models.CenterPost.updated_at.desc())
+    )
+    center_posts_total = center_posts_base_query.order_by(None).count()
+    safe_center_posts_page, center_posts_total_pages, center_posts_offset = _normalize_page(
+        center_posts_page,
+        center_posts_total,
+        center_posts_page_size,
+    )
+    center_posts_all = (
+        center_posts_base_query
+        .offset(center_posts_offset)
+        .limit(center_posts_page_size)
         .all()
     )
+    center_post_ids_page = [int(cp.id) for cp in center_posts_all]
+    center_post_gallery_counts = {
+        int(pid): int(cnt)
+        for pid, cnt in (
+            db.query(models.CenterPostImage.post_id, func.count(models.CenterPostImage.id))
+            .filter(models.CenterPostImage.post_id.in_(center_post_ids_page))
+            .group_by(models.CenterPostImage.post_id)
+            .all()
+        )
+    } if center_post_ids_page else {}
 
     def _post_admin_edit_url(edit_id: int) -> str:
         return _admin_page_url(**{ADMIN_QP_POST_EDIT: str(edit_id)}) + "#section-center-posts"
@@ -3262,7 +3390,7 @@ def admin_dashboard(
                 "is_published": cp.is_published,
                 "is_pinned": cp.is_pinned,
                 "updated_display": _fmt_dt(cp.updated_at),
-                "gallery_count": len(cp.images),
+                "gallery_count": center_post_gallery_counts.get(int(cp.id), 0),
                 "public_url": _url_with_params("/post", center_id=str(cid), post_id=str(cp.id))
                 if cp.is_published
                 else "",
@@ -3457,6 +3585,16 @@ def admin_dashboard(
                 "has_next": safe_payments_page < payments_total_pages,
                 "prev_url": payments_page_prev_url,
                 "next_url": payments_page_next_url,
+            },
+            "center_posts_pagination": {
+                "page": safe_center_posts_page,
+                "page_size": center_posts_page_size,
+                "total": center_posts_total,
+                "total_pages": center_posts_total_pages,
+                "has_prev": safe_center_posts_page > 1,
+                "has_next": safe_center_posts_page < center_posts_total_pages,
+                "prev_url": center_posts_page_prev_url,
+                "next_url": center_posts_page_next_url,
             },
             "room_filters": {
                 "sort": (
@@ -3708,6 +3846,7 @@ def admin_report_sessions(
         .all()
     )
     session_ids = [s.id for s in sessions]
+    spots_by_session = _spots_available_map(db, cid, [int(sid) for sid in session_ids])
     booking_counts: dict[int, dict[str, int]] = defaultdict(lambda: {"active": 0, "cancelled": 0})
     if session_ids:
         for sid, st, cnt in (
@@ -3731,7 +3870,7 @@ def admin_report_sessions(
         room = rooms_by_id.get(s.room_id)
         bc = booking_counts.get(s.id, {"active": 0, "cancelled": 0})
         cap = room.capacity if room else 0
-        spots = spots_available(db, s)
+        spots = spots_by_session.get(int(s.id), 0)
         util_pct = round(100.0 * bc["active"] / cap, 1) if cap > 0 else None
         session_rows.append(
             {
@@ -3762,18 +3901,18 @@ def admin_report_sessions(
     prev_session_count = int(
         db.query(func.count(models.YogaSession.id)).filter(*prev_sess_filters).scalar() or 0
     )
-    prev_ids = [r[0] for r in db.query(models.YogaSession.id).filter(*prev_sess_filters).all()]
-    prev_active_bookings = 0
-    if prev_ids:
-        prev_active_bookings = int(
-            db.query(func.count(models.Booking.id))
-            .filter(
-                models.Booking.session_id.in_(prev_ids),
-                models.Booking.status.in_(ACTIVE_BOOKING_STATUSES),
-            )
-            .scalar()
-            or 0
+    prev_active_bookings = int(
+        db.query(func.count(models.Booking.id))
+        .join(models.YogaSession, models.YogaSession.id == models.Booking.session_id)
+        .filter(
+            models.YogaSession.center_id == cid,
+            func.date(models.YogaSession.starts_at) >= pp0,
+            func.date(models.YogaSession.starts_at) <= pp1,
+            models.Booking.status.in_(ACTIVE_BOOKING_STATUSES),
         )
+        .scalar()
+        or 0
+    )
 
     return templates.TemplateResponse(
         request,
@@ -3891,26 +4030,50 @@ def admin_report_revenue(
         .group_by(models.Payment.status)
         .all()
     )
-    paid_rows_cat = (
-        db.query(models.Payment.amount, models.Payment.payment_method, models.Payment.booking_id)
+    sub_cond = models.Payment.payment_method.like("subscription_%")
+    cat_session_count, cat_session_amount, cat_sub_count, cat_sub_amount, cat_other_count, cat_other_amount = (
+        db.query(
+            func.coalesce(
+                func.sum(case((and_(~sub_cond, models.Payment.booking_id.is_not(None)), 1), else_=0)),
+                0,
+            ),
+            func.coalesce(
+                func.sum(
+                    case(
+                        (
+                            and_(~sub_cond, models.Payment.booking_id.is_not(None)),
+                            models.Payment.amount,
+                        ),
+                        else_=0.0,
+                    )
+                ),
+                0.0,
+            ),
+            func.coalesce(func.sum(case((sub_cond, 1), else_=0)), 0),
+            func.coalesce(func.sum(case((sub_cond, models.Payment.amount), else_=0.0)), 0.0),
+            func.coalesce(
+                func.sum(case((and_(~sub_cond, models.Payment.booking_id.is_(None)), 1), else_=0)),
+                0,
+            ),
+            func.coalesce(
+                func.sum(
+                    case(
+                        (
+                            and_(~sub_cond, models.Payment.booking_id.is_(None)),
+                            models.Payment.amount,
+                        ),
+                        else_=0.0,
+                    )
+                ),
+                0.0,
+            ),
+        )
         .filter(*base_pf, models.Payment.status == "paid")
-        .all()
+        .one()
     )
-    cat_session = {"count": 0, "amount": 0.0}
-    cat_sub = {"count": 0, "amount": 0.0}
-    cat_other = {"count": 0, "amount": 0.0}
-    for amt, pm, bid in paid_rows_cat:
-        a = float(amt or 0)
-        pms = (pm or "").strip()
-        if pms.startswith("subscription_"):
-            cat_sub["count"] += 1
-            cat_sub["amount"] += a
-        elif bid is not None:
-            cat_session["count"] += 1
-            cat_session["amount"] += a
-        else:
-            cat_other["count"] += 1
-            cat_other["amount"] += a
+    cat_session = {"count": int(cat_session_count or 0), "amount": float(cat_session_amount or 0.0)}
+    cat_sub = {"count": int(cat_sub_count or 0), "amount": float(cat_sub_amount or 0.0)}
+    cat_other = {"count": int(cat_other_count or 0), "amount": float(cat_other_amount or 0.0)}
     product_rows = [
         {"label": "حجز جلسة (مرتبط بحجز)", **cat_session},
         {"label": "اشتراك / باقة", **cat_sub},
@@ -3927,28 +4090,45 @@ def admin_report_revenue(
     success_rate_pct = round(100.0 * paid_n / terminal_n, 1) if terminal_n else 0.0
 
     now = utcnow_naive()
-    pending_open = (
-        db.query(models.Payment)
+    anchor = func.coalesce(models.Payment.created_at, models.Payment.paid_at, now)
+    cutoff_1d = now - timedelta(days=1)
+    cutoff_7d = now - timedelta(days=7)
+    (
+        pending_open_count,
+        pending_total_amt,
+        p01_n,
+        p01_amt,
+        p27_n,
+        p27_amt,
+        p8p_n,
+        p8p_amt,
+    ) = (
+        db.query(
+            func.count(models.Payment.id),
+            func.coalesce(func.sum(models.Payment.amount), 0.0),
+            func.coalesce(func.sum(case((anchor >= cutoff_1d, 1), else_=0)), 0),
+            func.coalesce(func.sum(case((anchor >= cutoff_1d, models.Payment.amount), else_=0.0)), 0.0),
+            func.coalesce(func.sum(case((and_(anchor < cutoff_1d, anchor >= cutoff_7d), 1), else_=0)), 0),
+            func.coalesce(
+                func.sum(case((and_(anchor < cutoff_1d, anchor >= cutoff_7d), models.Payment.amount), else_=0.0)),
+                0.0,
+            ),
+            func.coalesce(func.sum(case((anchor < cutoff_7d, 1), else_=0)), 0),
+            func.coalesce(func.sum(case((anchor < cutoff_7d, models.Payment.amount), else_=0.0)), 0.0),
+        )
         .filter(
             models.Payment.center_id == cid,
             models.Payment.status.in_(("pending", "pending_payment")),
         )
-        .all()
+        .one()
     )
-    pend_age_buckets = {"0_1": {"n": 0, "amt": 0.0}, "2_7": {"n": 0, "amt": 0.0}, "8p": {"n": 0, "amt": 0.0}}
-    for pr in pending_open:
-        anchor = pr.created_at or pr.paid_at or now
-        days = max(0, (now - anchor).days)
-        amt = float(pr.amount or 0)
-        if days <= 1:
-            k = "0_1"
-        elif days <= 7:
-            k = "2_7"
-        else:
-            k = "8p"
-        pend_age_buckets[k]["n"] += 1
-        pend_age_buckets[k]["amt"] += amt
-    pending_total_amt = sum(float(p.amount or 0) for p in pending_open)
+    pend_age_buckets = {
+        "0_1": {"n": int(p01_n or 0), "amt": float(p01_amt or 0.0)},
+        "2_7": {"n": int(p27_n or 0), "amt": float(p27_amt or 0.0)},
+        "8p": {"n": int(p8p_n or 0), "amt": float(p8p_amt or 0.0)},
+    }
+    pending_total_amt = float(pending_total_amt or 0.0)
+    pending_open_count = int(pending_open_count or 0)
 
     refund_count, refund_sum = (
         db.query(
@@ -4035,7 +4215,7 @@ def admin_report_revenue(
             "product_rows": product_rows,
             "success_rate_pct": success_rate_pct,
             "pending_total_amt": pending_total_amt,
-            "pending_open_count": len(pending_open),
+            "pending_open_count": pending_open_count,
             "pend_age_buckets": pend_age_buckets,
             "day_rows": day_rows,
             "method_rows": method_rows,
@@ -5241,9 +5421,12 @@ def admin_toggle_public_user_active(
     if redirect:
         return redirect
     assert user is not None
+    cid = require_user_center_id(user)
     if not user_has_permission(user, "public_users.manage"):
         return _trainer_forbidden_redirect(return_section)
-    row, redirect = _get_public_user_or_redirect(db, public_user_id, scroll_y, return_section=return_section)
+    row, redirect = _get_public_user_or_redirect(
+        db, cid, public_user_id, scroll_y, return_section=return_section
+    )
     if redirect:
         return redirect
     assert row is not None
@@ -5264,9 +5447,12 @@ def admin_toggle_public_user_verified(
     if redirect:
         return redirect
     assert user is not None
+    cid = require_user_center_id(user)
     if not user_has_permission(user, "public_users.manage"):
         return _trainer_forbidden_redirect(return_section)
-    row, redirect = _get_public_user_or_redirect(db, public_user_id, scroll_y, return_section=return_section)
+    row, redirect = _get_public_user_or_redirect(
+        db, cid, public_user_id, scroll_y, return_section=return_section
+    )
     if redirect:
         return redirect
     assert row is not None
@@ -5287,9 +5473,12 @@ def admin_delete_public_user(
     if redirect:
         return redirect
     assert user is not None
+    cid = require_user_center_id(user)
     if not user_has_permission(user, "public_users.manage"):
         return _trainer_forbidden_redirect(return_section)
-    row, redirect = _get_public_user_or_redirect(db, public_user_id, scroll_y, return_section=return_section)
+    row, redirect = _get_public_user_or_redirect(
+        db, cid, public_user_id, scroll_y, return_section=return_section
+    )
     if redirect:
         return redirect
     assert row is not None
@@ -5322,9 +5511,12 @@ def admin_resend_public_user_verification(
     if redirect:
         return redirect
     assert admin_user is not None
+    cid = require_user_center_id(admin_user)
     if not user_has_permission(admin_user, "public_users.manage"):
         return _trainer_forbidden_redirect(return_section)
-    row, redirect = _get_public_user_or_redirect(db, public_user_id, scroll_y, return_section=return_section)
+    row, redirect = _get_public_user_or_redirect(
+        db, cid, public_user_id, scroll_y, return_section=return_section
+    )
     if redirect:
         return redirect
     assert row is not None
@@ -5370,10 +5562,11 @@ def admin_restore_public_user(
     if redirect:
         return redirect
     assert admin_user is not None
+    cid = require_user_center_id(admin_user)
     if not user_has_permission(admin_user, "public_users.manage"):
         return _trainer_forbidden_redirect(return_section)
     row, redirect = _get_public_user_or_redirect(
-        db, public_user_id, scroll_y, allow_deleted=True, return_section=return_section
+        db, cid, public_user_id, scroll_y, allow_deleted=True, return_section=return_section
     )
     if redirect:
         return redirect
@@ -5406,10 +5599,11 @@ def admin_permanent_delete_public_user(
     if redirect:
         return redirect
     assert admin_user is not None
+    cid = require_user_center_id(admin_user)
     if not user_has_permission(admin_user, "public_users.manage"):
         return _trainer_forbidden_redirect(return_section)
     row, redirect = _get_public_user_or_redirect(
-        db, public_user_id, scroll_y, allow_deleted=True, return_section=return_section
+        db, cid, public_user_id, scroll_y, allow_deleted=True, return_section=return_section
     )
     if redirect:
         return redirect
@@ -5445,10 +5639,11 @@ def admin_public_users_bulk_action(
     assert admin_user is not None
     if not user_has_permission(admin_user, "public_users.manage"):
         return _trainer_forbidden_redirect(return_section)
+    cid = require_user_center_id(admin_user)
     ids = sorted(set(public_user_ids))
     if not ids:
         return _admin_redirect(ADMIN_MSG_PUBLIC_USERS_NONE_SELECTED, scroll_y, return_section)
-    rows = db.query(models.PublicUser).filter(models.PublicUser.id.in_(ids)).all()
+    rows = _public_users_query_for_center(db, cid).filter(models.PublicUser.id.in_(ids)).all()
     if not rows:
         return _admin_redirect(ADMIN_MSG_PUBLIC_USER_NOT_FOUND, scroll_y, return_section)
 
