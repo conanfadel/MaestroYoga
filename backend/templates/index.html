@@ -1988,6 +1988,10 @@
     }
     .plan-meta .k { display: block; color: var(--charcoal-muted); font-size: 0.72rem; font-weight: 700; }
     .plan-card .sub-btn { width: 100%; }
+    .plan-card__actions {
+      margin-top: auto;
+      padding-top: 10px;
+    }
     .best-note { margin-top: 6px; color: var(--gold-dark); font-size: 0.85rem; font-weight: 800; }
     .plan-empty {
       border: 1px dashed rgba(197, 160, 89, 0.45);
@@ -3845,7 +3849,7 @@
                   <div class="best-note">أفضل قيمة</div>
                   {% endif %}
 
-                  <div style="margin-top:10px;">
+                  <div class="plan-card__actions">
                     <button
                       type="button"
                       class="sub-btn book-btn-lg js-add-plan"
