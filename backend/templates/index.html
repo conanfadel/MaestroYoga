@@ -2803,6 +2803,9 @@
       .sessions-cards {
         grid-template-columns: repeat(2, minmax(0, 1fr));
       }
+      #plans-section .plans-cards {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
       .session-card__bar { font-size: 0.92rem; }
       .session-card__price { font-size: 1.28rem; }
       .session-card__price span { font-size: 0.86rem; }
@@ -2815,6 +2818,9 @@
     }
     @media (max-width: 1024px) and (orientation: landscape) {
       .sessions-cards {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+      }
+      #plans-section .plans-cards {
         grid-template-columns: repeat(3, minmax(0, 1fr));
       }
       .session-card__bar { font-size: 0.9rem; }
@@ -3669,7 +3675,7 @@
               {% endfor %}
         </div>
         {% if index_page.faq_teaser.show and faq_teaser_items %}
-        <div class="index-faq-teaser" aria-label="أسئلة سريعة">
+        <div class="index-faq-teaser" id="quick-faq-teaser" aria-label="أسئلة سريعة">
           <h3 class="booking-block-heading booking-block-heading--flush-top index-faq-teaser__title">{{ index_page.faq_teaser.title }}</h3>
           {% for faq in faq_teaser_items %}
           <details class="index-faq-teaser__item reveal-on-scroll">
@@ -3922,6 +3928,15 @@
           });
         }
       } catch (e) {}
+
+      (function relocateQuickFaqTeaserForSmallScreens() {
+        if (!(window.matchMedia && window.matchMedia("(max-width: 1024px)").matches)) return;
+        var teaser = document.getElementById("quick-faq-teaser");
+        var plansSection = document.getElementById("plans-section");
+        if (!teaser || !plansSection || !plansSection.parentNode) return;
+        if (teaser.previousElementSibling === plansSection) return;
+        plansSection.insertAdjacentElement("afterend", teaser);
+      })();
 
       const publicUserMenu = document.getElementById("public-user-menu");
       const publicUserMenuBtn = document.getElementById("public-user-menu-trigger");
