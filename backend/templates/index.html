@@ -2828,8 +2828,38 @@
       .session-card .availability strong { font-size: 0.94rem; }
     }
     @media (max-width: 1024px) {
+      .grid-two {
+        display: flex;
+        flex-direction: column;
+        gap: 0;
+      }
+      .grid-two > .grid-two__main,
+      .grid-two > aside {
+        display: contents;
+      }
+      #sessions-section { order: 1; }
+      #plans-section { order: 2; }
+      #center-news-section { order: 3; }
+      #testimonials-section { order: 4; }
+      #faq-section { order: 5; }
       #plans-section > .booking-block-heading {
         display: none;
+      }
+      #plans-section .plan-head .booking-block-heading {
+        font-size: 1rem;
+      }
+      #plans-section .plan-meta {
+        font-size: 0.82rem;
+      }
+      #plans-section .plan-meta .k {
+        font-size: 0.68rem;
+      }
+      #plans-section .best-note {
+        font-size: 0.76rem;
+      }
+      #plans-section .plan-card .sub-btn {
+        font-size: 0.9rem;
+        min-height: 46px;
       }
     }
     @media (hover: none), (pointer: coarse) {
