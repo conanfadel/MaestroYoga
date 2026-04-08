@@ -2752,8 +2752,19 @@
         font-size: clamp(1.2rem, 5vw + 0.55rem, 1.85rem);
       }
       .sessions-cards {
-        grid-template-columns: minmax(0, 1fr);
+        grid-template-columns: repeat(2, minmax(0, 1fr));
         gap: 16px;
+      }
+    }
+    /* تخطيط بطاقات الجلسات للهاتف/اللوح فقط */
+    @media (max-width: 1024px) and (orientation: portrait) {
+      .sessions-cards {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+    }
+    @media (max-width: 1024px) and (orientation: landscape) {
+      .sessions-cards {
+        grid-template-columns: repeat(4, minmax(0, 1fr));
       }
     }
     @media (hover: none), (pointer: coarse) {
