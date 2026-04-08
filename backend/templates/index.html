@@ -383,6 +383,8 @@
     .sub-btn:focus-visible,
     .cart-live-banner__btn:focus-visible,
     .hero-toolbar .btn:focus-visible,
+    a.btn:focus-visible,
+    .index-news-showcase a:focus-visible,
     #session-search:focus-visible,
     #session-level:focus-visible,
     #session-availability:focus-visible,
@@ -1357,6 +1359,15 @@
       color: var(--gold-dark);
       opacity: 0.9;
     }
+    .plans-section__summary-chevron {
+      display: inline-flex;
+      transition: transform 0.2s ease;
+      opacity: 0.85;
+      font-size: 0.78rem;
+    }
+    .plans-section__details[open] .plans-section__summary-chevron {
+      transform: rotate(180deg);
+    }
     .plans-section__details[open] .plans-section__summary {
       margin-bottom: 10px;
       border-end-start-radius: 8px;
@@ -1415,6 +1426,11 @@
       padding: 18px 20px;
       box-shadow: 0 10px 32px rgba(45, 52, 54, 0.06);
       margin-bottom: 14px;
+    }
+    #sessions-section,
+    #plans-section,
+    #center-news-section {
+      min-height: 100%;
     }
     h2 {
       margin: 0 0 10px;
@@ -1525,6 +1541,20 @@
       color: var(--charcoal);
       margin: 0;
       padding: 0 0 4px;
+    }
+    .sessions-filters__active-badge {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 1.5rem;
+      height: 1.5rem;
+      padding: 0 0.45rem;
+      border-radius: 999px;
+      background: linear-gradient(135deg, rgba(197, 160, 89, 0.2), rgba(170, 240, 209, 0.5));
+      border: 1px solid rgba(197, 160, 89, 0.45);
+      color: var(--charcoal);
+      font-size: 0.78rem;
+      font-weight: 800;
     }
     .sessions-filters__summary::-webkit-details-marker {
       display: none;
@@ -1723,6 +1753,24 @@
       font-size: 0.92rem;
       color: var(--charcoal-muted);
       line-height: 1.55;
+      display: -webkit-box;
+      -webkit-line-clamp: 1;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+    .session-card.is-expanded .session-card__info {
+      -webkit-line-clamp: initial;
+      overflow: visible;
+    }
+    .session-card__details-toggle {
+      border: 1px solid rgba(170, 240, 209, 0.85);
+      background: rgba(255, 255, 255, 0.85);
+      color: var(--charcoal);
+      border-radius: 999px;
+      font-size: 0.78rem;
+      font-weight: 800;
+      padding: 6px 10px;
+      cursor: pointer;
     }
     .session-card__info strong { color: var(--charcoal); }
     .session-card__footer {
@@ -1862,6 +1910,7 @@
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
       gap: 14px;
+      align-items: stretch;
     }
     .plan-card {
       border: 1px solid rgba(45, 52, 54, 0.1);
@@ -1871,6 +1920,9 @@
       box-shadow: 0 6px 22px rgba(45, 52, 54, 0.06);
       position: relative;
       overflow: hidden;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
     }
     @media (max-width: 900px) {
       .plan-card {
@@ -2839,12 +2891,11 @@
         flex-direction: column;
         gap: 0;
       }
-      .grid-two > .grid-two__main,
-      .grid-two > aside {
-        display: contents;
-      }
+      .grid-two > .grid-two__main { display: contents; }
+      .grid-two > aside { order: 2; }
       #sessions-section { order: 1; }
-      #plans-section { order: 2; }
+      #plans-section { order: 0; }
+      #quick-faq-teaser { order: 1; }
       #center-news-section { order: 3; }
       #testimonials-section { order: 4; }
       #faq-section { order: 5; }
@@ -2867,6 +2918,16 @@
         font-size: 0.9rem;
         min-height: 46px;
       }
+      main#main-content {
+        padding-bottom: max(28px, calc(112px + env(safe-area-inset-bottom, 0px))) !important;
+      }
+      #plans-section .plans-section__summary-hint::before { content: "مغلق"; }
+      #plans-section .plans-section__details[open] .plans-section__summary-hint::before { content: "مفتوح"; }
+    }
+    .sessions-cards.is-loading .session-card {
+      opacity: 0.45;
+      pointer-events: none;
+      filter: saturate(0.5);
     }
     @media (hover: none), (pointer: coarse) {
       .session-card:hover {
@@ -3562,9 +3623,13 @@
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>
             </span>
             <span>تصفية وترتيب الجلسات</span>
+            <span class="sessions-filters__active-badge" id="sessions-filters-active-badge" hidden>0</span>
           </summary>
           <div class="sessions-filters__body">
-            <h3 class="booking-block-heading sessions-filters-title sessions-filters-title--desktop">تصفية وترتيب الجلسات</h3>
+            <h3 class="booking-block-heading sessions-filters-title sessions-filters-title--desktop">
+              تصفية وترتيب الجلسات
+              <span class="sessions-filters__active-badge" id="sessions-filters-active-badge-desktop" hidden>0</span>
+            </h3>
             <div class="sessions-filters-grid">
               <div class="field">
                 <label for="session-search">بحث بالعنوان أو المدرب</label>
@@ -3644,6 +3709,7 @@
                     <span class="session-card__tag">عدد محدود</span>
                     {% endif %}
                   </div>
+                  <button type="button" class="session-card__details-toggle" aria-expanded="false">تفاصيل</button>
                   {% if s.spots_available > 0 %}
                     <button
                       type="button"
@@ -3674,18 +3740,6 @@
               </div>
               {% endfor %}
         </div>
-        {% if index_page.faq_teaser.show and faq_teaser_items %}
-        <div class="index-faq-teaser" id="quick-faq-teaser" aria-label="أسئلة سريعة">
-          <h3 class="booking-block-heading booking-block-heading--flush-top index-faq-teaser__title">{{ index_page.faq_teaser.title }}</h3>
-          {% for faq in faq_teaser_items %}
-          <details class="index-faq-teaser__item reveal-on-scroll">
-            <summary>{{ faq.question }}</summary>
-            <p>{{ faq.answer }}</p>
-          </details>
-          {% endfor %}
-          <a class="index-faq-teaser__more" href="#faq-section">{{ index_page.faq_teaser.more_text }}</a>
-        </div>
-        {% endif %}
       </section>
 
       {% if pinned_public_post or public_posts_teasers %}
@@ -3751,7 +3805,8 @@
           <details class="plans-section__details" id="plans-section-details" open>
             <summary class="plans-section__summary">
               <span>{{ index_page.plans_section.heading }}</span>
-              <span class="plans-section__summary-hint">عرض / إخفاء</span>
+              <span class="plans-section__summary-hint" aria-live="polite"></span>
+              <span class="plans-section__summary-chevron" aria-hidden="true">▼</span>
             </summary>
             <div class="plans-shell">
               <div class="plans-cards">
@@ -3809,6 +3864,19 @@
             </div>
           </details>
         </section>
+        {% endif %}
+
+        {% if index_page.faq_teaser.show and faq_teaser_items %}
+        <div class="index-faq-teaser card" id="quick-faq-teaser" aria-label="أسئلة سريعة">
+          <h3 class="booking-block-heading booking-block-heading--flush-top index-faq-teaser__title">{{ index_page.faq_teaser.title }}</h3>
+          {% for faq in faq_teaser_items %}
+          <details class="index-faq-teaser__item reveal-on-scroll">
+            <summary>{{ faq.question }}</summary>
+            <p>{{ faq.answer }}</p>
+          </details>
+          {% endfor %}
+          <a class="index-faq-teaser__more" href="#faq-section">{{ index_page.faq_teaser.more_text }}</a>
+        </div>
         {% endif %}
 
         {% if index_page.testimonials.show %}
@@ -3929,15 +3997,6 @@
         }
       } catch (e) {}
 
-      (function relocateQuickFaqTeaserForSmallScreens() {
-        if (!(window.matchMedia && window.matchMedia("(max-width: 1024px)").matches)) return;
-        var teaser = document.getElementById("quick-faq-teaser");
-        var plansSection = document.getElementById("plans-section");
-        if (!teaser || !plansSection || !plansSection.parentNode) return;
-        if (teaser.previousElementSibling === plansSection) return;
-        plansSection.insertAdjacentElement("afterend", teaser);
-      })();
-
       const publicUserMenu = document.getElementById("public-user-menu");
       const publicUserMenuBtn = document.getElementById("public-user-menu-trigger");
       const publicUserMenuPanel = document.getElementById("public-user-menu-panel");
@@ -4008,9 +4067,12 @@
       const availability = document.getElementById("session-availability");
       const maxPrice = document.getElementById("session-max-price");
       const sort = document.getElementById("session-sort");
+      const filtersBadge = document.getElementById("sessions-filters-active-badge");
+      const filtersBadgeDesktop = document.getElementById("sessions-filters-active-badge-desktop");
       const stickySelection = document.getElementById("sticky-selection");
       const CART_KEY = "maestro_cart_v1";
       const PAGE_CENTER_ID = {{ center_id|tojson }};
+      const plansDetails = document.getElementById("plans-section-details");
 
       function announceCartItemAdded() {
         var cart = loadCart();
@@ -4260,6 +4322,16 @@
         }, { rootMargin: "0px 0px -6% 0px", threshold: 0.06 });
         nodes.forEach(function (el) { io.observe(el); });
       })();
+      (function setupPlansDetailsA11y() {
+        if (!plansDetails) return;
+        var summary = plansDetails.querySelector(".plans-section__summary");
+        if (!summary) return;
+        function syncPlansState() {
+          summary.setAttribute("aria-expanded", plansDetails.open ? "true" : "false");
+        }
+        syncPlansState();
+        plansDetails.addEventListener("toggle", syncPlansState);
+      })();
 
       document.querySelectorAll(".js-add-session").forEach(function (btn) {
         btn.addEventListener("click", function () {
@@ -4368,6 +4440,17 @@
 
       if (sessionsRoot) {
         const rows = Array.from(sessionsRoot.querySelectorAll("article.session-row"));
+        sessionsRoot.setAttribute("aria-busy", "true");
+        sessionsRoot.classList.add("is-loading");
+        rows.forEach(function (row) {
+          var detailsBtn = row.querySelector(".session-card__details-toggle");
+          if (!detailsBtn) return;
+          detailsBtn.addEventListener("click", function () {
+            var expanded = row.classList.toggle("is-expanded");
+            detailsBtn.setAttribute("aria-expanded", expanded ? "true" : "false");
+            detailsBtn.textContent = expanded ? "إخفاء" : "تفاصيل";
+          });
+        });
         const upcomingWrap = document.getElementById("upcoming-sessions-wrap");
         const upcomingList = document.getElementById("upcoming-sessions-list");
         function updateUpcomingStrip() {
@@ -4428,6 +4511,16 @@
           const lv = level?.value || "";
           const av = availability?.value || "";
           const mp = parseFloat(maxPrice?.value || "");
+          const activeFiltersCount = (q ? 1 : 0) + (lv ? 1 : 0) + (av ? 1 : 0) + (!Number.isNaN(mp) ? 1 : 0) + ((sort?.value || "time_asc") !== "time_asc" ? 1 : 0);
+          [filtersBadge, filtersBadgeDesktop].forEach(function (badge) {
+            if (!badge) return;
+            if (activeFiltersCount > 0) {
+              badge.hidden = false;
+              badge.textContent = String(activeFiltersCount);
+            } else {
+              badge.hidden = true;
+            }
+          });
           rows.forEach(function (row) {
             const title = (row.dataset.title || "").toLowerCase();
             const rowLevel = row.dataset.level || "";
@@ -4447,6 +4540,8 @@
           window.requestAnimationFrame(function () {
             window.requestAnimationFrame(function () {
               if (sessionsRoot) sessionsRoot.classList.remove("is-filtering");
+              sessionsRoot.classList.remove("is-loading");
+              sessionsRoot.setAttribute("aria-busy", "false");
             });
           });
         }
