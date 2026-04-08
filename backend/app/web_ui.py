@@ -3335,12 +3335,6 @@ def admin_dashboard(
     payments_page_next_url = _admin_page_url(
         **{ADMIN_QP_PAYMENTS_PAGE: str(min(payments_total_pages, safe_payments_page + 1))}
     )
-    center_posts_page_prev_url = _admin_page_url(
-        **{"center_posts_page": str(max(1, safe_center_posts_page - 1))}
-    )
-    center_posts_page_next_url = _admin_page_url(
-        **{"center_posts_page": str(min(center_posts_total_pages, safe_center_posts_page + 1))}
-    )
     trash_page_prev_url = _admin_page_url(**{ADMIN_QP_TRASH_PAGE: str(max(1, safe_trash_page - 1))})
     trash_page_next_url = _admin_page_url(
         **{ADMIN_QP_TRASH_PAGE: str(min(trash_total_pages, safe_trash_page + 1))}
@@ -3364,6 +3358,12 @@ def admin_dashboard(
         .offset(center_posts_offset)
         .limit(center_posts_page_size)
         .all()
+    )
+    center_posts_page_prev_url = _admin_page_url(
+        **{"center_posts_page": str(max(1, safe_center_posts_page - 1))}
+    )
+    center_posts_page_next_url = _admin_page_url(
+        **{"center_posts_page": str(min(center_posts_total_pages, safe_center_posts_page + 1))}
     )
     center_post_ids_page = [int(cp.id) for cp in center_posts_all]
     center_post_gallery_counts = {
