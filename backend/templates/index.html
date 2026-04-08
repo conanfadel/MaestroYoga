@@ -3784,22 +3784,29 @@
 
   <script>
     (function () {
-      // على الهاتف/اللوح: حافظ على الوضع الافتراضي (بداية الصفحة) عند الدخول،
-      // واجعل الدخول يذهب مباشرة لجدول الجلسات بدل القفز تلقائياً لقسم الخطط.
+      // على الهاتف/اللوح: ثبّت الدخول على قسم الجلسات بدل القفز إلى خطط الاشتراك.
       try {
         var isSmall = window.matchMedia && window.matchMedia("(max-width: 1024px)").matches;
-        if (isSmall && !window.location.hash) {
+        var hash = (window.location.hash || "").toLowerCase();
+        var shouldForceSessions = isSmall && (!hash || hash === "#plans-section");
+        function forceSessionsEntryPosition() {
+          var sessions = document.getElementById("sessions-section");
           if ("scrollRestoration" in history) history.scrollRestoration = "manual";
-          // انتظر إطارين لضمان اكتمال رسم التخطيط قبل التمرير
+          if (sessions && typeof sessions.scrollIntoView === "function") {
+            sessions.scrollIntoView({ block: "start" });
+            if (window.location.hash !== "#sessions-section") {
+              history.replaceState(null, "", window.location.pathname + window.location.search + "#sessions-section");
+            }
+          } else {
+            window.scrollTo(0, 0);
+          }
+        }
+        if (shouldForceSessions) {
           requestAnimationFrame(function () {
-            requestAnimationFrame(function () {
-              var sessions = document.getElementById("sessions-section");
-              if (sessions && typeof sessions.scrollIntoView === "function") {
-                sessions.scrollIntoView({ block: "start" });
-              } else {
-                window.scrollTo(0, 0);
-              }
-            });
+            requestAnimationFrame(forceSessionsEntryPosition);
+          });
+          window.addEventListener("pageshow", function () {
+            requestAnimationFrame(forceSessionsEntryPosition);
           });
         }
       } catch (e) {}
