@@ -3785,12 +3785,22 @@
   <script>
     (function () {
       // على الهاتف/اللوح: حافظ على الوضع الافتراضي (بداية الصفحة) عند الدخول،
-      // ولا تسمح باستعادة تمرير سابق يقفز تلقائياً لقسم الخطط.
+      // واجعل الدخول يذهب مباشرة لجدول الجلسات بدل القفز تلقائياً لقسم الخطط.
       try {
         var isSmall = window.matchMedia && window.matchMedia("(max-width: 1024px)").matches;
         if (isSmall && !window.location.hash) {
           if ("scrollRestoration" in history) history.scrollRestoration = "manual";
-          window.scrollTo(0, 0);
+          // انتظر إطارين لضمان اكتمال رسم التخطيط قبل التمرير
+          requestAnimationFrame(function () {
+            requestAnimationFrame(function () {
+              var sessions = document.getElementById("sessions-section");
+              if (sessions && typeof sessions.scrollIntoView === "function") {
+                sessions.scrollIntoView({ block: "start" });
+              } else {
+                window.scrollTo(0, 0);
+              }
+            });
+          });
         }
       } catch (e) {}
 
