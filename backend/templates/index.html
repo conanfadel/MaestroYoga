@@ -1325,6 +1325,48 @@
       border-end-start-radius: 8px;
       border-end-end-radius: 8px;
     }
+    .plans-section__details {
+      margin-top: 4px;
+    }
+    .plans-section__summary {
+      list-style: none;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      flex-wrap: wrap;
+      font-weight: 800;
+      font-size: 0.88rem;
+      padding: 10px 12px;
+      border-radius: 12px;
+      background: linear-gradient(125deg, rgba(232, 252, 244, 0.75), rgba(255, 255, 255, 0.85));
+      border: 1px solid rgba(170, 240, 209, 0.65);
+      color: var(--charcoal);
+      line-height: 1.35;
+    }
+    .plans-section__summary::-webkit-details-marker {
+      display: none;
+    }
+    .plans-section__summary::marker {
+      content: "";
+    }
+    .plans-section__summary-hint {
+      font-size: 0.76rem;
+      font-weight: 700;
+      color: var(--gold-dark);
+      opacity: 0.9;
+    }
+    .plans-section__details[open] .plans-section__summary {
+      margin-bottom: 10px;
+      border-end-start-radius: 8px;
+      border-end-end-radius: 8px;
+    }
+    @media (min-width: 1025px) {
+      .plans-section__details > .plans-section__summary {
+        display: none;
+      }
+    }
     .loyalty-program.loyalty-program--compact-table table {
       font-size: 0.78rem;
       min-width: 0;
@@ -2764,7 +2806,12 @@
     }
     @media (max-width: 1024px) and (orientation: landscape) {
       .sessions-cards {
-        grid-template-columns: repeat(4, minmax(0, 1fr));
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+      }
+    }
+    @media (max-width: 1024px) {
+      #plans-section > .booking-block-heading {
+        display: none;
       }
     }
     @media (hover: none), (pointer: coarse) {
@@ -3647,60 +3694,66 @@
         {% if index_page.plans_section.show %}
         <section id="plans-section" class="card" aria-label="مقارنة الخطط">
           <h2 class="booking-block-heading booking-block-heading--flush-top">{{ index_page.plans_section.heading }}</h2>
-          <div class="plans-shell">
-            <div class="plans-cards">
-              {% for plan in plans %}
-              <article class="plan-card plan-{{ plan.plan_type }} reveal-on-scroll">
-                <div class="plan-head">
-                  <h3 class="booking-block-heading booking-block-heading--compact">{{ plan.name }}</h3>
-                  <span class="plan-badge {{ plan.plan_type }}">
-                    {% if plan.plan_type == 'weekly' %}
-                    <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                      <path d="M7 2v3M17 2v3M3 9h18M5 5h14a2 2 0 0 1 2 2v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2Z" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
-                      <path d="M8 13h3M8 17h2M14 13h2M14 17h3" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
-                    </svg>
-                    {% elif plan.plan_type == 'monthly' %}
-                    <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                      <path d="M7 2v3M17 2v3M3 9h18M5 5h14a2 2 0 0 1 2 2v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2Z" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
-                      <path d="M8 14h8" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
-                    </svg>
-                    {% else %}
-                    <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                      <path d="M12 3v18M3 12h18" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
-                      <circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.8"/>
-                    </svg>
-                    {% endif %}
-                    {{ plan.plan_type_label }}
-                  </span>
-                </div>
+          <details class="plans-section__details" id="plans-section-details" open>
+            <summary class="plans-section__summary">
+              <span>{{ index_page.plans_section.heading }}</span>
+              <span class="plans-section__summary-hint">عرض / إخفاء</span>
+            </summary>
+            <div class="plans-shell">
+              <div class="plans-cards">
+                {% for plan in plans %}
+                <article class="plan-card plan-{{ plan.plan_type }} reveal-on-scroll">
+                  <div class="plan-head">
+                    <h3 class="booking-block-heading booking-block-heading--compact">{{ plan.name }}</h3>
+                    <span class="plan-badge {{ plan.plan_type }}">
+                      {% if plan.plan_type == 'weekly' %}
+                      <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                        <path d="M7 2v3M17 2v3M3 9h18M5 5h14a2 2 0 0 1 2 2v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2Z" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+                        <path d="M8 13h3M8 17h2M14 13h2M14 17h3" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+                      </svg>
+                      {% elif plan.plan_type == 'monthly' %}
+                      <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                        <path d="M7 2v3M17 2v3M3 9h18M5 5h14a2 2 0 0 1 2 2v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2Z" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+                        <path d="M8 14h8" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+                      </svg>
+                      {% else %}
+                      <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                        <path d="M12 3v18M3 12h18" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+                        <circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.8"/>
+                      </svg>
+                      {% endif %}
+                      {{ plan.plan_type_label }}
+                    </span>
+                  </div>
 
-                <div class="plan-meta">
-                  <div><span class="k">المدة</span>{{ plan.duration_days }} يوم</div>
-                  <div><span class="k">السعر</span>{{ plan.price }} SAR</div>
-                  <div><span class="k">حد الجلسات</span>{{ plan.session_limit if plan.session_limit else 'غير محدود' }}</div>
-                </div>
+                  <div class="plan-meta">
+                    <div><span class="k">المدة</span>{{ plan.duration_days }} يوم</div>
+                    <div><span class="k">السعر</span>{{ plan.price }} SAR</div>
+                    <div><span class="k">حد الجلسات</span>{{ plan.session_limit if plan.session_limit else 'غير محدود' }}</div>
+                  </div>
 
-                {% if plan.plan_type == 'yearly' %}
-                <div class="best-note">أفضل قيمة</div>
-                {% endif %}
+                  {% if plan.plan_type == 'yearly' %}
+                  <div class="best-note">أفضل قيمة</div>
+                  {% endif %}
 
-                <div style="margin-top:10px;">
-                  <button
-                    type="button"
-                    class="sub-btn book-btn-lg js-add-plan"
-                    data-plan-id="{{ plan.id }}"
-                    data-plan-name="{{ plan.name|e }}"
-                    data-plan-price="{{ plan.price }}"
-                  >
-                    أضف للسلة
-                  </button>
-                </div>
-              </article>
-              {% else %}
-              <div class="plan-empty">لا توجد خطط اشتراك مفعلة حاليًا.</div>
-              {% endfor %}
+                  <div style="margin-top:10px;">
+                    <button
+                      type="button"
+                      class="sub-btn book-btn-lg js-add-plan"
+                      data-plan-id="{{ plan.id }}"
+                      data-plan-name="{{ plan.name|e }}"
+                      data-plan-price="{{ plan.price }}"
+                    >
+                      أضف للسلة
+                    </button>
+                  </div>
+                </article>
+                {% else %}
+                <div class="plan-empty">لا توجد خطط اشتراك مفعلة حاليًا.</div>
+                {% endfor %}
+              </div>
             </div>
-          </div>
+          </details>
         </section>
         {% endif %}
 
