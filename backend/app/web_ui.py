@@ -7,7 +7,6 @@ from collections import defaultdict
 from datetime import date, datetime, timedelta
 import os
 from pathlib import Path
-import hashlib
 from typing import Any
 from urllib.parse import urlencode, urlparse
 
@@ -52,13 +51,14 @@ from .mailer import (
     validate_mailer_settings,
 )
 from .payments import get_payment_provider, payment_provider_supports_hosted_checkout
+from .public_account_helpers import build_account_delete_confirm_url, public_account_phone_prefill
+from .public_content_version import compute_public_center_content_version
 from .rate_limiter import rate_limiter
 from .request_ip import get_client_ip
 from .security_audit import log_security_event
 from .security import (
     create_access_token,
     create_public_access_token,
-    create_public_account_delete_token,
     create_public_email_verification_token,
     create_public_email_verify_flash_token,
     create_public_password_reset_token,
@@ -404,15 +404,6 @@ def _build_reset_url(request: Request, user: models.PublicUser) -> str:
     token = create_public_password_reset_token(user.id, user.email)
     query = urlencode({"token": token})
     return f"{_public_base(request)}/public/reset-password?{query}"
-
-
-def _build_account_delete_confirm_url(
-    request: Request, user: models.PublicUser, next_url: str = PUBLIC_INDEX_DEFAULT_PATH
-) -> str:
-    token = create_public_account_delete_token(user.id, user.email)
-    safe_next = _sanitize_next_url(next_url)
-    query = urlencode({"token": token, "next": safe_next})
-    return f"{_public_base(request)}/public/account/delete/confirm?{query}"
 
 
 def _request_key(request: Request, prefix: str, identity: str = "") -> str:
@@ -1054,64 +1045,6 @@ def _index_preconnect_origins(
     return out
 
 
-def _public_center_content_version(db: Session, center_id: int) -> str:
-    center = db.get(models.Center, center_id)
-    if not center:
-        return "missing-center"
-    sessions_count = (
-        db.query(func.count(models.YogaSession.id)).filter(models.YogaSession.center_id == center_id).scalar() or 0
-    )
-    sessions_max_id = (
-        db.query(func.max(models.YogaSession.id)).filter(models.YogaSession.center_id == center_id).scalar() or 0
-    )
-    rooms_count = db.query(func.count(models.Room.id)).filter(models.Room.center_id == center_id).scalar() or 0
-    rooms_max_id = db.query(func.max(models.Room.id)).filter(models.Room.center_id == center_id).scalar() or 0
-    plans_count = (
-        db.query(func.count(models.SubscriptionPlan.id)).filter(models.SubscriptionPlan.center_id == center_id).scalar() or 0
-    )
-    plans_max_id = (
-        db.query(func.max(models.SubscriptionPlan.id)).filter(models.SubscriptionPlan.center_id == center_id).scalar() or 0
-    )
-    plans_active_count = (
-        db.query(func.count(models.SubscriptionPlan.id))
-        .filter(models.SubscriptionPlan.center_id == center_id, models.SubscriptionPlan.is_active.is_(True))
-        .scalar()
-        or 0
-    )
-    faq_count = db.query(func.count(models.FAQItem.id)).filter(models.FAQItem.center_id == center_id).scalar() or 0
-    faq_latest_upd = (
-        db.query(func.max(models.FAQItem.updated_at)).filter(models.FAQItem.center_id == center_id).scalar() or ""
-    )
-    post_count = db.query(func.count(models.CenterPost.id)).filter(models.CenterPost.center_id == center_id).scalar() or 0
-    post_latest_upd = (
-        db.query(func.max(models.CenterPost.updated_at)).filter(models.CenterPost.center_id == center_id).scalar() or ""
-    )
-    payload = "|".join(
-        [
-            str(center.id),
-            center.name or "",
-            center.city or "",
-            center.logo_url or "",
-            center.brand_tagline or "",
-            center.hero_image_url or "",
-            "1" if center.hero_show_stock_photo else "0",
-            center.index_config_json or "",
-            str(sessions_count),
-            str(sessions_max_id),
-            str(rooms_count),
-            str(rooms_max_id),
-            str(plans_count),
-            str(plans_max_id),
-            str(plans_active_count),
-            str(faq_count),
-            str(faq_latest_upd),
-            str(post_count),
-            str(post_latest_upd),
-        ]
-    )
-    return hashlib.sha256(payload.encode("utf-8")).hexdigest()[:16]
-
-
 @router.get("/index", response_class=HTMLResponse)
 def public_index(
     request: Request,
@@ -1348,7 +1281,7 @@ def public_index(
             ),
             "loyalty_program_rows": loyalty_program_table_rows(center),
             "feedback_enabled": bool(feedback_destination_email()) and validate_mailer_settings()[0],
-            "public_content_version": _public_center_content_version(db, center.id),
+            "public_content_version": compute_public_center_content_version(db, center.id),
             **loyalty_ctx,
             **_analytics_context("index", center_id=str(center.id)),
         },
@@ -1357,7 +1290,7 @@ def public_index(
 
 @router.get("/public/content-version")
 def public_content_version(center_id: int = 1, db: Session = Depends(get_db)):
-    return {"center_id": center_id, "version": _public_center_content_version(db, center_id)}
+    return {"center_id": center_id, "version": compute_public_center_content_version(db, center_id)}
 
 
 @router.post("/public/feedback")
@@ -2245,25 +2178,13 @@ def public_logout():
     return response
 
 
-def _public_account_phone_prefill(user: models.PublicUser) -> tuple[str, str]:
-    """(country_code, local_digits) for account form; default +966 if unknown."""
-    raw = (user.phone or "").strip()
-    if not raw:
-        return "+966", ""
-    for prefix in ("+966", "+971", "+965", "+973", "+974", "+968", "+20"):
-        if raw.startswith(prefix):
-            return prefix, raw[len(prefix) :].lstrip()
-    digits = "".join(ch for ch in raw if ch.isdigit())
-    return "+966", digits
-
-
 @router.get("/public/account", response_class=HTMLResponse)
 def public_account_page(request: Request, next: str = PUBLIC_INDEX_DEFAULT_PATH, db: Session = Depends(get_db)):
     safe_next = _sanitize_next_url(request.query_params.get("next") or next)
     user = _current_public_user(request, db)
     if not user:
         return _public_login_redirect(next_url=safe_next)
-    cc, phone_local = _public_account_phone_prefill(user)
+    cc, phone_local = public_account_phone_prefill(user)
     try:
         center_id_loyalty = int(public_center_id_str_from_next(safe_next))
     except ValueError:
@@ -2377,7 +2298,7 @@ def public_account_delete_request(
             url=_url_with_params("/public/account", msg="delete_rate_limited", next=safe_next),
             status_code=303,
         )
-    confirm_url = _build_account_delete_confirm_url(request, user, safe_next)
+    confirm_url = build_account_delete_confirm_url(request, user, safe_next)
     queued, mail_info = queue_account_delete_confirmation_email(user.email, confirm_url, full_name=user.full_name)
     if not queued:
         log_security_event(
