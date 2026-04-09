@@ -93,6 +93,14 @@ from .public_redirect_helpers import (
     redirect_public_index_with_msg,
     redirect_public_index_with_params,
 )
+from .public_register_helpers import (
+    build_post_login_redirect_url,
+    build_post_register_redirect_url,
+    is_public_login_rate_limited,
+    is_public_register_rate_limited,
+    set_public_auth_cookie,
+    upsert_public_user_for_register,
+)
 from .public_sessions_helpers import build_public_session_rows
 from .public_subscribe_helpers import (
     create_pending_subscription_payment,
@@ -1489,15 +1497,14 @@ def public_register(
             url=_url_with_params("/public/register", msg="invalid_phone", next=safe_next),
             status_code=303,
         )
-    register_key = _request_key(request, "public_register", email_normalized)
-    if not rate_limiter.allow(
-        register_key,
-        limit=5,
-        window_seconds=300,
-        lockout_seconds=600,
+    if is_public_register_rate_limited(
+        request=request,
+        email=email_normalized,
+        request_key_fn=_request_key,
+        allow_fn=rate_limiter.allow,
         max_lockout_seconds=MAX_LOCKOUT_SECONDS,
+        log_security_event_fn=log_security_event,
     ):
-        log_security_event("public_register", request, "rate_limited", email=email_normalized)
         return RedirectResponse(
             url=_url_with_params("/public/register", msg="rate_limited", next=safe_next),
             status_code=303,
@@ -1524,31 +1531,17 @@ def public_register(
             status_code=303,
         )
 
-    if exists and exists.is_deleted:
-        user = exists
-        user.full_name = full_name_normalized
-        user.email = email_normalized
-        user.phone = phone_normalized
-        user.password_hash = hash_password(password)
-        user.email_verified = not _is_email_verification_required()
-        user.verification_sent_at = utcnow_naive()
-        user.is_active = True
-        user.is_deleted = False
-        user.deleted_at = None
-        status_label = "restored"
-    else:
-        user = models.PublicUser(
-            full_name=full_name_normalized,
-            email=email_normalized,
-            phone=phone_normalized,
-            password_hash=hash_password(password),
-            email_verified=not _is_email_verification_required(),
-            verification_sent_at=utcnow_naive(),
-            is_active=True,
-            is_deleted=False,
-        )
-        db.add(user)
-        status_label = "created"
+    user, status_label = upsert_public_user_for_register(
+        db=db,
+        models_module=models,
+        existing_user=exists,
+        full_name=full_name_normalized,
+        email=email_normalized,
+        phone=phone_normalized,
+        password_hash=hash_password(password),
+        email_verified=not _is_email_verification_required(),
+        now=utcnow_naive(),
+    )
     _ensure_client_for_public_register(db, user, safe_next)
     db.commit()
     db.refresh(user)
@@ -1573,27 +1566,22 @@ def public_register(
             details={"mail_status": "queued", "state": status_label},
         )
     token = create_public_access_token(user.id)
-    if _is_email_verification_required():
-        next_msg = "registered" if queued else "mail_failed"
-        vp_params: dict[str, str] = {"msg": next_msg, "next": safe_next}
-        if not queued:
-            why = public_mail_fail_why_token(mail_info)
-            if why:
-                vp_params["why"] = why
-        response = RedirectResponse(
-            url=_url_with_params("/public/verify-pending", **vp_params),
-            status_code=303,
-        )
-    else:
-        sep = "&" if "?" in safe_next else "?"
-        response = RedirectResponse(url=f"{safe_next}{sep}msg=registered_no_verify", status_code=303)
-    response.set_cookie(
-        key=PUBLIC_COOKIE_NAME,
-        value=token,
-        httponly=True,
-        samesite="lax",
+    response = RedirectResponse(
+        url=build_post_register_redirect_url(
+            safe_next=safe_next,
+            verification_required=_is_email_verification_required(),
+            queued=queued,
+            mail_info=mail_info,
+            url_with_params_fn=_url_with_params,
+            mail_fail_why_token_fn=public_mail_fail_why_token,
+        ),
+        status_code=303,
+    )
+    set_public_auth_cookie(
+        response=response,
+        cookie_name=PUBLIC_COOKIE_NAME,
+        token=token,
         secure=_cookie_secure_flag(request),
-        max_age=60 * 60 * 24 * 7,
     )
     return response
 
@@ -1615,15 +1603,14 @@ def public_login(
     if _is_ip_blocked(db, request):
         return _public_login_redirect(next_url=safe_next, msg="ip_blocked")
     email_normalized = email.lower().strip()
-    login_key = _request_key(request, "public_login", email_normalized)
-    if not rate_limiter.allow(
-        login_key,
-        limit=8,
-        window_seconds=300,
-        lockout_seconds=300,
+    if is_public_login_rate_limited(
+        request=request,
+        email=email_normalized,
+        request_key_fn=_request_key,
+        allow_fn=rate_limiter.allow,
         max_lockout_seconds=MAX_LOCKOUT_SECONDS,
+        log_security_event_fn=log_security_event,
     ):
-        log_security_event("public_login", request, "rate_limited", email=email_normalized)
         return _public_login_redirect(next_url=safe_next, msg="rate_limited")
     user = (
         db.query(models.PublicUser)
@@ -1638,17 +1625,20 @@ def public_login(
         return _public_login_redirect(next_url=safe_next, msg="inactive")
 
     token = create_public_access_token(user.id)
-    if _is_email_verification_required() and not user.email_verified:
-        response = RedirectResponse(url=_url_with_params("/public/verify-pending", next=safe_next), status_code=303)
-    else:
-        response = RedirectResponse(url=safe_next, status_code=303)
-    response.set_cookie(
-        key=PUBLIC_COOKIE_NAME,
-        value=token,
-        httponly=True,
-        samesite="lax",
+    response = RedirectResponse(
+        url=build_post_login_redirect_url(
+            safe_next=safe_next,
+            verification_required=_is_email_verification_required(),
+            email_verified=bool(user.email_verified),
+            url_with_params_fn=_url_with_params,
+        ),
+        status_code=303,
+    )
+    set_public_auth_cookie(
+        response=response,
+        cookie_name=PUBLIC_COOKIE_NAME,
+        token=token,
         secure=_cookie_secure_flag(request),
-        max_age=60 * 60 * 24 * 7,
     )
     log_security_event(
         "public_login",
