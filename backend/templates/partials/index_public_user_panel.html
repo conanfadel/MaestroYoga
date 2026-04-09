@@ -1,0 +1,89 @@
+<div
+  class="public-user-menu__panel"
+  id="public-user-menu-panel"
+  role="region"
+  aria-label="معلومات حسابك"
+  aria-hidden="true"
+>
+  <div class="public-user-menu__panel-head">
+    <div class="public-user-menu__avatar" aria-hidden="true">
+      {{ (public_user.full_name or "؟")[:1] }}
+    </div>
+    <div class="public-user-menu__head-text">
+      <p class="name">{{ public_user.full_name }}</p>
+      {% if public_user.email_verified %}
+      <span class="public-user-menu__badge is-verified">حساب موثّق</span>
+      {% else %}
+      <span class="public-user-menu__badge">بانتظار تأكيد البريد</span>
+      {% endif %}
+      {% if loyalty_tier == 'bronze' %}
+      <span class="loyalty-badge loyalty-badge--bronze" title="برنامج الولاء"><span class="loyalty-badge__dot" aria-hidden="true"></span> وسام برونزي</span>
+      {% elif loyalty_tier == 'silver' %}
+      <span class="loyalty-badge loyalty-badge--silver" title="برنامج الولاء"><span class="loyalty-badge__dot" aria-hidden="true"></span> وسام فضي</span>
+      {% elif loyalty_tier == 'gold' %}
+      <span class="loyalty-badge loyalty-badge--gold" title="برنامج الولاء"><span class="loyalty-badge__dot" aria-hidden="true"></span> وسام ذهبي</span>
+      {% endif %}
+    </div>
+  </div>
+  <div class="public-user-menu__panel-body">
+    <div class="public-user-menu__row">
+      <div class="public-user-menu__row-icon" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/><path d="M8 7h8"/><path d="M8 11h8"/></svg>
+      </div>
+      <div class="public-user-menu__row-text">
+        <span class="k">الولاء</span>
+        <span class="v">{{ loyalty_confirmed_count }} جلسة مؤكدة في هذا المركز</span>
+        {% if loyalty_sessions_to_next is not none and loyalty_sessions_to_next > 0 %}
+        <span class="muted" style="display:block;font-size:0.78rem;margin-top:4px;font-weight:600;">متبقٍ {{ loyalty_sessions_to_next }} جلسة للوصول إلى «{{ loyalty_next_tier_label }}»</span>
+        {% elif loyalty_tier == 'gold' %}
+        <span class="muted" style="display:block;font-size:0.78rem;margin-top:4px;font-weight:600;">أعلى مستوى ولاء — شكراً لثقتك</span>
+        {% endif %}
+      </div>
+    </div>
+    <div class="public-user-menu__row">
+      <div class="public-user-menu__row-icon" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+      </div>
+      <div class="public-user-menu__row-text">
+        <span class="k">الاسم</span>
+        <span class="v">{{ public_user.full_name }}</span>
+      </div>
+    </div>
+    <div class="public-user-menu__row">
+      <div class="public-user-menu__row-icon" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+      </div>
+      <div class="public-user-menu__row-text">
+        <span class="k">البريد</span>
+        <span class="v">{{ public_user.email }}</span>
+      </div>
+    </div>
+    {% if public_user.phone %}
+    <div class="public-user-menu__row">
+      <div class="public-user-menu__row-icon" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+      </div>
+      <div class="public-user-menu__row-text">
+        <span class="k">الجوال</span>
+        <span class="v">{{ public_user.phone }}</span>
+      </div>
+    </div>
+    {% endif %}
+    <div class="public-user-menu__row">
+      <div class="public-user-menu__row-icon" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+      </div>
+      <div class="public-user-menu__row-text">
+        <span class="k">حالة التحقق</span>
+        <span class="v">{% if public_user.email_verified %}موثّق{% else %}بانتظار تأكيد البريد{% endif %}</span>
+      </div>
+    </div>
+    <div class="public-user-menu__actions">
+      <a class="btn ghost" href="/public/account?next={{ ('/index?center_id=' ~ center_id|string)|urlencode }}">الإعدادات</a>
+      {% if not public_user.email_verified %}
+      <a class="btn ghost" href="/public/verify-pending?next={{ ('/index?center_id=' ~ center_id|string)|urlencode }}">تأكيد البريد</a>
+      {% endif %}
+      <a class="btn primary" href="/public/logout">تسجيل الخروج</a>
+    </div>
+  </div>
+</div>
