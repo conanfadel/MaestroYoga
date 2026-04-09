@@ -1,0 +1,635 @@
+"""JSON REST API router (mounted at / and /api/v1 from main)."""
+
+import csv
+import io
+import json
+import logging
+from datetime import datetime, timezone
+from io import BytesIO
+import os
+from urllib.parse import urlsplit
+
+from fastapi import APIRouter, Depends, Header, HTTPException, Request
+from fastapi.responses import StreamingResponse
+from openpyxl import Workbook
+from sqlalchemy import func, text
+from sqlalchemy.orm import Session
+
+try:
+    from . import models, schemas
+    from .booking_utils import count_active_bookings
+    from .database import get_db
+    from .payments import (
+        MoyasarPaymentProvider,
+        StripePaymentProvider,
+        get_payment_provider,
+        payment_provider_supports_hosted_checkout,
+    )
+    from .security import (
+        create_access_token,
+        get_current_user,
+        hash_password,
+        require_any_permission,
+        require_permissions,
+        require_roles,
+        verify_password,
+    )
+    from .tenant_utils import require_user_center_id
+    from .time_utils import utcnow_naive
+except ImportError:
+    from backend.app import models, schemas
+    from backend.app.booking_utils import count_active_bookings
+    from backend.app.database import get_db
+    from backend.app.payments import (
+        MoyasarPaymentProvider,
+        StripePaymentProvider,
+        get_payment_provider,
+        payment_provider_supports_hosted_checkout,
+    )
+    from backend.app.security import (
+        create_access_token,
+        get_current_user,
+        hash_password,
+        require_any_permission,
+        require_permissions,
+        require_roles,
+        verify_password,
+    )
+    from backend.app.tenant_utils import require_user_center_id
+    from backend.app.time_utils import utcnow_naive
+
+logger = logging.getLogger(__name__)
+
+SEED_DEMO_KEY = os.getenv("SEED_DEMO_KEY", "").strip()
+PUBLIC_BASE_URL = os.getenv("PUBLIC_BASE_URL", "").strip().rstrip("/")
+STRIPE_CHECKOUT_ALLOWED_ORIGINS = [
+    x.strip().rstrip("/") for x in os.getenv("STRIPE_CHECKOUT_ALLOWED_ORIGINS", "").split(",") if x.strip()
+]
+
+api_router = APIRouter(tags=["api"])
+
+@api_router.get("/")
+def root():
+    return {"app": "Maestro Yoga", "status": "running"}
+
+
+@api_router.get("/health")
+def health():
+    """مسار خفيف لفحص الصحة على Render وغيره (بدون اتصال بقاعدة البيانات)."""
+    return {"status": "ok"}
+
+
+@api_router.get("/health/ready")
+def health_ready(db: Session = Depends(get_db)):
+    """جاهزية الخدمة مع التحقق من قاعدة البيانات (مناسب بعد النشر أو للموازن)."""
+    try:
+        db.execute(text("SELECT 1"))
+        return {"status": "ready", "database": "ok"}
+    except Exception as exc:
+        logger.warning("health_ready database check failed: %s", exc)
+        raise HTTPException(status_code=503, detail="database_unavailable") from exc
+
+def _payments_query(db: Session, center_id: int, client_id: int | None = None, status: str | None = None):
+    query = db.query(models.Payment).filter(models.Payment.center_id == center_id)
+    if client_id is not None:
+        query = query.filter(models.Payment.client_id == client_id)
+    if status:
+        query = query.filter(models.Payment.status == status)
+    return query
+
+
+def _allowed_checkout_origins() -> list[str]:
+    if STRIPE_CHECKOUT_ALLOWED_ORIGINS:
+        return STRIPE_CHECKOUT_ALLOWED_ORIGINS
+    if PUBLIC_BASE_URL:
+        return [PUBLIC_BASE_URL]
+    return ["http://127.0.0.1:8000", "http://localhost:8000"]
+
+
+def _is_checkout_redirect_allowed(url: str) -> bool:
+    try:
+        parsed = urlsplit(url.strip())
+    except Exception:
+        return False
+    if parsed.scheme not in {"http", "https"} or not parsed.netloc:
+        return False
+    origin = f"{parsed.scheme}://{parsed.netloc}".rstrip("/")
+    return origin in _allowed_checkout_origins()
+
+
+def _is_local_client(request: Request) -> bool:
+    if not request.client:
+        return False
+    host = request.client.host or ""
+    return host in {"127.0.0.1", "::1", "localhost"}
+
+
+@api_router.get("/dashboard/summary", response_model=schemas.DashboardSummaryOut)
+def dashboard_summary(
+    db: Session = Depends(get_db),
+    user: models.User = Depends(get_current_user),
+):
+    center_id = require_user_center_id(user)
+    today = datetime.now(timezone.utc).date()
+
+    clients_count = db.query(models.Client).filter(models.Client.center_id == center_id).count()
+    sessions_count = db.query(models.YogaSession).filter(models.YogaSession.center_id == center_id).count()
+    bookings_count = db.query(models.Booking).filter(models.Booking.center_id == center_id).count()
+    active_plans_count = (
+        db.query(models.SubscriptionPlan)
+        .filter(models.SubscriptionPlan.center_id == center_id, models.SubscriptionPlan.is_active.is_(True))
+        .count()
+    )
+    revenue_total = (
+        db.query(func.coalesce(func.sum(models.Payment.amount), 0.0))
+        .filter(models.Payment.center_id == center_id, models.Payment.status == "paid")
+        .scalar()
+    )
+    revenue_today = (
+        db.query(func.coalesce(func.sum(models.Payment.amount), 0.0))
+        .filter(
+            models.Payment.center_id == center_id,
+            models.Payment.status == "paid",
+            func.date(models.Payment.paid_at) == today,
+        )
+        .scalar()
+    )
+    pending_payments_count = (
+        db.query(models.Payment)
+        .filter(models.Payment.center_id == center_id, models.Payment.status == "pending")
+        .count()
+    )
+
+    return {
+        "center_id": center_id,
+        "clients_count": clients_count,
+        "sessions_count": sessions_count,
+        "bookings_count": bookings_count,
+        "active_plans_count": active_plans_count,
+        "revenue_total": float(revenue_total or 0.0),
+        "revenue_today": float(revenue_today or 0.0),
+        "pending_payments_count": pending_payments_count,
+    }
+
+
+@api_router.post("/auth/register", response_model=schemas.TokenOut)
+def register_owner(payload: schemas.UserRegister, db: Session = Depends(get_db)):
+    exists = db.query(models.User).filter(models.User.email == payload.email).first()
+    if exists:
+        raise HTTPException(status_code=409, detail="Email already registered")
+
+    center = models.Center(name=payload.center_name, city=payload.city)
+    db.add(center)
+    db.flush()
+
+    owner = models.User(
+        center_id=center.id,
+        full_name=payload.full_name,
+        email=payload.email.lower(),
+        password_hash=hash_password(payload.password),
+        role="center_owner",
+    )
+    db.add(owner)
+    db.commit()
+    db.refresh(owner)
+
+    token = create_access_token(owner.id)
+    return {"access_token": token, "user": owner}
+
+
+@api_router.post("/auth/login", response_model=schemas.TokenOut)
+def login(payload: schemas.UserLogin, db: Session = Depends(get_db)):
+    user = db.query(models.User).filter(models.User.email == payload.email.lower()).first()
+    if not user or not verify_password(payload.password, user.password_hash):
+        raise HTTPException(status_code=401, detail="Incorrect credentials")
+    if not user.is_active:
+        raise HTTPException(status_code=403, detail="User is inactive")
+    token = create_access_token(user.id)
+    return {"access_token": token, "user": user}
+
+
+@api_router.get("/auth/me", response_model=schemas.UserOut)
+def me(user: models.User = Depends(get_current_user)):
+    return user
+
+
+@api_router.post("/auth/users", response_model=schemas.UserOut)
+def create_user_by_owner(
+    payload: schemas.UserCreateByOwner,
+    db: Session = Depends(get_db),
+    user: models.User = Depends(require_roles("center_owner")),
+):
+    exists = db.query(models.User).filter(models.User.email == payload.email.lower()).first()
+    if exists:
+        raise HTTPException(status_code=409, detail="Email already registered")
+    perm_json: str | None = None
+    if payload.role == "custom_staff" and payload.permission_ids:
+        perm_json = json.dumps(payload.permission_ids, ensure_ascii=False)
+    new_user = models.User(
+        center_id=user.center_id,
+        full_name=payload.full_name,
+        email=payload.email.lower(),
+        password_hash=hash_password(payload.password),
+        role=payload.role,
+        custom_role_label=payload.custom_role_label if payload.role == "custom_staff" else None,
+        permissions_json=perm_json,
+    )
+    db.add(new_user)
+    db.commit()
+    db.refresh(new_user)
+    return new_user
+
+
+@api_router.post("/centers", response_model=schemas.CenterOut)
+def create_center(
+    payload: schemas.CenterCreate,
+    db: Session = Depends(get_db),
+    _: models.User = Depends(require_roles("superadmin")),
+):
+    center = models.Center(**payload.model_dump())
+    db.add(center)
+    db.commit()
+    db.refresh(center)
+    return center
+
+
+@api_router.get("/centers", response_model=list[schemas.CenterOut])
+def list_centers(
+    db: Session = Depends(get_db),
+    user: models.User = Depends(get_current_user),
+):
+    if user.role == "superadmin":
+        return db.query(models.Center).all()
+    center_id = require_user_center_id(user)
+    center = db.get(models.Center, center_id)
+    return [center] if center else []
+
+
+@api_router.post("/clients", response_model=schemas.ClientOut)
+def create_client(
+    payload: schemas.ClientCreate,
+    db: Session = Depends(get_db),
+    user: models.User = Depends(require_permissions("clients.manage")),
+):
+    client = models.Client(center_id=require_user_center_id(user), **payload.model_dump())
+    db.add(client)
+    db.commit()
+    db.refresh(client)
+    return client
+
+
+@api_router.get("/clients", response_model=list[schemas.ClientOut])
+def list_clients(
+    db: Session = Depends(get_db),
+    user: models.User = Depends(require_any_permission("clients.manage")),
+):
+    return db.query(models.Client).filter(models.Client.center_id == require_user_center_id(user)).all()
+
+
+@api_router.post("/plans", response_model=schemas.SubscriptionPlanOut)
+def create_plan(
+    payload: schemas.SubscriptionPlanCreate,
+    db: Session = Depends(get_db),
+    user: models.User = Depends(require_permissions("plans.manage")),
+):
+    plan = models.SubscriptionPlan(center_id=require_user_center_id(user), **payload.model_dump())
+    db.add(plan)
+    db.commit()
+    db.refresh(plan)
+    return plan
+
+
+@api_router.get("/plans", response_model=list[schemas.SubscriptionPlanOut])
+def list_plans(
+    db: Session = Depends(get_db),
+    user: models.User = Depends(require_any_permission("plans.manage", "sessions.manage")),
+):
+    return db.query(models.SubscriptionPlan).filter(models.SubscriptionPlan.center_id == require_user_center_id(user)).all()
+
+
+@api_router.post("/rooms", response_model=schemas.RoomOut)
+def create_room(
+    payload: schemas.RoomCreate,
+    db: Session = Depends(get_db),
+    user: models.User = Depends(require_permissions("rooms.manage")),
+):
+    room = models.Room(center_id=require_user_center_id(user), **payload.model_dump())
+    db.add(room)
+    db.commit()
+    db.refresh(room)
+    return room
+
+
+@api_router.post("/sessions", response_model=schemas.YogaSessionOut)
+def create_session(
+    payload: schemas.YogaSessionCreate,
+    db: Session = Depends(get_db),
+    user: models.User = Depends(require_permissions("sessions.manage")),
+):
+    center_id = require_user_center_id(user)
+    room = db.get(models.Room, payload.room_id)
+    if not room or room.center_id != center_id:
+        raise HTTPException(status_code=404, detail="Room not found for center")
+    yoga_session = models.YogaSession(center_id=center_id, **payload.model_dump())
+    db.add(yoga_session)
+    db.commit()
+    db.refresh(yoga_session)
+    return yoga_session
+
+
+@api_router.get("/sessions", response_model=list[schemas.YogaSessionOut])
+def list_sessions(
+    db: Session = Depends(get_db),
+    user: models.User = Depends(
+        require_any_permission("sessions.manage", "plans.manage", "reports.financial")
+    ),
+):
+    return db.query(models.YogaSession).filter(models.YogaSession.center_id == require_user_center_id(user)).all()
+
+
+@api_router.post("/bookings", response_model=schemas.BookingOut)
+def create_booking(
+    payload: schemas.BookingCreate,
+    db: Session = Depends(get_db),
+    user: models.User = Depends(
+        require_any_permission("sessions.manage", "clients.manage", "public_users.manage")
+    ),
+):
+    center_id = require_user_center_id(user)
+    session = db.get(models.YogaSession, payload.session_id)
+    client = db.get(models.Client, payload.client_id)
+    if not session or not client:
+        raise HTTPException(status_code=404, detail="Session or client not found")
+    if session.center_id != center_id or client.center_id != center_id:
+        raise HTTPException(status_code=400, detail="Center mismatch")
+
+    room = db.get(models.Room, session.room_id)
+    if not room:
+        raise HTTPException(status_code=404, detail="Room not found for session")
+    if count_active_bookings(db, session.id) >= room.capacity:
+        raise HTTPException(status_code=400, detail="Room is full")
+
+    booking = models.Booking(center_id=center_id, **payload.model_dump(), status="confirmed")
+    db.add(booking)
+    db.commit()
+    db.refresh(booking)
+    return booking
+
+
+@api_router.post("/payments", response_model=schemas.PaymentOut)
+def create_payment(
+    payload: schemas.PaymentCreate,
+    db: Session = Depends(get_db),
+    user: models.User = Depends(require_any_permission("payments.records", "payments.refund")),
+):
+    center_id = require_user_center_id(user)
+    client = db.get(models.Client, payload.client_id)
+    if not client or client.center_id != center_id:
+        raise HTTPException(status_code=404, detail="Client not found for center")
+
+    provider = get_payment_provider()
+    if payment_provider_supports_hosted_checkout(provider):
+        raise HTTPException(
+            status_code=400,
+            detail="Use /payments/checkout-session for Stripe or Moyasar payments",
+        )
+    provider_result = provider.charge(
+        amount=payload.amount,
+        currency=payload.currency,
+        metadata={"center_id": center_id, "client_id": payload.client_id},
+    )
+
+    payment = models.Payment(
+        center_id=center_id,
+        booking_id=None,
+        **payload.model_dump(),
+        provider_ref=provider_result.provider_ref,
+        status=provider_result.status,
+        created_at=utcnow_naive(),
+    )
+    db.add(payment)
+    db.commit()
+    db.refresh(payment)
+    return payment
+
+
+@api_router.post("/payments/checkout-session", response_model=schemas.PaymentCheckoutOut)
+def create_checkout_session(
+    payload: schemas.PaymentCheckoutCreate,
+    db: Session = Depends(get_db),
+    user: models.User = Depends(require_any_permission("payments.records", "payments.refund")),
+):
+    center_id = require_user_center_id(user)
+    client = db.get(models.Client, payload.client_id)
+    if not client or client.center_id != center_id:
+        raise HTTPException(status_code=404, detail="Client not found for center")
+
+    provider = get_payment_provider()
+    if not payment_provider_supports_hosted_checkout(provider):
+        raise HTTPException(status_code=400, detail="Checkout session requires Stripe or Moyasar provider")
+    if not _is_checkout_redirect_allowed(payload.success_url) or not _is_checkout_redirect_allowed(payload.cancel_url):
+        raise HTTPException(
+            status_code=400,
+            detail="success_url/cancel_url must match allowed checkout origins",
+        )
+
+    pm = "moyasar_checkout" if isinstance(provider, MoyasarPaymentProvider) else "stripe_checkout"
+    payment = models.Payment(
+        center_id=center_id,
+        client_id=payload.client_id,
+        booking_id=None,
+        amount=payload.amount,
+        currency=payload.currency.upper(),
+        payment_method=pm,
+        status="pending",
+        created_at=utcnow_naive(),
+    )
+    db.add(payment)
+    db.commit()
+    db.refresh(payment)
+
+    try:
+        meta = {
+            "payment_id": str(payment.id),
+            "center_id": str(center_id),
+            "client_id": str(payload.client_id),
+        }
+        if payment.booking_id:
+            meta["booking_id"] = str(payment.booking_id)
+        provider_result = provider.create_checkout_session(
+            amount=payload.amount,
+            currency=payload.currency,
+            metadata=meta,
+            success_url=payload.success_url,
+            cancel_url=payload.cancel_url,
+        )
+    except Exception as exc:
+        logger.exception("Failed to create Stripe checkout session: %s", exc)
+        raise HTTPException(status_code=500, detail="Checkout session creation failed")
+
+    payment.provider_ref = provider_result.provider_ref
+    db.commit()
+    db.refresh(payment)
+    return {
+        "payment_id": payment.id,
+        "checkout_url": provider_result.checkout_url or "",
+        "provider_ref": provider_result.provider_ref,
+        "status": payment.status,
+    }
+
+
+@api_router.get("/payments/{payment_id}", response_model=schemas.PaymentOut)
+def get_payment_status(
+    payment_id: int,
+    db: Session = Depends(get_db),
+    user: models.User = Depends(require_any_permission("payments.records", "reports.financial", "exports.payments")),
+):
+    center_id = require_user_center_id(user)
+    payment = db.get(models.Payment, payment_id)
+    if not payment or payment.center_id != center_id:
+        raise HTTPException(status_code=404, detail="Payment not found")
+    return payment
+
+
+@api_router.get("/payments", response_model=list[schemas.PaymentOut])
+def list_payments(
+    client_id: int | None = None,
+    status: str | None = None,
+    db: Session = Depends(get_db),
+    user: models.User = Depends(require_any_permission("payments.records", "reports.financial")),
+):
+    center_id = require_user_center_id(user)
+    query = _payments_query(db, center_id=center_id, client_id=client_id, status=status)
+    return query.order_by(models.Payment.paid_at.desc()).all()
+
+
+@api_router.get("/payments/export/csv")
+def export_payments_csv(
+    client_id: int | None = None,
+    status: str | None = None,
+    db: Session = Depends(get_db),
+    user: models.User = Depends(require_any_permission("exports.payments", "reports.financial")),
+):
+    center_id = require_user_center_id(user)
+    query = _payments_query(db, center_id=center_id, client_id=client_id, status=status)
+
+    payments = query.order_by(models.Payment.paid_at.desc()).all()
+
+    output = io.StringIO()
+    writer = csv.writer(output)
+    writer.writerow(
+        [
+            "payment_id",
+            "center_id",
+            "client_id",
+            "amount",
+            "currency",
+            "payment_method",
+            "provider_ref",
+            "status",
+            "paid_at",
+        ]
+    )
+    for payment in payments:
+        writer.writerow(
+            [
+                payment.id,
+                payment.center_id,
+                payment.client_id,
+                payment.amount,
+                payment.currency,
+                payment.payment_method,
+                payment.provider_ref or "",
+                payment.status,
+                payment.paid_at.isoformat() if payment.paid_at else "",
+            ]
+        )
+
+    filename = f"maestro_payments_center_{center_id}_{datetime.now(timezone.utc).strftime('%Y%m%d_%H%M%S')}.csv"
+    content = output.getvalue()
+    output.close()
+    headers = {"Content-Disposition": f'attachment; filename="{filename}"'}
+    return StreamingResponse(iter([content]), media_type="text/csv; charset=utf-8", headers=headers)
+
+
+@api_router.get("/payments/export/xlsx")
+def export_payments_xlsx(
+    client_id: int | None = None,
+    status: str | None = None,
+    db: Session = Depends(get_db),
+    user: models.User = Depends(require_any_permission("exports.payments", "reports.financial")),
+):
+    center_id = require_user_center_id(user)
+    query = _payments_query(db, center_id=center_id, client_id=client_id, status=status)
+    payments = query.order_by(models.Payment.paid_at.desc()).all()
+
+    workbook = Workbook()
+    sheet = workbook.active
+    sheet.title = "Payments"
+    headers_row = [
+        "payment_id",
+        "center_id",
+        "client_id",
+        "amount",
+        "currency",
+        "payment_method",
+        "provider_ref",
+        "status",
+        "paid_at",
+    ]
+    sheet.append(headers_row)
+    for payment in payments:
+        sheet.append(
+            [
+                payment.id,
+                payment.center_id,
+                payment.client_id,
+                payment.amount,
+                payment.currency,
+                payment.payment_method,
+                payment.provider_ref or "",
+                payment.status,
+                payment.paid_at.isoformat() if payment.paid_at else "",
+            ]
+        )
+
+    buffer = BytesIO()
+    workbook.save(buffer)
+    buffer.seek(0)
+    filename = f"maestro_payments_center_{center_id}_{datetime.now(timezone.utc).strftime('%Y%m%d_%H%M%S')}.xlsx"
+    headers = {"Content-Disposition": f'attachment; filename="{filename}"'}
+    return StreamingResponse(
+        buffer,
+        media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        headers=headers,
+    )
+def _moyasar_extract_invoice_id(payload: object) -> str | None:
+    if not isinstance(payload, dict):
+        return None
+    pid = payload.get("id")
+    if isinstance(pid, str) and len(pid) > 10:
+        return pid
+    data = payload.get("data")
+    if isinstance(data, dict) and data.get("id"):
+        return str(data["id"])
+    inv = payload.get("invoice")
+    if isinstance(inv, dict) and inv.get("id"):
+        return str(inv["id"])
+    return str(pid) if pid else None
+@api_router.post("/seed-demo")
+def seed_demo(
+    request: Request,
+    x_seed_demo_key: str = Header(default="", alias="X-Seed-Demo-Key"),
+    db: Session = Depends(get_db),
+):
+    if SEED_DEMO_KEY:
+        if x_seed_demo_key.strip() != SEED_DEMO_KEY:
+            raise HTTPException(status_code=403, detail="Forbidden")
+    elif not _is_local_client(request):
+        # Safe default: allow only local callers unless explicit key is configured.
+        raise HTTPException(status_code=403, detail="Forbidden")
+    center = ensure_demo_data(db)
+    return {
+        "message": "Demo data ready",
+        "center_id": center.id,
+    }
