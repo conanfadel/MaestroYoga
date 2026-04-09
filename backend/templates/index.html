@@ -4101,6 +4101,37 @@
       const CART_KEY = "maestro_cart_v1";
       const PAGE_CENTER_ID = {{ center_id|tojson }};
       const plansDetails = document.getElementById("plans-section-details");
+      var PUBLIC_CONTENT_VERSION = {{ public_content_version|tojson }};
+
+      (function initPublicAutoRefresh() {
+        if (!PAGE_CENTER_ID || !PUBLIC_CONTENT_VERSION || !window.fetch) return;
+        var timer = null;
+        var inFlight = false;
+        var intervalMs = 15000;
+        function check() {
+          if (inFlight) return;
+          if (document.visibilityState && document.visibilityState !== "visible") return;
+          inFlight = true;
+          fetch("/public/content-version?center_id=" + encodeURIComponent(String(PAGE_CENTER_ID)), {
+            method: "GET",
+            credentials: "same-origin",
+            cache: "no-store"
+          })
+            .then(function (r) { return r.ok ? r.json() : null; })
+            .then(function (data) {
+              if (!data || !data.version) return;
+              if (String(data.version) !== String(PUBLIC_CONTENT_VERSION)) {
+                window.location.reload();
+              }
+            })
+            .catch(function () {})
+            .finally(function () { inFlight = false; });
+        }
+        timer = setInterval(check, intervalMs);
+        document.addEventListener("visibilitychange", function () {
+          if (document.visibilityState === "visible") check();
+        });
+      })();
 
       function announceCartItemAdded() {
         var cart = loadCart();

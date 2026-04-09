@@ -7,6 +7,7 @@ from collections import defaultdict
 from datetime import date, datetime, timedelta
 import os
 from pathlib import Path
+import hashlib
 from typing import Any
 from urllib.parse import urlencode, urlparse
 
@@ -1053,6 +1054,64 @@ def _index_preconnect_origins(
     return out
 
 
+def _public_center_content_version(db: Session, center_id: int) -> str:
+    center = db.get(models.Center, center_id)
+    if not center:
+        return "missing-center"
+    sessions_count = (
+        db.query(func.count(models.YogaSession.id)).filter(models.YogaSession.center_id == center_id).scalar() or 0
+    )
+    sessions_max_id = (
+        db.query(func.max(models.YogaSession.id)).filter(models.YogaSession.center_id == center_id).scalar() or 0
+    )
+    rooms_count = db.query(func.count(models.Room.id)).filter(models.Room.center_id == center_id).scalar() or 0
+    rooms_max_id = db.query(func.max(models.Room.id)).filter(models.Room.center_id == center_id).scalar() or 0
+    plans_count = (
+        db.query(func.count(models.SubscriptionPlan.id)).filter(models.SubscriptionPlan.center_id == center_id).scalar() or 0
+    )
+    plans_max_id = (
+        db.query(func.max(models.SubscriptionPlan.id)).filter(models.SubscriptionPlan.center_id == center_id).scalar() or 0
+    )
+    plans_active_count = (
+        db.query(func.count(models.SubscriptionPlan.id))
+        .filter(models.SubscriptionPlan.center_id == center_id, models.SubscriptionPlan.is_active.is_(True))
+        .scalar()
+        or 0
+    )
+    faq_count = db.query(func.count(models.FAQItem.id)).filter(models.FAQItem.center_id == center_id).scalar() or 0
+    faq_latest_upd = (
+        db.query(func.max(models.FAQItem.updated_at)).filter(models.FAQItem.center_id == center_id).scalar() or ""
+    )
+    post_count = db.query(func.count(models.CenterPost.id)).filter(models.CenterPost.center_id == center_id).scalar() or 0
+    post_latest_upd = (
+        db.query(func.max(models.CenterPost.updated_at)).filter(models.CenterPost.center_id == center_id).scalar() or ""
+    )
+    payload = "|".join(
+        [
+            str(center.id),
+            center.name or "",
+            center.city or "",
+            center.logo_url or "",
+            center.brand_tagline or "",
+            center.hero_image_url or "",
+            "1" if center.hero_show_stock_photo else "0",
+            center.index_config_json or "",
+            str(sessions_count),
+            str(sessions_max_id),
+            str(rooms_count),
+            str(rooms_max_id),
+            str(plans_count),
+            str(plans_max_id),
+            str(plans_active_count),
+            str(faq_count),
+            str(faq_latest_upd),
+            str(post_count),
+            str(post_latest_upd),
+        ]
+    )
+    return hashlib.sha256(payload.encode("utf-8")).hexdigest()[:16]
+
+
 @router.get("/index", response_class=HTMLResponse)
 def public_index(
     request: Request,
@@ -1289,10 +1348,16 @@ def public_index(
             ),
             "loyalty_program_rows": loyalty_program_table_rows(center),
             "feedback_enabled": bool(feedback_destination_email()) and validate_mailer_settings()[0],
+            "public_content_version": _public_center_content_version(db, center.id),
             **loyalty_ctx,
             **_analytics_context("index", center_id=str(center.id)),
         },
     )
+
+
+@router.get("/public/content-version")
+def public_content_version(center_id: int = 1, db: Session = Depends(get_db)):
+    return {"center_id": center_id, "version": _public_center_content_version(db, center_id)}
 
 
 @router.post("/public/feedback")
