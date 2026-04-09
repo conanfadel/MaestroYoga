@@ -93,6 +93,38 @@
       cursor: pointer;
       font-family: inherit;
     }
+    .danger-zone {
+      margin-top: 18px;
+      padding: 12px 14px;
+      border-radius: 12px;
+      border: 1px solid rgba(239, 68, 68, 0.35);
+      background: #fff7f7;
+    }
+    .danger-zone__title {
+      margin: 0 0 6px;
+      font-size: 0.92rem;
+      font-weight: 800;
+      color: #991b1b;
+    }
+    .danger-zone__hint {
+      margin: 0 0 10px;
+      font-size: 0.84rem;
+      line-height: 1.55;
+      color: #7f1d1d;
+    }
+    .btn-danger {
+      width: 100%;
+      margin-top: 0;
+      padding: 11px 12px;
+      border: 1px solid rgba(220, 38, 38, 0.45);
+      border-radius: 999px;
+      background: linear-gradient(120deg, #ef4444, #dc2626);
+      color: #fff;
+      font-weight: 800;
+      font-size: 0.95rem;
+      cursor: pointer;
+      font-family: inherit;
+    }
     .alert {
       margin-bottom: 14px;
       padding: 12px 14px;
@@ -234,6 +266,18 @@
       {% if request.query_params.get('msg') == 'phone_exists' %}
         <div class="alert warn">رقم الجوال مستخدم من حساب آخر.</div>
       {% endif %}
+      {% if request.query_params.get('msg') == 'delete_mail_sent' %}
+        <div class="alert ok">أرسلنا رسالة تأكيد حذف الحساب إلى بريدك. افتح الرسالة واضغط رابط التأكيد لإتمام الحذف.</div>
+      {% endif %}
+      {% if request.query_params.get('msg') == 'delete_mail_failed' %}
+        <div class="alert warn">تعذر إرسال رسالة تأكيد حذف الحساب الآن. حاول لاحقًا.</div>
+      {% endif %}
+      {% if request.query_params.get('msg') == 'delete_rate_limited' %}
+        <div class="alert warn">تم تجاوز عدد طلبات حذف الحساب. حاول بعد قليل.</div>
+      {% endif %}
+      {% if request.query_params.get('msg') == 'delete_invalid_link' %}
+        <div class="alert warn">رابط تأكيد حذف الحساب غير صالح أو منتهي الصلاحية.</div>
+      {% endif %}
 
       <form method="post" action="/public/account">
         <input type="hidden" name="next" value="{{ next }}" />
@@ -259,6 +303,13 @@
         </div>
 
         <button type="submit">حفظ التعديلات</button>
+      </form>
+
+      <form method="post" action="/public/account/delete/request" class="danger-zone">
+        <input type="hidden" name="next" value="{{ next }}" />
+        <p class="danger-zone__title">حذف الحساب</p>
+        <p class="danger-zone__hint">سيتم إرسال رابط تأكيد إلى بريدك الإلكتروني، ولن يتم الحذف إلا بعد الضغط على الرابط في البريد.</p>
+        <button type="submit" class="btn-danger">طلب حذف الحساب</button>
       </form>
 
       <div class="links">

@@ -44,6 +44,7 @@ from .loyalty import (
 )
 from .mailer import (
     feedback_destination_email,
+    queue_account_delete_confirmation_email,
     queue_email_verification_email,
     queue_password_reset_email,
     send_mail_with_attachments,
@@ -56,9 +57,11 @@ from .security_audit import log_security_event
 from .security import (
     create_access_token,
     create_public_access_token,
+    create_public_account_delete_token,
     create_public_email_verification_token,
     create_public_email_verify_flash_token,
     create_public_password_reset_token,
+    decode_public_account_delete_token,
     decode_public_email_verification_token,
     decode_public_email_verify_flash_token,
     decode_public_password_reset_token,
@@ -400,6 +403,15 @@ def _build_reset_url(request: Request, user: models.PublicUser) -> str:
     token = create_public_password_reset_token(user.id, user.email)
     query = urlencode({"token": token})
     return f"{_public_base(request)}/public/reset-password?{query}"
+
+
+def _build_account_delete_confirm_url(
+    request: Request, user: models.PublicUser, next_url: str = PUBLIC_INDEX_DEFAULT_PATH
+) -> str:
+    token = create_public_account_delete_token(user.id, user.email)
+    safe_next = _sanitize_next_url(next_url)
+    query = urlencode({"token": token, "next": safe_next})
+    return f"{_public_base(request)}/public/account/delete/confirm?{query}"
 
 
 def _request_key(request: Request, prefix: str, identity: str = "") -> str:
@@ -2273,6 +2285,101 @@ def public_account_update(
         url=_url_with_params("/public/account", msg="saved", next=safe_next),
         status_code=303,
     )
+
+
+@router.post("/public/account/delete/request")
+def public_account_delete_request(
+    request: Request,
+    next: str = Form(PUBLIC_INDEX_DEFAULT_PATH),
+    db: Session = Depends(get_db),
+):
+    safe_next = _sanitize_next_url(next)
+    if _is_ip_blocked(db, request):
+        return _public_login_redirect(next_url=safe_next, msg="ip_blocked")
+    user = _current_public_user(request, db)
+    if not user:
+        return _public_login_redirect(next_url=safe_next)
+    delete_key = _request_key(request, "public_account_delete_request", user.email.lower())
+    if not rate_limiter.allow(
+        delete_key,
+        limit=3,
+        window_seconds=600,
+        lockout_seconds=900,
+        max_lockout_seconds=MAX_LOCKOUT_SECONDS,
+    ):
+        log_security_event("public_account_delete_request", request, "rate_limited", email=user.email)
+        return RedirectResponse(
+            url=_url_with_params("/public/account", msg="delete_rate_limited", next=safe_next),
+            status_code=303,
+        )
+    confirm_url = _build_account_delete_confirm_url(request, user, safe_next)
+    queued, mail_info = queue_account_delete_confirmation_email(user.email, confirm_url, full_name=user.full_name)
+    if not queued:
+        log_security_event(
+            "public_account_delete_request",
+            request,
+            "mail_failed",
+            email=user.email,
+            details={"mail_error": mail_info[:200]},
+        )
+        return RedirectResponse(
+            url=_url_with_params("/public/account", msg="delete_mail_failed", next=safe_next),
+            status_code=303,
+        )
+    log_security_event(
+        "public_account_delete_request",
+        request,
+        "success",
+        email=user.email,
+        details={"mail_status": "sent"},
+    )
+    return RedirectResponse(
+        url=_url_with_params("/public/account", msg="delete_mail_sent", next=safe_next),
+        status_code=303,
+    )
+
+
+@router.get("/public/account/delete/confirm")
+def public_account_delete_confirm(
+    request: Request,
+    token: str = "",
+    next: str = PUBLIC_INDEX_DEFAULT_PATH,
+    db: Session = Depends(get_db),
+):
+    token_value = token.strip().strip("<>").strip('"').strip("'")
+    safe_next = _sanitize_next_url(next)
+    if not token_value:
+        return RedirectResponse(
+            url=_url_with_params("/public/account", msg="delete_invalid_link", next=safe_next),
+            status_code=303,
+        )
+    try:
+        payload = decode_public_account_delete_token(token_value)
+        user_id = int(payload.get("sub"))
+    except (HTTPException, ValueError, TypeError):
+        return RedirectResponse(
+            url=_url_with_params("/public/account", msg="delete_invalid_link", next=safe_next),
+            status_code=303,
+        )
+    token_email = str(payload.get("email", "")).strip().lower()
+    user = db.get(models.PublicUser, user_id)
+    if not user or user.is_deleted or user.email.lower().strip() != token_email:
+        return RedirectResponse(
+            url=_url_with_params("/public/account", msg="delete_invalid_link", next=safe_next),
+            status_code=303,
+        )
+    _soft_delete_public_user(user)
+    db.commit()
+    log_security_event(
+        "public_account_delete_confirm",
+        request,
+        "success",
+        email=token_email,
+        details={"public_user_id": user_id},
+    )
+    response = RedirectResponse(url=public_index_url_from_next(safe_next, msg="account_deleted"), status_code=303)
+    response.delete_cookie(PUBLIC_COOKIE_NAME)
+    return response
 
 
 @router.get("/public/verify-pending", response_class=HTMLResponse)

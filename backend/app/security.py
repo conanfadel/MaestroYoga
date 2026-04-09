@@ -22,6 +22,7 @@ PUBLIC_SESSION_EXPIRES_MINUTES = int(os.getenv("PUBLIC_SESSION_EXPIRES_MINUTES",
 PUBLIC_EMAIL_VERIFY_EXPIRES_MINUTES = int(os.getenv("PUBLIC_EMAIL_VERIFY_EXPIRES_MINUTES", "30"))
 PUBLIC_EMAIL_VERIFY_FLASH_EXPIRES_MINUTES = int(os.getenv("PUBLIC_EMAIL_VERIFY_FLASH_EXPIRES_MINUTES", "30"))
 PUBLIC_PASSWORD_RESET_EXPIRES_MINUTES = int(os.getenv("PUBLIC_PASSWORD_RESET_EXPIRES_MINUTES", "30"))
+PUBLIC_ACCOUNT_DELETE_EXPIRES_MINUTES = int(os.getenv("PUBLIC_ACCOUNT_DELETE_EXPIRES_MINUTES", "30"))
 APP_ENV = os.getenv("APP_ENV", "development").strip().lower()
 _INSECURE_SECRET_VALUES = {
     "",
@@ -212,6 +213,28 @@ def decode_public_password_reset_token(token: str) -> dict:
     except JWTError:
         raise invalid
     if payload.get("purpose") != "public_password_reset":
+        raise invalid
+    return payload
+
+
+def create_public_account_delete_token(public_user_id: int, email: str) -> str:
+    expire = datetime.now(timezone.utc) + timedelta(minutes=PUBLIC_ACCOUNT_DELETE_EXPIRES_MINUTES)
+    payload = {
+        "sub": str(public_user_id),
+        "email": email.lower(),
+        "purpose": "public_account_delete",
+        "exp": expire,
+    }
+    return jwt.encode(payload, PUBLIC_JWT_SECRET, algorithm=JWT_ALGORITHM)
+
+
+def decode_public_account_delete_token(token: str) -> dict:
+    invalid = HTTPException(status_code=400, detail="Invalid or expired account-delete link")
+    try:
+        payload = jwt.decode(token, PUBLIC_JWT_SECRET, algorithms=[JWT_ALGORITHM])
+    except JWTError:
+        raise invalid
+    if payload.get("purpose") != "public_account_delete":
         raise invalid
     return payload
 

@@ -634,3 +634,45 @@ def queue_password_reset_email(to_email: str, reset_url: str, full_name: str = "
     if not sent_ok:
         print(f"[MAILER][ERROR] password_reset send failed: {sent_reason}")
     return sent_ok, sent_reason
+
+
+def send_account_delete_confirmation_email(to_email: str, confirm_url: str, full_name: str = "") -> tuple[bool, str]:
+    app_name = os.getenv("APP_NAME", "Maestro Yoga")
+    recipient_name = full_name.strip() or "there"
+    try:
+        mins = max(5, int(os.getenv("PUBLIC_ACCOUNT_DELETE_EXPIRES_MINUTES", "30")))
+    except ValueError:
+        mins = 30
+    foot_note = (
+        f"صلاحية رابط الحذف نحو {mins} دقيقة. بعد التأكيد سيتم حذف الحساب من الوصول العام فوراً."
+    )
+    subject = f"{app_name} - تأكيد حذف الحساب"
+    body = (
+        f"مرحبًا،\n\n"
+        f"استلمنا طلبًا لحذف حسابك في {app_name}.\n"
+        f"للتأكيد افتح الرابط التالي:\n{confirm_url}\n\n"
+        f"{foot_note}\n\n"
+        "إذا لم تطلب حذف الحساب، تجاهل هذه الرسالة."
+    )
+    html_body = _brand_email_html(
+        app_name=app_name,
+        title="تأكيد حذف الحساب",
+        recipient_name=recipient_name,
+        intro="وصلك طلب حذف حسابك. لحماية حسابك، لن يتم الحذف إلا بعد الضغط على زر التأكيد من هذه الرسالة.",
+        cta_label="تأكيد حذف الحساب",
+        cta_url=confirm_url,
+        foot_note=foot_note,
+    )
+    return _send_mail(to_email, subject, body, html_body=html_body)
+
+
+def queue_account_delete_confirmation_email(to_email: str, confirm_url: str, full_name: str = "") -> tuple[bool, str]:
+    ok, reason = validate_mailer_settings()
+    if not ok:
+        print(f"[MAILER][CONFIG] account_delete blocked: {reason}")
+        return False, reason
+    # متزامن لإرجاع حالة دقيقة للمستخدم مباشرة.
+    sent_ok, sent_reason = send_account_delete_confirmation_email(to_email, confirm_url, full_name)
+    if not sent_ok:
+        print(f"[MAILER][ERROR] account_delete send failed: {sent_reason}")
+    return sent_ok, sent_reason
