@@ -58,6 +58,7 @@ from .public_auth_helpers import (
     queue_verify_email_for_user,
 )
 from .public_content_version import compute_public_center_content_version
+from .public_sessions_helpers import build_public_session_rows
 from .rate_limiter import rate_limiter
 from .request_ip import get_client_ip
 from .security_audit import log_security_event
@@ -79,7 +80,6 @@ from .time_utils import utcnow_naive
 from .web_shared import (
     _cookie_secure_flag,
     _fmt_dt,
-    _fmt_dt_weekday_ar,
     _is_email_verification_required,
     _is_strong_public_password,
     _is_truthy_env,
@@ -1062,34 +1062,7 @@ def public_index(
             for r in db.query(models.Room).filter(models.Room.center_id == center.id, models.Room.id.in_(room_ids)).all()
         }
     spots_by_session = _spots_available_map(db, center.id, [int(s.id) for s in sessions])
-    rows = []
-    level_labels = {
-        "beginner": "مبتدئ",
-        "intermediate": "متوسط",
-        "advanced": "متقدم",
-    }
-    for s in sessions:
-        room = rooms_by_id.get(s.room_id)
-        starts = s.starts_at
-        dur = int(s.duration_minutes or 0)
-        ends = (starts + timedelta(minutes=dur)) if starts else None
-        rows.append(
-            {
-                "id": s.id,
-                "title": s.title,
-                "trainer_name": s.trainer_name,
-                "level": s.level,
-                "level_label": level_labels.get(s.level, s.level),
-                "starts_at": s.starts_at,
-                "starts_at_display": _fmt_dt_weekday_ar(s.starts_at),
-                "starts_at_iso": starts.isoformat() if starts else "",
-                "ends_at_iso": ends.isoformat() if ends else "",
-                "duration_minutes": s.duration_minutes,
-                "price_drop_in": s.price_drop_in,
-                "room_name": room.name if room else "-",
-                "spots_available": spots_by_session.get(int(s.id), 0),
-            }
-        )
+    rows = build_public_session_rows(sessions, rooms_by_id, spots_by_session)
 
     plans = (
         db.query(models.SubscriptionPlan)
