@@ -1,0 +1,49 @@
+      <section id="center-news-section" class="card index-news-showcase" aria-label="ما الجديد في المركز">
+        <div class="index-news-showcase__head">
+          <h2 class="booking-block-heading booking-block-heading--flush-top">ما الجديد في المركز</h2>
+          <a class="btn ghost index-news-showcase__all" href="{{ public_news_list_url }}">جميع الأخبار</a>
+        </div>
+        <p class="index-news-showcase__lead">آخر المنشورات والإعلانات بعد الجلسات — اختر بطاقة للتفاصيل والصور.</p>
+        <div class="index-news-showcase__grid">
+          {% if pinned_public_post %}
+          <a class="index-news-card index-news-card--featured reveal-on-scroll" href="{{ pinned_public_post.detail_url }}">
+            <div class="index-news-card__media">
+              {% if pinned_public_post.cover_image_url %}
+              <img src="{{ pinned_public_post.cover_image_url }}" alt="" decoding="async" loading="lazy" />
+              {% endif %}
+            </div>
+            <div class="index-news-card__body">
+              <span class="index-news-card__badge">مثبّت · {{ pinned_public_post.type_label }}</span>
+              <h3 class="booking-block-heading index-news-card__title">{{ pinned_public_post.title }}</h3>
+              {% if pinned_public_post.summary_short %}
+              <p class="index-news-card__summary">{{ pinned_public_post.summary_short }}</p>
+              {% endif %}
+            </div>
+          </a>
+          {% endif %}
+          {% for t in public_posts_teasers %}
+          <a class="index-news-card reveal-on-scroll" href="{{ t.detail_url }}">
+            <div class="index-news-card__media">
+              {% if t.cover_image_url %}
+              <img src="{{ t.cover_image_url }}" alt="" decoding="async" loading="lazy" />
+              {% endif %}
+            </div>
+            <div class="index-news-card__body">
+              <span class="index-news-card__badge">{{ t.type_label }}</span>
+              <h3 class="booking-block-heading index-news-card__title">{{ t.title }}</h3>
+              {% if t.summary %}
+              <p class="index-news-card__summary">{{ t.summary }}</p>
+              {% endif %}
+              {% if t.published_at_display %}
+              <span class="index-news-card__date">{{ t.published_at_display }}</span>
+              {% endif %}
+            </div>
+          </a>
+          {% endfor %}
+        </div>
+        {% if public_news_has_more %}
+        <p class="index-news-showcase__more">
+          <a class="btn ghost" href="{{ public_news_list_url }}">عرض المزيد من المنشورات</a>
+        </p>
+        {% endif %}
+      </section>

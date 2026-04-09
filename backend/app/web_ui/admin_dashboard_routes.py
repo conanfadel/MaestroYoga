@@ -48,13 +48,13 @@ def register_admin_dashboard_routes(router: APIRouter) -> None:
         room_ordering = {
             "id_asc": (_s.models.Room.id.asc(),),
             "name": (_s.models.Room.name.asc(), _s.models.Room.id.asc()),
-            "newest": (_s.models.Room.id._s.desc(),),
-            "capacity_desc": (_s.models.Room.capacity._s.desc(), _s.models.Room.name.asc(), _s.models.Room.id.asc()),
+            "newest": (_s.models.Room.id.desc(),),
+            "capacity_desc": (_s.models.Room.capacity.desc(), _s.models.Room.name.asc(), _s.models.Room.id.asc()),
             "capacity_asc": (_s.models.Room.capacity.asc(), _s.models.Room.name.asc(), _s.models.Room.id.asc()),
         }
         if room_sort_key in {"sessions_desc", "sessions_asc"}:
             session_count_order = (
-                _s.func.count(_s.models.YogaSession.id)._s.desc()
+                _s.func.count(_s.models.YogaSession.id).desc()
                 if room_sort_key == "sessions_desc"
                 else _s.func.count(_s.models.YogaSession.id).asc()
             )
@@ -105,7 +105,7 @@ def register_admin_dashboard_routes(router: APIRouter) -> None:
             sessions_page_size,
         )
         sessions = (
-            sessions_base_query.order_by(_s.models.YogaSession.starts_at._s.desc())
+            sessions_base_query.order_by(_s.models.YogaSession.starts_at.desc())
             .offset(sessions_offset)
             .limit(sessions_page_size)
             .all()
@@ -152,7 +152,7 @@ def register_admin_dashboard_routes(router: APIRouter) -> None:
             public_users_page_size,
         )
         public_users = (
-            public_users_query.order_by(_s.models.PublicUser.created_at._s.desc())
+            public_users_query.order_by(_s.models.PublicUser.created_at.desc())
             .offset(public_users_offset)
             .limit(public_users_page_size)
             .all()
@@ -173,7 +173,7 @@ def register_admin_dashboard_routes(router: APIRouter) -> None:
             public_users_page_size,
         )
         trash_users_list = (
-            trash_base.order_by(_s.models.PublicUser.deleted_at._s.desc(), _s.models.PublicUser.id._s.desc())
+            trash_base.order_by(_s.models.PublicUser.deleted_at.desc(), _s.models.PublicUser.id.desc())
             .offset(trash_offset)
             .limit(public_users_page_size)
             .all()
@@ -399,7 +399,7 @@ def register_admin_dashboard_routes(router: APIRouter) -> None:
             }
             for ev in db.query(_s.models.SecurityAuditEvent)
             .filter(_s.models.SecurityAuditEvent.event_type == "admin_login")
-            .order_by(_s.models.SecurityAuditEvent.created_at._s.desc())
+            .order_by(_s.models.SecurityAuditEvent.created_at.desc())
             .limit(20)
             .all()
         ]
@@ -494,7 +494,7 @@ def register_admin_dashboard_routes(router: APIRouter) -> None:
             payments_page_size,
         )
         recent_payments = (
-            payments_base_query.order_by(_s.models.Payment.paid_at._s.desc())
+            payments_base_query.order_by(_s.models.Payment.paid_at.desc())
             .offset(payments_offset)
             .limit(payments_page_size)
             .all()
@@ -590,7 +590,7 @@ def register_admin_dashboard_routes(router: APIRouter) -> None:
             audit_page_size,
         )
         security_events = (
-            audit_query.order_by(_s.models.SecurityAuditEvent.created_at._s.desc())
+            audit_query.order_by(_s.models.SecurityAuditEvent.created_at.desc())
             .offset(security_events_offset)
             .limit(audit_page_size)
             .all()
@@ -627,7 +627,7 @@ def register_admin_dashboard_routes(router: APIRouter) -> None:
             )
             .group_by(_s.models.SecurityAuditEvent.ip)
             .having(_s.func.count(_s.models.SecurityAuditEvent.id) >= 5)
-            .order_by(_s.func.count(_s.models.SecurityAuditEvent.id)._s.desc())
+            .order_by(_s.func.count(_s.models.SecurityAuditEvent.id).desc())
             .limit(5)
             .all()
         )
@@ -637,7 +637,7 @@ def register_admin_dashboard_routes(router: APIRouter) -> None:
                 _s.models.BlockedIP.is_active.is_(True),
                 _s.or_(_s.models.BlockedIP.blocked_until.is_(None), _s.models.BlockedIP.blocked_until > _s.utcnow_naive()),
             )
-            .order_by(_s.models.BlockedIP.created_at._s.desc())
+            .order_by(_s.models.BlockedIP.created_at.desc())
             .limit(20)
             .all()
         )
@@ -667,7 +667,7 @@ def register_admin_dashboard_routes(router: APIRouter) -> None:
         block_history_events = (
             db.query(_s.models.SecurityAuditEvent)
             .filter(_s.models.SecurityAuditEvent.event_type.in_(["admin_ip_block", "admin_ip_unblock"]))
-            .order_by(_s.models.SecurityAuditEvent.created_at._s.desc())
+            .order_by(_s.models.SecurityAuditEvent.created_at.desc())
             .limit(120)
             .all()
         )
@@ -757,7 +757,7 @@ def register_admin_dashboard_routes(router: APIRouter) -> None:
         center_posts_base_query = (
             db.query(_s.models.CenterPost)
             .filter(_s.models.CenterPost.center_id == cid)
-            .order_by(_s.models.CenterPost.updated_at._s.desc())
+            .order_by(_s.models.CenterPost.updated_at.desc())
         )
         center_posts_total = center_posts_base_query.order_by(None).count()
         safe_center_posts_page, center_posts_total_pages, center_posts_offset = _normalize_page(
