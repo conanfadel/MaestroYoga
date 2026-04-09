@@ -95,6 +95,22 @@ def build_public_news_list_rows(*, posts: list, center_id: int, type_labels: dic
     return rows
 
 
+def build_public_news_filter_options(
+    *,
+    post_types: set[str],
+    type_labels: dict[str, str],
+    sort_modes: set[str],
+) -> tuple[list[tuple[str, str]], list[tuple[str, str]]]:
+    post_type_filter_options = [("", "كل الأنواع")] + [(k, type_labels[k]) for k in sorted(post_types)]
+    default_sort_labels = {
+        "newest": "الأحدث نشراً",
+        "oldest": "الأقدم نشراً",
+        "recent": "آخر إضافة",
+    }
+    sort_filter_options = [(k, default_sort_labels.get(k, k)) for k in ("newest", "oldest", "recent") if k in sort_modes]
+    return post_type_filter_options, sort_filter_options
+
+
 def index_preconnect_origins(
     request,
     center,

@@ -60,6 +60,7 @@ from .public_auth_helpers import (
 )
 from .public_content_version import compute_public_center_content_version
 from .public_news_helpers import (
+    build_public_news_filter_options,
     build_public_news_list_rows,
     build_public_posts_blocks,
     index_preconnect_origins,
@@ -1265,12 +1266,11 @@ def public_news_list(
     posts = q.all()
     news_rows = build_public_news_list_rows(posts=posts, center_id=center_id, type_labels=CENTER_POST_TYPE_LABELS)
 
-    post_type_filter_options = [("", "كل الأنواع")] + [(k, CENTER_POST_TYPE_LABELS[k]) for k in sorted(CENTER_POST_TYPES)]
-    sort_filter_options = [
-        ("newest", "الأحدث نشراً"),
-        ("oldest", "الأقدم نشراً"),
-        ("recent", "آخر إضافة"),
-    ]
+    post_type_filter_options, sort_filter_options = build_public_news_filter_options(
+        post_types=CENTER_POST_TYPES,
+        type_labels=CENTER_POST_TYPE_LABELS,
+        sort_modes=NEWS_LIST_SORT_MODES,
+    )
 
     return templates.TemplateResponse(
         request,
