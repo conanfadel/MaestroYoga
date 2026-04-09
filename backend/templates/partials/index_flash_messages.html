@@ -1,0 +1,24 @@
+{% if payment == 'success' %}<div class="alert">تم إتمام الدفع بنجاح. تم تأكيد طلبك.</div>{% endif %}
+{% if payment == 'cancelled' %}<div class="alert warn">تم إلغاء عملية الدفع. يمكنك المحاولة مرة أخرى.</div>{% endif %}
+{% if msg == 'email_verified' %}<div class="alert">تم تأكيد البريد بنجاح. يمكنك الآن إكمال الحجز والدفع.</div>{% endif %}
+{% if msg == 'logged_out' %}<div class="alert">تم تسجيل الخروج بنجاح.</div>{% endif %}
+{% if msg == 'auth_required' %}<div class="alert warn">الرجاء تسجيل الدخول أولًا قبل الحجز أو الاشتراك.</div>{% endif %}
+{% if msg == 'ip_blocked' %}<div class="alert err">تم حظر هذا الـ IP مؤقتًا لأسباب أمنية. حاول لاحقًا أو تواصل مع الإدارة.</div>{% endif %}
+{% if msg == 'full' %}<div class="alert err">لا توجد أماكن متاحة في هذه الجلسة.</div>{% endif %}
+{% if msg == 'duplicate' %}<div class="alert err">لديك حجز فعّال لهذه الجلسة بالفعل.</div>{% endif %}
+{% if msg == 'paid_mock' %}<div class="alert">تم تأكيد الحجز (وضع تجريبي للدفع).</div>{% endif %}
+{% if msg == 'subscribed' or msg == 'subscribed_mock' %}<div class="alert">تم تفعيل الاشتراك بنجاح، أهلًا بك في رحلتك الصحية.</div>{% endif %}
+{% if msg == 'subscription_cancelled' %}<div class="alert warn">لم يكتمل دفع الاشتراك.</div>{% endif %}
+{% if msg == 'stripe_error' %}<div class="alert err">تعذر بدء الدفع عبر Stripe. تحقق من المفاتيح.</div>{% endif %}
+{% if msg == 'stripe_no_url' %}<div class="alert err">لم يتم استلام رابط الدفع من Stripe.</div>{% endif %}
+{% if msg == 'cart_empty' %}<div class="alert warn">السلة فارغة. أضف جلسات أو خطة ثم أعد المحاولة.</div>{% endif %}
+{% if msg == 'cart_invalid' %}<div class="alert err">تعذر قراءة السلة. أعد تحميل الصفحة وحاول مرة أخرى.</div>{% endif %}
+{% if msg == 'cart_too_many' %}<div class="alert warn">تجاوزت السلة الحد المسموح للجلسات في طلب واحد.</div>{% endif %}
+{% if msg == 'cart_session_full' %}<div class="alert err">إحدى الجلسات في السلة لم تعد متاحة. حدّث السلة وحاول مرة أخرى.</div>{% endif %}
+{% if msg == 'feedback_sent' %}<div class="alert">تم إرسال رسالتك. شكرًا لتواصلك معنا.</div>{% endif %}
+{% if msg == 'feedback_error' %}<div class="alert err">تعذر إرسال الرسالة. حاول لاحقًا أو تواصل مع المركز مباشرة.</div>{% endif %}
+{% if msg == 'feedback_auth_required' %}<div class="alert warn">يجب تسجيل الدخول لإرسال الملاحظات من صفحة الحجز.</div>{% endif %}
+{% if msg == 'feedback_unavailable' %}<div class="alert warn">خدمة إرسال الملاحظات غير مفعّلة حاليًا على الخادم.</div>{% endif %}
+{% if msg == 'feedback_rate_limited' %}<div class="alert warn">تم تجاوز عدد المحاولات المسموح. حاول لاحقًا.</div>{% endif %}
+{% if msg == 'feedback_bad_image' %}<div class="alert err">صيغة الصورة غير مدعومة. استخدم JPG أو PNG أو WebP أو GIF.</div>{% endif %}
+{% if msg == 'feedback_image_too_large' %}<div class="alert err">حجم أحد الملفات كبير جدًا. قلّل الحجم أو أزل بعض الصور.</div>{% endif %}

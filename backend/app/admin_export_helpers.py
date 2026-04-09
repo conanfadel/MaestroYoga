@@ -147,3 +147,34 @@ def build_security_events_csv_content(events) -> str:
     content = output.getvalue()
     output.close()
     return content
+
+
+def build_security_events_filtered_query(
+    *,
+    db,
+    models_module,
+    func_module,
+    parse_optional_date_fn,
+    audit_event_type: str,
+    audit_status: str,
+    audit_email: str,
+    audit_ip: str,
+    audit_date_from: str,
+    audit_date_to: str,
+):
+    query = db.query(models_module.SecurityAuditEvent)
+    df = parse_optional_date_fn(audit_date_from.strip() or None)
+    dt = parse_optional_date_fn(audit_date_to.strip() or None)
+    if df:
+        query = query.filter(func_module.date(models_module.SecurityAuditEvent.created_at) >= df)
+    if dt:
+        query = query.filter(func_module.date(models_module.SecurityAuditEvent.created_at) <= dt)
+    if audit_event_type.strip():
+        query = query.filter(models_module.SecurityAuditEvent.event_type == audit_event_type.strip())
+    if audit_status.strip():
+        query = query.filter(models_module.SecurityAuditEvent.status == audit_status.strip())
+    if audit_email.strip():
+        query = query.filter(models_module.SecurityAuditEvent.email.ilike(f"%{audit_email.strip().lower()}%"))
+    if audit_ip.strip():
+        query = query.filter(models_module.SecurityAuditEvent.ip.ilike(f"%{audit_ip.strip()}%"))
+    return query

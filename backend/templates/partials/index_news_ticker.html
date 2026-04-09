@@ -1,0 +1,20 @@
+{% if index_page.news_ticker.show and news_ticker_items %}
+<div class="news-ticker-bar" role="region" aria-label="عناوين أخبار سريعة — اضغط للانتقال للخبر">
+  <span class="news-ticker-bar__label">آخر الأخبار</span>
+  <div class="news-ticker">
+    <div class="news-ticker__track">
+      <div class="news-ticker__group">
+        {% for it in news_ticker_items %}
+        <a class="news-ticker__link" href="{{ it.detail_url }}"><span class="news-ticker__type">{{ it.type_label }}</span> {{ it.title }}</a>
+        {% endfor %}
+      </div>
+      <div class="news-ticker__group" aria-hidden="true">
+        {% for it in news_ticker_items %}
+        <a class="news-ticker__link" href="{{ it.detail_url }}" tabindex="-1"><span class="news-ticker__type">{{ it.type_label }}</span> {{ it.title }}</a>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+  <a class="news-ticker-bar__all" href="{{ public_news_list_url }}">جميع الأخبار</a>
+</div>
+{% endif %}

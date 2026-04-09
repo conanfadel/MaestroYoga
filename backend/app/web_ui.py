@@ -49,6 +49,7 @@ from .admin_export_helpers import (
     admin_user_for_export_permission,
     build_bookings_csv_content,
     build_payments_csv_content,
+    build_security_events_filtered_query,
     build_security_events_csv_content,
     clients_new_returning_for_range,
 )
@@ -4750,21 +4751,18 @@ def export_security_events_csv(
     if not user_has_permission(user, "security.audit"):
         return _security_owner_forbidden_redirect()
 
-    query = db.query(models.SecurityAuditEvent)
-    df = _parse_optional_date_str(audit_date_from.strip() or None)
-    dt = _parse_optional_date_str(audit_date_to.strip() or None)
-    if df:
-        query = query.filter(func.date(models.SecurityAuditEvent.created_at) >= df)
-    if dt:
-        query = query.filter(func.date(models.SecurityAuditEvent.created_at) <= dt)
-    if audit_event_type.strip():
-        query = query.filter(models.SecurityAuditEvent.event_type == audit_event_type.strip())
-    if audit_status.strip():
-        query = query.filter(models.SecurityAuditEvent.status == audit_status.strip())
-    if audit_email.strip():
-        query = query.filter(models.SecurityAuditEvent.email.ilike(f"%{audit_email.strip().lower()}%"))
-    if audit_ip.strip():
-        query = query.filter(models.SecurityAuditEvent.ip.ilike(f"%{audit_ip.strip()}%"))
+    query = build_security_events_filtered_query(
+        db=db,
+        models_module=models,
+        func_module=func,
+        parse_optional_date_fn=_parse_optional_date_str,
+        audit_event_type=audit_event_type,
+        audit_status=audit_status,
+        audit_email=audit_email,
+        audit_ip=audit_ip,
+        audit_date_from=audit_date_from,
+        audit_date_to=audit_date_to,
+    )
     events = query.order_by(models.SecurityAuditEvent.created_at.desc()).all()
 
     filename = f"security_audit_{utcnow_naive().strftime('%Y%m%d_%H%M%S')}.csv"
