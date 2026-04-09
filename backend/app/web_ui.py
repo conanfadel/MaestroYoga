@@ -58,6 +58,16 @@ from .public_auth_helpers import (
     public_user_from_verify_flash_token,
     queue_verify_email_for_user,
 )
+from .public_auth_flow_helpers import (
+    is_public_account_delete_request_rate_limited,
+    is_public_forgot_password_rate_limited,
+    is_public_resend_verification_rate_limited,
+    is_public_reset_password_rate_limited,
+    reset_password_validation_error,
+    resolve_public_account_delete_confirmation,
+    resolve_public_email_verification,
+    sanitize_public_token,
+)
 from .public_cart_helpers import (
     create_pending_single_booking_payment,
     build_cart_booking_bundle,
@@ -1762,15 +1772,14 @@ def public_account_delete_request(
     user = _current_public_user(request, db)
     if not user:
         return _public_login_redirect(next_url=safe_next)
-    delete_key = _request_key(request, "public_account_delete_request", user.email.lower())
-    if not rate_limiter.allow(
-        delete_key,
-        limit=3,
-        window_seconds=600,
-        lockout_seconds=900,
+    if is_public_account_delete_request_rate_limited(
+        request=request,
+        email=user.email,
+        request_key_fn=_request_key,
+        allow_fn=rate_limiter.allow,
         max_lockout_seconds=MAX_LOCKOUT_SECONDS,
+        log_security_event_fn=log_security_event,
     ):
-        log_security_event("public_account_delete_request", request, "rate_limited", email=user.email)
         return RedirectResponse(
             url=_url_with_params("/public/account", msg="delete_rate_limited", next=safe_next),
             status_code=303,
@@ -1809,26 +1818,17 @@ def public_account_delete_confirm(
     next: str = PUBLIC_INDEX_DEFAULT_PATH,
     db: Session = Depends(get_db),
 ):
-    token_value = token.strip().strip("<>").strip('"').strip("'")
+    token_value = sanitize_public_token(token)
     safe_next = _sanitize_next_url(next)
-    if not token_value:
+    user, err_msg = resolve_public_account_delete_confirmation(
+        token_value=token_value,
+        db=db,
+        decode_token_fn=decode_public_account_delete_token,
+        models_module=models,
+    )
+    if err_msg:
         return RedirectResponse(
-            url=_url_with_params("/public/account", msg="delete_invalid_link", next=safe_next),
-            status_code=303,
-        )
-    try:
-        payload = decode_public_account_delete_token(token_value)
-        user_id = int(payload.get("sub"))
-    except (HTTPException, ValueError, TypeError):
-        return RedirectResponse(
-            url=_url_with_params("/public/account", msg="delete_invalid_link", next=safe_next),
-            status_code=303,
-        )
-    token_email = str(payload.get("email", "")).strip().lower()
-    user = db.get(models.PublicUser, user_id)
-    if not user or user.is_deleted or user.email.lower().strip() != token_email:
-        return RedirectResponse(
-            url=_url_with_params("/public/account", msg="delete_invalid_link", next=safe_next),
+            url=_url_with_params("/public/account", msg=err_msg, next=safe_next),
             status_code=303,
         )
     _soft_delete_public_user(user)
@@ -1837,8 +1837,8 @@ def public_account_delete_confirm(
         "public_account_delete_confirm",
         request,
         "success",
-        email=token_email,
-        details={"public_user_id": user_id},
+        email=user.email,
+        details={"public_user_id": user.id},
     )
     response = RedirectResponse(url=public_index_url_from_next(safe_next, msg="account_deleted"), status_code=303)
     response.delete_cookie(PUBLIC_COOKIE_NAME)
@@ -1877,13 +1877,11 @@ def public_verify_pending(request: Request, next: str = PUBLIC_INDEX_DEFAULT_PAT
                 },
             )
             if (not user) or user.id != target.id:
-                response.set_cookie(
-                    key=PUBLIC_COOKIE_NAME,
-                    value=create_public_access_token(target.id),
-                    httponly=True,
-                    samesite="lax",
+                set_public_auth_cookie(
+                    response=response,
+                    cookie_name=PUBLIC_COOKIE_NAME,
+                    token=create_public_access_token(target.id),
                     secure=_cookie_secure_flag(request),
-                    max_age=60 * 60 * 24 * 7,
                 )
             return response
     if not user:
@@ -1917,15 +1915,13 @@ def public_resend_verification(
     safe_next = _sanitize_next_url(next)
     if _is_ip_blocked(db, request):
         return _public_login_redirect(next_url=safe_next, msg="ip_blocked")
-    resend_key = _request_key(request, "public_resend_verify")
-    if not rate_limiter.allow(
-        resend_key,
-        limit=6,
-        window_seconds=300,
-        lockout_seconds=300,
+    if is_public_resend_verification_rate_limited(
+        request=request,
+        request_key_fn=_request_key,
+        allow_fn=rate_limiter.allow,
         max_lockout_seconds=MAX_LOCKOUT_SECONDS,
+        log_security_event_fn=log_security_event,
     ):
-        log_security_event("public_resend_verification", request, "rate_limited")
         return RedirectResponse(
             url=_url_with_params("/public/verify-pending", msg="rate_limited", next=safe_next),
             status_code=303,
@@ -1979,29 +1975,17 @@ def public_verify_email(
     next: str = PUBLIC_INDEX_DEFAULT_PATH,
     db: Session = Depends(get_db),
 ):
-    token_value = token.strip().strip("<>").strip('"').strip("'")
+    token_value = sanitize_public_token(token)
     safe_next = _sanitize_next_url(next)
-    if not token_value:
-        return RedirectResponse(url=_url_with_params("/public/verify-pending", msg="invalid_link", next=safe_next), status_code=303)
-    try:
-        payload = decode_public_email_verification_token(token_value)
-    except HTTPException:
+    user, err_msg = resolve_public_email_verification(
+        token_value=token_value,
+        db=db,
+        decode_token_fn=decode_public_email_verification_token,
+        models_module=models,
+    )
+    if err_msg:
         return RedirectResponse(
-            url=_url_with_params("/public/verify-pending", msg="expired_link", next=safe_next),
-            status_code=303,
-        )
-    try:
-        user_id = int(payload.get("sub"))
-    except (TypeError, ValueError):
-        return RedirectResponse(
-            url=_url_with_params("/public/verify-pending", msg="invalid_link", next=safe_next),
-            status_code=303,
-        )
-    email = str(payload.get("email", "")).lower().strip()
-    user = db.get(models.PublicUser, user_id)
-    if not user or user.email.lower() != email or user.is_deleted:
-        return RedirectResponse(
-            url=_url_with_params("/public/verify-pending", msg="invalid_link", next=safe_next),
+            url=_url_with_params("/public/verify-pending", msg=err_msg, next=safe_next),
             status_code=303,
         )
     if not user.email_verified:
@@ -2013,13 +1997,11 @@ def public_verify_email(
         url=_url_with_params("/public/verify-pending", msg="email_verified", next=safe_next, vk=flash_token),
         status_code=303,
     )
-    response.set_cookie(
-        key=PUBLIC_COOKIE_NAME,
-        value=session_token,
-        httponly=True,
-        samesite="lax",
+    set_public_auth_cookie(
+        response=response,
+        cookie_name=PUBLIC_COOKIE_NAME,
+        token=session_token,
         secure=_cookie_secure_flag(request),
-        max_age=60 * 60 * 24 * 7,
     )
     log_security_event(
         "public_verify_email",
@@ -2045,15 +2027,14 @@ def public_forgot_password(
     if _is_ip_blocked(db, request):
         return _public_login_redirect(msg="ip_blocked")
     email_normalized = email.lower().strip()
-    forgot_key = _request_key(request, "public_forgot_password", email_normalized)
-    if not rate_limiter.allow(
-        forgot_key,
-        limit=5,
-        window_seconds=300,
-        lockout_seconds=600,
+    if is_public_forgot_password_rate_limited(
+        request=request,
+        email=email_normalized,
+        request_key_fn=_request_key,
+        allow_fn=rate_limiter.allow,
         max_lockout_seconds=MAX_LOCKOUT_SECONDS,
+        log_security_event_fn=log_security_event,
     ):
-        log_security_event("public_forgot_password", request, "rate_limited", email=email_normalized)
         return RedirectResponse(url="/public/forgot-password?msg=rate_limited", status_code=303)
 
     user = (
@@ -2119,29 +2100,26 @@ def public_reset_password(
 ):
     if _is_ip_blocked(db, request):
         return _public_login_redirect(msg="ip_blocked")
-    reset_key = _request_key(request, "public_reset_password")
-    if not rate_limiter.allow(
-        reset_key,
-        limit=8,
-        window_seconds=300,
-        lockout_seconds=300,
+    if is_public_reset_password_rate_limited(
+        request=request,
+        request_key_fn=_request_key,
+        allow_fn=rate_limiter.allow,
         max_lockout_seconds=MAX_LOCKOUT_SECONDS,
+        log_security_event_fn=log_security_event,
     ):
-        log_security_event("public_reset_password", request, "rate_limited")
         return RedirectResponse(
             url=_url_with_params("/public/reset-password", token=token, msg="rate_limited"),
             status_code=303,
         )
-    if not _is_strong_public_password(password):
-        log_security_event("public_reset_password", request, "weak_password")
+    validation_msg = reset_password_validation_error(
+        password=password,
+        confirm_password=confirm_password,
+        is_strong_password_fn=_is_strong_public_password,
+    )
+    if validation_msg:
+        log_security_event("public_reset_password", request, validation_msg)
         return RedirectResponse(
-            url=_url_with_params("/public/reset-password", token=token, msg="weak_password"),
-            status_code=303,
-        )
-    if password != confirm_password:
-        log_security_event("public_reset_password", request, "password_mismatch")
-        return RedirectResponse(
-            url=_url_with_params("/public/reset-password", token=token, msg="password_mismatch"),
+            url=_url_with_params("/public/reset-password", token=token, msg=validation_msg),
             status_code=303,
         )
 
