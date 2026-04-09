@@ -550,7 +550,8 @@
       flex-direction: row;
       flex-wrap: nowrap;
       align-items: center;
-      gap: 10px 12px;
+      /* مرن عبر المقاسات: يقلّل التباعد على الشاشات الكبيرة ويمنع التداخل على المتوسطة */
+      gap: clamp(6px, 1vw, 12px);
       position: relative;
       z-index: 2;
       margin-top: 0;
@@ -590,7 +591,7 @@
       display: inline-flex;
       align-items: center;
       flex-wrap: nowrap;
-      gap: 8px;
+      gap: clamp(6px, 0.9vw, 10px);
       flex-shrink: 0;
     }
     .hero-toolbar__group--chips {
@@ -618,6 +619,8 @@
       font-size: 0.88rem;
       font-weight: 800;
       white-space: nowrap;
+      flex: 0 1 auto;
+      min-width: 0;
     }
     .hero-toolbar__ico {
       width: 17px;
@@ -640,6 +643,20 @@
       .hero-toolbar__btn {
         min-height: 44px;
         padding-inline: 16px;
+      }
+    }
+    /* على اللابتوب/الشاشات المتوسطة: اسمح بالالتفاف بدل التداخل */
+    @media (max-width: 1180px) {
+      .hero-toolbar {
+        flex-wrap: wrap;
+        overflow-x: visible;
+        justify-content: flex-start;
+      }
+      .hero-toolbar__divider { display: none; }
+      .hero-toolbar__group--chips {
+        flex: 1 1 100%;
+        justify-content: flex-start;
+        flex-wrap: wrap;
       }
     }
     .public-user-menu { position: relative; display: inline-flex; max-width: 100%; z-index: 100; }
