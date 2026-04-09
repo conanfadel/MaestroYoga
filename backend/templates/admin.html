@@ -20,21 +20,7 @@
   <a class="admin-skip-link" href="#main-content">تخطي إلى المحتوى الرئيسي</a>
   <main id="main-content" class="admin-main" tabindex="-1">
   <div class="container">
-    <div class="top">
-      <div class="top-brand">
-        <h1><span>لوحة الإدارة</span> | {{ center.name if center else 'المركز' }}</h1>
-        <div class="muted">مرحبًا {{ user.full_name }} · {{ user.email }}</div>
-      </div>
-      <div class="top-actions">
-        <button type="button" class="admin-theme-toggle" id="admin-theme-toggle" title="تبديل الوضع الفاتح/الداكن">وضع داكن</button>
-        <button type="button" class="admin-help-btn" id="admin-help-open" title="اختصارات لوحة التحكم (؟)">اختصارات</button>
-        <button type="button" class="secondary" id="admin-copy-public-url" data-public-url="{{ request.url.scheme }}://{{ request.url.netloc }}{{ admin_public_index_url }}" title="نسخ رابط صفحة الحجز العامة">نسخ رابط صفحة الحجز</button>
-        <a class="btn secondary" href="{{ admin_public_index_url }}" target="_blank" rel="noopener noreferrer" title="فتح صفحة الحجز العامة في تبويب جديد">صفحة الحجز العامة</a>
-        <form method="post" action="/admin/logout" data-preserve-scroll="1" style="display:inline;">
-          <button type="submit" class="btn">تسجيل الخروج</button>
-        </form>
-      </div>
-    </div>
+    {% include "partials/admin_top_bar.html" %}
 
     {% if admin_flash %}
       <div class="alert{{ ' warn' if admin_flash.level == 'warn' else '' }}">{{ admin_flash.text }}</div>

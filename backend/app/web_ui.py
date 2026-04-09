@@ -32,6 +32,7 @@ from .role_definitions import (
 from .booking_utils import ACTIVE_BOOKING_STATUSES, count_active_bookings, spots_available
 from .bootstrap import DEMO_CENTER_NAME, ensure_demo_data, ensure_demo_news_posts, should_auto_seed_demo_data
 from .admin_report_helpers import (
+    build_subscription_report_rows,
     effective_vat_percent_for_center,
     parse_optional_non_negative_float,
     parse_optional_non_negative_int,
@@ -40,6 +41,7 @@ from .admin_report_helpers import (
     report_previous_period_range,
     user_can_report_revenue,
     user_can_report_sessions,
+    user_can_report_health,
     utf8_bom_csv_content,
     vat_inclusive_breakdown,
 )
@@ -4062,12 +4064,6 @@ def admin_report_insights(
     )
 
 
-def _user_can_report_health(user: models.User) -> bool:
-    return user_can_report_sessions(user=user, user_has_permission_fn=user_has_permission) or user_can_report_revenue(
-        user=user, user_has_permission_fn=user_has_permission
-    )
-
-
 @router.get("/admin/reports/clients", response_class=HTMLResponse)
 def admin_report_clients(
     request: Request,
@@ -4182,19 +4178,7 @@ def admin_report_subscriptions(
         .order_by(models.ClientSubscription.end_date.asc())
         .all()
     )
-    sub_rows: list[dict[str, Any]] = []
-    for sub, client, plan in rows_raw:
-        sub_rows.append(
-            {
-                "id": sub.id,
-                "client_name": client.full_name,
-                "plan_name": plan.name,
-                "plan_type": plan.plan_type,
-                "session_limit": plan.session_limit,
-                "end_date_display": _fmt_dt(sub.end_date),
-                "end_date_d": sub.end_date.date() if isinstance(sub.end_date, datetime) else sub.end_date,
-            }
-        )
+    sub_rows = build_subscription_report_rows(rows_raw=rows_raw, fmt_dt_fn=_fmt_dt)
 
     return templates.TemplateResponse(
         request,
@@ -4220,7 +4204,7 @@ def admin_report_health(request: Request, db: Session = Depends(get_db)):
             url=_url_with_params("/admin", msg=ADMIN_MSG_TRAINER_ADMIN_FORBIDDEN),
             status_code=303,
         )
-    if not _user_can_report_health(user):
+    if not user_can_report_health(user=user, user_has_permission_fn=user_has_permission):
         return RedirectResponse(
             url=_url_with_params("/admin", msg=ADMIN_MSG_REPORT_FORBIDDEN),
             status_code=303,

@@ -3275,16 +3275,7 @@
 
     {% include "partials/index_trust_bar.html" %}
 
-    {% set hint_post = pinned_public_post or (public_posts_teasers[0] if public_posts_teasers else none) %}
-    {% if hint_post %}
-    <div class="hero-news-hint" role="region" aria-label="آخر نشاط في المركز">
-      <a class="hero-news-hint__link" href="{{ hint_post.detail_url }}">
-        <span class="hero-news-hint__badge">{{ hint_post.type_label }}</span>
-        <span class="hero-news-hint__title">{{ hint_post.title|truncate(78) }}</span>
-        <span class="hero-news-hint__cta">عرض التفاصيل ←</span>
-      </a>
-    </div>
-    {% endif %}
+    {% include "partials/index_content_highlights.html" %}
 
     <div id="cart-live-banner" class="cart-live-banner" hidden role="status" aria-live="polite">
       <button type="button" class="cart-live-banner__btn" id="cart-live-open">
@@ -3292,29 +3283,6 @@
       </button>
     </div>
 
-    {% if index_page.product_clarity.show %}
-    <section class="index-product-clarity" aria-label="الفرق بين الجلسة المفردة والاشتراك">
-      <div class="index-product-clarity__grid">
-        <div class="index-product-clarity__card">
-          <h3 class="booking-block-heading booking-block-heading--flush-top">{{ index_page.product_clarity.dropin_title }}</h3>
-          <p>{{ index_page.product_clarity.dropin_body }}</p>
-        </div>
-        <div class="index-product-clarity__card index-product-clarity__card--plan">
-          <h3 class="booking-block-heading booking-block-heading--flush-top">{{ index_page.product_clarity.plan_title }}</h3>
-          <p>{{ index_page.product_clarity.plan_body | safe }}</p>
-        </div>
-      </div>
-      <p class="index-product-clarity__note">{{ index_page.product_clarity.note | safe }}</p>
-      {% if index_page.team_strip.show %}
-      <div class="index-team-strip">
-        <div class="index-team-strip__ico" aria-hidden="true">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
-        </div>
-        <p>{{ index_page.team_strip.text | safe }}</p>
-      </div>
-      {% endif %}
-    </section>
-    {% endif %}
 
     {% if index_page.news_ticker.show and news_ticker_items %}
     <div class="news-ticker-bar" role="region" aria-label="عناوين أخبار سريعة — اضغط للانتقال للخبر">

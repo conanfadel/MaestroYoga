@@ -1,5 +1,5 @@
 import os
-from datetime import date, timedelta
+from datetime import date, datetime, timedelta
 
 
 def utf8_bom_csv_content(output) -> str:
@@ -17,6 +17,12 @@ def user_can_report_revenue(*, user, user_has_permission_fn) -> bool:
     return user_has_permission_fn(user, "payments.records") or user_has_permission_fn(
         user, "reports.financial"
     ) or user_has_permission_fn(user, "dashboard.financial")
+
+
+def user_can_report_health(*, user, user_has_permission_fn) -> bool:
+    return user_can_report_sessions(user=user, user_has_permission_fn=user_has_permission_fn) or user_can_report_revenue(
+        user=user, user_has_permission_fn=user_has_permission_fn
+    )
 
 
 def report_period_to_range(
@@ -115,3 +121,20 @@ def parse_optional_non_negative_int(raw: str | None) -> int | None:
         return v if v >= 0 else None
     except ValueError:
         return None
+
+
+def build_subscription_report_rows(*, rows_raw, fmt_dt_fn) -> list[dict]:
+    sub_rows: list[dict] = []
+    for sub, client, plan in rows_raw:
+        sub_rows.append(
+            {
+                "id": sub.id,
+                "client_name": client.full_name,
+                "plan_name": plan.name,
+                "plan_type": plan.plan_type,
+                "session_limit": plan.session_limit,
+                "end_date_display": fmt_dt_fn(sub.end_date),
+                "end_date_d": sub.end_date.date() if isinstance(sub.end_date, datetime) else sub.end_date,
+            }
+        )
+    return sub_rows
