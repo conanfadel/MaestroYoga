@@ -58,6 +58,7 @@ from .public_auth_helpers import (
     queue_verify_email_for_user,
 )
 from .public_content_version import compute_public_center_content_version
+from .public_news_helpers import build_public_posts_blocks, index_preconnect_origins, preview_text
 from .public_sessions_helpers import build_public_session_rows
 from .rate_limiter import rate_limiter
 from .request_ip import get_client_ip
@@ -716,15 +717,6 @@ def _soft_delete_public_user(row: models.PublicUser) -> tuple[str, str]:
     return original_email, original_phone
 
 
-def _preview_text(text: str | None, max_len: int = 100) -> str:
-    t = (text or "").strip()
-    if not t:
-        return ""
-    if len(t) <= max_len:
-        return t
-    return t[: max_len - 1].rstrip() + "…"
-
-
 def _index_seo_title(center: models.Center) -> str:
     tag = (center.brand_tagline or "").strip()
     if tag:
@@ -960,52 +952,6 @@ def _index_refund_p1_rendered(p1_template: str, center_name: str) -> str:
     return t.replace("{name}", name)
 
 
-def _index_preconnect_origins(
-    request: Request,
-    center: models.Center,
-    pinned_public_post: dict | None,
-    public_posts_teasers: list[dict],
-) -> list[str]:
-    """Origins for external image/asset URLs (not the current page host) — for link rel=preconnect."""
-    seen: set[str] = set()
-    out: list[str] = []
-
-    try:
-        cur = urlparse(str(request.url))
-        current_host = (cur.hostname or "").lower()
-    except Exception:
-        current_host = ""
-
-    def add_url(url: str | None) -> None:
-        if not url or not isinstance(url, str):
-            return
-        u = url.strip()
-        if not u.startswith(("http://", "https://")):
-            return
-        try:
-            p = urlparse(u)
-            if p.scheme not in ("http", "https") or not p.netloc:
-                return
-            host = (p.hostname or "").lower()
-            if host == current_host:
-                return
-            origin = f"{p.scheme}://{p.netloc}"
-            if origin not in seen:
-                seen.add(origin)
-                out.append(origin)
-        except Exception:
-            return
-
-    add_url(getattr(center, "hero_image_url", None))
-    add_url(getattr(center, "logo_url", None))
-    if pinned_public_post:
-        add_url(pinned_public_post.get("cover_image_url"))
-    for t in public_posts_teasers or []:
-        add_url(t.get("cover_image_url"))
-
-    return out
-
-
 @router.get("/index", response_class=HTMLResponse)
 def public_index(
     request: Request,
@@ -1105,65 +1051,18 @@ def public_index(
         .limit(24)
         .all()
     )
-    pinned_public_post = None
-    if pinned_post:
-        sum_full = (pinned_post.summary or "").strip()
-        pinned_public_post = {
-            "id": pinned_post.id,
-            "title": pinned_post.title,
-            "post_type": pinned_post.post_type,
-            "type_label": CENTER_POST_TYPE_LABELS.get(pinned_post.post_type, pinned_post.post_type),
-            "summary": sum_full,
-            "summary_short": _preview_text(sum_full, 100),
-            "cover_image_url": pinned_post.cover_image_url,
-            "detail_url": _url_with_params("/post", center_id=str(center.id), post_id=str(pinned_post.id)),
-        }
+    pinned_public_post, public_posts_teasers, news_ticker_items = build_public_posts_blocks(
+        pinned_post=pinned_post,
+        recent_posts=recent_posts_q,
+        center_id=center.id,
+        type_labels=CENTER_POST_TYPE_LABELS,
+    )
     loyalty_ctx: dict = {}
     if public_user:
         loyalty_ctx = loyalty_context_for_count(
             count_confirmed_sessions_for_public_user(db, center.id, public_user),
             center=center,
         )
-
-    public_posts_teasers: list[dict] = []
-    news_ticker_items: list[dict[str, str]] = []
-    if pinned_post:
-        news_ticker_items.append(
-            {
-                "title": (pinned_post.title or "").strip(),
-                "type_label": CENTER_POST_TYPE_LABELS.get(pinned_post.post_type, pinned_post.post_type),
-                "detail_url": _url_with_params("/post", center_id=str(center.id), post_id=str(pinned_post.id)),
-            }
-        )
-    for p in recent_posts_q:
-        if pinned_post and p.id == pinned_post.id:
-            continue
-        if len(public_posts_teasers) < 3:
-            sum_full = (p.summary or "").strip()
-            public_posts_teasers.append(
-                {
-                    "id": p.id,
-                    "title": p.title,
-                    "post_type": p.post_type,
-                    "type_label": CENTER_POST_TYPE_LABELS.get(p.post_type, p.post_type),
-                    "summary": _preview_text(sum_full, 120),
-                    "cover_image_url": p.cover_image_url,
-                    "published_at_display": _fmt_dt(p.published_at) if p.published_at else "",
-                    "detail_url": _url_with_params("/post", center_id=str(center.id), post_id=str(p.id)),
-                }
-            )
-        if len(news_ticker_items) < 14:
-            tl = (p.title or "").strip()
-            if tl:
-                news_ticker_items.append(
-                    {
-                        "title": tl,
-                        "type_label": CENTER_POST_TYPE_LABELS.get(p.post_type, p.post_type),
-                        "detail_url": _url_with_params("/post", center_id=str(center.id), post_id=str(p.id)),
-                    }
-                )
-        if len(public_posts_teasers) >= 3 and len(news_ticker_items) >= 14:
-            break
 
     num_news_on_index = (1 if pinned_public_post else 0) + len(public_posts_teasers)
     public_news_has_more = total_published_posts > num_news_on_index
@@ -1210,7 +1109,7 @@ def public_index(
             "index_seo_title": _index_seo_title(center),
             "index_meta_description": _index_meta_description(center, len(rows), len(plans)),
             "faq_teaser_items": faq_items[:3],
-            "index_preconnect_origins": _index_preconnect_origins(
+            "index_preconnect_origins": index_preconnect_origins(
                 request, center, pinned_public_post, public_posts_teasers
             ),
             "loyalty_program_rows": loyalty_program_table_rows(center),
@@ -1437,7 +1336,7 @@ def public_news_list(
                 "title": p.title,
                 "post_type": p.post_type,
                 "type_label": CENTER_POST_TYPE_LABELS.get(p.post_type, p.post_type),
-                "summary": _preview_text(sum_full, 180),
+                "summary": preview_text(sum_full, 180),
                 "published_at_display": _fmt_dt(p.published_at) if p.published_at else "",
                 "detail_url": _url_with_params("/post", center_id=str(center_id), post_id=str(p.id)),
                 "cover_image_url": p.cover_image_url,
