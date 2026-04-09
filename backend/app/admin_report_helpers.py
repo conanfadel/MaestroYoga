@@ -25,6 +25,17 @@ def user_can_report_health(*, user, user_has_permission_fn) -> bool:
     )
 
 
+def can_access_report_kind(*, user, kind: str, user_has_permission_fn) -> bool:
+    k = (kind or "").strip().lower()
+    if k in {"sessions", "clients", "subscriptions", "insights"}:
+        return user_can_report_sessions(user=user, user_has_permission_fn=user_has_permission_fn)
+    if k == "revenue":
+        return user_can_report_revenue(user=user, user_has_permission_fn=user_has_permission_fn)
+    if k == "health":
+        return user_can_report_health(user=user, user_has_permission_fn=user_has_permission_fn)
+    return False
+
+
 def report_period_to_range(
     *,
     period: str,

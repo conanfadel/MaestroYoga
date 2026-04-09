@@ -33,6 +33,7 @@ from .booking_utils import ACTIVE_BOOKING_STATUSES, count_active_bookings, spots
 from .bootstrap import DEMO_CENTER_NAME, ensure_demo_data, ensure_demo_news_posts, should_auto_seed_demo_data
 from .admin_report_helpers import (
     build_subscription_report_rows,
+    can_access_report_kind,
     effective_vat_percent_for_center,
     parse_optional_non_negative_float,
     parse_optional_non_negative_int,
@@ -3343,7 +3344,7 @@ def admin_report_sessions(
             url=_url_with_params("/admin", msg=ADMIN_MSG_TRAINER_ADMIN_FORBIDDEN),
             status_code=303,
         )
-    if not user_can_report_sessions(user=user, user_has_permission_fn=user_has_permission):
+    if not can_access_report_kind(user=user, kind="sessions", user_has_permission_fn=user_has_permission):
         return RedirectResponse(
             url=_url_with_params("/admin", msg=ADMIN_MSG_REPORT_FORBIDDEN),
             status_code=303,
@@ -3475,7 +3476,7 @@ def admin_report_revenue(
             url=_url_with_params("/admin", msg=ADMIN_MSG_TRAINER_ADMIN_FORBIDDEN),
             status_code=303,
         )
-    if not user_can_report_revenue(user=user, user_has_permission_fn=user_has_permission):
+    if not can_access_report_kind(user=user, kind="revenue", user_has_permission_fn=user_has_permission):
         return RedirectResponse(
             url=_url_with_params("/admin", msg=ADMIN_MSG_REPORT_FORBIDDEN),
             status_code=303,
@@ -3778,7 +3779,7 @@ def admin_report_insights(
             url=_url_with_params("/admin", msg=ADMIN_MSG_TRAINER_ADMIN_FORBIDDEN),
             status_code=303,
         )
-    if not user_can_report_sessions(user=user, user_has_permission_fn=user_has_permission):
+    if not can_access_report_kind(user=user, kind="insights", user_has_permission_fn=user_has_permission):
         return RedirectResponse(
             url=_url_with_params("/admin", msg=ADMIN_MSG_REPORT_FORBIDDEN),
             status_code=303,
@@ -4083,7 +4084,7 @@ def admin_report_clients(
             url=_url_with_params("/admin", msg=ADMIN_MSG_TRAINER_ADMIN_FORBIDDEN),
             status_code=303,
         )
-    if not user_can_report_sessions(user=user, user_has_permission_fn=user_has_permission):
+    if not can_access_report_kind(user=user, kind="clients", user_has_permission_fn=user_has_permission):
         return RedirectResponse(
             url=_url_with_params("/admin", msg=ADMIN_MSG_REPORT_FORBIDDEN),
             status_code=303,
@@ -4155,7 +4156,7 @@ def admin_report_subscriptions(
             url=_url_with_params("/admin", msg=ADMIN_MSG_TRAINER_ADMIN_FORBIDDEN),
             status_code=303,
         )
-    if not user_can_report_sessions(user=user, user_has_permission_fn=user_has_permission):
+    if not can_access_report_kind(user=user, kind="subscriptions", user_has_permission_fn=user_has_permission):
         return RedirectResponse(
             url=_url_with_params("/admin", msg=ADMIN_MSG_REPORT_FORBIDDEN),
             status_code=303,
@@ -4205,7 +4206,7 @@ def admin_report_health(request: Request, db: Session = Depends(get_db)):
             url=_url_with_params("/admin", msg=ADMIN_MSG_TRAINER_ADMIN_FORBIDDEN),
             status_code=303,
         )
-    if not user_can_report_health(user=user, user_has_permission_fn=user_has_permission):
+    if not can_access_report_kind(user=user, kind="health", user_has_permission_fn=user_has_permission):
         return RedirectResponse(
             url=_url_with_params("/admin", msg=ADMIN_MSG_REPORT_FORBIDDEN),
             status_code=303,
