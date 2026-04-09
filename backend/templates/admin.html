@@ -324,12 +324,14 @@
             <input type="hidden" name="return_section" value="section-index-page" />
 
             <h3 class="admin-booking-block-heading admin-booking-block-heading--flush-top">الاسم والموقع</h3>
+            <button type="submit" class="soft" style="margin:10px 0 16px;">حفظ الاسم والموقع</button>
             <label for="index_center_name">اسم المركز (يظهر في العنوان وSEO)</label>
             <input id="index_center_name" name="center_name" type="text" required maxlength="200" value="{{ center.name }}" />
             <label for="index_city">المدينة (اختياري — شريط الثقة)</label>
             <input id="index_city" name="city" type="text" maxlength="120" placeholder="مثال: الرياض" value="{{ center.city or '' }}" />
 
             <h3 class="admin-booking-block-heading">شريط الثقة أسفل الغلاف</h3>
+            <button type="submit" class="soft" style="margin:10px 0 16px;">حفظ شريط الثقة أسفل الغلاف</button>
             <label for="trust_show">القسم</label>
             <select id="trust_show" name="trust_show" aria-label="إظهار شريط الثقة">
               <option value="1" {% if index_page.trust_bar.show %}selected{% endif %}>إظهار</option>
@@ -353,6 +355,7 @@
             <input id="trust_refund_link_text" name="trust_refund_link_text" type="text" maxlength="120" value="{{ index_page.trust_bar.refund_link_text }}" />
 
             <h3 class="admin-booking-block-heading">شرائح الهيرو (بجانب أزرار الحجز)</h3>
+            <button type="submit" class="soft" style="margin:10px 0 16px;">حفظ شرائح الهيرو</button>
             <label for="hero_chips_show">الشرائح</label>
             <select id="hero_chips_show" name="hero_chips_show">
               <option value="1" {% if index_page.hero_chips.show %}selected{% endif %}>إظهار</option>
@@ -366,6 +369,7 @@
             <input id="hero_c3" name="hero_c3" type="text" maxlength="80" value="{{ index_page.hero_chips.c3 }}" />
 
             <h3 class="admin-booking-block-heading">شرح الجلسة مقابل الاشتراك</h3>
+            <button type="submit" class="soft" style="margin:10px 0 16px;">حفظ شرح الجلسة مقابل الاشتراك</button>
             <label for="pc_show">القسم</label>
             <select id="pc_show" name="pc_show">
               <option value="1" {% if index_page.product_clarity.show %}selected{% endif %}>إظهار</option>
@@ -383,6 +387,7 @@
             <textarea id="pc_note" name="pc_note" rows="2" maxlength="800">{{ index_page.product_clarity.note }}</textarea>
 
             <h3 class="admin-booking-block-heading">شريط الفريق / المستويات</h3>
+            <button type="submit" class="soft" style="margin:10px 0 16px;">حفظ شريط الفريق / المستويات</button>
             <label for="team_show">القسم</label>
             <select id="team_show" name="team_show">
               <option value="1" {% if index_page.team_strip.show %}selected{% endif %}>إظهار</option>
@@ -392,6 +397,7 @@
             <textarea id="team_text" name="team_text" rows="2" maxlength="600">{{ index_page.team_strip.text }}</textarea>
 
             <h3 class="branding-subhead">شريط أخبار متحرك</h3>
+            <button type="submit" class="soft" style="margin:10px 0 16px;">حفظ شريط أخبار متحرك</button>
             <label for="news_ticker_show">الشريط</label>
             <select id="news_ticker_show" name="news_ticker_show">
               <option value="1" {% if index_page.news_ticker.show %}selected{% endif %}>إظهار عند وجود أخبار</option>
@@ -399,6 +405,7 @@
             </select>
 
             <h3 class="admin-booking-block-heading">خطوات الدفع (1–2–3)</h3>
+            <button type="submit" class="soft" style="margin:10px 0 16px;">حفظ خطوات الدفع</button>
             <label for="steps_show">القسم</label>
             <select id="steps_show" name="steps_show">
               <option value="1" {% if index_page.steps.show %}selected{% endif %}>إظهار</option>
@@ -412,6 +419,7 @@
             <input id="steps_s3" name="steps_s3" type="text" maxlength="220" value="{{ index_page.steps.s3 }}" />
 
             <h3 class="admin-booking-block-heading">قسم الولاء في الصفحة</h3>
+            <button type="submit" class="soft" style="margin:10px 0 16px;">حفظ قسم الولاء في الصفحة</button>
             <label for="loyalty_block_show">القسم</label>
             <select id="loyalty_block_show" name="loyalty_block_show">
               <option value="1" {% if index_page.loyalty_block.show %}selected{% endif %}>إظهار</option>
@@ -423,6 +431,7 @@
             <textarea id="loyalty_block_lead" name="loyalty_block_lead" rows="3" maxlength="1200">{{ index_page.loyalty_block.lead }}</textarea>
 
             <h3 class="admin-booking-block-heading">أسئلة سريعة داخل قسم الجلسات</h3>
+            <button type="submit" class="soft" style="margin:10px 0 16px;">حفظ أسئلة سريعة داخل قسم الجلسات</button>
             <label for="faq_teaser_show">القسم</label>
             <select id="faq_teaser_show" name="faq_teaser_show">
               <option value="1" {% if index_page.faq_teaser.show %}selected{% endif %}>إظهار عند وجود أسئلة</option>
@@ -434,6 +443,7 @@
             <input id="faq_teaser_more" name="faq_teaser_more" type="text" maxlength="120" value="{{ index_page.faq_teaser.more_text }}" />
 
             <h3 class="admin-booking-block-heading">العمود الجانبي — مقارنة الخطط</h3>
+            <button type="submit" class="soft" style="margin:10px 0 16px;">حفظ العمود الجانبي — مقارنة الخطط</button>
             <label for="plans_section_show">قسم الخطط</label>
             <select id="plans_section_show" name="plans_section_show">
               <option value="1" {% if index_page.plans_section.show %}selected{% endif %}>إظهار</option>
@@ -443,6 +453,7 @@
             <input id="plans_section_heading" name="plans_section_heading" type="text" maxlength="200" value="{{ index_page.plans_section.heading }}" />
 
             <h3 class="branding-subhead">آراء العملاء</h3>
+            <button type="submit" class="soft" style="margin:10px 0 16px;">حفظ آراء العملاء</button>
             <label for="testimonials_show">القسم</label>
             <select id="testimonials_show" name="testimonials_show">
               <option value="1" {% if index_page.testimonials.show %}selected{% endif %}>إظهار</option>
@@ -456,6 +467,7 @@
             <textarea id="tm3" name="tm3" rows="2" maxlength="400">{{ index_page.testimonials.t3 }}</textarea>
 
             <h3 class="admin-booking-block-heading">الأسئلة الشائعة (العمود الجانبي)</h3>
+            <button type="submit" class="soft" style="margin:10px 0 16px;">حفظ الأسئلة الشائعة</button>
             <label for="faq_section_show">القسم</label>
             <select id="faq_section_show" name="faq_section_show">
               <option value="1" {% if index_page.faq_section.show %}selected{% endif %}>إظهار</option>
@@ -465,6 +477,7 @@
             <input id="faq_section_heading" name="faq_section_heading" type="text" maxlength="120" value="{{ index_page.faq_section.heading }}" />
 
             <h3 class="branding-subhead">الإلغاء والاسترداد (أسفل الصفحة)</h3>
+            <button type="submit" class="soft" style="margin:10px 0 16px;">حفظ الإلغاء والاسترداد</button>
             <label for="refund_show">القسم</label>
             <select id="refund_show" name="refund_show">
               <option value="1" {% if index_page.refund.show %}selected{% endif %}>إظهار</option>
