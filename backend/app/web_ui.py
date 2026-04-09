@@ -601,6 +601,38 @@ def _public_users_query_for_center(db: Session, center_id: int):
     )
 
 
+def _ensure_client_for_public_register(db: Session, user: models.PublicUser, next_url: str) -> None:
+    """Create or refresh a Client row for the center in ``next`` so the user appears in admin public-user lists."""
+    cid_str = public_center_id_str_from_next(next_url)
+    try:
+        center_id = int(cid_str)
+    except (ValueError, TypeError):
+        return
+    if not db.get(models.Center, center_id):
+        return
+    existing = (
+        db.query(models.Client)
+        .filter(
+            models.Client.center_id == center_id,
+            func.lower(models.Client.email) == func.lower(user.email),
+        )
+        .first()
+    )
+    if existing:
+        existing.full_name = user.full_name
+        if user.phone:
+            existing.phone = user.phone
+        return
+    db.add(
+        models.Client(
+            center_id=center_id,
+            full_name=user.full_name,
+            email=user.email.lower(),
+            phone=user.phone,
+        )
+    )
+
+
 def _spots_available_map(db: Session, center_id: int, session_ids: list[int]) -> dict[int, int]:
     if not session_ids:
         return {}
@@ -1012,17 +1044,35 @@ def _index_preconnect_origins(
 @router.get("/index", response_class=HTMLResponse)
 def public_index(
     request: Request,
-    center_id: int = 1,
+    center_id: int | None = Query(
+        default=None,
+        description="معرّف المركز. عند عدم الإرسال يحاول النظام اختيار مركز مناسب تلقائياً.",
+    ),
     payment: str | None = None,
     msg: str | None = None,
     db: Session = Depends(get_db),
 ):
     public_user = _current_public_user(request, db)
-    center = db.get(models.Center, center_id)
+    # If no center_id is provided, prefer a real center (non-demo) when available.
+    effective_center_id = int(center_id) if isinstance(center_id, int) else None
+    if effective_center_id is None:
+        first_non_demo = (
+            db.query(models.Center.id)
+            .filter(models.Center.name != DEMO_CENTER_NAME)
+            .order_by(models.Center.id.asc())
+            .first()
+        )
+        if first_non_demo and first_non_demo[0]:
+            effective_center_id = int(first_non_demo[0])
+        else:
+            first_any = db.query(models.Center.id).order_by(models.Center.id.asc()).first()
+            effective_center_id = int(first_any[0]) if first_any and first_any[0] else 1
+
+    center = db.get(models.Center, effective_center_id)
     if not center:
         # Keep web pages usable even on a fresh DB.
         ensure_demo_data(db)
-        center = db.get(models.Center, center_id)
+        center = db.get(models.Center, effective_center_id)
         if not center:
             center = db.query(models.Center).order_by(models.Center.id.asc()).first()
     if not center:
@@ -1035,7 +1085,7 @@ def public_index(
 
     sessions = (
         db.query(models.YogaSession)
-        .filter(models.YogaSession.center_id == center_id)
+        .filter(models.YogaSession.center_id == center.id)
         .order_by(models.YogaSession.starts_at.asc())
         .all()
     )
@@ -1044,9 +1094,9 @@ def public_index(
     if room_ids:
         rooms_by_id = {
             r.id: r
-            for r in db.query(models.Room).filter(models.Room.center_id == center_id, models.Room.id.in_(room_ids)).all()
+            for r in db.query(models.Room).filter(models.Room.center_id == center.id, models.Room.id.in_(room_ids)).all()
         }
-    spots_by_session = _spots_available_map(db, center_id, [int(s.id) for s in sessions])
+    spots_by_session = _spots_available_map(db, center.id, [int(s.id) for s in sessions])
     rows = []
     level_labels = {
         "beginner": "مبتدئ",
@@ -1079,7 +1129,7 @@ def public_index(
     plans = (
         db.query(models.SubscriptionPlan)
         .filter(
-            models.SubscriptionPlan.center_id == center_id,
+            models.SubscriptionPlan.center_id == center.id,
             models.SubscriptionPlan.is_active.is_(True),
         )
         .order_by(models.SubscriptionPlan.price.asc())
@@ -1087,14 +1137,14 @@ def public_index(
     )
     faq_items = (
         db.query(models.FAQItem)
-        .filter(models.FAQItem.center_id == center_id, models.FAQItem.is_active.is_(True))
+        .filter(models.FAQItem.center_id == center.id, models.FAQItem.is_active.is_(True))
         .order_by(models.FAQItem.sort_order.asc(), models.FAQItem.created_at.asc())
         .all()
     )
     pinned_post = (
         db.query(models.CenterPost)
         .filter(
-            models.CenterPost.center_id == center_id,
+            models.CenterPost.center_id == center.id,
             models.CenterPost.is_published.is_(True),
             models.CenterPost.is_pinned.is_(True),
         )
@@ -1104,7 +1154,7 @@ def public_index(
     total_published_posts = (
         db.query(func.count(models.CenterPost.id))
         .filter(
-            models.CenterPost.center_id == center_id,
+            models.CenterPost.center_id == center.id,
             models.CenterPost.is_published.is_(True),
         )
         .scalar()
@@ -1112,7 +1162,7 @@ def public_index(
     )
     recent_posts_q = (
         db.query(models.CenterPost)
-        .filter(models.CenterPost.center_id == center_id, models.CenterPost.is_published.is_(True))
+        .filter(models.CenterPost.center_id == center.id, models.CenterPost.is_published.is_(True))
         .order_by(nullslast(models.CenterPost.published_at.desc()), models.CenterPost.id.desc())
         .limit(24)
         .all()
@@ -1128,12 +1178,12 @@ def public_index(
             "summary": sum_full,
             "summary_short": _preview_text(sum_full, 100),
             "cover_image_url": pinned_post.cover_image_url,
-            "detail_url": _url_with_params("/post", center_id=str(center_id), post_id=str(pinned_post.id)),
+            "detail_url": _url_with_params("/post", center_id=str(center.id), post_id=str(pinned_post.id)),
         }
     loyalty_ctx: dict = {}
     if public_user:
         loyalty_ctx = loyalty_context_for_count(
-            count_confirmed_sessions_for_public_user(db, center_id, public_user),
+            count_confirmed_sessions_for_public_user(db, center.id, public_user),
             center=center,
         )
 
@@ -1144,7 +1194,7 @@ def public_index(
             {
                 "title": (pinned_post.title or "").strip(),
                 "type_label": CENTER_POST_TYPE_LABELS.get(pinned_post.post_type, pinned_post.post_type),
-                "detail_url": _url_with_params("/post", center_id=str(center_id), post_id=str(pinned_post.id)),
+                "detail_url": _url_with_params("/post", center_id=str(center.id), post_id=str(pinned_post.id)),
             }
         )
     for p in recent_posts_q:
@@ -1161,7 +1211,7 @@ def public_index(
                     "summary": _preview_text(sum_full, 120),
                     "cover_image_url": p.cover_image_url,
                     "published_at_display": _fmt_dt(p.published_at) if p.published_at else "",
-                    "detail_url": _url_with_params("/post", center_id=str(center_id), post_id=str(p.id)),
+                    "detail_url": _url_with_params("/post", center_id=str(center.id), post_id=str(p.id)),
                 }
             )
         if len(news_ticker_items) < 14:
@@ -1171,7 +1221,7 @@ def public_index(
                     {
                         "title": tl,
                         "type_label": CENTER_POST_TYPE_LABELS.get(p.post_type, p.post_type),
-                        "detail_url": _url_with_params("/post", center_id=str(center_id), post_id=str(p.id)),
+                        "detail_url": _url_with_params("/post", center_id=str(center.id), post_id=str(p.id)),
                     }
                 )
         if len(public_posts_teasers) >= 3 and len(news_ticker_items) >= 14:
@@ -1179,7 +1229,7 @@ def public_index(
 
     num_news_on_index = (1 if pinned_public_post else 0) + len(public_posts_teasers)
     public_news_has_more = total_published_posts > num_news_on_index
-    public_news_list_url = _url_with_params("/news", center_id=str(center_id))
+    public_news_list_url = _url_with_params("/news", center_id=str(center.id))
     plan_labels = {
         "weekly": "أسبوعي",
         "monthly": "شهري",
@@ -1194,7 +1244,7 @@ def public_index(
         "index.html",
         {
             "center": center,
-            "center_id": center_id,
+            "center_id": center.id,
             "index_page": index_page,
             "index_refund_p1_html": idx_refund_p1,
             "sessions": rows,
@@ -1228,7 +1278,7 @@ def public_index(
             "loyalty_program_rows": loyalty_program_table_rows(center),
             "feedback_enabled": bool(feedback_destination_email()) and validate_mailer_settings()[0],
             **loyalty_ctx,
-            **_analytics_context("index", center_id=str(center_id)),
+            **_analytics_context("index", center_id=str(center.id)),
         },
     )
 
@@ -1999,6 +2049,7 @@ def public_register(
         )
         db.add(user)
         status_label = "created"
+    _ensure_client_for_public_register(db, user, safe_next)
     db.commit()
     db.refresh(user)
 

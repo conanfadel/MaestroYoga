@@ -2113,9 +2113,11 @@
           if (!form || form.tagName !== "FORM") return;
           if ((form.method || "").toLowerCase() !== "post") return;
           if (form.getAttribute("data-no-loading") === "1") return;
+          var submitter = e.submitter || null;
           var buttons = form.querySelectorAll('button[type="submit"]');
           buttons.forEach(function (b) {
             if (b.disabled) return;
+            if (submitter && b === submitter) return;
             b.disabled = true;
             b.classList.add("is-loading");
             if (!b.querySelector("svg") && (b.textContent || "").trim().length < 56) {
