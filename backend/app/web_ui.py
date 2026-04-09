@@ -14,7 +14,7 @@ from pydantic import ValidationError
 from fastapi import APIRouter, Depends, File, Form, HTTPException, Query, Request, UploadFile
 from fastapi.responses import HTMLResponse, RedirectResponse, StreamingResponse
 from fastapi.templating import Jinja2Templates
-from sqlalchemy import and_, case, desc, func, nullslast, or_, text
+from sqlalchemy import and_, case, desc, func, or_, text
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
@@ -31,7 +31,7 @@ from .role_definitions import (
 )
 from .booking_utils import ACTIVE_BOOKING_STATUSES, count_active_bookings, spots_available
 from .bootstrap import DEMO_CENTER_NAME, ensure_demo_data, ensure_demo_news_posts, should_auto_seed_demo_data
-from .public_center_helpers import resolve_public_center_or_404
+from .public_center_helpers import get_center_or_404, get_seeded_center_or_404, resolve_public_center_or_404
 from .database import get_db, is_sqlite
 from .loyalty import (
     LOYALTY_REWARD_MAX_LEN,
@@ -58,18 +58,48 @@ from .public_auth_helpers import (
     public_user_from_verify_flash_token,
     queue_verify_email_for_user,
 )
+from .public_cart_helpers import (
+    create_pending_single_booking_payment,
+    build_cart_booking_bundle,
+    parse_cart_session_ids,
+    process_hosted_cart_checkout,
+    process_hosted_single_booking_checkout,
+    process_mock_single_booking_checkout,
+    process_mock_cart_checkout,
+)
+from .public_client_helpers import get_or_sync_public_client
 from .public_content_version import compute_public_center_content_version
+from .public_feedback_helpers import (
+    feedback_send_result_message,
+    is_valid_feedback_contact_name,
+    is_valid_feedback_email,
+    is_valid_feedback_message,
+    prepare_feedback_submission,
+)
 from .public_news_helpers import (
+    apply_public_news_filters_and_sort,
+    build_public_news_index_meta,
     build_public_news_filter_options,
     build_public_news_list_rows,
     build_public_posts_blocks,
     index_preconnect_origins,
     preview_text,
 )
-from .public_index_data_helpers import load_public_index_data
+from .public_index_data_helpers import build_public_index_template_context, load_public_index_data
 from .public_loyalty_helpers import build_public_loyalty_context
-from .public_plan_helpers import build_public_plan_rows
+from .public_plan_helpers import build_public_plan_rows, default_plan_labels
+from .public_redirect_helpers import (
+    redirect_public_index_paid_mock,
+    redirect_public_index_with_msg,
+    redirect_public_index_with_params,
+)
 from .public_sessions_helpers import build_public_session_rows
+from .public_subscribe_helpers import (
+    create_pending_subscription_payment,
+    get_active_center_plan_or_404,
+    process_hosted_subscription_checkout,
+    process_mock_subscription_checkout,
+)
 from .rate_limiter import rate_limiter
 from .request_ip import get_client_ip
 from .security_audit import log_security_event
@@ -1011,50 +1041,44 @@ def public_index(
     )
     loyalty_ctx = build_public_loyalty_context(db, center.id, public_user, center=center)
 
-    num_news_on_index = (1 if pinned_public_post else 0) + len(public_posts_teasers)
-    public_news_has_more = total_published_posts > num_news_on_index
-    public_news_list_url = _url_with_params("/news", center_id=str(center.id))
-    plan_labels = {
-        "weekly": "أسبوعي",
-        "monthly": "شهري",
-        "yearly": "سنوي",
-    }
+    public_news_meta = build_public_news_index_meta(
+        center_id=center.id,
+        total_published_posts=total_published_posts,
+        pinned_public_post=pinned_public_post,
+        public_posts_teasers=public_posts_teasers,
+        url_with_params_fn=_url_with_params,
+    )
+    plan_labels = default_plan_labels()
 
     index_page = merge_index_page_config(center)
     idx_refund_p1 = _index_refund_p1_rendered(str(index_page.get("refund", {}).get("p1", "")), center.name)
 
-    return templates.TemplateResponse(
-        request,
-        "index.html",
-        {
-            "center": center,
-            "center_id": center.id,
-            "index_page": index_page,
-            "index_refund_p1_html": idx_refund_p1,
-            "sessions": rows,
-            "plans": build_public_plan_rows(plans, plan_labels=plan_labels),
-            "payment": payment,
-            "msg": msg,
-            "public_user": public_user,
-            "faq_items": faq_items,
-            "pinned_public_post": pinned_public_post,
-            "public_posts_teasers": public_posts_teasers,
-            "news_ticker_items": news_ticker_items,
-            "public_news_has_more": public_news_has_more,
-            "public_news_list_url": public_news_list_url,
-            "index_seo_title": _index_seo_title(center),
-            "index_meta_description": _index_meta_description(center, len(rows), len(plans)),
-            "faq_teaser_items": faq_items[:3],
-            "index_preconnect_origins": index_preconnect_origins(
-                request, center, pinned_public_post, public_posts_teasers
-            ),
-            "loyalty_program_rows": loyalty_program_table_rows(center),
-            "feedback_enabled": bool(feedback_destination_email()) and validate_mailer_settings()[0],
-            "public_content_version": compute_public_center_content_version(db, center.id),
-            **loyalty_ctx,
-            **_analytics_context("index", center_id=str(center.id)),
-        },
+    context = build_public_index_template_context(
+        request=request,
+        center=center,
+        rows=rows,
+        plans=plans,
+        payment=payment,
+        msg=msg,
+        public_user=public_user,
+        faq_items=faq_items,
+        pinned_public_post=pinned_public_post,
+        public_posts_teasers=public_posts_teasers,
+        news_ticker_items=news_ticker_items,
+        public_news_meta=public_news_meta,
+        plan_rows=build_public_plan_rows(plans, plan_labels=plan_labels),
+        index_page=index_page,
+        index_refund_p1_html=idx_refund_p1,
+        index_seo_title=_index_seo_title(center),
+        index_meta_description=_index_meta_description(center, len(rows), len(plans)),
+        index_preconnect_origins_fn=index_preconnect_origins,
+        loyalty_program_rows_fn=loyalty_program_table_rows,
+        feedback_enabled=bool(feedback_destination_email()) and validate_mailer_settings()[0],
+        public_content_version=compute_public_center_content_version(db, center.id),
+        loyalty_ctx=loyalty_ctx,
+        analytics_ctx=_analytics_context("index", center_id=str(center.id)),
     )
+    return templates.TemplateResponse(request, "index.html", context)
 
 
 @router.get("/public/content-version")
@@ -1076,138 +1100,58 @@ async def public_feedback_submit(
     """إرسال مشكلة / شكوى / اقتراح من الواجهة العامة إلى بريد الإدارة (مع صور اختيارية)."""
     pu = _current_public_user(request, db)
     if not pu:
-        return RedirectResponse(
-            url=_url_with_params("/index", center_id=str(center_id), msg="feedback_auth_required"),
-            status_code=303,
-        )
+        return redirect_public_index_with_params(center_id=center_id, msg="feedback_auth_required")
 
     dest = feedback_destination_email()
     ok_cfg, _why = validate_mailer_settings()
     if not dest or not ok_cfg:
-        return RedirectResponse(
-            url=_url_with_params("/index", center_id=str(center_id), msg="feedback_unavailable"),
-            status_code=303,
-        )
+        return redirect_public_index_with_params(center_id=center_id, msg="feedback_unavailable")
 
-    cat_key = (category or "").strip().lower()
-    if cat_key not in PUBLIC_FEEDBACK_CATEGORY_LABELS:
-        return RedirectResponse(
-            url=_url_with_params("/index", center_id=str(center_id), msg="feedback_error"),
-            status_code=303,
-        )
-
-    center = db.get(models.Center, center_id)
-    if not center:
-        ensure_demo_data(db)
-        center = db.get(models.Center, center_id)
-    if not center:
-        raise HTTPException(status_code=404, detail="Center not found")
-
-    msg_text = (message or "").strip()
-    if len(msg_text) < 3 or len(msg_text) > 8000:
-        return RedirectResponse(
-            url=_url_with_params("/index", center_id=str(center_id), msg="feedback_error"),
-            status_code=303,
-        )
-
-    name_sub = (contact_name or "").strip()
-    if len(name_sub) < 2 or len(name_sub) > 200:
-        return RedirectResponse(
-            url=_url_with_params("/index", center_id=str(center_id), msg="feedback_error"),
-            status_code=303,
-        )
-    phone_sub = (contact_phone or "").strip()[:40]
-
-    ce = (pu.email or "").strip().lower()
-    if not ce or "@" not in ce or len(ce) > 254:
-        return RedirectResponse(
-            url=_url_with_params("/index", center_id=str(center_id), msg="feedback_error"),
-            status_code=303,
-        )
-
-    fb_key = _request_key(request, "public_feedback", f"{center_id}")
-    if not rate_limiter.allow(fb_key, limit=5, window_seconds=3600, lockout_seconds=120, max_lockout_seconds=MAX_LOCKOUT_SECONDS):
-        log_security_event("public_feedback", request, "rate_limited", email=ce or None)
-        return RedirectResponse(
-            url=_url_with_params("/index", center_id=str(center_id), msg="feedback_rate_limited"),
-            status_code=303,
-        )
-
-    attachments: list[tuple[str, bytes, str]] = []
-    upload_list = images if images else []
-    for uf in upload_list:
-        if not uf.filename:
-            continue
-        ct = (uf.content_type or "").split(";")[0].strip().lower()
-        if ct not in PUBLIC_FEEDBACK_ALLOWED_IMAGE_TYPES:
-            return RedirectResponse(
-                url=_url_with_params("/index", center_id=str(center_id), msg="feedback_bad_image"),
-                status_code=303,
-            )
-        raw = await uf.read()
-        if len(raw) > PUBLIC_FEEDBACK_MAX_IMAGE_BYTES:
-            return RedirectResponse(
-                url=_url_with_params("/index", center_id=str(center_id), msg="feedback_image_too_large"),
-                status_code=303,
-            )
-        if len(attachments) >= PUBLIC_FEEDBACK_MAX_IMAGES:
-            break
-        safe_name = os.path.basename(uf.filename or "image.jpg")[:180]
-        attachments.append((safe_name, raw, ct))
-
+    center = get_seeded_center_or_404(db, center_id)
     app_name = os.getenv("APP_NAME", "Maestro Yoga")
-    cat_label = PUBLIC_FEEDBACK_CATEGORY_LABELS[cat_key]
-    ip = get_client_ip(request)
-    subject = f"{app_name} — {center.name} — {cat_label}"
-    body_lines = [
-        f"المركز: {center.name} (center_id={center_id})",
-        f"التصنيف: {cat_label}",
-        f"الاسم: {name_sub}",
-        f"الجوال: {phone_sub or '—'}",
-        f"البريد (من حساب المستخدم): {ce}",
-        "",
-        "النص:",
-        msg_text,
-        "",
-        f"عنوان IP: {ip}",
-    ]
-    body = "\n".join(body_lines)
-    html_body = (
-        f"<div dir='rtl' style='font-family:Tahoma,Arial,sans-serif;line-height:1.6'>"
-        f"<p><strong>المركز:</strong> {html_escape(center.name)}</p>"
-        f"<p><strong>التصنيف:</strong> {html_escape(cat_label)}</p>"
-        f"<p><strong>الاسم:</strong> {html_escape(name_sub)}</p>"
-        f"<p><strong>الجوال:</strong> {html_escape(phone_sub or '—')}</p>"
-        f"<p><strong>البريد:</strong> {html_escape(ce)}</p>"
-        f"<p><strong>النص:</strong></p><pre style='white-space:pre-wrap'>{html_escape(msg_text)}</pre>"
-        f"<p><strong>IP:</strong> {html_escape(ip)}</p>"
-        f"</div>"
+    prepared, prepare_error = await prepare_feedback_submission(
+        request=request,
+        center_id=center_id,
+        center_name=center.name,
+        category=category,
+        message=message,
+        contact_name=contact_name,
+        contact_phone=contact_phone,
+        account_email=pu.email,
+        images=images,
+        category_labels=PUBLIC_FEEDBACK_CATEGORY_LABELS,
+        allowed_image_types=PUBLIC_FEEDBACK_ALLOWED_IMAGE_TYPES,
+        max_image_bytes=PUBLIC_FEEDBACK_MAX_IMAGE_BYTES,
+        max_images=PUBLIC_FEEDBACK_MAX_IMAGES,
+        max_lockout_seconds=MAX_LOCKOUT_SECONDS,
+        request_key_fn=_request_key,
+        allow_fn=rate_limiter.allow,
+        log_security_event_fn=log_security_event,
+        client_ip_fn=get_client_ip,
+        app_name=app_name,
+        is_valid_message_fn=is_valid_feedback_message,
+        is_valid_contact_name_fn=is_valid_feedback_contact_name,
+        is_valid_email_fn=is_valid_feedback_email,
     )
+    if prepare_error:
+        return redirect_public_index_with_params(center_id=center_id, msg=prepare_error)
+    assert prepared is not None
 
     sent_ok, send_reason = send_mail_with_attachments(
         dest,
-        subject,
-        body,
-        html_body=html_body,
-        attachments=attachments or None,
+        prepared["subject"],
+        prepared["body"],
+        html_body=prepared["html_body"],
+        attachments=prepared["attachments"] or None,
     )
-    if not sent_ok:
-        log_security_event(
-            "public_feedback",
-            request,
-            "send_failed",
-            email=ce or None,
-            details={"reason": send_reason[:400]},
-        )
-        return RedirectResponse(
-            url=_url_with_params("/index", center_id=str(center_id), msg="feedback_error"),
-            status_code=303,
-        )
-    log_security_event("public_feedback", request, "success", email=ce or None)
-    return RedirectResponse(
-        url=_url_with_params("/index", center_id=str(center_id), msg="feedback_sent"),
-        status_code=303,
+    result_msg = feedback_send_result_message(
+        sent_ok=sent_ok,
+        send_reason=send_reason,
+        request=request,
+        email=prepared["email"],
+        log_security_event_fn=log_security_event,
     )
+    return redirect_public_index_with_params(center_id=center_id, msg=result_msg)
 
 
 @router.get("/news", response_class=HTMLResponse)
@@ -1218,14 +1162,7 @@ def public_news_list(
     sort: str = Query("newest", description="newest | oldest | recent"),
     db: Session = Depends(get_db),
 ):
-    center = db.get(models.Center, center_id)
-    if not center:
-        ensure_demo_data(db)
-        center = db.get(models.Center, center_id)
-        if not center:
-            center = db.query(models.Center).order_by(models.Center.id.asc()).first()
-    if not center:
-        raise HTTPException(status_code=404, detail="Center not found")
+    center = resolve_public_center_or_404(db, center_id)
     if center.name == DEMO_CENTER_NAME:
         ensure_demo_news_posts(db, center.id)
     _clear_center_branding_urls_if_files_missing(db, center)
@@ -1238,33 +1175,18 @@ def public_news_list(
         sort_key = "newest"
 
     q = db.query(models.CenterPost).filter(
-        models.CenterPost.center_id == center_id,
+        models.CenterPost.center_id == center.id,
         models.CenterPost.is_published.is_(True),
     )
-    if type_key:
-        q = q.filter(models.CenterPost.post_type == type_key)
-
-    if sort_key == "oldest":
-        q = q.order_by(
-            models.CenterPost.is_pinned.desc(),
-            nullslast(models.CenterPost.published_at.asc()),
-            models.CenterPost.id.asc(),
-        )
-    elif sort_key == "recent":
-        q = q.order_by(
-            models.CenterPost.is_pinned.desc(),
-            models.CenterPost.created_at.desc(),
-            models.CenterPost.id.desc(),
-        )
-    else:
-        q = q.order_by(
-            models.CenterPost.is_pinned.desc(),
-            nullslast(models.CenterPost.published_at.desc()),
-            models.CenterPost.id.desc(),
-        )
+    q = apply_public_news_filters_and_sort(
+        q,
+        model=models.CenterPost,
+        type_key=type_key,
+        sort_key=sort_key,
+    )
 
     posts = q.all()
-    news_rows = build_public_news_list_rows(posts=posts, center_id=center_id, type_labels=CENTER_POST_TYPE_LABELS)
+    news_rows = build_public_news_list_rows(posts=posts, center_id=center.id, type_labels=CENTER_POST_TYPE_LABELS)
 
     post_type_filter_options, sort_filter_options = build_public_news_filter_options(
         post_types=CENTER_POST_TYPES,
@@ -1277,14 +1199,14 @@ def public_news_list(
         "public_news_list.html",
         {
             "center": center,
-            "center_id": center_id,
+            "center_id": center.id,
             "news_rows": news_rows,
             "news_type_filter": type_key,
             "news_sort": sort_key,
             "post_type_filter_options": post_type_filter_options,
             "sort_filter_options": sort_filter_options,
-            "index_url": _url_with_params("/index", center_id=str(center_id)),
-            **_analytics_context("public_news_list", center_id=str(center_id)),
+            "index_url": _url_with_params("/index", center_id=str(center.id)),
+            **_analytics_context("public_news_list", center_id=str(center.id)),
         },
     )
 
@@ -1296,9 +1218,7 @@ def public_post_detail(
     post_id: int,
     db: Session = Depends(get_db),
 ):
-    center = db.get(models.Center, center_id)
-    if not center:
-        raise HTTPException(status_code=404, detail="Center not found")
+    center = get_center_or_404(db, center_id)
     post = db.get(models.CenterPost, post_id)
     if not post or post.center_id != center_id or not post.is_published:
         raise HTTPException(status_code=404, detail="Post not found")
@@ -1345,7 +1265,7 @@ def public_book(
     db: Session = Depends(get_db),
 ):
     if _is_ip_blocked(db, request):
-        return RedirectResponse(url=f"/index?center_id={center_id}&msg=ip_blocked", status_code=303)
+        return redirect_public_index_with_msg(center_id=center_id, msg="ip_blocked")
     public_user = _current_public_user(request, db)
     if not public_user:
         return _public_login_redirect(next_url=f"/index?center_id={center_id}", msg="auth_required")
@@ -1355,9 +1275,7 @@ def public_book(
             status_code=303,
         )
 
-    center = db.get(models.Center, center_id)
-    if not center:
-        raise HTTPException(status_code=404, detail="Center not found")
+    center = get_center_or_404(db, center_id)
 
     if is_sqlite:
         # Serialize concurrent writers to reduce race windows on capacity checks.
@@ -1386,24 +1304,7 @@ def public_book(
             status_code=303,
         )
 
-    client = (
-        db.query(models.Client)
-        .filter(models.Client.center_id == center_id, models.Client.email == public_user.email.lower())
-        .first()
-    )
-    if not client:
-        client = models.Client(
-            center_id=center_id,
-            full_name=public_user.full_name,
-            email=public_user.email.lower(),
-            phone=public_user.phone,
-        )
-        db.add(client)
-        db.flush()
-    else:
-        client.full_name = public_user.full_name
-        if public_user.phone:
-            client.phone = public_user.phone
+    client = get_or_sync_public_client(db, center_id=center_id, public_user=public_user)
 
     duplicate = (
         db.query(models.Booking)
@@ -1415,105 +1316,62 @@ def public_book(
         .first()
     )
     if duplicate:
-        return RedirectResponse(
-            url=f"/index?center_id={center_id}&msg=duplicate",
-            status_code=303,
-        )
+        return redirect_public_index_with_msg(center_id=center_id, msg="duplicate")
 
-    booking = models.Booking(
+    amount = float(yoga_session.price_drop_in)
+    booking, payment_row, booking_error = create_pending_single_booking_payment(
+        db=db,
+        models_module=models,
         center_id=center_id,
         session_id=session_id,
         client_id=client.id,
-        status="pending_payment",
-    )
-    db.add(booking)
-    db.flush()
-
-    amount = float(yoga_session.price_drop_in)
-    payment_row = models.Payment(
-        center_id=center_id,
-        client_id=client.id,
-        booking_id=booking.id,
         amount=amount,
-        currency="SAR",
         payment_method="public_checkout",
-        status="pending",
-        created_at=utcnow_naive(),
+        utcnow_fn=utcnow_naive,
+        integrity_error_cls=IntegrityError,
     )
-    db.add(payment_row)
-    try:
-        db.commit()
-    except IntegrityError:
-        db.rollback()
-        return RedirectResponse(
-            url=f"/index?center_id={center_id}&msg=duplicate",
-            status_code=303,
-        )
-    db.refresh(payment_row)
+    if booking_error:
+        return redirect_public_index_with_msg(center_id=center_id, msg="duplicate")
+    assert booking is not None and payment_row is not None
 
     provider = get_payment_provider()
     base = _public_base(request)
 
     if payment_provider_supports_hosted_checkout(provider):
-        try:
-            provider_result = provider.create_checkout_session(
-                amount=amount,
-                currency="sar",
-                metadata={
-                    "payment_id": str(payment_row.id),
-                    "booking_id": str(booking.id),
-                    "center_id": str(center_id),
-                    "client_id": str(client.id),
-                },
-                success_url=f"{base}/index?center_id={center_id}&payment=success",
-                cancel_url=f"{base}/index?center_id={center_id}&payment=cancelled",
-                line_item_name=f"حجز جلسة — {yoga_session.title}"[:120],
-                line_item_description=f"{center.name} · {_fmt_dt(yoga_session.starts_at)} · {yoga_session.duration_minutes} دقيقة"[
-                    :500
-                ],
-            )
-        except Exception as exc:
-            booking.status = "cancelled"
-            payment_row.status = "failed"
-            db.commit()
-            log_security_event(
-                "public_book",
-                request,
-                "stripe_error",
-                details={"error": str(exc)[:200], "center_id": center_id, "session_id": session_id},
-            )
-            return RedirectResponse(
-                url=f"/index?center_id={center_id}&msg=stripe_error",
-                status_code=303,
-            )
-
-        payment_row.provider_ref = provider_result.provider_ref
-        db.commit()
-        checkout_url = provider_result.checkout_url or ""
-        if not checkout_url:
-            booking.status = "cancelled"
-            payment_row.status = "failed"
-            db.commit()
-            return RedirectResponse(
-                url=f"/index?center_id={center_id}&msg=stripe_no_url",
-                status_code=303,
-            )
+        checkout_url, hosted_error = process_hosted_single_booking_checkout(
+            db=db,
+            provider=provider,
+            booking=booking,
+            payment_row=payment_row,
+            amount=amount,
+            center_id=center_id,
+            client_id=client.id,
+            center_name=center.name,
+            session_title=yoga_session.title,
+            session_starts_at=yoga_session.starts_at,
+            session_duration_minutes=yoga_session.duration_minutes,
+            base_url=base,
+            fmt_dt_fn=_fmt_dt,
+            request=request,
+            log_security_event_fn=log_security_event,
+            session_id=session_id,
+        )
+        if hosted_error:
+            return redirect_public_index_with_msg(center_id=center_id, msg=hosted_error)
+        assert checkout_url
         return RedirectResponse(url=checkout_url, status_code=303)
 
-    provider_result = provider.charge(
+    process_mock_single_booking_checkout(
+        db=db,
+        provider=provider,
+        booking=booking,
+        payment_row=payment_row,
         amount=amount,
-        currency="SAR",
-        metadata={"center_id": center_id, "client_id": client.id, "booking_id": booking.id},
+        center_id=center_id,
+        client_id=client.id,
     )
-    payment_row.provider_ref = provider_result.provider_ref
-    payment_row.status = provider_result.status
-    booking.status = "confirmed"
-    db.commit()
 
-    return RedirectResponse(
-        url=f"/index?center_id={center_id}&msg=paid_mock&booking_id={booking.id}",
-        status_code=303,
-    )
+    return redirect_public_index_paid_mock(center_id=center_id, booking_id=booking.id)
 
 
 @router.post("/public/cart/checkout")
@@ -1524,7 +1382,7 @@ def public_cart_checkout(
     db: Session = Depends(get_db),
 ):
     if _is_ip_blocked(db, request):
-        return RedirectResponse(url=f"/index?center_id={center_id}&msg=ip_blocked", status_code=303)
+        return redirect_public_index_with_msg(center_id=center_id, msg="ip_blocked")
     public_user = _current_public_user(request, db)
     if not public_user:
         return _public_login_redirect(next_url=f"/index?center_id={center_id}", msg="auth_required")
@@ -1534,99 +1392,26 @@ def public_cart_checkout(
             status_code=303,
         )
 
-    try:
-        raw_items = json.loads(cart_json)
-    except (json.JSONDecodeError, TypeError):
-        return RedirectResponse(url=f"/index?center_id={center_id}&msg=cart_invalid", status_code=303)
-    if not isinstance(raw_items, list) or not raw_items:
-        return RedirectResponse(url=f"/index?center_id={center_id}&msg=cart_empty", status_code=303)
+    session_ids, cart_error = parse_cart_session_ids(cart_json, max_sessions=MAX_PUBLIC_CART_SESSIONS)
+    if cart_error:
+        return redirect_public_index_with_msg(center_id=center_id, msg=cart_error)
 
-    session_ids: list[int] = []
-    for it in raw_items:
-        if not isinstance(it, dict):
-            return RedirectResponse(url=f"/index?center_id={center_id}&msg=cart_invalid", status_code=303)
-        if it.get("type") != "session":
-            return RedirectResponse(url=f"/index?center_id={center_id}&msg=cart_invalid", status_code=303)
-        sid = it.get("session_id")
-        if isinstance(sid, str) and sid.strip().isdigit():
-            session_ids.append(int(sid.strip()))
-        elif isinstance(sid, int):
-            session_ids.append(sid)
-    seen: set[int] = set()
-    deduped: list[int] = []
-    for sid in session_ids:
-        if sid not in seen:
-            seen.add(sid)
-            deduped.append(sid)
-    session_ids = deduped
-    if not session_ids:
-        return RedirectResponse(url=f"/index?center_id={center_id}&msg=cart_empty", status_code=303)
-    if len(session_ids) > MAX_PUBLIC_CART_SESSIONS:
-        return RedirectResponse(url=f"/index?center_id={center_id}&msg=cart_too_many", status_code=303)
+    center = get_center_or_404(db, center_id)
 
-    center = db.get(models.Center, center_id)
-    if not center:
-        raise HTTPException(status_code=404, detail="Center not found")
+    client = get_or_sync_public_client(db, center_id=center_id, public_user=public_user)
 
-    client = (
-        db.query(models.Client)
-        .filter(models.Client.center_id == center_id, models.Client.email == public_user.email.lower())
-        .first()
+    bundle, bundle_error = build_cart_booking_bundle(
+        db=db,
+        models_module=models,
+        session_ids=session_ids,
+        center_id=center_id,
+        client_id=client.id,
+        active_booking_statuses=ACTIVE_BOOKING_STATUSES,
+        spots_available_fn=spots_available,
+        utcnow_fn=utcnow_naive,
     )
-    if not client:
-        client = models.Client(
-            center_id=center_id,
-            full_name=public_user.full_name,
-            email=public_user.email.lower(),
-            phone=public_user.phone,
-        )
-        db.add(client)
-        db.flush()
-    else:
-        client.full_name = public_user.full_name
-        if public_user.phone:
-            client.phone = public_user.phone
-
-    bundle: list[tuple[models.Booking, models.Payment, models.YogaSession]] = []
-    for session_id in session_ids:
-        yoga_session = db.get(models.YogaSession, session_id)
-        if not yoga_session or yoga_session.center_id != center_id:
-            return RedirectResponse(url=f"/index?center_id={center_id}&msg=cart_invalid", status_code=303)
-        if spots_available(db, yoga_session) <= 0:
-            return RedirectResponse(url=f"/index?center_id={center_id}&msg=cart_session_full", status_code=303)
-        duplicate = (
-            db.query(models.Booking)
-            .filter(
-                models.Booking.session_id == session_id,
-                models.Booking.client_id == client.id,
-                models.Booking.status.in_(ACTIVE_BOOKING_STATUSES),
-            )
-            .first()
-        )
-        if duplicate:
-            return RedirectResponse(url=f"/index?center_id={center_id}&msg=duplicate", status_code=303)
-        booking = models.Booking(
-            center_id=center_id,
-            session_id=session_id,
-            client_id=client.id,
-            status="pending_payment",
-        )
-        db.add(booking)
-        db.flush()
-        amount = float(yoga_session.price_drop_in)
-        payment_row = models.Payment(
-            center_id=center_id,
-            client_id=client.id,
-            booking_id=booking.id,
-            amount=amount,
-            currency="SAR",
-            payment_method="public_cart_checkout",
-            status="pending",
-            created_at=utcnow_naive(),
-        )
-        db.add(payment_row)
-        db.flush()
-        bundle.append((booking, payment_row, yoga_session))
+    if bundle_error:
+        return redirect_public_index_with_msg(center_id=center_id, msg=bundle_error)
 
     db.commit()
 
@@ -1634,75 +1419,31 @@ def public_cart_checkout(
     base = _public_base(request)
 
     if payment_provider_supports_hosted_checkout(provider):
-        line_specs = [
-            (
-                float(ys.price_drop_in),
-                f"حجز جلسة — {ys.title}"[:120],
-                f"{center.name} · {_fmt_dt(ys.starts_at)} · {ys.duration_minutes} دقيقة"[:500],
-            )
-            for _, _, ys in bundle
-        ]
-        payment_ids_meta = ",".join(str(p.id) for _, p, _ in bundle)
-        try:
-            provider_result = provider.create_checkout_session_multi_line(
-                currency="sar",
-                line_specs=line_specs,
-                metadata={
-                    "payment_ids": payment_ids_meta,
-                    "center_id": str(center_id),
-                    "client_id": str(client.id),
-                    "cart": "1",
-                },
-                success_url=f"{base}/index?center_id={center_id}&payment=success",
-                cancel_url=f"{base}/index?center_id={center_id}&payment=cancelled",
-            )
-        except Exception as exc:
-            for bk, pay, _ in bundle:
-                bk.status = "cancelled"
-                pay.status = "failed"
-            db.commit()
-            log_security_event(
-                "public_cart_checkout",
-                request,
-                "stripe_error",
-                details={"error": str(exc)[:200], "center_id": center_id},
-            )
-            return RedirectResponse(url=f"/index?center_id={center_id}&msg=stripe_error", status_code=303)
-
-        pref = provider_result.provider_ref
-        checkout_url = provider_result.checkout_url or ""
-        if not pref or not checkout_url:
-            for bk, pay, _ in bundle:
-                bk.status = "cancelled"
-                pay.status = "failed"
-            db.commit()
-            return RedirectResponse(url=f"/index?center_id={center_id}&msg=stripe_no_url", status_code=303)
-        for _, pay, _ in bundle:
-            pay.provider_ref = pref
-        db.commit()
+        checkout_url, hosted_error = process_hosted_cart_checkout(
+            db=db,
+            provider=provider,
+            bundle=bundle,
+            center_name=center.name,
+            center_id=center_id,
+            client_id=client.id,
+            base_url=base,
+            fmt_dt_fn=_fmt_dt,
+            request=request,
+            log_security_event_fn=log_security_event,
+        )
+        if hosted_error:
+            return redirect_public_index_with_msg(center_id=center_id, msg=hosted_error)
+        assert checkout_url
         return RedirectResponse(url=checkout_url, status_code=303)
 
-    total = sum(float(ys.price_drop_in) for _, _, ys in bundle)
-    provider_result = provider.charge(
-        amount=total,
-        currency="SAR",
-        metadata={"center_id": center_id, "client_id": client.id, "cart": "1"},
+    first_bid = process_mock_cart_checkout(
+        db=db,
+        provider=provider,
+        bundle=bundle,
+        center_id=center_id,
+        client_id=client.id,
     )
-    pref = provider_result.provider_ref
-    for bk, pay, _ in bundle:
-        pay.provider_ref = pref
-        if provider_result.status == "paid":
-            pay.status = "paid"
-            bk.status = "confirmed"
-        else:
-            pay.status = "failed"
-            bk.status = "cancelled"
-    db.commit()
-    first_bid = bundle[0][0].id if bundle else ""
-    return RedirectResponse(
-        url=f"/index?center_id={center_id}&msg=paid_mock&booking_id={first_bid}",
-        status_code=303,
-    )
+    return redirect_public_index_paid_mock(center_id=center_id, booking_id=first_bid)
 
 
 @router.get("/public/register", response_class=HTMLResponse)
@@ -6394,7 +6135,7 @@ def public_subscribe(
     db: Session = Depends(get_db),
 ):
     if _is_ip_blocked(db, request):
-        return RedirectResponse(url=f"/index?center_id={center_id}&msg=ip_blocked", status_code=303)
+        return redirect_public_index_with_msg(center_id=center_id, msg="ip_blocked")
     public_user = _current_public_user(request, db)
     if not public_user:
         return _public_login_redirect(next_url=f"/index?center_id={center_id}", msg="auth_required")
@@ -6404,115 +6145,55 @@ def public_subscribe(
             status_code=303,
         )
 
-    center = db.get(models.Center, center_id)
-    if not center:
-        raise HTTPException(status_code=404, detail="Center not found")
-    plan = db.get(models.SubscriptionPlan, plan_id)
-    if not plan or plan.center_id != center_id or not plan.is_active:
-        raise HTTPException(status_code=404, detail="Plan not found")
-
-    client = (
-        db.query(models.Client)
-        .filter(models.Client.center_id == center_id, models.Client.email == public_user.email.lower())
-        .first()
+    center = get_center_or_404(db, center_id)
+    plan = get_active_center_plan_or_404(
+        db=db,
+        models_module=models,
+        center_id=center_id,
+        plan_id=plan_id,
     )
-    if not client:
-        client = models.Client(
-            center_id=center_id,
-            full_name=public_user.full_name,
-            email=public_user.email.lower(),
-            phone=public_user.phone,
-        )
-        db.add(client)
-        db.flush()
-    else:
-        client.full_name = public_user.full_name
-        if public_user.phone:
-            client.phone = public_user.phone
 
-    start_date = utcnow_naive()
-    end_date = start_date + timedelta(days=_plan_duration_days(plan.plan_type))
-    subscription = models.ClientSubscription(
-        client_id=client.id,
-        plan_id=plan.id,
-        start_date=start_date,
-        end_date=end_date,
-        status="pending",
-    )
-    db.add(subscription)
-    db.flush()
+    client = get_or_sync_public_client(db, center_id=center_id, public_user=public_user)
 
-    payment_row = models.Payment(
+    subscription, payment_row = create_pending_subscription_payment(
+        db=db,
+        models_module=models,
         center_id=center_id,
         client_id=client.id,
-        booking_id=None,
-        amount=float(plan.price),
-        currency="SAR",
-        payment_method=f"subscription_{plan.plan_type}",
-        status="pending",
-        created_at=utcnow_naive(),
+        plan=plan,
+        utcnow_fn=utcnow_naive,
+        plan_duration_days_fn=_plan_duration_days,
     )
-    db.add(payment_row)
-    db.commit()
-    db.refresh(payment_row)
-    db.refresh(subscription)
 
     provider = get_payment_provider()
     base = _public_base(request)
     if payment_provider_supports_hosted_checkout(provider):
-        try:
-            provider_result = provider.create_checkout_session(
-                amount=float(plan.price),
-                currency="sar",
-                metadata={
-                    "payment_id": str(payment_row.id),
-                    "subscription_id": str(subscription.id),
-                    "center_id": str(center_id),
-                    "client_id": str(client.id),
-                    "plan_id": str(plan.id),
-                },
-                success_url=f"{base}/index?center_id={center_id}&payment=success&msg=subscribed",
-                cancel_url=f"{base}/index?center_id={center_id}&payment=cancelled&msg=subscription_cancelled",
-                line_item_name=f"اشتراك — {plan.name}"[:120],
-                line_item_description=f"{center.name} · باقة {plan.plan_type}"[:500],
-            )
-        except Exception as exc:
-            payment_row.status = "failed"
-            subscription.status = "cancelled"
-            db.commit()
-            log_security_event(
-                "public_subscribe",
-                request,
-                "stripe_error",
-                details={"error": str(exc)[:200], "center_id": center_id, "plan_id": plan_id},
-            )
-            return RedirectResponse(
-                url=f"/index?center_id={center_id}&msg=stripe_error",
-                status_code=303,
-            )
-
-        payment_row.provider_ref = provider_result.provider_ref
-        db.commit()
-        checkout_url = provider_result.checkout_url or ""
-        if not checkout_url:
-            payment_row.status = "failed"
-            subscription.status = "cancelled"
-            db.commit()
-            return RedirectResponse(url=f"/index?center_id={center_id}&msg=stripe_no_url", status_code=303)
+        checkout_url, hosted_error = process_hosted_subscription_checkout(
+            db=db,
+            provider=provider,
+            payment_row=payment_row,
+            subscription=subscription,
+            center_id=center_id,
+            client_id=client.id,
+            plan=plan,
+            center_name=center.name,
+            base_url=base,
+            request=request,
+            log_security_event_fn=log_security_event,
+        )
+        if hosted_error:
+            return redirect_public_index_with_msg(center_id=center_id, msg=hosted_error)
+        assert checkout_url
         return RedirectResponse(url=checkout_url, status_code=303)
 
-    provider_result = provider.charge(
+    process_mock_subscription_checkout(
+        db=db,
+        provider=provider,
+        payment_row=payment_row,
+        subscription=subscription,
+        center_id=center_id,
+        client_id=client.id,
+        plan_id=plan.id,
         amount=float(plan.price),
-        currency="SAR",
-        metadata={
-            "center_id": center_id,
-            "client_id": client.id,
-            "plan_id": plan.id,
-            "subscription_id": subscription.id,
-        },
     )
-    payment_row.provider_ref = provider_result.provider_ref
-    payment_row.status = provider_result.status
-    subscription.status = "active" if provider_result.status == "paid" else "cancelled"
-    db.commit()
-    return RedirectResponse(url=f"/index?center_id={center_id}&msg=subscribed_mock", status_code=303)
+    return redirect_public_index_with_msg(center_id=center_id, msg="subscribed_mock")

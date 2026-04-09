@@ -1,5 +1,7 @@
 from urllib.parse import urlparse
 
+from sqlalchemy import nullslast
+
 from .web_shared import _fmt_dt, _url_with_params
 
 
@@ -109,6 +111,50 @@ def build_public_news_filter_options(
     }
     sort_filter_options = [(k, default_sort_labels.get(k, k)) for k in ("newest", "oldest", "recent") if k in sort_modes]
     return post_type_filter_options, sort_filter_options
+
+
+def apply_public_news_filters_and_sort(
+    query,
+    *,
+    model,
+    type_key: str,
+    sort_key: str,
+):
+    if type_key:
+        query = query.filter(model.post_type == type_key)
+
+    if sort_key == "oldest":
+        return query.order_by(
+            model.is_pinned.desc(),
+            nullslast(model.published_at.asc()),
+            model.id.asc(),
+        )
+    if sort_key == "recent":
+        return query.order_by(
+            model.is_pinned.desc(),
+            model.created_at.desc(),
+            model.id.desc(),
+        )
+    return query.order_by(
+        model.is_pinned.desc(),
+        nullslast(model.published_at.desc()),
+        model.id.desc(),
+    )
+
+
+def build_public_news_index_meta(
+    *,
+    center_id: int,
+    total_published_posts: int,
+    pinned_public_post,
+    public_posts_teasers: list,
+    url_with_params_fn,
+):
+    num_news_on_index = (1 if pinned_public_post else 0) + len(public_posts_teasers)
+    return {
+        "public_news_has_more": total_published_posts > num_news_on_index,
+        "public_news_list_url": url_with_params_fn("/news", center_id=str(center_id)),
+    }
 
 
 def index_preconnect_origins(

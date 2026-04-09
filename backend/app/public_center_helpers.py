@@ -5,6 +5,23 @@ from . import models
 from .bootstrap import DEMO_CENTER_NAME, ensure_demo_data
 
 
+def get_center_or_404(db: Session, center_id: int) -> models.Center:
+    center = db.get(models.Center, center_id)
+    if not center:
+        raise HTTPException(status_code=404, detail="Center not found")
+    return center
+
+
+def get_seeded_center_or_404(db: Session, center_id: int) -> models.Center:
+    center = db.get(models.Center, center_id)
+    if not center:
+        ensure_demo_data(db)
+        center = db.get(models.Center, center_id)
+    if not center:
+        raise HTTPException(status_code=404, detail="Center not found")
+    return center
+
+
 def resolve_public_center_or_404(db: Session, center_id: int | None) -> models.Center:
     """Resolve the center for public pages, preserving existing fallback behavior."""
     effective_center_id = int(center_id) if isinstance(center_id, int) else None

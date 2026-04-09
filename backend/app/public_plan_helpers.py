@@ -1,6 +1,14 @@
 from .web_shared import _plan_duration_days
 
 
+def default_plan_labels() -> dict[str, str]:
+    return {
+        "weekly": "أسبوعي",
+        "monthly": "شهري",
+        "yearly": "سنوي",
+    }
+
+
 def build_public_plan_rows(plans: list, *, plan_labels: dict[str, str]) -> list[dict]:
     return [
         {
