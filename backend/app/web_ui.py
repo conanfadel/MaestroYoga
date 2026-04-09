@@ -45,13 +45,18 @@ from .loyalty import (
 from .mailer import (
     feedback_destination_email,
     queue_account_delete_confirmation_email,
-    queue_email_verification_email,
     queue_password_reset_email,
     send_mail_with_attachments,
     validate_mailer_settings,
 )
 from .payments import get_payment_provider, payment_provider_supports_hosted_checkout
 from .public_account_helpers import build_account_delete_confirm_url, public_account_phone_prefill
+from .public_auth_helpers import (
+    build_reset_url,
+    build_verify_url,
+    public_user_from_verify_flash_token,
+    queue_verify_email_for_user,
+)
 from .public_content_version import compute_public_center_content_version
 from .rate_limiter import rate_limiter
 from .request_ip import get_client_ip
@@ -59,12 +64,9 @@ from .security_audit import log_security_event
 from .security import (
     create_access_token,
     create_public_access_token,
-    create_public_email_verification_token,
     create_public_email_verify_flash_token,
-    create_public_password_reset_token,
     decode_public_account_delete_token,
     decode_public_email_verification_token,
-    decode_public_email_verify_flash_token,
     decode_public_password_reset_token,
     get_public_user_from_token_string,
     get_user_from_token_string,
@@ -370,42 +372,6 @@ def _current_public_user(request: Request, db: Session) -> models.PublicUser | N
         return None
 
 
-def _public_user_from_verify_flash_token(db: Session, vk: str) -> models.PublicUser | None:
-    vk_value = (vk or "").strip()
-    if not vk_value:
-        return None
-    try:
-        payload = decode_public_email_verify_flash_token(vk_value)
-    except HTTPException:
-        return None
-    try:
-        user_id = int(payload.get("sub"))
-    except (TypeError, ValueError):
-        return None
-    email = str(payload.get("email", "")).lower().strip()
-    user = db.get(models.PublicUser, user_id)
-    if not user or user.is_deleted or not user.is_active:
-        return None
-    if user.email.lower() != email:
-        return None
-    if not user.email_verified:
-        return None
-    return user
-
-
-def _build_verify_url(request: Request, user: models.PublicUser, next_url: str = PUBLIC_INDEX_DEFAULT_PATH) -> str:
-    token = create_public_email_verification_token(user.id, user.email)
-    safe_next = _sanitize_next_url(next_url)
-    query = urlencode({"token": token, "next": safe_next})
-    return f"{_public_base(request)}/public/verify-email?{query}"
-
-
-def _build_reset_url(request: Request, user: models.PublicUser) -> str:
-    token = create_public_password_reset_token(user.id, user.email)
-    query = urlencode({"token": token})
-    return f"{_public_base(request)}/public/reset-password?{query}"
-
-
 def _request_key(request: Request, prefix: str, identity: str = "") -> str:
     client_ip = get_client_ip(request)
     scope = identity.strip().lower() if identity else client_ip
@@ -708,7 +674,7 @@ def _apply_public_user_bulk_action(
         row.email_verified = False
         updated = 1
     elif action_key == "resend_verification" and (not row.is_deleted) and (not row.email_verified):
-        ok, _ = _queue_verify_email_for_user(request, row)
+        ok, _ = queue_verify_email_for_user(request, row)
         if ok:
             row.verification_sent_at = utcnow_naive()
             queued = 1
@@ -734,11 +700,6 @@ def _analytics_context(page_name: str, **extra: str) -> dict:
     }
     data.update(extra)
     return data
-
-
-def _queue_verify_email_for_user(request: Request, user: models.PublicUser, next_url: str = PUBLIC_INDEX_DEFAULT_PATH) -> tuple[bool, str]:
-    verify_url = _build_verify_url(request, user, next_url=next_url)
-    return queue_email_verification_email(user.email, verify_url, full_name=user.full_name)
 
 
 def _soft_delete_public_user(row: models.PublicUser) -> tuple[str, str]:
@@ -2065,7 +2026,7 @@ def public_register(
 
     queued, mail_info = (True, "verification_bypassed")
     if _is_email_verification_required():
-        queued, mail_info = _queue_verify_email_for_user(request, user, next_url=safe_next)
+        queued, mail_info = queue_verify_email_for_user(request, user, next_url=safe_next)
     if not queued:
         log_security_event(
             "public_register",
@@ -2373,7 +2334,7 @@ def public_verify_pending(request: Request, next: str = PUBLIC_INDEX_DEFAULT_PAT
     safe_next = _sanitize_next_url(next)
     msg_param = (request.query_params.get("msg") or "").strip()
     vk_param = (request.query_params.get("vk") or "").strip()
-    flash_user = _public_user_from_verify_flash_token(db, vk_param) if msg_param == "email_verified" else None
+    flash_user = public_user_from_verify_flash_token(db, vk_param) if msg_param == "email_verified" else None
     user = _current_public_user(request, db)
     if msg_param == "email_verified":
         target: models.PublicUser | None = None
@@ -2416,7 +2377,7 @@ def public_verify_pending(request: Request, next: str = PUBLIC_INDEX_DEFAULT_PAT
     if user.email_verified:
         return RedirectResponse(url=public_index_url_from_next(safe_next), status_code=303)
     show_dev_verify_link = _is_truthy_env(os.getenv("SHOW_DEV_VERIFY_LINK"))
-    dev_verify_url = _build_verify_url(request, user, next_url=safe_next) if show_dev_verify_link else ""
+    dev_verify_url = build_verify_url(request, user, next_url=safe_next) if show_dev_verify_link else ""
     return templates.TemplateResponse(
         request,
         "public_verify_pending.html",
@@ -2465,7 +2426,7 @@ def public_resend_verification(
         )
     user.verification_sent_at = now
     db.commit()
-    queued, mail_info = _queue_verify_email_for_user(request, user, next_url=safe_next)
+    queued, mail_info = queue_verify_email_for_user(request, user, next_url=safe_next)
     if not queued:
         log_security_event(
             "public_resend_verification",
@@ -2586,7 +2547,7 @@ def public_forgot_password(
     )
     mail_sent = False
     if user and user.is_active:
-        reset_url = _build_reset_url(request, user)
+        reset_url = build_reset_url(request, user)
         mail_sent, mail_info = queue_password_reset_email(user.email, reset_url, full_name=user.full_name)
         if not mail_sent:
             log_security_event(
@@ -5667,7 +5628,7 @@ def admin_resend_public_user_verification(
     if row.email_verified:
         return _admin_redirect(ADMIN_MSG_PUBLIC_USER_ALREADY_VERIFIED, scroll_y, return_section)
 
-    queued, mail_info = _queue_verify_email_for_user(request, row)
+    queued, mail_info = queue_verify_email_for_user(request, row)
     if not queued:
         log_security_event(
             "admin_public_user_resend_verification",
