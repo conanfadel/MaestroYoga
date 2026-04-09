@@ -61,6 +61,7 @@ from .public_auth_helpers import (
 from .public_content_version import compute_public_center_content_version
 from .public_news_helpers import build_public_posts_blocks, index_preconnect_origins, preview_text
 from .public_index_data_helpers import load_public_index_data
+from .public_loyalty_helpers import build_public_loyalty_context
 from .public_sessions_helpers import build_public_session_rows
 from .rate_limiter import rate_limiter
 from .request_ip import get_client_ip
@@ -1001,12 +1002,7 @@ def public_index(
         center_id=center.id,
         type_labels=CENTER_POST_TYPE_LABELS,
     )
-    loyalty_ctx: dict = {}
-    if public_user:
-        loyalty_ctx = loyalty_context_for_count(
-            count_confirmed_sessions_for_public_user(db, center.id, public_user),
-            center=center,
-        )
+    loyalty_ctx = build_public_loyalty_context(db, center.id, public_user, center=center)
 
     num_news_on_index = (1 if pinned_public_post else 0) + len(public_posts_teasers)
     public_news_has_more = total_published_posts > num_news_on_index
@@ -1334,12 +1330,7 @@ def public_post_detail(
     )
     gallery = [{"id": i.id, "url": i.image_url} for i in imgs]
     public_user = _current_public_user(request, db)
-    loyalty_ctx: dict = {}
-    if public_user:
-        loyalty_ctx = loyalty_context_for_count(
-            count_confirmed_sessions_for_public_user(db, center_id, public_user),
-            center=center,
-        )
+    loyalty_ctx = build_public_loyalty_context(db, center_id, public_user, center=center)
     return templates.TemplateResponse(
         request,
         "post_detail.html",
@@ -1967,10 +1958,7 @@ def public_account_page(request: Request, next: str = PUBLIC_INDEX_DEFAULT_PATH,
     except ValueError:
         center_id_loyalty = 1
     center_loyalty = db.get(models.Center, center_id_loyalty)
-    loyalty_ctx = loyalty_context_for_count(
-        count_confirmed_sessions_for_public_user(db, center_id_loyalty, user),
-        center=center_loyalty,
-    )
+    loyalty_ctx = build_public_loyalty_context(db, center_id_loyalty, user, center=center_loyalty)
     return templates.TemplateResponse(
         request,
         "public_account.html",
