@@ -62,6 +62,7 @@ from .public_content_version import compute_public_center_content_version
 from .public_news_helpers import build_public_posts_blocks, index_preconnect_origins, preview_text
 from .public_index_data_helpers import load_public_index_data
 from .public_loyalty_helpers import build_public_loyalty_context
+from .public_plan_helpers import build_public_plan_rows
 from .public_sessions_helpers import build_public_session_rows
 from .rate_limiter import rate_limiter
 from .request_ip import get_client_ip
@@ -1025,18 +1026,7 @@ def public_index(
             "index_page": index_page,
             "index_refund_p1_html": idx_refund_p1,
             "sessions": rows,
-            "plans": [
-                {
-                    "id": p.id,
-                    "name": p.name,
-                    "plan_type": p.plan_type,
-                    "plan_type_label": plan_labels.get(p.plan_type, p.plan_type),
-                    "duration_days": _plan_duration_days(p.plan_type),
-                    "price": p.price,
-                    "session_limit": p.session_limit,
-                }
-                for p in plans
-            ],
+            "plans": build_public_plan_rows(plans, plan_labels=plan_labels),
             "payment": payment,
             "msg": msg,
             "public_user": public_user,
