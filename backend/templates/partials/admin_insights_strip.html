@@ -1,0 +1,7 @@
+{% if admin_insights %}
+<div class="admin-insights" role="navigation" aria-label="تنبيهات سريعة">
+  {% for it in admin_insights %}
+  <a class="admin-insight {{ it.kind }}" href="{{ it.href }}">{{ it.label }} →</a>
+  {% endfor %}
+</div>
+{% endif %}

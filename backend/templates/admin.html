@@ -40,13 +40,7 @@
       <div class="alert{{ ' warn' if admin_flash.level == 'warn' else '' }}">{{ admin_flash.text }}</div>
     {% endif %}
 
-    {% if admin_insights %}
-    <div class="admin-insights" role="navigation" aria-label="تنبيهات سريعة">
-      {% for it in admin_insights %}
-      <a class="admin-insight {{ it.kind }}" href="{{ it.href }}">{{ it.label }} →</a>
-      {% endfor %}
-    </div>
-    {% endif %}
+    {% include "partials/admin_insights_strip.html" %}
 
     {% include "partials/admin_dashboard_summary.html" %}
 

@@ -43,6 +43,13 @@ from .admin_report_helpers import (
     utf8_bom_csv_content,
     vat_inclusive_breakdown,
 )
+from .admin_export_helpers import (
+    admin_user_for_export_permission,
+    build_bookings_csv_content,
+    build_payments_csv_content,
+    build_security_events_csv_content,
+    clients_new_returning_for_range,
+)
 from .public_center_helpers import get_center_or_404, get_seeded_center_or_404, resolve_public_center_or_404
 from .database import get_db, is_sqlite
 from .loyalty import (
@@ -3316,18 +3323,6 @@ def admin_create_staff_user(
     return _admin_redirect(ADMIN_MSG_STAFF_CREATED, scroll_y, return_section)
 
 
-def _admin_user_for_export_permission(
-    request: Request, db: Session, permission_id: str
-) -> tuple[models.User | None, RedirectResponse | None]:
-    user, redirect = _require_admin_user_or_redirect(request, db)
-    if redirect:
-        return None, redirect
-    assert user is not None
-    if not user_has_permission(user, permission_id):
-        return None, _trainer_forbidden_redirect()
-    return user, None
-
-
 @router.get("/admin/reports/sessions", response_class=HTMLResponse)
 def admin_report_sessions(
     request: Request,
@@ -4073,46 +4068,6 @@ def _user_can_report_health(user: models.User) -> bool:
     )
 
 
-def _clients_new_returning_for_range(
-    db: Session, cid: int, d0: date, d1: date
-) -> tuple[int, int, int]:
-    sess_filters = [
-        models.YogaSession.center_id == cid,
-        func.date(models.YogaSession.starts_at) >= d0,
-        func.date(models.YogaSession.starts_at) <= d1,
-    ]
-    active_client_ids = (
-        db.query(models.Booking.client_id)
-        .join(models.YogaSession, models.YogaSession.id == models.Booking.session_id)
-        .filter(*sess_filters, models.Booking.status.in_(ACTIVE_BOOKING_STATUSES))
-        .distinct()
-        .all()
-    )
-    cids_period = [r[0] for r in active_client_ids]
-    first_dates: dict[int, date] = {}
-    if cids_period:
-        for cid_row, fst in (
-            db.query(models.Booking.client_id, func.min(models.Booking.booked_at))
-            .filter(models.Booking.center_id == cid, models.Booking.client_id.in_(cids_period))
-            .group_by(models.Booking.client_id)
-            .all()
-        ):
-            if fst:
-                first_dates[cid_row] = fst.date() if isinstance(fst, datetime) else fst
-    new_clients = 0
-    returning_clients = 0
-    for cl_id in set(cids_period):
-        fd = first_dates.get(cl_id)
-        if not fd:
-            continue
-        if d0 <= fd <= d1:
-            new_clients += 1
-        else:
-            returning_clients += 1
-    distinct_booking_clients = len(set(cids_period))
-    return new_clients, returning_clients, distinct_booking_clients
-
-
 @router.get("/admin/reports/clients", response_class=HTMLResponse)
 def admin_report_clients(
     request: Request,
@@ -4145,9 +4100,25 @@ def admin_report_clients(
         parse_optional_date_fn=_parse_optional_date_str,
         utcnow_fn=utcnow_naive,
     )
-    new_clients, returning_clients, distinct_booking_clients = _clients_new_returning_for_range(db, cid, d0, d1)
+    new_clients, returning_clients, distinct_booking_clients = clients_new_returning_for_range(
+        db=db,
+        models_module=models,
+        center_id=cid,
+        d0=d0,
+        d1=d1,
+        active_booking_statuses=ACTIVE_BOOKING_STATUSES,
+        func_module=func,
+    )
     pp0, pp1, prev_clients_label = report_previous_period_range(d0, d1)
-    prev_new, prev_returning, prev_distinct = _clients_new_returning_for_range(db, cid, pp0, pp1)
+    prev_new, prev_returning, prev_distinct = clients_new_returning_for_range(
+        db=db,
+        models_module=models,
+        center_id=cid,
+        d0=pp0,
+        d1=pp1,
+        active_booking_statuses=ACTIVE_BOOKING_STATUSES,
+        func_module=func,
+    )
 
     return templates.TemplateResponse(
         request,
@@ -4656,7 +4627,14 @@ def admin_reports_email_summary(request: Request, db: Session = Depends(get_db))
 
 @router.get("/admin/export/clients.csv")
 def export_clients_csv(request: Request, db: Session = Depends(get_db)):
-    user, redirect = _admin_user_for_export_permission(request, db, "exports.clients")
+    user, redirect = admin_user_for_export_permission(
+        request=request,
+        db=db,
+        permission_id="exports.clients",
+        require_admin_user_or_redirect_fn=_require_admin_user_or_redirect,
+        user_has_permission_fn=user_has_permission,
+        forbidden_redirect_fn=_trainer_forbidden_redirect,
+    )
     if redirect:
         return redirect
     assert user is not None
@@ -4692,7 +4670,14 @@ def export_clients_csv(request: Request, db: Session = Depends(get_db)):
 
 @router.get("/admin/export/bookings.csv")
 def export_bookings_csv(request: Request, db: Session = Depends(get_db)):
-    user, redirect = _admin_user_for_export_permission(request, db, "exports.bookings")
+    user, redirect = admin_user_for_export_permission(
+        request=request,
+        db=db,
+        permission_id="exports.bookings",
+        require_admin_user_or_redirect_fn=_require_admin_user_or_redirect,
+        user_has_permission_fn=user_has_permission,
+        forbidden_redirect_fn=_trainer_forbidden_redirect,
+    )
     if redirect:
         return redirect
     assert user is not None
@@ -4706,37 +4691,7 @@ def export_bookings_csv(request: Request, db: Session = Depends(get_db)):
         .limit(50_000)
         .all()
     )
-    output = io.StringIO()
-    writer = csv.writer(output)
-    writer.writerow(
-        [
-            "booking_id",
-            "status",
-            "booked_at",
-            "session_id",
-            "session_title",
-            "session_starts_at",
-            "client_id",
-            "client_name",
-            "client_email",
-        ]
-    )
-    for bk, sess, cl in q:
-        writer.writerow(
-            [
-                bk.id,
-                bk.status,
-                bk.booked_at.isoformat() if bk.booked_at else "",
-                sess.id,
-                sess.title,
-                sess.starts_at.isoformat() if sess.starts_at else "",
-                cl.id,
-                cl.full_name,
-                cl.email,
-            ]
-        )
-    content = utf8_bom_csv_content(output)
-    output.close()
+    content = utf8_bom_csv_content(io.StringIO(build_bookings_csv_content(q)))
     fn = f"bookings_center_{cid}_{utcnow_naive().strftime('%Y%m%d_%H%M%S')}.csv"
     return StreamingResponse(
         iter([content]),
@@ -4752,7 +4707,14 @@ def export_payments_csv(
     payment_date_to: str = "",
     db: Session = Depends(get_db),
 ):
-    user, redirect = _admin_user_for_export_permission(request, db, "exports.payments")
+    user, redirect = admin_user_for_export_permission(
+        request=request,
+        db=db,
+        permission_id="exports.payments",
+        require_admin_user_or_redirect_fn=_require_admin_user_or_redirect,
+        user_has_permission_fn=user_has_permission,
+        forbidden_redirect_fn=_trainer_forbidden_redirect,
+    )
     if redirect:
         return redirect
     assert user is not None
@@ -4770,28 +4732,14 @@ def export_payments_csv(
         c.id: c
         for c in db.query(models.Client).filter(models.Client.id.in_(client_ids)).all()
     } if client_ids else {}
-    output = io.StringIO()
-    writer = csv.writer(output)
-    writer.writerow(
-        ["payment_id", "client_id", "client_name", "amount", "currency", "status", "method", "paid_at", "booking_id"]
-    )
-    for p in rows:
-        cl = clients_map.get(p.client_id)
-        writer.writerow(
-            [
-                p.id,
-                p.client_id,
-                cl.full_name if cl else "",
-                p.amount,
-                p.currency,
-                p.status,
-                p.payment_method,
-                p.paid_at.isoformat() if p.paid_at else "",
-                p.booking_id or "",
-            ]
+    content = utf8_bom_csv_content(
+        io.StringIO(
+            build_payments_csv_content(
+                rows=rows,
+                clients_map=clients_map,
+            )
         )
-    content = utf8_bom_csv_content(output)
-    output.close()
+    )
     fn = f"payments_center_{cid}_{utcnow_naive().strftime('%Y%m%d_%H%M%S')}.csv"
     return StreamingResponse(
         iter([content]),
@@ -4835,26 +4783,9 @@ def export_security_events_csv(
         query = query.filter(models.SecurityAuditEvent.ip.ilike(f"%{audit_ip.strip()}%"))
     events = query.order_by(models.SecurityAuditEvent.created_at.desc()).all()
 
-    output = io.StringIO()
-    writer = csv.writer(output)
-    writer.writerow(["id", "created_at", "event_type", "status", "email", "ip", "path", "details_json"])
-    for ev in events:
-        writer.writerow(
-            [
-                ev.id,
-                ev.created_at.isoformat() if ev.created_at else "",
-                ev.event_type,
-                ev.status,
-                ev.email or "",
-                ev.ip or "",
-                ev.path or "",
-                ev.details_json or "",
-            ]
-        )
     filename = f"security_audit_{utcnow_naive().strftime('%Y%m%d_%H%M%S')}.csv"
     headers = {"Content-Disposition": f'attachment; filename="{filename}"'}
-    content = output.getvalue()
-    output.close()
+    content = build_security_events_csv_content(events)
     return StreamingResponse(iter([content]), media_type="text/csv; charset=utf-8", headers=headers)
 
 
