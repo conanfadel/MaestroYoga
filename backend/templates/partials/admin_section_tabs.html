@@ -1,0 +1,107 @@
+<div class="section-tabs-sticky" id="section-tabs-sticky">
+<nav class="section-tabs" id="section-tabs" aria-label="أقسام لوحة الإدارة">
+  {% if not use_trainer_layout and perm_site_cluster %}
+  <div class="section-tab-cluster" data-tab-cluster>
+    <button type="button" class="section-tab section-tab--cluster-toggle" id="admin-cluster-site-btn" aria-expanded="false" aria-controls="admin-cluster-site-panel" aria-haspopup="true">
+      <span class="section-tab__icon" aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M2 12h20"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg></span>
+      الموقع والمحتوى
+    </button>
+    <div class="section-tab-cluster__dropdown" id="admin-cluster-site-panel" role="group" aria-label="الموقع والمحتوى">
+      <a class="section-tab section-tab--subitem" data-target="section-branding" href="#section-branding" id="tab-section-branding">هوية المركز والغلاف</a>
+      <a class="section-tab section-tab--subitem" data-target="section-index-page" href="#section-index-page" id="tab-section-index-page">محتوى صفحة الحجز</a>
+      <a class="section-tab section-tab--subitem" data-target="section-center-posts" href="#section-center-posts" id="tab-section-center-posts">أخبار ومنشورات</a>
+      <a class="section-tab section-tab--subitem" data-target="section-faq" href="#section-faq" id="tab-section-faq">الأسئلة الشائعة</a>
+      {% if show_staff_roles_handbook %}
+      <a class="section-tab section-tab--subitem" data-target="section-staff-invite" href="#section-staff-invite" id="tab-section-staff-invite">إضافة عضو فريق</a>
+      <a class="section-tab section-tab--subitem" data-target="section-staff-roles" href="#section-staff-roles" id="tab-section-staff-roles">مرجع الأدوار والصلاحيات</a>
+      {% endif %}
+    </div>
+  </div>
+  {% endif %}
+  {% if not use_trainer_layout and perm_ops_cluster %}
+  <div class="section-tab-cluster" data-tab-cluster>
+    <button type="button" class="section-tab section-tab--cluster-toggle" id="admin-cluster-ops-btn" aria-expanded="false" aria-controls="admin-cluster-ops-panel" aria-haspopup="true">
+      <span class="section-tab__icon" aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" aria-hidden="true"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg></span>
+      التشغيل والمواعيد
+    </button>
+    <div class="section-tab-cluster__dropdown" id="admin-cluster-ops-panel" role="group" aria-label="التشغيل والمواعيد">
+      <a class="section-tab section-tab--subitem" data-target="section-rooms" href="#section-rooms" id="tab-section-rooms">الغرف والسعة</a>
+      <a class="section-tab section-tab--subitem" data-target="section-sessions" href="#section-sessions" id="tab-section-sessions">الجلسات والمدفوعات</a>
+      <a class="section-tab section-tab--subitem" data-target="section-plans" href="#section-plans" id="tab-section-plans">خطط الاشتراك</a>
+    </div>
+  </div>
+  {% endif %}
+  {% if not use_trainer_layout and perm_clients_cluster %}
+  <div class="section-tab-cluster" data-tab-cluster>
+    <button type="button" class="section-tab section-tab--cluster-toggle" id="admin-cluster-clients-btn" aria-expanded="false" aria-controls="admin-cluster-clients-panel" aria-haspopup="true">
+      <span class="section-tab__icon section-tab__icon--users" aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></span>
+      العملاء والولاء
+    </button>
+    <div class="section-tab-cluster__dropdown" id="admin-cluster-clients-panel" role="group" aria-label="العملاء والولاء">
+      {% if perm_public_users %}
+      <a class="section-tab section-tab--subitem" data-target="section-public-users" href="#section-public-users" id="tab-section-public-users" title="إدارة المستخدمين">إدارة المستخدمين</a>
+      {% endif %}
+      {% if perm_loyalty %}
+      <a class="section-tab section-tab--subitem" data-target="section-loyalty" href="#section-loyalty" id="tab-section-loyalty" title="برنامج الولاء">برنامج الولاء</a>
+      {% endif %}
+      {% if perm_public_users %}
+      <a class="section-tab section-tab--subitem" data-target="section-public-users-trash" href="#section-public-users-trash" id="tab-section-public-users-trash" title="سلة المحذوفات">سلة المحذوفات</a>
+      {% endif %}
+    </div>
+  </div>
+  {% endif %}
+  {% if not use_trainer_layout and perm_reports_hub %}
+  <div class="section-tab-cluster" data-tab-cluster>
+    <button type="button" class="section-tab section-tab--cluster-toggle" id="admin-cluster-reports-btn" aria-expanded="false" aria-controls="admin-cluster-reports-panel" aria-haspopup="true">
+      <span class="section-tab__icon" aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M3 3v18h18"/><path d="M7 16l4-4 3 3 5-6"/></svg></span>
+      التقارير
+    </button>
+    <div class="section-tab-cluster__dropdown" id="admin-cluster-reports-panel" role="group" aria-label="التقارير">
+      <a class="section-tab section-tab--subitem" data-target="section-reports" href="#section-reports" id="tab-section-reports">مركز التقارير والمقترحات</a>
+    </div>
+  </div>
+  {% endif %}
+  {% if use_trainer_layout %}
+  <div class="section-tab-cluster" data-tab-cluster>
+    <button type="button" class="section-tab section-tab--cluster-toggle" id="admin-cluster-trainer-btn" aria-expanded="false" aria-controls="admin-cluster-trainer-panel" aria-haspopup="true">
+      <span class="section-tab__icon" aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg></span>
+      الجلسات والغرف
+    </button>
+    <div class="section-tab-cluster__dropdown" id="admin-cluster-trainer-panel" role="group" aria-label="الجلسات والغرف">
+      <a class="section-tab section-tab--subitem" data-target="section-rooms" href="#section-rooms" id="tab-section-rooms-trainer">الغرف ونشر الجلسات</a>
+      <a class="section-tab section-tab--subitem" data-target="section-sessions" href="#section-sessions" id="tab-section-sessions-trainer">الجلسات والمدفوعات</a>
+    </div>
+  </div>
+  {% endif %}
+  {% if show_security_section %}
+  <div class="section-tab-cluster" data-tab-cluster id="admin-cluster-security-cluster">
+    <button type="button" class="section-tab section-tab--cluster-toggle" id="admin-cluster-security-btn" aria-expanded="false" aria-controls="admin-cluster-security-panel" aria-haspopup="true">
+      <span class="section-tab__icon section-tab__icon--shield" aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" aria-hidden="true"><g transform="translate(12,12) scale(0.48) translate(-12,-12)"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></g></svg></span>
+      الأمان والمخاطر
+    </button>
+    <div class="section-tab-cluster__dropdown" id="admin-cluster-security-panel" role="group" aria-label="الأمان والمخاطر">
+      <a class="section-tab section-tab--subitem section-tab--security-link" data-target="section-security" data-scroll-anchor="sec-security-overview" data-security-sub="overview" href="#section-security" id="tab-sec-overview">
+        <span class="section-tab__icon" aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg></span>
+        نظرة عامة والمخاطر
+      </a>
+      <a class="section-tab section-tab--subitem section-tab--security-link" data-target="section-security" data-scroll-anchor="sec-security-admin" data-security-sub="admin" href="#section-security" id="tab-sec-admin">
+        <span class="section-tab__icon" aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></span>
+        دخول لوحة الإدارة
+      </a>
+      <a class="section-tab section-tab--subitem section-tab--security-link" data-target="section-security" data-scroll-anchor="sec-security-audit" data-security-sub="audit" href="#section-security" id="tab-sec-audit">
+        <span class="section-tab__icon" aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><line x1="10" y1="9" x2="8" y2="9"/></svg></span>
+        سجل التدقيق والفلترة
+      </a>
+      <a class="section-tab section-tab--subitem section-tab--security-link" data-target="section-security" data-scroll-anchor="sec-security-blocked" data-security-sub="blocked" href="#section-security" id="tab-sec-blocked">
+        <span class="section-tab__icon" aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 9.9-1"/></svg></span>
+        العناوين المحظورة
+      </a>
+      <a class="section-tab section-tab--subitem section-tab--security-link" data-target="section-security" data-scroll-anchor="sec-security-history" data-security-sub="history" href="#section-security" id="tab-sec-history">
+        <span class="section-tab__icon" aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></span>
+        سجل الحظر والإلغاء
+      </a>
+    </div>
+  </div>
+  {% endif %}
+</nav>
+</div>

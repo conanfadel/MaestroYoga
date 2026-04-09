@@ -1,0 +1,52 @@
+{% if analytics_enabled and ga4_measurement_id %}
+<script async src="https://www.googletagmanager.com/gtag/js?id={{ ga4_measurement_id }}"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){ dataLayer.push(arguments); }
+  gtag("js", new Date());
+  gtag("config", "{{ ga4_measurement_id }}", { send_page_view: true });
+</script>
+{% endif %}
+{% set index_page_url = request.url.scheme ~ '://' ~ request.url.netloc ~ request.url.path ~ ('?' ~ request.url.query if request.url.query else '') %}
+{% set healthclub_id = request.url.scheme ~ '://' ~ request.url.netloc ~ '/#center-' ~ (center_id|string) %}
+<script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "HealthClub",
+        "@id": {{ healthclub_id|tojson }},
+        "name": {{ center.name|tojson }},
+        "description": {{ index_meta_description|tojson }},
+        "url": {{ index_page_url|tojson }}
+      }
+      {%- for s in sessions -%}
+      {%- if s.starts_at_iso -%}
+      ,
+      {
+        "@type": "Event",
+        "@id": {{ (index_page_url ~ '#session-' ~ (s.id|string))|tojson }},
+        "name": {{ s.title|tojson }},
+        "description": {{ ((s.trainer_name ~ " — " ~ s.level_label ~ " — " ~ s.room_name))|tojson }},
+        "eventAttendanceMode": "https://schema.org/OfflineEventAttendanceMode",
+        "eventStatus": "https://schema.org/EventScheduled",
+        "startDate": {{ s.starts_at_iso|tojson }},
+        "endDate": {{ s.ends_at_iso|tojson }},
+        "location": {
+          "@type": "Place",
+          "name": {{ s.room_name|tojson }}
+        },
+        "offers": {
+          "@type": "Offer",
+          "price": {{ (s.price_drop_in|string)|tojson }},
+          "priceCurrency": "SAR",
+          "availability": {{ ("https://schema.org/InStock" if s.spots_available > 0 else "https://schema.org/SoldOut")|tojson }},
+          "url": {{ (index_page_url ~ '#session-' ~ (s.id|string))|tojson }}
+        },
+        "organizer": { "@id": {{ healthclub_id|tojson }} }
+      }
+      {%- endif -%}
+      {%- endfor -%}
+    ]
+  }
+</script>

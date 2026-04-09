@@ -31,6 +31,18 @@ from .role_definitions import (
 )
 from .booking_utils import ACTIVE_BOOKING_STATUSES, count_active_bookings, spots_available
 from .bootstrap import DEMO_CENTER_NAME, ensure_demo_data, ensure_demo_news_posts, should_auto_seed_demo_data
+from .admin_report_helpers import (
+    effective_vat_percent_for_center,
+    parse_optional_non_negative_float,
+    parse_optional_non_negative_int,
+    payment_method_label_ar,
+    report_period_to_range,
+    report_previous_period_range,
+    user_can_report_revenue,
+    user_can_report_sessions,
+    utf8_bom_csv_content,
+    vat_inclusive_breakdown,
+)
 from .public_center_helpers import get_center_or_404, get_seeded_center_or_404, resolve_public_center_or_404
 from .database import get_db, is_sqlite
 from .loyalty import (
@@ -3316,98 +3328,6 @@ def _admin_user_for_export_permission(
     return user, None
 
 
-def _utf8_bom_csv_content(output: io.StringIO) -> str:
-    """BOM لعرض UTF-8 بشكل صحيح في Excel."""
-    return "\ufeff" + output.getvalue()
-
-
-def _user_can_report_sessions(user: models.User) -> bool:
-    return user_has_permission(user, "sessions.manage") or user_has_permission(
-        user, "reports.financial"
-    ) or user_has_permission(user, "dashboard.view")
-
-
-def _user_can_report_revenue(user: models.User) -> bool:
-    return user_has_permission(user, "payments.records") or user_has_permission(
-        user, "reports.financial"
-    ) or user_has_permission(user, "dashboard.financial")
-
-
-def _report_period_to_range(
-    period: str,
-    date_from_s: str | None,
-    date_to_s: str | None,
-) -> tuple[date, date, str, str | None]:
-    """(start, end, label_ar, error_or_none). التواريخ حسب تخزين الخادم (نفس لوحة الإدارة)."""
-    today = utcnow_naive().date()
-    p = (period or "today").strip().lower()
-    if p == "today":
-        return today, today, "اليوم", None
-    if p == "week":
-        w0 = today - timedelta(days=today.weekday())
-        w6 = w0 + timedelta(days=6)
-        return w0, w6, "هذا الأسبوع (الإثنين–الأحد)", None
-    if p == "month":
-        first = today.replace(day=1)
-        if first.month == 12:
-            last = date(first.year, 12, 31)
-        else:
-            last = date(first.year, first.month + 1, 1) - timedelta(days=1)
-        return first, last, "هذا الشهر", None
-    if p == "year":
-        y = today.year
-        return date(y, 1, 1), date(y, 12, 31), f"السنة {y}", None
-    if p == "custom":
-        a = _parse_optional_date_str(date_from_s)
-        b = _parse_optional_date_str(date_to_s)
-        if not a or not b or a > b:
-            return today, today, "", "أدخل تاريخ البداية والنهاية بصيغة YYYY-MM-DD ضمن فترة صحيحة."
-        return a, b, f"من {a.isoformat()} إلى {b.isoformat()}", None
-    return today, today, "اليوم", None
-
-
-def _report_previous_period_range(d0: date, d1: date) -> tuple[date, date, str]:
-    """نفس طول الفترة الحالية مباشرة قبلها (للمقارنة)."""
-    span_days = (d1 - d0).days + 1
-    if span_days < 1:
-        span_days = 1
-    prev_end = d0 - timedelta(days=1)
-    prev_start = prev_end - timedelta(days=span_days - 1)
-    label = f"{prev_start.isoformat()} ← {prev_end.isoformat()}"
-    return prev_start, prev_end, label
-
-
-def _vat_inclusive_breakdown(gross_total: float, vat_rate_percent: float) -> dict[str, float]:
-    """تقدير صافي وضريبة بافتراض أن الإجمالي يشمل الضريبة (عرض شائع بالريال)."""
-    if gross_total <= 0 or vat_rate_percent <= 0:
-        return {"gross": gross_total, "net": gross_total, "vat": 0.0}
-    div = 1.0 + (vat_rate_percent / 100.0)
-    net = gross_total / div
-    vat_amt = gross_total - net
-    return {"gross": gross_total, "net": net, "vat": vat_amt}
-
-
-def _effective_vat_percent_for_center(center: models.Center | None) -> float:
-    if center is not None and center.vat_rate_percent is not None:
-        try:
-            return float(center.vat_rate_percent)
-        except (TypeError, ValueError):
-            pass
-    try:
-        return float((os.getenv("VAT_RATE_PERCENT") or "15").strip() or "15")
-    except ValueError:
-        return 15.0
-
-
-def _payment_method_label_ar(method: str | None) -> str:
-    m = (method or "").strip()
-    return {
-        "in_app_mock": "وهمي / تجريبي",
-        "public_checkout": "دفع صفحة الحجز",
-        "public_cart_checkout": "دفع السلة العامة",
-    }.get(m, m or "—")
-
-
 @router.get("/admin/reports/sessions", response_class=HTMLResponse)
 def admin_report_sessions(
     request: Request,
@@ -3425,14 +3345,20 @@ def admin_report_sessions(
             url=_url_with_params("/admin", msg=ADMIN_MSG_TRAINER_ADMIN_FORBIDDEN),
             status_code=303,
         )
-    if not _user_can_report_sessions(user):
+    if not user_can_report_sessions(user=user, user_has_permission_fn=user_has_permission):
         return RedirectResponse(
             url=_url_with_params("/admin", msg=ADMIN_MSG_REPORT_FORBIDDEN),
             status_code=303,
         )
     cid = require_user_center_id(user)
     center = db.get(models.Center, cid)
-    d0, d1, range_label, range_err = _report_period_to_range(period, date_from, date_to)
+    d0, d1, range_label, range_err = report_period_to_range(
+        period=period,
+        date_from_s=date_from,
+        date_to_s=date_to,
+        parse_optional_date_fn=_parse_optional_date_str,
+        utcnow_fn=utcnow_naive,
+    )
     rooms_by_id = {r.id: r for r in db.query(models.Room).filter(models.Room.center_id == cid).all()}
     sessions = (
         db.query(models.YogaSession)
@@ -3491,7 +3417,7 @@ def admin_report_sessions(
         )
     curr_session_count = len(sessions)
     curr_active_bookings = sum(booking_counts[sid]["active"] for sid in session_ids)
-    pp0, pp1, prev_sess_label = _report_previous_period_range(d0, d1)
+    pp0, pp1, prev_sess_label = report_previous_period_range(d0, d1)
     prev_sess_filters = [
         models.YogaSession.center_id == cid,
         func.date(models.YogaSession.starts_at) >= pp0,
@@ -3551,15 +3477,21 @@ def admin_report_revenue(
             url=_url_with_params("/admin", msg=ADMIN_MSG_TRAINER_ADMIN_FORBIDDEN),
             status_code=303,
         )
-    if not _user_can_report_revenue(user):
+    if not user_can_report_revenue(user=user, user_has_permission_fn=user_has_permission):
         return RedirectResponse(
             url=_url_with_params("/admin", msg=ADMIN_MSG_REPORT_FORBIDDEN),
             status_code=303,
         )
     cid = require_user_center_id(user)
     center = db.get(models.Center, cid)
-    d0, d1, range_label, range_err = _report_period_to_range(period, date_from, date_to)
-    vat_pct = _effective_vat_percent_for_center(center)
+    d0, d1, range_label, range_err = report_period_to_range(
+        period=period,
+        date_from_s=date_from,
+        date_to_s=date_to,
+        parse_optional_date_fn=_parse_optional_date_str,
+        utcnow_fn=utcnow_naive,
+    )
+    vat_pct = effective_vat_percent_for_center(center=center)
 
     base_pf = [
         models.Payment.center_id == cid,
@@ -3572,12 +3504,12 @@ def admin_report_revenue(
         .scalar()
         or 0.0
     )
-    vat_breakdown = _vat_inclusive_breakdown(paid_total, vat_pct)
+    vat_breakdown = vat_inclusive_breakdown(paid_total, vat_pct)
     paid_count = (
         db.query(func.count(models.Payment.id)).filter(*base_pf, models.Payment.status == "paid").scalar()
         or 0
     )
-    p0, p1, prev_period_label = _report_previous_period_range(d0, d1)
+    p0, p1, prev_period_label = report_previous_period_range(d0, d1)
     prev_pf = [
         models.Payment.center_id == cid,
         func.date(models.Payment.paid_at) >= p0,
@@ -3748,7 +3680,7 @@ def admin_report_revenue(
     day_rows = [{"d": row[0], "amount": float(row[1] or 0)} for row in by_day]
     method_rows = [
         {
-            "method": _payment_method_label_ar(m),
+            "method": payment_method_label_ar(m),
             "method_id": m or "",
             "count": int(c),
             "amount": float(a or 0),
@@ -3848,14 +3780,20 @@ def admin_report_insights(
             url=_url_with_params("/admin", msg=ADMIN_MSG_TRAINER_ADMIN_FORBIDDEN),
             status_code=303,
         )
-    if not _user_can_report_sessions(user):
+    if not user_can_report_sessions(user=user, user_has_permission_fn=user_has_permission):
         return RedirectResponse(
             url=_url_with_params("/admin", msg=ADMIN_MSG_REPORT_FORBIDDEN),
             status_code=303,
         )
     cid = require_user_center_id(user)
     center = db.get(models.Center, cid)
-    d0, d1, range_label, range_err = _report_period_to_range(period, date_from, date_to)
+    d0, d1, range_label, range_err = report_period_to_range(
+        period=period,
+        date_from_s=date_from,
+        date_to_s=date_to,
+        parse_optional_date_fn=_parse_optional_date_str,
+        utcnow_fn=utcnow_naive,
+    )
     sess_filters = [
         models.YogaSession.center_id == cid,
         func.date(models.YogaSession.starts_at) >= d0,
@@ -4058,7 +3996,7 @@ def admin_report_insights(
             else:
                 attend_counts["unknown"] += cni
 
-    ip0, ip1, prev_insights_label = _report_previous_period_range(d0, d1)
+    ip0, ip1, prev_insights_label = report_previous_period_range(d0, d1)
     prev_sess_filters_ins = [
         models.YogaSession.center_id == cid,
         func.date(models.YogaSession.starts_at) >= ip0,
@@ -4130,7 +4068,9 @@ def admin_report_insights(
 
 
 def _user_can_report_health(user: models.User) -> bool:
-    return _user_can_report_sessions(user) or _user_can_report_revenue(user)
+    return user_can_report_sessions(user=user, user_has_permission_fn=user_has_permission) or user_can_report_revenue(
+        user=user, user_has_permission_fn=user_has_permission
+    )
 
 
 def _clients_new_returning_for_range(
@@ -4191,16 +4131,22 @@ def admin_report_clients(
             url=_url_with_params("/admin", msg=ADMIN_MSG_TRAINER_ADMIN_FORBIDDEN),
             status_code=303,
         )
-    if not _user_can_report_sessions(user):
+    if not user_can_report_sessions(user=user, user_has_permission_fn=user_has_permission):
         return RedirectResponse(
             url=_url_with_params("/admin", msg=ADMIN_MSG_REPORT_FORBIDDEN),
             status_code=303,
         )
     cid = require_user_center_id(user)
     center = db.get(models.Center, cid)
-    d0, d1, range_label, range_err = _report_period_to_range(period, date_from, date_to)
+    d0, d1, range_label, range_err = report_period_to_range(
+        period=period,
+        date_from_s=date_from,
+        date_to_s=date_to,
+        parse_optional_date_fn=_parse_optional_date_str,
+        utcnow_fn=utcnow_naive,
+    )
     new_clients, returning_clients, distinct_booking_clients = _clients_new_returning_for_range(db, cid, d0, d1)
-    pp0, pp1, prev_clients_label = _report_previous_period_range(d0, d1)
+    pp0, pp1, prev_clients_label = report_previous_period_range(d0, d1)
     prev_new, prev_returning, prev_distinct = _clients_new_returning_for_range(db, cid, pp0, pp1)
 
     return templates.TemplateResponse(
@@ -4241,7 +4187,7 @@ def admin_report_subscriptions(
             url=_url_with_params("/admin", msg=ADMIN_MSG_TRAINER_ADMIN_FORBIDDEN),
             status_code=303,
         )
-    if not _user_can_report_sessions(user):
+    if not user_can_report_sessions(user=user, user_has_permission_fn=user_has_permission):
         return RedirectResponse(
             url=_url_with_params("/admin", msg=ADMIN_MSG_REPORT_FORBIDDEN),
             status_code=303,
@@ -4372,7 +4318,13 @@ def admin_report_security_audit(
     assert user is not None
     if not user_has_permission(user, "security.audit"):
         return _security_owner_forbidden_redirect()
-    d0, d1, range_label, range_err = _report_period_to_range(period, date_from, date_to)
+    d0, d1, range_label, range_err = report_period_to_range(
+        period=period,
+        date_from_s=date_from,
+        date_to_s=date_to,
+        parse_optional_date_fn=_parse_optional_date_str,
+        utcnow_fn=utcnow_naive,
+    )
     q = db.query(models.SecurityAuditEvent).filter(
         func.date(models.SecurityAuditEvent.created_at) >= d0,
         func.date(models.SecurityAuditEvent.created_at) <= d1,
@@ -4409,28 +4361,6 @@ def admin_report_security_audit(
     )
 
 
-def _parse_optional_non_negative_float(raw: str | None) -> float | None:
-    s = (raw or "").strip().replace(",", ".")
-    if not s:
-        return None
-    try:
-        v = float(s)
-        return v if v >= 0 else None
-    except ValueError:
-        return None
-
-
-def _parse_optional_non_negative_int(raw: str | None) -> int | None:
-    s = (raw or "").strip()
-    if not s:
-        return None
-    try:
-        v = int(s)
-        return v if v >= 0 else None
-    except ValueError:
-        return None
-
-
 @router.post("/admin/center/report-settings")
 def admin_center_report_settings(
     request: Request,
@@ -4451,13 +4381,13 @@ def admin_center_report_settings(
     center = db.get(models.Center, cid)
     if not center:
         return _admin_redirect(ADMIN_MSG_CENTER_BRANDING_CENTER_MISSING, return_section=return_section)
-    center.monthly_revenue_goal = _parse_optional_non_negative_float(monthly_revenue_goal)
-    center.monthly_bookings_goal = _parse_optional_non_negative_int(monthly_bookings_goal)
+    center.monthly_revenue_goal = parse_optional_non_negative_float(monthly_revenue_goal)
+    center.monthly_bookings_goal = parse_optional_non_negative_int(monthly_bookings_goal)
     s_vat = (vat_rate_percent or "").strip()
     if not s_vat:
         center.vat_rate_percent = None
     else:
-        vr = _parse_optional_non_negative_float(s_vat)
+        vr = parse_optional_non_negative_float(s_vat)
         center.vat_rate_percent = vr if vr is not None and vr <= 100 else None
     em = (report_digest_email or "").strip()[:220]
     center.report_digest_email = em or None
@@ -4750,7 +4680,7 @@ def export_clients_csv(request: Request, db: Session = Depends(get_db)):
                 c.created_at.isoformat() if c.created_at else "",
             ]
         )
-    content = _utf8_bom_csv_content(output)
+    content = utf8_bom_csv_content(output)
     output.close()
     fn = f"clients_center_{cid}_{utcnow_naive().strftime('%Y%m%d_%H%M%S')}.csv"
     return StreamingResponse(
@@ -4805,7 +4735,7 @@ def export_bookings_csv(request: Request, db: Session = Depends(get_db)):
                 cl.email,
             ]
         )
-    content = _utf8_bom_csv_content(output)
+    content = utf8_bom_csv_content(output)
     output.close()
     fn = f"bookings_center_{cid}_{utcnow_naive().strftime('%Y%m%d_%H%M%S')}.csv"
     return StreamingResponse(
@@ -4860,7 +4790,7 @@ def export_payments_csv(
                 p.booking_id or "",
             ]
         )
-    content = _utf8_bom_csv_content(output)
+    content = utf8_bom_csv_content(output)
     output.close()
     fn = f"payments_center_{cid}_{utcnow_naive().strftime('%Y%m%d_%H%M%S')}.csv"
     return StreamingResponse(
