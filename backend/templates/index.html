@@ -3337,78 +3337,7 @@
 
     <main id="main-content" class="grid-two">
       <div class="grid-two__main">
-      <section id="sessions-section" class="card sessions-panel" aria-label="قائمة الجلسات">
-        <h2 class="booking-block-heading booking-block-heading--flush-top">الجلسات المتاحة للحجز الفوري</h2>
-        <p class="sessions-lead">صفِّ الجلسات حسب الوقت والسعر والمستوى (بما فيها جلسات <strong>المبتدئين</strong>)، ثم أضِف ما تريد إلى السلة وأكمل الطلب بعد تسجيل الدخول.</p>
-        {% include "partials/index_sessions_filters.html" %}
-
-        <div class="sessions-cards" id="sessions-cards">
-              {% for s in sessions %}
-              <article
-                id="session-{{ s.id }}"
-                class="session-card session-row{% if s.spots_available > 0 and s.spots_available <= 3 %} session-card--scarce{% endif %} reveal-on-scroll"
-                data-session-id="{{ s.id }}"
-                data-title="{{ s.title }} {{ s.trainer_name }}"
-                data-level="{{ s.level_label }}"
-                data-available="{{ s.spots_available }}"
-                data-price="{{ s.price_drop_in }}"
-                data-time="{{ s.starts_at.isoformat() if s.starts_at else '' }}"
-              >
-                <header class="session-card__bar">{{ s.title }}</header>
-                <div class="session-card__body">
-                  <div class="session-card__price">{{ s.price_drop_in }}<span>ر.س</span></div>
-                  <div class="session-card__when">
-                    <span class="session-card__when-label">اليوم والموعد</span>
-                    <span class="session-card__when-main">{{ s.starts_at_display }}</span>
-                    <span class="session-card__when-relative" data-session-relative aria-hidden="true"></span>
-                  </div>
-                  <div class="session-card__info">
-                    <strong>المدرب:</strong> {{ s.trainer_name }} · <strong>المستوى:</strong> {{ s.level_label }}<br/>
-                    <strong>الغرفة:</strong> {{ s.room_name }} · <strong>المدة:</strong> {{ s.duration_minutes }} دقيقة
-                  </div>
-                </div>
-                <div class="session-card__footer">
-                  <div class="session-card__row">
-                    <div class="availability">
-                      <strong>{{ s.spots_available }}</strong> مقعد متاح
-                      <div class="bar"><span style="width: {{ 100 if s.spots_available > 10 else (s.spots_available * 10) }}%;"></span></div>
-                    </div>
-                    {% if s.spots_available > 0 and s.spots_available < 5 %}
-                    <span class="session-card__tag">عدد محدود</span>
-                    {% endif %}
-                  </div>
-                  <button type="button" class="session-card__details-toggle" aria-expanded="false">تفاصيل</button>
-                  {% if s.spots_available > 0 %}
-                    <button
-                      type="button"
-                      class="book-btn book-btn-lg js-add-session"
-                      data-session-id="{{ s.id }}"
-                      data-title="{{ s.title|e }}"
-                      data-price="{{ s.price_drop_in }}"
-                      data-when="{{ s.starts_at_display|e }}"
-                    >
-                      أضف للسلة
-                    </button>
-                  {% else %}
-                  <button class="book-btn book-btn-lg" type="button" disabled>ممتلئة</button>
-                  {% endif %}
-                </div>
-              </article>
-              {% else %}
-              <div class="sessions-empty" role="status">
-                <div class="sessions-empty__icon" aria-hidden="true">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/><path d="M8 14h.01"/><path d="M12 14h.01"/><path d="M16 14h.01"/><path d="M8 18h.01"/><path d="M12 18h.01"/><path d="M16 18h.01"/></svg>
-                </div>
-                <h3 class="booking-block-heading booking-block-heading--compact sessions-empty__title">لا توجد جلسات مفتوحة للحجز الآن</h3>
-                <p>يمكنك الاطلاع على <strong>باقات الاشتراك</strong> في العمود الجانبي، أو العودة لاحقًا عند إضافة مواعيد جديدة.</p>
-                <div class="sessions-empty__actions">
-                  <a class="btn primary" href="#plans-section">عرض خطط الاشتراك</a>
-                  <a class="btn ghost" href="{{ public_news_list_url }}">أخبار المركز</a>
-                </div>
-              </div>
-              {% endfor %}
-        </div>
-      </section>
+      {% include "partials/index_sessions_panel.html" %}
 
       {% if pinned_public_post or public_posts_teasers %}
       <section id="center-news-section" class="card index-news-showcase" aria-label="ما الجديد في المركز">

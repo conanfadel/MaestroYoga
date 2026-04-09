@@ -412,7 +412,7 @@ curl -X POST http://127.0.0.1:8000/seed-demo -H "X-Seed-Demo-Key: replace-with-s
 - `backend/app/security.py` - JWT + كلمة المرور + الصلاحيات
 - `backend/app/payments.py` - طبقة مزود الدفع
 - `mobile_app/main.py` - واجهة العميل (موبايل/تابلت)
-- `backend/app/web_ui.py` - صفحات الويب (إدارة + عامة)
+- `backend/app/web_ui/` - صفحات الويب: `impl_state.py`، `public_routes.py` (يجمع `public_index_routes`، `public_browse_routes`، `public_commerce_routes`، `public_auth_routes`، `public_subscribe_routes`)، `admin_routes.py` (يجمع `admin_auth_routes`، `admin_dashboard_routes`، `admin_org_routes`، `admin_center_routes`)، `admin_reports*.py`، و`impl.py` يجمّع الـ `router`؛ التصدير من `__init__.py`
 - `backend/templates/` - قوالب HTML (لوحة الإدارة + الفهرس العام)
 
 ## Smoke Checks (سريعة)
