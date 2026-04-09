@@ -60,6 +60,7 @@ from .public_auth_helpers import (
 )
 from .public_content_version import compute_public_center_content_version
 from .public_news_helpers import build_public_posts_blocks, index_preconnect_origins, preview_text
+from .public_index_data_helpers import load_public_index_data
 from .public_sessions_helpers import build_public_session_rows
 from .rate_limiter import rate_limiter
 from .request_ip import get_client_ip
@@ -988,47 +989,12 @@ def public_index(
     spots_by_session = _spots_available_map(db, center.id, [int(s.id) for s in sessions])
     rows = build_public_session_rows(sessions, rooms_by_id, spots_by_session)
 
-    plans = (
-        db.query(models.SubscriptionPlan)
-        .filter(
-            models.SubscriptionPlan.center_id == center.id,
-            models.SubscriptionPlan.is_active.is_(True),
-        )
-        .order_by(models.SubscriptionPlan.price.asc())
-        .all()
-    )
-    faq_items = (
-        db.query(models.FAQItem)
-        .filter(models.FAQItem.center_id == center.id, models.FAQItem.is_active.is_(True))
-        .order_by(models.FAQItem.sort_order.asc(), models.FAQItem.created_at.asc())
-        .all()
-    )
-    pinned_post = (
-        db.query(models.CenterPost)
-        .filter(
-            models.CenterPost.center_id == center.id,
-            models.CenterPost.is_published.is_(True),
-            models.CenterPost.is_pinned.is_(True),
-        )
-        .order_by(nullslast(models.CenterPost.published_at.desc()), models.CenterPost.id.desc())
-        .first()
-    )
-    total_published_posts = (
-        db.query(func.count(models.CenterPost.id))
-        .filter(
-            models.CenterPost.center_id == center.id,
-            models.CenterPost.is_published.is_(True),
-        )
-        .scalar()
-        or 0
-    )
-    recent_posts_q = (
-        db.query(models.CenterPost)
-        .filter(models.CenterPost.center_id == center.id, models.CenterPost.is_published.is_(True))
-        .order_by(nullslast(models.CenterPost.published_at.desc()), models.CenterPost.id.desc())
-        .limit(24)
-        .all()
-    )
+    index_data = load_public_index_data(db, center.id)
+    plans = index_data["plans"]
+    faq_items = index_data["faq_items"]
+    pinned_post = index_data["pinned_post"]
+    total_published_posts = index_data["total_published_posts"]
+    recent_posts_q = index_data["recent_posts"]
     pinned_public_post, public_posts_teasers, news_ticker_items = build_public_posts_blocks(
         pinned_post=pinned_post,
         recent_posts=recent_posts_q,
