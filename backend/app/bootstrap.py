@@ -195,7 +195,7 @@ def _seed_default_faqs(center_id: int) -> list[models.FAQItem]:
 def ensure_demo_data(db: Session) -> models.Center:
     center = db.query(models.Center).filter(models.Center.name == DEMO_CENTER_NAME).first()
     if not center:
-        center = models.Center(name=DEMO_CENTER_NAME, city="Riyadh")
+        center = models.Center(name=DEMO_CENTER_NAME, city="القطيف")
         db.add(center)
         db.flush()
 
@@ -478,6 +478,10 @@ def ensure_demo_data(db: Session) -> models.Center:
         db.commit()
 
     if center.name == DEMO_CENTER_NAME:
+        # Normalize legacy demo city value to the new default.
+        if (center.city or "").strip().lower() == "riyadh":
+            center.city = "القطيف"
+            db.commit()
         ensure_demo_news_posts(db, center.id)
 
     return center

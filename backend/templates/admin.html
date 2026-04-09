@@ -327,7 +327,7 @@
             <label for="index_center_name">اسم المركز (يظهر في العنوان وSEO)</label>
             <input id="index_center_name" name="center_name" type="text" required maxlength="200" value="{{ center.name }}" />
             <label for="index_city">المدينة (اختياري — شريط الثقة)</label>
-            <input id="index_city" name="city" type="text" maxlength="120" placeholder="مثال: الرياض" value="{{ center.city or '' }}" />
+            <input id="index_city" name="city" type="text" maxlength="120" placeholder="مثال: القطيف" value="{{ center.city or 'القطيف' }}" />
             <button type="submit" class="soft" style="margin:10px 0 16px;">حفظ الاسم والموقع</button>
 
             <h3 class="admin-booking-block-heading">شريط الثقة أسفل الغلاف</h3>
