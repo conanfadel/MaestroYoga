@@ -1,0 +1,63 @@
+{% if morning_brief %}
+<div class="card morning-brief-strip" style="margin-bottom:14px;" aria-label="ملخص سريع لليوم">
+  <h2 class="admin-booking-block-heading admin-booking-block-heading--compact" style="margin-bottom:10px;">لمحة اليوم</h2>
+  <div class="stats" style="flex-wrap:wrap;">
+    <div class="stat"><div class="k">جلسات مجدولة</div><div class="v">{{ morning_brief.sessions_today }}</div></div>
+    <div class="stat"><div class="k">حجوزات نشطة</div><div class="v">{{ morning_brief.bookings_today }}</div></div>
+    <div class="stat"><div class="k">إيراد مدفوع</div><div class="v">{{ '%.2f'|format(morning_brief.revenue_today) }} SAR</div></div>
+    <div class="stat"><div class="k">معلّقات قديمة (+8 يوم)</div><div class="v">{{ morning_brief.pending_stale_8d }}</div></div>
+    <div class="stat"><div class="k">فاشلة (7 أيام)</div><div class="v">{{ morning_brief.failed_7d }}</div></div>
+    <div class="stat"><div class="k">اشتراكات تنتهي (7 أيام)</div><div class="v">{{ morning_brief.subs_expiring_7d }}</div></div>
+  </div>
+</div>
+{% endif %}
+
+{% if revenue_7d_bars and perm_dashboard_financial %}
+<div class="revenue-7d-wrap" aria-label="إيراد آخر 7 أيام">
+  <div class="revenue-7d-head">
+    <strong>إيراد مدفوعات آخر 7 أيام (ريال)</strong>
+    <span class="small">مجموع أسبوعي تقريبي للمقارنة البصرية</span>
+  </div>
+  <div class="revenue-7d-bars">
+    {% for b in revenue_7d_bars %}
+    <div class="revenue-7d-bar-col">
+      <div class="revenue-7d-bar" style="height: {{ b.bar_pct }}px; max-height: 96px;" title="{{ b.amount }} ريال"></div>
+      <span class="revenue-7d-label">{{ b.label }}</span>
+      <span class="revenue-7d-amt">{{ '%.0f'|format(b.amount) }}</span>
+    </div>
+    {% endfor %}
+  </div>
+</div>
+{% endif %}
+
+{% if perm_reminder_card %}
+<div class="card" style="margin-bottom:14px;">
+  <h2 style="margin-bottom:8px;">قالب رسالة تذكير بالحجز</h2>
+  <p class="small" style="margin:0 0 8px;">انسخ النص وعدّله في تطبيق الرسائل أو البريد (لا يُرسل تلقائياً من النظام).</p>
+  <textarea id="admin-reminder-template" readonly rows="5" style="min-height:120px;">مرحبًا [اسم_العميل]،
+
+نذكّرك بجلسة اليوغا «[عنوان_الجلسة]» يوم [التاريخ_والوقت] في [اسم_المركز].
+
+رابط الحجز والتفاصيل:
+{{ request.url.scheme }}://{{ request.url.netloc }}{{ admin_public_index_url }}
+
+مع تحيات فريق {{ center.name if center else 'المركز' }}</textarea>
+  <button type="button" class="btn-inline" id="admin-copy-reminder-btn">نسخ القالب</button>
+</div>
+{% endif %}
+
+{% if perm_dashboard %}
+<div class="stats">
+  <div class="stat"><div class="k">عدد العملاء</div><div class="v">{{ dashboard.clients_count }}</div></div>
+  <div class="stat"><div class="k">عدد الغرف</div><div class="v">{{ dashboard.rooms_count }}</div></div>
+  <div class="stat"><div class="k">عدد الجلسات</div><div class="v">{{ dashboard.sessions_count }}</div></div>
+  <div class="stat"><div class="k">عدد الحجوزات</div><div class="v">{{ dashboard.bookings_count }}</div></div>
+  <div class="stat"><div class="k">الخطط النشطة</div><div class="v">{{ dashboard.active_plans_count }}</div></div>
+  <div class="stat"><div class="k">الاشتراكات الفعّالة</div><div class="v">{{ dashboard.active_subscriptions_count }}</div></div>
+  <div class="stat"><div class="k">إيراد اليوم</div><div class="v">{{ dashboard.revenue_today }} SAR</div></div>
+  <div class="stat"><div class="k">الإيراد الكلي</div><div class="v">{{ dashboard.revenue_total }} SAR</div></div>
+  <div class="stat"><div class="k">عدد المستخدمين</div><div class="v">{{ dashboard.public_users_count }}</div></div>
+  <div class="stat"><div class="k">مستخدمون جدد (7 أيام)</div><div class="v">{{ dashboard.public_users_new_7d }}</div></div>
+  <div class="stat"><div class="k">محذوفون (Soft)</div><div class="v">{{ dashboard.public_users_deleted_count }}</div></div>
+</div>
+{% endif %}
