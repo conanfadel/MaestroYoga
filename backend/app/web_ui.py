@@ -59,7 +59,12 @@ from .public_auth_helpers import (
     queue_verify_email_for_user,
 )
 from .public_content_version import compute_public_center_content_version
-from .public_news_helpers import build_public_posts_blocks, index_preconnect_origins, preview_text
+from .public_news_helpers import (
+    build_public_news_list_rows,
+    build_public_posts_blocks,
+    index_preconnect_origins,
+    preview_text,
+)
 from .public_index_data_helpers import load_public_index_data
 from .public_loyalty_helpers import build_public_loyalty_context
 from .public_plan_helpers import build_public_plan_rows
@@ -1258,21 +1263,7 @@ def public_news_list(
         )
 
     posts = q.all()
-    news_rows = []
-    for p in posts:
-        sum_full = (p.summary or "").strip()
-        news_rows.append(
-            {
-                "title": p.title,
-                "post_type": p.post_type,
-                "type_label": CENTER_POST_TYPE_LABELS.get(p.post_type, p.post_type),
-                "summary": preview_text(sum_full, 180),
-                "published_at_display": _fmt_dt(p.published_at) if p.published_at else "",
-                "detail_url": _url_with_params("/post", center_id=str(center_id), post_id=str(p.id)),
-                "cover_image_url": p.cover_image_url,
-                "is_pinned": bool(p.is_pinned),
-            }
-        )
+    news_rows = build_public_news_list_rows(posts=posts, center_id=center_id, type_labels=CENTER_POST_TYPE_LABELS)
 
     post_type_filter_options = [("", "كل الأنواع")] + [(k, CENTER_POST_TYPE_LABELS[k]) for k in sorted(CENTER_POST_TYPES)]
     sort_filter_options = [

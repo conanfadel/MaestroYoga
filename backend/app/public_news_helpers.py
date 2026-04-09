@@ -76,6 +76,25 @@ def build_public_posts_blocks(
     return pinned_public_post, public_posts_teasers, news_ticker_items
 
 
+def build_public_news_list_rows(*, posts: list, center_id: int, type_labels: dict[str, str]) -> list[dict]:
+    rows: list[dict] = []
+    for p in posts:
+        sum_full = (p.summary or "").strip()
+        rows.append(
+            {
+                "title": p.title,
+                "post_type": p.post_type,
+                "type_label": type_labels.get(p.post_type, p.post_type),
+                "summary": preview_text(sum_full, 180),
+                "published_at_display": _fmt_dt(p.published_at) if p.published_at else "",
+                "detail_url": _url_with_params("/post", center_id=str(center_id), post_id=str(p.id)),
+                "cover_image_url": p.cover_image_url,
+                "is_pinned": bool(p.is_pinned),
+            }
+        )
+    return rows
+
+
 def index_preconnect_origins(
     request,
     center,
