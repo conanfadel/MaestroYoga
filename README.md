@@ -412,7 +412,7 @@ curl -X POST http://127.0.0.1:8000/seed-demo -H "X-Seed-Demo-Key: replace-with-s
 - `backend/app/security.py` - JWT + كلمة المرور + الصلاحيات
 - `backend/app/payments.py` - طبقة مزود الدفع
 - `mobile_app/main.py` - واجهة العميل (موبايل/تابلت)
-- `backend/app/web_ui/` - صفحات الويب: `impl_state.py`، `public_routes.py` (يجمع وحدات `public_*`)، `admin_routes.py` (يجمع `admin_auth`، `admin_dashboard`، `admin_org_*`، `admin_center`)، `admin_reports_html.py` (واجهة لـ `admin_reports_html_sessions_revenue`، `insights`، `rest`) مع `admin_reports_*` الأخرى، و`impl.py` يجمّع الـ `router`؛ التصدير من `__init__.py`
+- `backend/app/web_ui/` - صفحات الويب: `impl_state.py`، `public_routes.py` (يجمع وحدات `public_*`)، `admin_routes.py` (يجمع `admin_auth`، `admin_dashboard`، `admin_org_*`، `admin_center`)، `admin_dashboard_context.py` (بناء سياق قالب `GET /admin`)، `admin_reports_html.py` (واجهة لـ `admin_reports_html_sessions_revenue`، `insights`، `rest`) مع `admin_reports_*` الأخرى، و`impl.py` يجمّع الـ `router`؛ التصدير من `__init__.py`
 - `backend/static/css/admin-dashboard.css` - يستورد `admin-dashboard-reports`، `shell`، `main`، `extras` (التقسيم للصيانة دون تغيير مسار الربط في القوالب)
 - `backend/templates/` - قوالب HTML (لوحة الإدارة + الفهرس العام)
 
