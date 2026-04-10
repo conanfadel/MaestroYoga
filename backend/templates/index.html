@@ -500,11 +500,9 @@
     }
     .hero-toolbar {
       display: flex;
-      flex-direction: row;
-      flex-wrap: nowrap;
-      align-items: center;
-      /* مرن عبر المقاسات: يقلّل التباعد على الشاشات الكبيرة ويمنع التداخل على المتوسطة */
-      gap: clamp(6px, 1vw, 12px);
+      flex-direction: column;
+      align-items: stretch;
+      gap: 10px;
       position: relative;
       z-index: 2;
       margin-top: 0;
@@ -515,9 +513,38 @@
       -webkit-backdrop-filter: blur(10px);
       border: 1px solid rgba(197, 160, 89, 0.14);
       box-shadow: 0 4px 20px rgba(45, 52, 54, 0.05);
-      overflow-x: auto;
-      -webkit-overflow-scrolling: touch;
-      scrollbar-width: thin;
+      overflow-x: visible;
+    }
+    .hero-toolbar__actions {
+      display: flex;
+      flex-direction: row;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: clamp(8px, 1.2vw, 14px);
+      width: 100%;
+      min-width: 0;
+    }
+    .hero-toolbar__actions-cluster {
+      display: inline-flex;
+      flex-direction: row;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: clamp(6px, 1vw, 12px);
+      min-width: 0;
+      flex: 0 1 auto;
+    }
+    .hero-toolbar__chips-row {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 8px;
+      width: 100%;
+      padding-top: 8px;
+      margin-top: 2px;
+      border-top: 1px solid rgba(197, 160, 89, 0.14);
+      min-width: 0;
     }
     /* الشريط بعرض كامل داخل الهيدر — صورة الغلاف تظهر خلفه من الحافة اليمنى إلى اليسرى */
     .hero-toolbar--over-cover {
@@ -548,9 +575,10 @@
       flex-shrink: 0;
     }
     .hero-toolbar__group--chips {
-      flex: 1 1 auto;
+      flex: 0 1 auto;
       min-width: 0;
       justify-content: center;
+      flex-wrap: wrap;
       gap: 7px;
     }
     .hero-toolbar__group--cta {
@@ -587,9 +615,12 @@
       font-weight: 700;
     }
     @media (max-width: 720px) {
-      .hero-toolbar {
-        flex-wrap: wrap;
-        overflow-x: visible;
+      .hero-toolbar__actions {
+        flex-direction: column;
+        align-items: stretch;
+        justify-content: flex-start;
+      }
+      .hero-toolbar__actions-cluster {
         justify-content: flex-start;
       }
       .hero-toolbar__divider { display: none; }
@@ -598,19 +629,11 @@
         padding-inline: 16px;
       }
     }
-    /* على اللابتوب/الشاشات المتوسطة: اسمح بالالتفاف بدل التداخل */
     @media (max-width: 1180px) {
-      .hero-toolbar {
+      .hero-toolbar__actions {
         flex-wrap: wrap;
-        overflow-x: visible;
-        justify-content: flex-start;
       }
       .hero-toolbar__divider { display: none; }
-      .hero-toolbar__group--chips {
-        flex: 1 1 100%;
-        justify-content: flex-start;
-        flex-wrap: wrap;
-      }
     }
     .public-user-menu { position: relative; display: inline-flex; max-width: 100%; z-index: 100; }
     .public-user-menu__trigger {
@@ -2969,10 +2992,8 @@
     }
     /* إخفاء عناصر محددة في شريط الهيرو على الهاتف/اللوح فقط */
     @media (max-width: 1024px) {
-      .hero-toolbar__group--chips,
-      .hero-toolbar__btn--compare-plans,
-      .hero-toolbar__divider--before-chips,
-      .hero-toolbar__divider--after-chips {
+      .hero-toolbar__chips-row,
+      .hero-toolbar__btn--compare-plans {
         display: none !important;
       }
     }
@@ -3151,6 +3172,9 @@
     html[data-theme="dark"] .hero-toolbar {
       background: rgba(12, 15, 20, 0.5);
       border-color: rgba(212, 184, 120, 0.2);
+    }
+    html[data-theme="dark"] .hero-toolbar__chips-row {
+      border-top-color: rgba(212, 184, 120, 0.22);
     }
     html[data-theme="dark"] .hero-toolbar .chip {
       background: rgba(255, 255, 255, 0.1);

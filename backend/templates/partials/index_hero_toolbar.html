@@ -1,64 +1,69 @@
 <div class="hero-toolbar hero-toolbar--over-cover" role="toolbar" aria-label="إجراءات سريعة">
-  <div class="hero-toolbar__group hero-toolbar__group--theme">
-    <button type="button" class="btn ghost hero-toolbar__btn index-theme-toggle" id="index-theme-toggle" title="تبديل الوضع الفاتح/الداكن" aria-label="تبديل الوضع الفاتح أو الداكن">
-      <svg class="hero-toolbar__ico hero-toolbar__ico--theme" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
-      <span class="hero-toolbar__label">وضع داكن</span>
-    </button>
-  </div>
-  <span class="hero-toolbar__divider" aria-hidden="true"></span>
-  {% if public_user %}
-  <div class="hero-toolbar__group hero-toolbar__group--account">
-    <div class="public-user-menu" id="public-user-menu">
-      <button
-        type="button"
-        class="btn ghost public-user-menu__trigger hero-toolbar__btn"
-        id="public-user-menu-trigger"
-        aria-expanded="false"
-        aria-controls="public-user-menu-panel"
-        aria-haspopup="true"
-      >
-        <svg class="hero-toolbar__ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-        <span class="public-user-menu__trigger-label">{{ public_user.full_name }}</span>
-        <span class="public-user-menu__trigger-chevron" aria-hidden="true"></span>
-      </button>
+  <div class="hero-toolbar__actions">
+    <div class="hero-toolbar__actions-cluster hero-toolbar__actions-cluster--start">
+      <div class="hero-toolbar__group hero-toolbar__group--theme">
+        <button type="button" class="btn ghost hero-toolbar__btn index-theme-toggle" id="index-theme-toggle" title="تبديل الوضع الفاتح/الداكن" aria-label="تبديل الوضع الفاتح أو الداكن">
+          <svg class="hero-toolbar__ico hero-toolbar__ico--theme" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+          <span class="hero-toolbar__label">وضع داكن</span>
+        </button>
+      </div>
+      <span class="hero-toolbar__divider" aria-hidden="true"></span>
+      {% if public_user %}
+      <div class="hero-toolbar__group hero-toolbar__group--account">
+        <div class="public-user-menu" id="public-user-menu">
+          <button
+            type="button"
+            class="btn ghost public-user-menu__trigger hero-toolbar__btn"
+            id="public-user-menu-trigger"
+            aria-expanded="false"
+            aria-controls="public-user-menu-panel"
+            aria-haspopup="true"
+          >
+            <svg class="hero-toolbar__ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+            <span class="public-user-menu__trigger-label">{{ public_user.full_name }}</span>
+            <span class="public-user-menu__trigger-chevron" aria-hidden="true"></span>
+          </button>
+        </div>
+      </div>
+      {% else %}
+      <div class="hero-toolbar__group hero-toolbar__group--auth">
+        <a class="btn primary hero-toolbar__btn" href="/public/login?next=/index?center_id={{ center_id }}" aria-label="دخول المستخدم">
+          <svg class="hero-toolbar__ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+          <span class="hero-toolbar__label">دخول المستخدم</span>
+        </a>
+        <a class="btn ghost hero-toolbar__btn" href="/public/register?next={{ ('/index?center_id=' ~ center_id|string)|urlencode }}" aria-label="تسجيل مستخدم جديد">
+          <svg class="hero-toolbar__ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><line x1="20" y1="8" x2="20" y2="14"/><line x1="23" y1="11" x2="17" y2="11"/></svg>
+          <span class="hero-toolbar__label">تسجيل جديد</span>
+        </a>
+      </div>
+      {% endif %}
+    </div>
+    <div class="hero-toolbar__actions-cluster hero-toolbar__actions-cluster--end">
+      <div class="hero-toolbar__group hero-toolbar__group--cta">
+        <a class="btn primary hero-toolbar__btn" href="#sessions-section" aria-label="الانتقال إلى قسم الجلسات — احجز الآن">
+          <svg class="hero-toolbar__ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+          <span class="hero-toolbar__label">احجز الآن</span>
+        </a>
+        <a class="btn ghost hero-toolbar__btn hero-toolbar__btn--compare-plans" href="#plans-section" aria-label="الانتقال إلى مقارنة خطط الاشتراك">
+          <svg class="hero-toolbar__ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
+          <span class="hero-toolbar__label">قارن الخطط</span>
+        </a>
+        {% if pinned_public_post or public_posts_teasers %}
+        <a class="btn ghost hero-toolbar__btn" href="#center-news-section" aria-label="الانتقال إلى أخبار المركز">
+          <svg class="hero-toolbar__ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 22h16a2 2 0 0 0 2-2V4a2 2 0 0 0-2-2H8a2 2 0 0 0-2 2v16a2 2 0 0 1-2 2Zm0 0a2 2 0 0 1-2-2v-9c0-1.1.9-2 2-2h2"/><path d="M18 14h-8"/><path d="M15 18h-5"/><path d="M10 6h8v4h-8V6Z"/></svg>
+          <span class="hero-toolbar__label">أخبار المركز</span>
+        </a>
+        {% endif %}
+      </div>
     </div>
   </div>
-  <span class="hero-toolbar__divider" aria-hidden="true"></span>
-  {% else %}
-  <div class="hero-toolbar__group hero-toolbar__group--auth">
-    <a class="btn primary hero-toolbar__btn" href="/public/login?next=/index?center_id={{ center_id }}" aria-label="دخول المستخدم">
-      <svg class="hero-toolbar__ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-      <span class="hero-toolbar__label">دخول المستخدم</span>
-    </a>
-    <a class="btn ghost hero-toolbar__btn" href="/public/register?next={{ ('/index?center_id=' ~ center_id|string)|urlencode }}" aria-label="تسجيل مستخدم جديد">
-      <svg class="hero-toolbar__ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><line x1="20" y1="8" x2="20" y2="14"/><line x1="23" y1="11" x2="17" y2="11"/></svg>
-      <span class="hero-toolbar__label">تسجيل جديد</span>
-    </a>
-  </div>
-  <span class="hero-toolbar__divider hero-toolbar__divider--before-chips" aria-hidden="true"></span>
-  {% endif %}
   {% if index_page.hero_chips.show %}
-  <div class="hero-toolbar__group hero-toolbar__group--chips">
-    <span class="chip">{{ index_page.hero_chips.c1 }}</span>
-    <span class="chip">{{ index_page.hero_chips.c2 }}</span>
-    <span class="chip">{{ index_page.hero_chips.c3 }}</span>
+  <div class="hero-toolbar__chips-row" role="group" aria-label="معلومات سريعة">
+    <div class="hero-toolbar__group hero-toolbar__group--chips">
+      <span class="chip">{{ index_page.hero_chips.c1 }}</span>
+      <span class="chip">{{ index_page.hero_chips.c2 }}</span>
+      <span class="chip">{{ index_page.hero_chips.c3 }}</span>
+    </div>
   </div>
   {% endif %}
-  <span class="hero-toolbar__divider hero-toolbar__divider--after-chips" aria-hidden="true"></span>
-  <div class="hero-toolbar__group hero-toolbar__group--cta">
-    <a class="btn primary hero-toolbar__btn" href="#sessions-section" aria-label="الانتقال إلى قسم الجلسات — احجز الآن">
-      <svg class="hero-toolbar__ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
-      <span class="hero-toolbar__label">احجز الآن</span>
-    </a>
-    <a class="btn ghost hero-toolbar__btn hero-toolbar__btn--compare-plans" href="#plans-section" aria-label="الانتقال إلى مقارنة خطط الاشتراك">
-      <svg class="hero-toolbar__ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
-      <span class="hero-toolbar__label">قارن الخطط</span>
-    </a>
-    {% if pinned_public_post or public_posts_teasers %}
-    <a class="btn ghost hero-toolbar__btn" href="#center-news-section" aria-label="الانتقال إلى أخبار المركز">
-      <svg class="hero-toolbar__ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 22h16a2 2 0 0 0 2-2V4a2 2 0 0 0-2-2H8a2 2 0 0 0-2 2v16a2 2 0 0 1-2 2Zm0 0a2 2 0 0 1-2-2v-9c0-1.1.9-2 2-2h2"/><path d="M18 14h-8"/><path d="M15 18h-5"/><path d="M10 6h8v4h-8V6Z"/></svg>
-      <span class="hero-toolbar__label">أخبار المركز</span>
-    </a>
-    {% endif %}
-  </div>
 </div>
