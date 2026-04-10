@@ -1,6 +1,8 @@
 """Helpers for lightweight schema migration and index creation."""
 
-from sqlalchemy import inspect, text
+import json
+
+from sqlalchemy import text
 
 
 def _public_users_is_deleted_sql(dialect: str) -> str:
@@ -70,3 +72,60 @@ def _ensure_performance_indexes(conn, insp) -> None:
         except Exception:
             # Existing duplicate active rows can block index creation on old data sets.
             pass
+
+
+_INDEX_PC_TEAM_HIDE_PATCH_ID = "index_pc_team_default_hide_v1"
+
+
+def _ensure_maestro_schema_patches_table(conn) -> None:
+    conn.execute(
+        text(
+            "CREATE TABLE IF NOT EXISTS maestro_schema_patches (patch_id VARCHAR(128) NOT NULL PRIMARY KEY)"
+        )
+    )
+
+
+def _apply_patch_index_hide_product_clarity_and_team_strip(conn, insp) -> None:
+    """One-time: stored index_config_json may still have show=true from old defaults; align with new policy."""
+    if not insp.has_table("centers"):
+        return
+    _ensure_maestro_schema_patches_table(conn)
+    if conn.execute(
+        text("SELECT 1 FROM maestro_schema_patches WHERE patch_id = :p"),
+        {"p": _INDEX_PC_TEAM_HIDE_PATCH_ID},
+    ).first():
+        return
+    rows = conn.execute(
+        text(
+            "SELECT id, index_config_json FROM centers "
+            "WHERE index_config_json IS NOT NULL AND trim(index_config_json) <> ''"
+        )
+    ).fetchall()
+    for row in rows:
+        cid, raw = int(row[0]), row[1]
+        if not raw or not str(raw).strip():
+            continue
+        try:
+            data = json.loads(raw)
+        except json.JSONDecodeError:
+            continue
+        if not isinstance(data, dict):
+            continue
+        changed = False
+        for key in ("product_clarity", "team_strip"):
+            block = data.get(key)
+            if isinstance(block, dict) and block.get("show") is True:
+                block["show"] = False
+                changed = True
+        if changed:
+            conn.execute(
+                text("UPDATE centers SET index_config_json = :blob WHERE id = :id"),
+                {
+                    "blob": json.dumps(data, ensure_ascii=False),
+                    "id": cid,
+                },
+            )
+    conn.execute(
+        text("INSERT INTO maestro_schema_patches (patch_id) VALUES (:p)"),
+        {"p": _INDEX_PC_TEAM_HIDE_PATCH_ID},
+    )

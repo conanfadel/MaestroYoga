@@ -4,6 +4,7 @@ from sqlalchemy import inspect, text
 
 from .engine import engine
 from .migrate_support import (
+    _apply_patch_index_hide_product_clarity_and_team_strip,
     _cleanup_stale_center_logo_urls_sql,
     _clear_legacy_default_hero_url,
     _ensure_performance_indexes,
@@ -119,6 +120,7 @@ def migrate_schema() -> None:
             _cleanup_stale_center_logo_urls_sql(conn)
             _clear_legacy_default_hero_url(conn, insp)
             _ensure_performance_indexes(conn, insp)
+            _apply_patch_index_hide_product_clarity_and_team_strip(conn, insp)
         return
     with engine.begin() as conn:
         if needs_payment_booking_id:
@@ -198,3 +200,4 @@ def migrate_schema() -> None:
         _cleanup_stale_center_logo_urls_sql(conn)
         _clear_legacy_default_hero_url(conn, inspect(conn))
         _ensure_performance_indexes(conn, insp)
+        _apply_patch_index_hide_product_clarity_and_team_strip(conn, insp)
