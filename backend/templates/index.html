@@ -264,52 +264,6 @@
       line-height: 1.55;
       color: var(--charcoal-muted);
     }
-    .index-faq-teaser {
-      margin-top: 22px;
-      padding: 18px;
-      border-radius: 16px;
-      background: var(--white);
-      border: 1px solid rgba(197, 160, 89, 0.28);
-      box-shadow: var(--shadow-brand);
-    }
-    .index-faq-teaser__title.booking-block-heading {
-      margin-bottom: 12px;
-    }
-    .index-faq-teaser__item {
-      margin-bottom: 8px;
-      border: 1px solid rgba(170, 240, 209, 0.65);
-      border-radius: 12px;
-      overflow: hidden;
-      background: rgba(232, 252, 244, 0.35);
-    }
-    .index-faq-teaser__item summary {
-      padding: 10px 14px;
-      cursor: pointer;
-      font-weight: 700;
-      font-size: 0.9rem;
-      color: var(--charcoal);
-      list-style: none;
-    }
-    .index-faq-teaser__item summary::-webkit-details-marker { display: none; }
-    .index-faq-teaser__item[open] summary {
-      border-bottom: 1px solid rgba(170, 240, 209, 0.6);
-    }
-    .index-faq-teaser__item p {
-      margin: 0;
-      padding: 10px 14px 12px;
-      font-size: 0.86rem;
-      line-height: 1.55;
-      color: var(--charcoal-muted);
-    }
-    .index-faq-teaser__more {
-      display: inline-block;
-      margin-top: 10px;
-      font-weight: 800;
-      font-size: 0.88rem;
-      color: var(--gold-dark);
-      text-decoration: none;
-    }
-    .index-faq-teaser__more:hover { text-decoration: underline; }
     .index-refund-policy {
       margin: 20px auto 0;
       max-width: var(--content-max);
@@ -2892,7 +2846,6 @@
       .grid-two > aside { order: 2; }
       #sessions-section { order: 1; }
       #plans-section { order: 0; }
-      #quick-faq-teaser { order: 1; }
       #center-news-section { order: 3; }
       #testimonials-section { order: 4; }
       #faq-section { order: 5; }
@@ -3013,11 +2966,6 @@
       .index-product-clarity {
         margin-bottom: 14px;
         padding: 14px 14px 12px;
-        border-radius: 14px;
-      }
-      .index-faq-teaser {
-        margin-top: 16px;
-        padding: 14px;
         border-radius: 14px;
       }
       .hero-toolbar {
@@ -3141,13 +3089,6 @@
     }
     html[data-theme="dark"] .index-team-strip {
       background: rgba(22, 28, 36, 0.85);
-      border-color: rgba(90, 175, 142, 0.35);
-    }
-    html[data-theme="dark"] .index-faq-teaser {
-      border-color: rgba(212, 184, 120, 0.28);
-    }
-    html[data-theme="dark"] .index-faq-teaser__item {
-      background: rgba(21, 42, 34, 0.35);
       border-color: rgba(90, 175, 142, 0.35);
     }
     html[data-theme="dark"] .hero {
@@ -3445,19 +3386,6 @@
             </div>
           </details>
         </section>
-        {% endif %}
-
-        {% if index_page.faq_teaser.show and faq_teaser_items %}
-        <div class="index-faq-teaser card" id="quick-faq-teaser" aria-label="أسئلة سريعة">
-          <h3 class="booking-block-heading booking-block-heading--flush-top index-faq-teaser__title">{{ index_page.faq_teaser.title }}</h3>
-          {% for faq in faq_teaser_items %}
-          <details class="index-faq-teaser__item reveal-on-scroll">
-            <summary>{{ faq.question }}</summary>
-            <p>{{ faq.answer }}</p>
-          </details>
-          {% endfor %}
-          <a class="index-faq-teaser__more" href="#faq-section">{{ index_page.faq_teaser.more_text }}</a>
-        </div>
         {% endif %}
 
         {% if index_page.testimonials.show %}

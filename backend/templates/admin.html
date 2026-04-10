@@ -256,18 +256,6 @@
             <textarea id="loyalty_block_lead" name="loyalty_block_lead" rows="3" maxlength="1200">{{ index_page.loyalty_block.lead }}</textarea>
             <button type="submit" class="soft" style="margin:10px 0 16px;">حفظ قسم الولاء في الصفحة</button>
 
-            <h3 class="admin-booking-block-heading">أسئلة سريعة داخل قسم الجلسات</h3>
-            <label for="faq_teaser_show">القسم</label>
-            <select id="faq_teaser_show" name="faq_teaser_show">
-              <option value="1" {% if index_page.faq_teaser.show %}selected{% endif %}>إظهار عند وجود أسئلة</option>
-              <option value="0" {% if not index_page.faq_teaser.show %}selected{% endif %}>إخفاء</option>
-            </select>
-            <label for="faq_teaser_title">عنوان الكتلة</label>
-            <input id="faq_teaser_title" name="faq_teaser_title" type="text" maxlength="160" value="{{ index_page.faq_teaser.title }}" />
-            <label for="faq_teaser_more">نص رابط «عرض الكل»</label>
-            <input id="faq_teaser_more" name="faq_teaser_more" type="text" maxlength="120" value="{{ index_page.faq_teaser.more_text }}" />
-            <button type="submit" class="soft" style="margin:10px 0 16px;">حفظ أسئلة سريعة داخل قسم الجلسات</button>
-
             <h3 class="admin-booking-block-heading">العمود الجانبي — مقارنة الخطط</h3>
             <label for="plans_section_show">قسم الخطط</label>
             <select id="plans_section_show" name="plans_section_show">

@@ -100,7 +100,6 @@ def build_public_index_template_context(
         "public_news_list_url": public_news_meta["public_news_list_url"],
         "index_seo_title": index_seo_title,
         "index_meta_description": index_meta_description,
-        "faq_teaser_items": faq_items[:3],
         "index_preconnect_origins": index_preconnect_origins_fn(
             request, center, pinned_public_post, public_posts_teasers
         ),

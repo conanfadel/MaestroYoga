@@ -53,7 +53,7 @@ def _default_index_page_config() -> dict[str, Any]:
             "c3": "دفع إلكتروني آمن",
         },
         "product_clarity": {
-            "show": True,
+            "show": False,
             "dropin_title": "جلسة بالحصة (دروب إن)",
             "dropin_body": "ادفع ثمن جلسة واحدة واختر الموعد من الجدول أدناه — مناسب للتجربة أو المرونة.",
             "plan_title": "اشتراك أسبوعي أو شهري أو سنوي",
@@ -67,7 +67,7 @@ def _default_index_page_config() -> dict[str, Any]:
             ),
         },
         "team_strip": {
-            "show": True,
+            "show": False,
             "text": "جلسات لمستويات <strong>مبتدئ ومتوسط ومتقدم</strong> — يحدد المدرب والجدول ما يناسبك عند الحجز.",
         },
         "loyalty_block": {
@@ -84,11 +84,6 @@ def _default_index_page_config() -> dict[str, Any]:
             "s1": "اختر الجلسة أو الخطة المناسبة.",
             "s2": "سجّل الدخول وفعّل بريدك الإلكتروني.",
             "s3": "راجع السلة وأكمل الطلب منها.",
-        },
-        "faq_teaser": {
-            "show": True,
-            "title": "أسئلة سريعة قبل الحجز",
-            "more_text": "عرض كل الأسئلة الشائعة ←",
         },
         "plans_section": {
             "show": True,
@@ -182,7 +177,7 @@ def _index_config_build_from_form(form_data: Any) -> dict[str, Any]:
             "c3": _form_str_index(form_data, "hero_c3", 80),
         },
         "product_clarity": {
-            "show": _form_bool01(form_data, "pc_show", True),
+            "show": _form_bool01(form_data, "pc_show", False),
             "dropin_title": _form_str_index(form_data, "pc_dropin_title", 120),
             "dropin_body": _form_str_index(form_data, "pc_dropin_body", 600),
             "plan_title": _form_str_index(form_data, "pc_plan_title", 120),
@@ -190,7 +185,7 @@ def _index_config_build_from_form(form_data: Any) -> dict[str, Any]:
             "note": _form_str_index(form_data, "pc_note", 800),
         },
         "team_strip": {
-            "show": _form_bool01(form_data, "team_show", True),
+            "show": _form_bool01(form_data, "team_show", False),
             "text": _form_str_index(form_data, "team_text", 600),
         },
         "loyalty_block": {
@@ -204,11 +199,6 @@ def _index_config_build_from_form(form_data: Any) -> dict[str, Any]:
             "s1": _form_str_index(form_data, "steps_s1", 220),
             "s2": _form_str_index(form_data, "steps_s2", 220),
             "s3": _form_str_index(form_data, "steps_s3", 220),
-        },
-        "faq_teaser": {
-            "show": _form_bool01(form_data, "faq_teaser_show", True),
-            "title": _form_str_index(form_data, "faq_teaser_title", 160),
-            "more_text": _form_str_index(form_data, "faq_teaser_more", 120),
         },
         "plans_section": {
             "show": _form_bool01(form_data, "plans_section_show", True),
