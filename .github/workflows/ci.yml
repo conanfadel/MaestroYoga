@@ -26,6 +26,9 @@ jobs:
       - name: Syntax check (compileall)
         run: python -m compileall -q backend/app tests
 
+      - name: Ruff
+        run: python -m ruff check backend/app tests
+
       - name: Run tests
         run: python -m pytest tests/ -q --tb=short
         env:

@@ -1,0 +1,14 @@
+[tool.ruff]
+target-version = "py312"
+line-length = 100
+
+[tool.ruff.lint]
+# Pragmatic baseline: do not block CI on patterns the codebase uses intentionally.
+# Tighten incrementally (e.g. drop F401) after targeted cleanups — avoid blanket `ruff check --fix`.
+ignore = [
+    "E402",  # late imports after bootstrap (e.g. main.py)
+    "F401",  # unused imports (large surface; fix in small batches)
+    "F403",  # import * (package re-exports)
+    "F405",  # names from import *
+    "F841",  # unused bindings (often tests)
+]
