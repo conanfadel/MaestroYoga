@@ -1,0 +1,9 @@
+{% if index_page.about_block.show %}
+{% set ab = index_page.about_block %}
+{% if ab['body'] | default('') %}
+<section class="index-about card" id="about-section" aria-labelledby="about-section-title">
+  <h2 id="about-section-title" class="booking-block-heading booking-block-heading--flush-top">{{ ab['title'] | default('من نحن') }}</h2>
+  <div class="index-about__body muted reveal-on-scroll">{{ ab['body'] | safe }}</div>
+</section>
+{% endif %}
+{% endif %}

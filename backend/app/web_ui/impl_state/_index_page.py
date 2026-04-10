@@ -70,6 +70,14 @@ def _default_index_page_config() -> dict[str, Any]:
             "show": False,
             "text": "جلسات لمستويات <strong>مبتدئ ومتوسط ومتقدم</strong> — يحدد المدرب والجدول ما يناسبك عند الحجز.",
         },
+        "about_block": {
+            "show": False,
+            "title": "من نحن",
+            "body": (
+                "<p>تعرّف على مركزنا: فريقٌ يهتم براحتك وتقدّمك، وفضاءٌ ملائم لممارسة اليوغا "
+                "بمستويات مختلفة.</p>"
+            ),
+        },
         "services_block": {
             "show": True,
             "title": "خدماتنا",
@@ -216,6 +224,11 @@ def _index_config_build_from_form(form_data: Any) -> dict[str, Any]:
         "team_strip": {
             "show": _form_bool01(form_data, "team_show", False),
             "text": _form_str_index(form_data, "team_text", 600),
+        },
+        "about_block": {
+            "show": _form_bool01(form_data, "about_show", False),
+            "title": _form_str_index(form_data, "about_title", 120),
+            "body": _form_str_index(form_data, "about_body", 4000),
         },
         "services_block": {
             "show": _form_bool01(form_data, "services_show", True),

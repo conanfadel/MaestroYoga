@@ -264,6 +264,25 @@
       line-height: 1.55;
       color: var(--charcoal-muted);
     }
+    .index-about {
+      margin: 0 0 18px;
+      padding: 18px 18px 16px;
+      border-radius: 18px;
+      background: linear-gradient(168deg, #ffffff 0%, var(--mint-bg) 42%, #ffffff 100%);
+      border: 1px solid rgba(197, 160, 89, 0.28);
+      box-shadow: var(--shadow-brand);
+    }
+    .index-about__body {
+      font-size: 0.95rem;
+      line-height: 1.75;
+    }
+    .index-about__body p { margin: 0 0 12px; }
+    .index-about__body p:last-child { margin-bottom: 0; }
+    .index-about__body ul,
+    .index-about__body ol {
+      margin: 8px 0 12px;
+      padding-inline-start: 1.35em;
+    }
     .index-services {
       margin: 0 0 18px;
       padding: 18px 18px 16px;
@@ -1045,6 +1064,7 @@
     }
     /* فواصل تمرير للأقسام */
     #sessions-section,
+    #about-section,
     #services-section,
     #center-news-section,
     #plans-section,
@@ -3133,6 +3153,10 @@
       background: rgba(22, 28, 36, 0.85);
       border-color: rgba(90, 175, 142, 0.35);
     }
+    html[data-theme="dark"] .index-about {
+      background: linear-gradient(168deg, var(--white) 0%, var(--mint-bg) 42%, #1e252d 100%);
+      border-color: rgba(212, 184, 120, 0.28);
+    }
     html[data-theme="dark"] .index-services {
       background: linear-gradient(168deg, var(--white) 0%, var(--mint-bg) 42%, #1e252d 100%);
       border-color: rgba(212, 184, 120, 0.28);
@@ -3299,6 +3323,8 @@
     {% include "partials/index_trust_bar.html" %}
 
     {% include "partials/index_content_highlights.html" %}
+
+    {% include "partials/index_about_block.html" %}
 
     {% include "partials/index_services_block.html" %}
 
