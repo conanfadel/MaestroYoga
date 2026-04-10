@@ -142,7 +142,7 @@
         <div class="card">
           <h2>محتوى صفحة الحجز العامة</h2>
           <p class="small" style="margin:0 0 14px;line-height:1.65;">
-            تحكّم باسم المدينة و<strong>اسم المركز</strong> كما يظهر للزائر، وبإظهار أو إخفاء أقسام الصفحة (شريط الثقة، شرح الجلسة/الاشتراك، شريط الفريق، <strong>من نحن</strong>، <strong>خدماتنا</strong>، الأخبار، الخطوات، الولاء، آراء العملاء، الاسترداد، إلخ). يمكنك استخدام <code>{name}</code> في فقرة الاسترداد الأولى لعرض اسم المركز داخل النص.
+            تحكّم باسم المدينة و<strong>اسم المركز</strong> كما يظهر للزائر، وبإظهار أو إخفاء أقسام الصفحة (شريط الثقة، شرح الجلسة/الاشتراك، شريط الفريق، الأخبار، الخطوات، الولاء، آراء العملاء، الاسترداد، إلخ). يمكنك استخدام <code>{name}</code> في فقرة الاسترداد الأولى لعرض اسم المركز داخل النص.
           </p>
           {% if center and index_page %}
           <form method="post" action="/admin/center/index-page" data-preserve-scroll="1">
@@ -221,41 +221,6 @@
             <label for="team_text">النص (HTML مسموح)</label>
             <textarea id="team_text" name="team_text" rows="2" maxlength="600">{{ index_page.team_strip.text }}</textarea>
             <button type="submit" class="soft" style="margin:10px 0 16px;">حفظ شريط الفريق / المستويات</button>
-
-            <h3 class="admin-booking-block-heading">من نحن</h3>
-            <p class="small" style="margin:0 0 10px;line-height:1.6;">تعريف قصير بالمركز في الصفحة الرئيسية. يُسمح بوسوم HTML بسيطة (فقرات، قوائم، روابط).</p>
-            <label for="about_show">القسم</label>
-            <select id="about_show" name="about_show">
-              <option value="1" {% if index_page.about_block.show %}selected{% endif %}>إظهار</option>
-              <option value="0" {% if not index_page.about_block.show %}selected{% endif %}>إخفاء</option>
-            </select>
-            <label for="about_title">عنوان القسم</label>
-            <input id="about_title" name="about_title" type="text" maxlength="120" value="{{ index_page.about_block.title }}" />
-            <label for="about_body">المحتوى (HTML مسموح)</label>
-            <textarea id="about_body" name="about_body" rows="6" maxlength="4000">{{ index_page.about_block['body'] }}</textarea>
-            <button type="submit" class="soft" style="margin:10px 0 16px;">حفظ قسم من نحن</button>
-
-            <h3 class="admin-booking-block-heading">خدماتنا</h3>
-            <p class="small" style="margin:0 0 10px;line-height:1.6;">عرّف بخدمات المركز في الصفحة الرئيسية. املأ عنوان الخدمة ووصفاً قصيراً لكل بطاقة (حتى 6 خدمات). اترك الصفوف الفارغة لتجاهلها.</p>
-            <label for="services_show">القسم</label>
-            <select id="services_show" name="services_show">
-              <option value="1" {% if index_page.services_block.show %}selected{% endif %}>إظهار</option>
-              <option value="0" {% if not index_page.services_block.show %}selected{% endif %}>إخفاء</option>
-            </select>
-            <label for="services_title">عنوان القسم</label>
-            <input id="services_title" name="services_title" type="text" maxlength="120" value="{{ index_page.services_block.title }}" />
-            <label for="services_intro">مقدمة تحت العنوان (اختياري)</label>
-            <textarea id="services_intro" name="services_intro" rows="2" maxlength="600">{{ index_page.services_block.intro }}</textarea>
-            {% set svc_items = index_page.services_block['items'] | default([]) %}
-            {% for i in [1, 2, 3, 4, 5, 6] %}
-            {% set it = svc_items[i - 1] if svc_items | length >= i else {} %}
-            <h4 class="branding-subhead" style="margin:14px 0 6px;">خدمة {{ i }}</h4>
-            <label for="svc_{{ i }}_title">عنوان الخدمة {{ i }}</label>
-            <input id="svc_{{ i }}_title" name="svc_{{ i }}_title" type="text" maxlength="120" value="{{ it.title | default('') }}" />
-            <label for="svc_{{ i }}_body">وصف مختصر {{ i }}</label>
-            <textarea id="svc_{{ i }}_body" name="svc_{{ i }}_body" rows="2" maxlength="500">{{ it.body | default('') }}</textarea>
-            {% endfor %}
-            <button type="submit" class="soft" style="margin:10px 0 16px;">حفظ قسم خدماتنا</button>
 
             <h3 class="branding-subhead">شريط أخبار متحرك</h3>
             <label for="news_ticker_show">الشريط</label>
