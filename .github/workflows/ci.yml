@@ -29,6 +29,9 @@ jobs:
       - name: Ruff
         run: python -m ruff check backend/app tests
 
+      - name: Mypy (schemas + role_definitions)
+        run: python -m mypy
+
       - name: Run tests
         run: python -m pytest tests/ -q --tb=short
         env:

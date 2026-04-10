@@ -318,7 +318,7 @@ def test_finalize_checkout_paid_is_idempotent(client):
 
 def test_admin_cannot_manage_public_user_of_another_center(client):
     db = SessionLocal()
-    demo_center = ensure_demo_data(db)
+    ensure_demo_data(db)
     other_center = models.Center(name=f"Other Center {int(time.time())}", city="Jeddah")
     db.add(other_center)
     db.flush()
