@@ -222,6 +222,28 @@
             <textarea id="team_text" name="team_text" rows="2" maxlength="600">{{ index_page.team_strip.text }}</textarea>
             <button type="submit" class="soft" style="margin:10px 0 16px;">حفظ شريط الفريق / المستويات</button>
 
+            <h3 class="admin-booking-block-heading">خدماتنا</h3>
+            <p class="small" style="margin:0 0 10px;line-height:1.6;">عرّف بخدمات المركز في الصفحة الرئيسية. املأ عنوان الخدمة ووصفاً قصيراً لكل بطاقة (حتى 6 خدمات). اترك الصفوف الفارغة لتجاهلها.</p>
+            <label for="services_show">القسم</label>
+            <select id="services_show" name="services_show">
+              <option value="1" {% if index_page.services_block.show %}selected{% endif %}>إظهار</option>
+              <option value="0" {% if not index_page.services_block.show %}selected{% endif %}>إخفاء</option>
+            </select>
+            <label for="services_title">عنوان القسم</label>
+            <input id="services_title" name="services_title" type="text" maxlength="120" value="{{ index_page.services_block.title }}" />
+            <label for="services_intro">مقدمة تحت العنوان (اختياري)</label>
+            <textarea id="services_intro" name="services_intro" rows="2" maxlength="600">{{ index_page.services_block.intro }}</textarea>
+            {% set svc_items = index_page.services_block.items | default([]) %}
+            {% for i in [1, 2, 3, 4, 5, 6] %}
+            {% set it = svc_items[i - 1] if svc_items | length >= i else {} %}
+            <h4 class="branding-subhead" style="margin:14px 0 6px;">خدمة {{ i }}</h4>
+            <label for="svc_{{ i }}_title">عنوان الخدمة {{ i }}</label>
+            <input id="svc_{{ i }}_title" name="svc_{{ i }}_title" type="text" maxlength="120" value="{{ it.title | default('') }}" />
+            <label for="svc_{{ i }}_body">وصف مختصر {{ i }}</label>
+            <textarea id="svc_{{ i }}_body" name="svc_{{ i }}_body" rows="2" maxlength="500">{{ it.body | default('') }}</textarea>
+            {% endfor %}
+            <button type="submit" class="soft" style="margin:10px 0 16px;">حفظ قسم خدماتنا</button>
+
             <h3 class="branding-subhead">شريط أخبار متحرك</h3>
             <label for="news_ticker_show">الشريط</label>
             <select id="news_ticker_show" name="news_ticker_show">

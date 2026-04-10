@@ -264,6 +264,47 @@
       line-height: 1.55;
       color: var(--charcoal-muted);
     }
+    .index-services {
+      margin: 0 0 18px;
+      padding: 18px 18px 16px;
+      border-radius: 18px;
+      background: linear-gradient(168deg, #ffffff 0%, var(--mint-bg) 42%, #ffffff 100%);
+      border: 1px solid rgba(197, 160, 89, 0.28);
+      box-shadow: var(--shadow-brand);
+    }
+    .index-services__intro {
+      margin: 0 0 14px;
+      font-size: 0.95rem;
+      line-height: 1.65;
+    }
+    .index-services__grid {
+      list-style: none;
+      margin: 0;
+      padding: 0;
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(min(100%, 240px), 1fr));
+      gap: 14px;
+    }
+    .index-services__item {
+      margin: 0;
+      padding: 14px 16px;
+      border-radius: 14px;
+      background: var(--white);
+      border: 1px solid rgba(170, 240, 209, 0.65);
+      box-shadow: 0 4px 14px rgba(45, 52, 54, 0.04);
+    }
+    .index-services__item-title {
+      margin: 0 0 8px;
+      font-size: 1.02rem;
+      font-weight: 800;
+      color: var(--charcoal);
+    }
+    .index-services__item-body {
+      margin: 0;
+      font-size: 0.9rem;
+      line-height: 1.55;
+      color: var(--charcoal-muted);
+    }
     .index-refund-policy {
       margin: 20px auto 0;
       max-width: var(--content-max);
@@ -1004,6 +1045,7 @@
     }
     /* فواصل تمرير للأقسام */
     #sessions-section,
+    #services-section,
     #center-news-section,
     #plans-section,
     #testimonials-section,
@@ -3091,6 +3133,14 @@
       background: rgba(22, 28, 36, 0.85);
       border-color: rgba(90, 175, 142, 0.35);
     }
+    html[data-theme="dark"] .index-services {
+      background: linear-gradient(168deg, var(--white) 0%, var(--mint-bg) 42%, #1e252d 100%);
+      border-color: rgba(212, 184, 120, 0.28);
+    }
+    html[data-theme="dark"] .index-services__item {
+      background: rgba(22, 28, 36, 0.92);
+      border-color: rgba(90, 175, 142, 0.35);
+    }
     html[data-theme="dark"] .hero {
       border-color: rgba(212, 184, 120, 0.3);
       box-shadow: 0 12px 40px rgba(0, 0, 0, 0.35);
@@ -3249,6 +3299,8 @@
     {% include "partials/index_trust_bar.html" %}
 
     {% include "partials/index_content_highlights.html" %}
+
+    {% include "partials/index_services_block.html" %}
 
     <div id="cart-live-banner" class="cart-live-banner" hidden role="status" aria-live="polite">
       <button type="button" class="cart-live-banner__btn" id="cart-live-open">

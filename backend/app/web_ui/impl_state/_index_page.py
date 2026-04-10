@@ -70,6 +70,25 @@ def _default_index_page_config() -> dict[str, Any]:
             "show": False,
             "text": "جلسات لمستويات <strong>مبتدئ ومتوسط ومتقدم</strong> — يحدد المدرب والجدول ما يناسبك عند الحجز.",
         },
+        "services_block": {
+            "show": True,
+            "title": "خدماتنا",
+            "intro": "نقدّم في مركزنا مجموعة من الخدمات لتناسب احتياجاتك.",
+            "items": [
+                {
+                    "title": "جلسات يوغا جماعية",
+                    "body": "جلسات بمستويات متعددة مع مدربين معتمدين.",
+                },
+                {
+                    "title": "حصص خاصة",
+                    "body": "تدريب فردي أو لمجموعات صغيرة حسب الطلب.",
+                },
+                {
+                    "title": "ورش وبرامج خاصة",
+                    "body": "فعاليات وورش دورية — تابع الجدول والإعلانات في المركز.",
+                },
+            ],
+        },
         "loyalty_block": {
             "show": True,
             "title": "برنامج المكافآت والولاء",
@@ -145,6 +164,16 @@ def _form_str_index(form_data: Any, key: str, max_len: int) -> str:
     return s[:max_len]
 
 
+def _services_items_from_form(form_data: Any) -> list[dict[str, str]]:
+    items: list[dict[str, str]] = []
+    for i in range(1, 7):
+        title = _form_str_index(form_data, f"svc_{i}_title", 120)
+        body = _form_str_index(form_data, f"svc_{i}_body", 500)
+        if title or body:
+            items.append({"title": title or "خدمة", "body": body})
+    return items
+
+
 def _form_bool01(form_data: Any, key: str, default: bool = True) -> bool:
     v = form_data.get(key)
     if v is None:
@@ -187,6 +216,12 @@ def _index_config_build_from_form(form_data: Any) -> dict[str, Any]:
         "team_strip": {
             "show": _form_bool01(form_data, "team_show", False),
             "text": _form_str_index(form_data, "team_text", 600),
+        },
+        "services_block": {
+            "show": _form_bool01(form_data, "services_show", True),
+            "title": _form_str_index(form_data, "services_title", 120),
+            "intro": _form_str_index(form_data, "services_intro", 600),
+            "items": _services_items_from_form(form_data),
         },
         "loyalty_block": {
             "show": _form_bool01(form_data, "loyalty_block_show", True),
