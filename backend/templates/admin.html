@@ -233,7 +233,7 @@
             <input id="services_title" name="services_title" type="text" maxlength="120" value="{{ index_page.services_block.title }}" />
             <label for="services_intro">مقدمة تحت العنوان (اختياري)</label>
             <textarea id="services_intro" name="services_intro" rows="2" maxlength="600">{{ index_page.services_block.intro }}</textarea>
-            {% set svc_items = index_page.services_block.items | default([]) %}
+            {% set svc_items = index_page.services_block['items'] | default([]) %}
             {% for i in [1, 2, 3, 4, 5, 6] %}
             {% set it = svc_items[i - 1] if svc_items | length >= i else {} %}
             <h4 class="branding-subhead" style="margin:14px 0 6px;">خدمة {{ i }}</h4>

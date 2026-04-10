@@ -1,6 +1,6 @@
 {% if index_page.services_block.show %}
 {% set svc = index_page.services_block %}
-{% set svc_items = svc.items | default([]) %}
+{% set svc_items = svc['items'] | default([]) %}
 {% set has_any = (svc.intro | default('')) or (svc_items | length > 0) %}
 {% if has_any %}
 <section class="index-services card" id="services-section" aria-labelledby="services-section-title">
