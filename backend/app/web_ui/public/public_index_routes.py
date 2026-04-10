@@ -95,6 +95,7 @@ def register_public_index_routes(router: APIRouter) -> None:
             public_content_version=_s.compute_public_center_content_version(db, center.id),
             loyalty_ctx=loyalty_ctx,
             analytics_ctx=_s._analytics_context("index", center_id=str(center.id)),
+            index_hero_app_name=_s.os.getenv("APP_NAME", "Maestro Yoga").strip() or "Maestro Yoga",
         )
         return _s.templates.TemplateResponse(request, "index.html", context)
     

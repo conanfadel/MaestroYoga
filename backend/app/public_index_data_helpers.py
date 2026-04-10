@@ -80,6 +80,7 @@ def build_public_index_template_context(
     public_content_version: str,
     loyalty_ctx: dict,
     analytics_ctx: dict,
+    index_hero_app_name: str,
 ) -> dict:
     return {
         "center": center,
@@ -108,4 +109,5 @@ def build_public_index_template_context(
         "public_content_version": public_content_version,
         **loyalty_ctx,
         **analytics_ctx,
+        "index_hero_app_name": index_hero_app_name,
     }

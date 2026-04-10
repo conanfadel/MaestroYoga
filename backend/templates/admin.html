@@ -93,6 +93,20 @@
               <span class="branding-identity-divider__line" aria-hidden="true"></span>
             </div>
 
+            <h3 class="admin-booking-block-heading">عنوان البطاقة في أعلى صفحة الحجز</h3>
+            <p class="small" style="margin:0 0 8px;line-height:1.6;">
+              النص داخل الشريط الأبيض فوق الغلاف (بجانب الشعار إن وُجد). <strong>الافتراضي:</strong> اسم التطبيق من إعداد الخادم (<code>APP_NAME</code>) بلون ذهبي، ثم <strong>|</strong> ثم اسم المركز. اترك الحقل فارغاً وفعّل «استعادة الافتراضي» إن رغبت، ثم احفظ.
+            </p>
+            <label for="index_hero_heading">نص العنوان (اختياري — يستبدل السطر الافتراضي بالكامل)</label>
+            <input id="index_hero_heading" name="index_hero_heading" type="text" maxlength="200" value="{{ center.index_hero_heading_override or '' }}" placeholder="مثال: مركز ماسترو يوغا | ماسترو يوغا" dir="auto" />
+            <div class="branding-remove-zone" role="group" aria-labelledby="reset-hero-heading-label" style="margin-top:12px;">
+              <div class="branding-remove-zone__head">
+                <input type="checkbox" id="reset_hero_heading_chk" class="branding-remove-zone__checkbox" name="reset_index_hero_heading" value="1" />
+                <label id="reset-hero-heading-label" class="branding-remove-zone__title" for="reset_hero_heading_chk">استعادة العنوان الافتراضي</label>
+              </div>
+              <p class="branding-remove-zone__help">عند التفعيل مع «حفظ» يُلغى النص المخصّص ويُعرض تلقائياً اسم التطبيق واسم المركز كما في السابق.</p>
+            </div>
+
             <h3 class="admin-booking-block-heading">التلميح والشعار</h3>
             <label for="brand_tagline">تلميح تحت العنوان (اختياري)</label>
             <textarea id="brand_tagline" name="brand_tagline" rows="2" maxlength="500" placeholder="مثال: مساحة للتنفس والحركة — يوغا لجميع المستويات في أجواء هادئة" title="نص قصير يظهر كتلميح تحت عنوان الصفحة">{{ center.brand_tagline or '' }}</textarea>

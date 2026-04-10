@@ -56,6 +56,7 @@ def migrate_schema() -> None:
     needs_center_monthly_bookings_goal = False
     needs_center_vat_rate_percent = False
     needs_center_report_digest_email = False
+    needs_center_index_hero_heading_override = False
     if insp.has_table("centers"):
         center_cols = {c["name"] for c in insp.get_columns("centers")}
         needs_center_logo_url = "logo_url" not in center_cols
@@ -76,6 +77,7 @@ def migrate_schema() -> None:
         needs_center_monthly_bookings_goal = "monthly_bookings_goal" not in center_cols
         needs_center_vat_rate_percent = "vat_rate_percent" not in center_cols
         needs_center_report_digest_email = "report_digest_email" not in center_cols
+        needs_center_index_hero_heading_override = "index_hero_heading_override" not in center_cols
 
     needs_users_custom_role_label = False
     needs_users_permissions_json = False
@@ -107,6 +109,7 @@ def migrate_schema() -> None:
         and not needs_center_monthly_bookings_goal
         and not needs_center_vat_rate_percent
         and not needs_center_report_digest_email
+        and not needs_center_index_hero_heading_override
         and not needs_users_custom_role_label
         and not needs_users_permissions_json
         and not needs_booking_checked_in
@@ -178,6 +181,8 @@ def migrate_schema() -> None:
                 conn.execute(text("ALTER TABLE centers ADD COLUMN vat_rate_percent REAL"))
         if needs_center_report_digest_email:
             conn.execute(text("ALTER TABLE centers ADD COLUMN report_digest_email VARCHAR(220)"))
+        if needs_center_index_hero_heading_override:
+            conn.execute(text("ALTER TABLE centers ADD COLUMN index_hero_heading_override VARCHAR(200)"))
         if needs_users_custom_role_label:
             conn.execute(text("ALTER TABLE users ADD COLUMN custom_role_label VARCHAR(120)"))
         if needs_users_permissions_json:

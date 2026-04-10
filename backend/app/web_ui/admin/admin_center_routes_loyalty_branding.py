@@ -90,6 +90,8 @@ def register_admin_center_loyalty_branding_routes(router: APIRouter) -> None:
     @router.post("/admin/center/branding")
     async def admin_center_branding(
         brand_tagline: str = _s.Form(""),
+        index_hero_heading: str = _s.Form(""),
+        reset_index_hero_heading: str = _s.Form(""),
         remove_logo: str = _s.Form(""),
         remove_hero: str = _s.Form(""),
         restore_hero_stock: str = _s.Form(""),
@@ -135,6 +137,12 @@ def register_admin_center_loyalty_branding_routes(router: APIRouter) -> None:
 
         tag = brand_tagline.strip()[:500]
         center.brand_tagline = tag if tag else None
+
+        if _s._is_truthy_env(reset_index_hero_heading):
+            center.index_hero_heading_override = None
+        else:
+            h_raw = (index_hero_heading or "").strip()[:200]
+            center.index_hero_heading_override = h_raw if h_raw else None
 
         remove = _s._is_truthy_env(remove_logo)
         remove_h = _s._is_truthy_env(remove_hero)

@@ -434,6 +434,10 @@
       line-height: 1.25;
     }
     .hero h1 span { color: var(--gold-dark); }
+    .hero h1.hero-heading-plain,
+    .hero h1.hero-heading-plain span {
+      color: var(--charcoal);
+    }
     .muted { margin: 0; color: var(--charcoal-muted); font-size: 1.02rem; line-height: 1.65; }
     .brand-tagline-hint {
       margin: 4px 0 0;
@@ -3259,7 +3263,11 @@
           <img class="hero-logo" src="{{ center.logo_url }}" width="72" height="72" alt="شعار {{ center.name }}" decoding="async" onerror="this.remove();" />
           {% endif %}
           <div>
-            <h1 class="booking-block-heading booking-block-heading--flush-top"><span>Maestro Yoga</span> | {{ center.name }}</h1>
+            {% if center.index_hero_heading_override %}
+            <h1 class="booking-block-heading booking-block-heading--flush-top hero-heading-plain">{{ center.index_hero_heading_override }}</h1>
+            {% else %}
+            <h1 class="booking-block-heading booking-block-heading--flush-top"><span>{{ index_hero_app_name }}</span> | {{ center.name }}</h1>
+            {% endif %}
             {% if center.brand_tagline %}
             <p class="brand-tagline-hint">{{ center.brand_tagline }}</p>
             {% endif %}

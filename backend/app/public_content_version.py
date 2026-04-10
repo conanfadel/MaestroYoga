@@ -45,6 +45,7 @@ def compute_public_center_content_version(db: Session, center_id: int) -> str:
             center.city or "",
             center.logo_url or "",
             center.brand_tagline or "",
+            center.index_hero_heading_override or "",
             center.hero_image_url or "",
             "1" if center.hero_show_stock_photo else "0",
             center.index_config_json or "",

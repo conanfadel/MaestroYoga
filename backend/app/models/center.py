@@ -12,6 +12,8 @@ class Center(Base):
     city = Column(String, nullable=True)
     logo_url = Column(String, nullable=True)
     brand_tagline = Column(String, nullable=True)
+    # نص مخصّص لعنوان بطاقة الهيرو في /index؛ NULL = «APP_NAME | اسم المركز»
+    index_hero_heading_override = Column(String(200), nullable=True)
     hero_image_url = Column(String, nullable=True)
     # عند عدم رفع غلاف: True = صورة يوغا افتراضية (ثيم التطبيق)، False = تدرج ألوان فقط
     hero_show_stock_photo = Column(Boolean, nullable=False, default=True)

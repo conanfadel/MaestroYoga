@@ -182,6 +182,31 @@ def test_admin_center_branding_upload_and_tagline(client):
     assert bad.status_code == 303
     assert "msg=center_branding_bad_file" in (bad.headers.get("location") or "")
 
+    custom_heading = "عنوان مخصص للهيرو | تجربة"
+    hero_title = client.post(
+        "/admin/center/branding",
+        data={"scroll_y": "0", "brand_tagline": "", "index_hero_heading": custom_heading},
+        follow_redirects=False,
+    )
+    assert hero_title.status_code == 303
+    db = SessionLocal()
+    center = db.get(models.Center, center_id)
+    assert center is not None
+    assert center.index_hero_heading_override == custom_heading
+    db.close()
+
+    hero_reset = client.post(
+        "/admin/center/branding",
+        data={"scroll_y": "0", "brand_tagline": "", "reset_index_hero_heading": "1"},
+        follow_redirects=False,
+    )
+    assert hero_reset.status_code == 303
+    db = SessionLocal()
+    center = db.get(models.Center, center_id)
+    assert center is not None
+    assert center.index_hero_heading_override is None
+    db.close()
+
 
 def test_mobile_compatible_api_flow(client):
     db = SessionLocal()
