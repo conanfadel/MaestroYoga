@@ -1,6 +1,15 @@
 <div class="hero-toolbar hero-toolbar--over-cover" role="toolbar" aria-label="إجراءات سريعة">
   <div class="hero-toolbar__actions">
     <div class="hero-toolbar__actions-cluster hero-toolbar__actions-cluster--start">
+      {% if index_page.about_block.show %}
+      {% set ab = index_page.about_block %}
+      {% if ab['body'] | default('') %}
+      <a class="btn primary hero-toolbar__btn" href="#about-section" aria-label="الانتقال إلى قسم من نحن">
+        <svg class="hero-toolbar__ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+        <span class="hero-toolbar__label">من نحن</span>
+      </a>
+      {% endif %}
+      {% endif %}
       <div class="hero-toolbar__group hero-toolbar__group--theme">
         <button type="button" class="btn ghost hero-toolbar__btn index-theme-toggle" id="index-theme-toggle" title="تبديل الوضع الفاتح/الداكن" aria-label="تبديل الوضع الفاتح أو الداكن">
           <svg class="hero-toolbar__ico hero-toolbar__ico--theme" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
@@ -53,6 +62,17 @@
           <svg class="hero-toolbar__ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 22h16a2 2 0 0 0 2-2V4a2 2 0 0 0-2-2H8a2 2 0 0 0-2 2v16a2 2 0 0 1-2 2Zm0 0a2 2 0 0 1-2-2v-9c0-1.1.9-2 2-2h2"/><path d="M18 14h-8"/><path d="M15 18h-5"/><path d="M10 6h8v4h-8V6Z"/></svg>
           <span class="hero-toolbar__label">أخبار المركز</span>
         </a>
+        {% endif %}
+        {% if index_page.services_block.show %}
+        {% set svc = index_page.services_block %}
+        {% set svc_items = svc['items'] | default([]) %}
+        {% set has_any = (svc.intro | default('')) or (svc_items | length > 0) %}
+        {% if has_any %}
+        <a class="btn ghost hero-toolbar__btn" href="#services-section" aria-label="الانتقال إلى قسم خدماتنا">
+          <svg class="hero-toolbar__ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/></svg>
+          <span class="hero-toolbar__label">خدماتنا</span>
+        </a>
+        {% endif %}
         {% endif %}
       </div>
     </div>
