@@ -548,6 +548,13 @@
       min-width: 0;
       flex: 0 1 auto;
     }
+    /* صف واحد بترتيب RTL كما في التصميم (من نحن … خدماتنا) */
+    .hero-toolbar__actions-cluster--full {
+      flex: 1 1 auto;
+      width: 100%;
+      min-width: 0;
+      justify-content: flex-start;
+    }
     .hero-toolbar__chips-row {
       display: flex;
       justify-content: center;
@@ -594,9 +601,6 @@
       justify-content: center;
       flex-wrap: wrap;
       gap: 7px;
-    }
-    .hero-toolbar__group--cta {
-      gap: 8px;
     }
     .hero-toolbar__divider {
       width: 1px;
