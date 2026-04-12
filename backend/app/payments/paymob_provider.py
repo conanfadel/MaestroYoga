@@ -12,6 +12,7 @@ import urllib.error
 import urllib.parse
 import urllib.request
 from typing import Any
+from urllib.parse import urlsplit
 
 from .types import BasePaymentProvider, PaymentResult
 
@@ -96,6 +97,33 @@ def parse_paymob_merchant_order_ref(merchant_order_id: str | None) -> dict[str, 
     return {}
 
 
+def _iframe_src_from_embed(raw: str) -> str:
+    s = raw.strip()
+    if "<iframe" in s.lower():
+        m = re.search(r"""src\s*=\s*["']([^"']+)["']""", s, re.I)
+        if m:
+            return m.group(1).strip()
+    return s
+
+
+def normalize_paymob_iframe_checkout_base(raw: str) -> str:
+    """رابط واجهة الدفع من اللوحة (بدون payment_token) أو سلسلة iframe كاملة."""
+    if not raw or not str(raw).strip():
+        return ""
+    s = _iframe_src_from_embed(str(raw).strip()).strip().strip('"').strip("'")
+    parts = urlsplit(s)
+    if parts.scheme not in ("http", "https") or not parts.netloc:
+        raise RuntimeError(
+            "PAYMOB_IFRAME_CHECKOUT_BASE / PAYMOB_IFRAME_LINK must be a full http(s) URL "
+            "(paste the Iframe Link from Paymob, without payment_token)."
+        )
+    low = s.lower()
+    if "payment_token=" in low:
+        cut = low.index("payment_token=")
+        s = s[:cut].rstrip("?&")
+    return s.rstrip("/")
+
+
 def metadata_from_paymob_obj(obj: dict[str, Any]) -> dict[str, str]:
     order = obj.get("order")
     merchant_order_id: str | None = None
@@ -128,15 +156,25 @@ class PaymobPaymentProvider(BasePaymentProvider):
                 "Online Card / payment integration id from Paymob Dashboard → Developers → Payment Integrations."
             )
         self._integration_id = int(iid)
+        raw_iframe = (
+            os.getenv("PAYMOB_IFRAME_CHECKOUT_BASE", "").strip()
+            or os.getenv("PAYMOB_IFRAME_LINK", "").strip()
+        )
+        self._iframe_checkout_base = normalize_paymob_iframe_checkout_base(raw_iframe) if raw_iframe else ""
+
         fid = os.getenv("PAYMOB_IFRAME_ID", "").strip()
-        if fid.isdigit():
+        if self._iframe_checkout_base:
+            self._iframe_id = int(iid)
+            logger.info(
+                "Using PAYMOB_IFRAME_CHECKOUT_BASE / PAYMOB_IFRAME_LINK for the payment redirect URL."
+            )
+        elif fid.isdigit():
             self._iframe_id = int(fid)
         elif not fid:
-            # لوحة Paymob أحياناً لا تعرض iframe id منفصلاً؛ مسار Accept الكلاسيكي يقبل غالباً نفس رقم التكامل هنا.
             self._iframe_id = int(iid)
             logger.info(
                 "PAYMOB_IFRAME_ID unset: using PAYMOB_INTEGRATION_ID (%s) in the hosted checkout URL. "
-                "If the payment page fails, set PAYMOB_IFRAME_ID from Dashboard → Developers → iframes.",
+                "If the payment page fails, set PAYMOB_IFRAME_ID or PAYMOB_IFRAME_LINK from the Paymob dashboard.",
                 iid,
             )
         else:
@@ -251,9 +289,17 @@ class PaymobPaymentProvider(BasePaymentProvider):
         if not pay_token or not isinstance(pay_token, str):
             raise RuntimeError(f"paymob_invalid_payment_key:{json.dumps(keys)[:300]}")
 
-        tok_q = urllib.parse.quote(pay_token, safe="")
-        checkout_url = f"{self._api_base}/api/acceptance/iframes/{self._iframe_id}?payment_token={tok_q}"
+        checkout_url = self._checkout_url_with_token(pay_token)
         return PaymentResult(provider_ref=str(oid), status="pending", checkout_url=checkout_url)
+
+    def _checkout_url_with_token(self, pay_token: str) -> str:
+        tok_q = urllib.parse.quote(pay_token, safe="")
+        base = getattr(self, "_iframe_checkout_base", "") or ""
+        if base:
+            b = base.rstrip("/")
+            joiner = "&" if "?" in b else "?"
+            return f"{b}{joiner}payment_token={tok_q}"
+        return f"{self._api_base}/api/acceptance/iframes/{self._iframe_id}?payment_token={tok_q}"
 
     def create_checkout_session(
         self,
