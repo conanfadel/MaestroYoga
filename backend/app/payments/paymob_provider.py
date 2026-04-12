@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import hashlib
+import logging
 import hmac
 import json
 import os
@@ -13,6 +14,8 @@ import urllib.request
 from typing import Any
 
 from .types import BasePaymentProvider, PaymentResult
+
+logger = logging.getLogger(__name__)
 
 _HMAC_FIELD_PATHS: list[tuple[str, ...]] = [
     ("obj", "amount_cents"),
@@ -115,13 +118,36 @@ class PaymobPaymentProvider(BasePaymentProvider):
                 "Paymob auth not configured: set PAYMOB_API_KEY (dashboard API Key) "
                 "or PAYMOB_SECRET_KEY (dashboard Secret Key) for /api/auth/tokens."
             )
-        iid = os.getenv("PAYMOB_INTEGRATION_ID", "").strip()
+        iid = (
+            os.getenv("PAYMOB_INTEGRATION_ID", "").strip()
+            or os.getenv("PAYMOB_CARD_INTEGRATION_ID", "").strip()
+        )
         if not iid.isdigit():
-            raise RuntimeError("PAYMOB_INTEGRATION_ID must be set to a numeric integration id")
+            raise RuntimeError(
+                "PAYMOB_INTEGRATION_ID (or PAYMOB_CARD_INTEGRATION_ID) must be a numeric "
+                "Online Card / payment integration id from Paymob Dashboard → Developers → Payment Integrations."
+            )
         self._integration_id = int(iid)
         fid = os.getenv("PAYMOB_IFRAME_ID", "").strip()
+        mirror = os.getenv("PAYMOB_MIRROR_IFRAME_TO_INTEGRATION", "").strip().lower() in (
+            "1",
+            "true",
+            "yes",
+        )
         if not fid.isdigit():
-            raise RuntimeError("PAYMOB_IFRAME_ID must be set to a numeric iframe id from Paymob dashboard")
+            if mirror:
+                fid = iid
+                logger.warning(
+                    "PAYMOB_IFRAME_ID unset: using PAYMOB_INTEGRATION_ID for iframe URL "
+                    "(PAYMOB_MIRROR_IFRAME_TO_INTEGRATION=1). If checkout fails, obtain a separate Iframe ID "
+                    "from Paymob Dashboard → Developers → iframes."
+                )
+            else:
+                raise RuntimeError(
+                    "PAYMOB_IFRAME_ID must be a numeric iframe id (Paymob Dashboard → Developers → iframes). "
+                    "If your account only shows one id for card checkout, set PAYMOB_INTEGRATION_ID to that "
+                    "number and add PAYMOB_MIRROR_IFRAME_TO_INTEGRATION=1 to reuse it for the iframe URL."
+                )
         self._iframe_id = int(fid)
         self._api_base = os.getenv("PAYMOB_API_BASE", "https://accept.paymob.com").strip().rstrip("/")
         self._auth_token: str | None = None
