@@ -43,6 +43,56 @@ def session_ids_booked_via_plan_for_client(
     return out
 
 
+def cancel_public_plan_session_booking(
+    db: Session,
+    *,
+    center_id: int,
+    session_id: int,
+    client: models.Client,
+    models_module: type,
+    utcnow_fn,
+) -> tuple[bool, str]:
+    """يُلغي حجزاً مؤكداً ضمن الخطة قبل بدء الجلسة. يرجع (نجاح، رمز_رسالة)."""
+    now = utcnow_fn()
+    B = models_module.Booking
+    P = models_module.Payment
+    booking = (
+        db.query(B)
+        .join(P, P.booking_id == B.id)
+        .filter(
+            B.client_id == client.id,
+            B.center_id == center_id,
+            B.session_id == session_id,
+            B.status == "confirmed",
+            P.payment_method == "plan_sessions_included",
+            P.status == "paid",
+        )
+        .first()
+    )
+    if not booking:
+        return False, "plan_cancel_not_found"
+
+    yoga_session = db.get(models_module.YogaSession, session_id)
+    if not yoga_session or yoga_session.center_id != center_id:
+        return False, "plan_cancel_not_found"
+    if not yoga_session_accepts_new_public_booking(yoga_session, now=now):
+        return False, "plan_cancel_session_started"
+
+    booking.status = "cancelled"
+    for pay in (
+        db.query(models_module.Payment)
+        .filter(
+            models_module.Payment.booking_id == booking.id,
+            models_module.Payment.payment_method == "plan_sessions_included",
+            models_module.Payment.status == "paid",
+        )
+        .all()
+    ):
+        pay.status = "failed"
+    db.commit()
+    return True, "plan_session_cancelled"
+
+
 def confirm_public_plan_session_booking(
     db: Session,
     *,
@@ -131,4 +181,6 @@ def confirm_public_plan_session_booking(
     except integrity_error_cls:
         db.rollback()
         return False, "duplicate"
-    return True, "plan_booked"
+    lim = int(limit_v)
+    msg = "plan_booked_quota_complete" if used + 1 >= lim else "plan_booked"
+    return True, msg

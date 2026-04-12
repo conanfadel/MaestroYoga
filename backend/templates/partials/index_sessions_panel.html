@@ -46,7 +46,21 @@
                   </div>
                   <button type="button" class="session-card__details-toggle" aria-expanded="false">تفاصيل</button>
                   {% if s.booked_via_plan %}
-                    <button class="book-btn book-btn-lg" type="button" disabled aria-disabled="true">محجوز ضمن خطتك</button>
+                    <div class="session-card__plan-booked-actions">
+                      <button class="book-btn book-btn-lg" type="button" disabled aria-disabled="true">محجوز ضمن خطتك</button>
+                      {% if s.can_cancel_plan_slot %}
+                      <form
+                        method="post"
+                        action="/public/cancel-plan-session"
+                        class="plan-slot-cancel-form"
+                        onsubmit="return confirm('إزالة هذه الجلسة من خطتك؟ يُحرَّر المقعد ويمكنك اختيار جلسة أخرى ضمن الحد إن وُجد.');"
+                      >
+                        <input type="hidden" name="center_id" value="{{ center_id }}" />
+                        <input type="hidden" name="session_id" value="{{ s.id }}" />
+                        <button type="submit" class="book-btn book-btn-lg plan-slot-cancel-form__btn">إزالة من الخطة</button>
+                      </form>
+                      {% endif %}
+                    </div>
                   {% elif s.use_plan_slot_cta and s.spots_available > 0 and s.allows_public_booking %}
                     <form method="post" action="/public/book-plan-session" class="plan-slot-book-form">
                       <input type="hidden" name="center_id" value="{{ center_id }}" />

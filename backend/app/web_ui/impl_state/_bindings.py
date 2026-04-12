@@ -125,6 +125,7 @@ from ...public_session_visibility import (
     yoga_session_still_on_public_schedule,
 )
 from ...public_plan_session_booking import (
+    cancel_public_plan_session_booking,
     confirm_public_plan_session_booking,
     session_ids_booked_via_plan_for_client,
 )

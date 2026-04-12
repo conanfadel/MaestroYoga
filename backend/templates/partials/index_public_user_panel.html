@@ -51,6 +51,12 @@
         <span class="muted" style="display:block;font-size:0.78rem;margin-top:4px;color:#64748b;">صالح حتى {{ public_sub_ends_at_display }}</span>
         {% if public_sub_session_cap %}
         <span class="muted" style="display:block;font-size:0.78rem;margin-top:4px;">جلسات مؤكدة ضمن فترة الاشتراك: <strong>{{ public_sub_sessions_used }}</strong> من <strong>{{ public_sub_sessions_limit }}</strong></span>
+        {% if public_sub_at_cap %}
+        <div class="public-user-menu__plan-complete" role="status">
+          <strong>اكتمل تخصيص جلسات خطتك لهذه الفترة.</strong>
+          <span class="public-user-menu__plan-complete-hint">راجع مواعيدك في القائمة أدناه؛ للمزيد من الجلسات استخدم الدفع لكل جلسة أو جدّد اشتراكك عند التوفر.</span>
+        </div>
+        {% endif %}
         <div class="public-user-menu__subscription-actions">
           <span class="public-user-menu__session-badge{% if public_sub_at_cap %} is-low{% endif %}" title="متبقٍ ضمن حد الخطة">
             <span aria-hidden="true">+</span> {{ public_sub_sessions_remaining }} متبقٍ

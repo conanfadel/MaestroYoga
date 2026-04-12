@@ -33,6 +33,15 @@
 {% if msg == 'cart_session_ended' %}<div class="alert err">تتضمن السلة جلسة انتهى وقتها. أفرغ السلة أو أعد التحميل واختر جلسات حالية.</div>{% endif %}
 {% if msg == 'cart_session_started' %}<div class="alert err">تتضمن السلة جلسة بدأ وقتها. أزلها من السلة واختر مواعيد قادمة.</div>{% endif %}
 {% if msg == 'plan_booked' %}<div class="alert ok">تمت إضافة الجلسة إلى اشتراكك ضمن حصة الخطة.</div>{% endif %}
+{% if msg == 'plan_booked_quota_complete' %}
+<div class="alert ok public-plan-quota-complete" role="status">
+  <strong>تم تأكيد اكتمال حصة جلسات خطتك لهذه الفترة.</strong>
+  <p class="small" style="margin:0.35rem 0 0;">أضفتَ آخر جلسة متاحة ضمن الحد؛ يمكنك حضور الجلسات المحجوزة، وللمزيد استخدم «أضف للسلة» أو جدّد اشتراكك عند التوفر.</p>
+</div>
+{% endif %}
+{% if msg == 'plan_session_cancelled' %}<div class="alert ok">تمت إزالة الجلسة من خطتك، ويمكنك اختيار جلسة أخرى ضمن الحد إن وُجد.</div>{% endif %}
+{% if msg == 'plan_cancel_not_found' %}<div class="alert warn">لم يُعثر على حجز ضمن الخطة لهذه الجلسة، أو تم إلغاؤه مسبقًا.</div>{% endif %}
+{% if msg == 'plan_cancel_session_started' %}<div class="alert warn">بدأت الجلسة؛ لا يمكن إزالتها من الخطة من الواجهة العامة. تواصل مع المركز إن احتجت تعديلًا.</div>{% endif %}
 {% if msg == 'plan_sessions_exhausted' %}<div class="alert warn">استنفدت جلسات اشتراكك لهذه الفترة. جرّب «أضف للسلة» للدفع لكل جلسة أو جدّد اشتراكك.</div>{% endif %}
 {% if msg == 'plan_booking_no_subscription' %}<div class="alert err">لا يوجد اشتراك فعّال يسمح بحجز الجلسة ضمن الخطة.</div>{% endif %}
 {% if msg == 'plan_booking_no_cap' %}<div class="alert err">خطتك الحالية لا تحدد عدد جلسات؛ استخدم «أضف للسلة» للحجز.</div>{% endif %}

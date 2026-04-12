@@ -746,6 +746,24 @@
       border-color: rgba(220, 38, 38, 0.35);
       color: #991b1b;
     }
+    .public-user-menu__plan-complete {
+      margin-top: 8px;
+      padding: 8px 10px;
+      border-radius: 10px;
+      background: rgba(125, 211, 174, 0.22);
+      border: 1px solid rgba(13, 148, 136, 0.35);
+      font-size: 0.78rem;
+      font-weight: 700;
+      color: #064e3b;
+      line-height: 1.45;
+    }
+    .public-user-menu__plan-complete-hint {
+      display: block;
+      margin-top: 4px;
+      font-weight: 600;
+      color: #0f766e;
+      font-size: 0.74rem;
+    }
     .public-user-menu__sub-book {
       font-size: 0.78rem;
       font-weight: 800;
@@ -1801,6 +1819,28 @@
     .plan-slot-book-form__btn {
       width: 100%;
       box-sizing: border-box;
+    }
+    .session-card__plan-booked-actions {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      width: 100%;
+    }
+    .plan-slot-cancel-form {
+      width: 100%;
+      margin: 0;
+    }
+    .plan-slot-cancel-form__btn {
+      width: 100%;
+      box-sizing: border-box;
+      background: transparent !important;
+      color: #0f766e !important;
+      border: 2px dashed rgba(15, 118, 110, 0.5) !important;
+      box-shadow: none !important;
+    }
+    .plan-slot-cancel-form__btn:hover {
+      border-color: rgba(15, 118, 110, 0.85) !important;
+      background: rgba(240, 253, 250, 0.65) !important;
     }
     @media (max-width: 720px) {
       .session-card__footer {
@@ -3225,6 +3265,21 @@
       border-color: rgba(165, 243, 252, 0.35);
       color: #ccfbf1;
     }
+    html[data-theme="dark"] .plan-slot-cancel-form__btn {
+      color: #5eead4 !important;
+      border-color: rgba(94, 234, 212, 0.45) !important;
+    }
+    html[data-theme="dark"] .plan-slot-cancel-form__btn:hover {
+      background: rgba(13, 148, 136, 0.2) !important;
+    }
+    html[data-theme="dark"] .public-user-menu__plan-complete {
+      background: rgba(13, 148, 136, 0.15);
+      border-color: rgba(45, 212, 191, 0.35);
+      color: #ccfbf1;
+    }
+    html[data-theme="dark"] .public-user-menu__plan-complete-hint {
+      color: #99f6e4;
+    }
     html[data-theme="dark"] .cart-drawer__foot {
       background: linear-gradient(180deg, var(--white) 0%, var(--mint-bg) 100%);
     }
@@ -4262,8 +4317,14 @@
       if (msgStatus === "subscribed" || msgStatus === "subscribed_mock") {
         track("subscription_activated", { mode: msgStatus });
       }
-      if (msgStatus === "plan_booked") {
-        track("plan_session_booked", { source: "index" });
+      if (msgStatus === "plan_booked" || msgStatus === "plan_booked_quota_complete") {
+        track("plan_session_booked", {
+          source: "index",
+          quota_complete: msgStatus === "plan_booked_quota_complete",
+        });
+      }
+      if (msgStatus === "plan_session_cancelled") {
+        track("plan_session_cancelled", { source: "index" });
       }
       if (msgStatus === "paid_mock") {
         track("booking_paid_mock", { mode: "mock" });

@@ -45,6 +45,8 @@ def build_public_session_rows(
                 "allows_public_booking": yoga_session_accepts_new_public_booking(s, now=now),
                 "use_plan_slot_cta": bool(plan_session_booking_enabled),
                 "booked_via_plan": int(s.id) in booked_ids,
+                "can_cancel_plan_slot": (int(s.id) in booked_ids)
+                and yoga_session_accepts_new_public_booking(s, now=now),
             }
         )
     return rows
