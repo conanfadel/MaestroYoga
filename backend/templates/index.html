@@ -3667,6 +3667,44 @@
       }
     })();
 
+    (function captureScrollBeforePublicPostReturn() {
+      var paths = {
+        "/public/book-plan-session": 1,
+        "/public/cancel-plan-session": 1,
+        "/public/book": 1,
+        "/public/cart/checkout": 1,
+        "/public/subscribe": 1,
+      };
+      document.addEventListener(
+        "submit",
+        function (ev) {
+          var form = ev.target;
+          if (!form || form.tagName !== "FORM") return;
+          var act = (form.getAttribute("action") || "").trim();
+          if (!act) return;
+          try {
+            var u = new URL(act, window.location.origin);
+            if (u.origin !== window.location.origin) return;
+          } catch (eUrl) {
+            return;
+          }
+          var path = act.split("#")[0].split("?")[0];
+          if (!paths[path]) return;
+          try {
+            sessionStorage.setItem(
+              "maestro_index_scroll_v1",
+              JSON.stringify({
+                x: window.scrollX || 0,
+                y: window.scrollY || 0,
+                t: Date.now(),
+              })
+            );
+          } catch (eSave) {}
+        },
+        true
+      );
+    })();
+
     (function () {
       // على الهاتف/اللوح: ثبّت الدخول على قسم الجلسات بدل القفز إلى خطط الاشتراك.
       // لا تعيد الجذب إذا كنا نستعيد التمرير بعد إعادة تحميل المحتوى، وليس مع كل pageshow.
