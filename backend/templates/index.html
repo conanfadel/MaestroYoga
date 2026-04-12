@@ -719,6 +719,37 @@
     .public-user-menu__row-text { min-width: 0; flex: 1; }
     .public-user-menu__row-text .k { display: block; color: var(--charcoal-muted); font-weight: 700; font-size: 0.72rem; margin-bottom: 2px; }
     .public-user-menu__row-text .v { word-break: break-word; font-weight: 700; color: var(--charcoal); }
+    .public-user-menu__subscription-actions {
+      display: flex;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 8px;
+    }
+    .public-user-menu__session-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 4px 10px;
+      border-radius: 999px;
+      font-size: 0.78rem;
+      font-weight: 800;
+      background: rgba(197, 160, 89, 0.28);
+      border: 1px solid rgba(197, 160, 89, 0.5);
+      color: #422006;
+    }
+    .public-user-menu__session-badge.is-low {
+      background: rgba(239, 68, 68, 0.12);
+      border-color: rgba(220, 38, 38, 0.35);
+      color: #991b1b;
+    }
+    .public-user-menu__sub-book {
+      font-size: 0.78rem;
+      font-weight: 800;
+      color: #0f766e;
+      text-decoration: none;
+    }
+    .public-user-menu__sub-book:hover { text-decoration: underline; }
     .public-user-menu__actions {
       display: flex;
       flex-direction: column;

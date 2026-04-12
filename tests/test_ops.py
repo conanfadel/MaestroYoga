@@ -104,3 +104,23 @@ def test_normalize_paymob_iframe_strips_paymob_placeholder_token() -> None:
 
     raw = "https://ksa.paymob.com/api/acceptance/iframes/10190?payment_token={payment_key_obtained_previously}"
     assert normalize_paymob_iframe_checkout_base(raw) == "https://ksa.paymob.com/api/acceptance/iframes/10190"
+
+
+def test_empty_public_subscription_context_has_book_url() -> None:
+    from backend.app.public_subscription_helpers import empty_public_subscription_context
+
+    ctx = empty_public_subscription_context(3)
+    assert ctx["public_sub_active"] is False
+    assert ctx["public_sub_book_url"] == "/index?center_id=3#sessions-section"
+
+
+def test_build_public_active_subscription_without_user_returns_empty() -> None:
+    from backend.app.database import SessionLocal
+    from backend.app.public_subscription_helpers import build_public_active_subscription_context
+
+    db = SessionLocal()
+    try:
+        ctx = build_public_active_subscription_context(db, 1, None, {"weekly": "أسبوعي"})
+        assert ctx["public_sub_active"] is False
+    finally:
+        db.close()

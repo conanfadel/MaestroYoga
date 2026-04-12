@@ -23,6 +23,10 @@ def register_public_auth_account_profile_routes(router: APIRouter) -> None:
             center_id_loyalty = 1
         center_loyalty = db.get(_s.models.Center, center_id_loyalty)
         loyalty_ctx = _s.build_public_loyalty_context(db, center_id_loyalty, user, center=center_loyalty)
+        plan_labels = _s.default_plan_labels()
+        subscription_ctx = _s.build_public_active_subscription_context(
+            db, center_id_loyalty, user, plan_labels
+        )
         return _s.templates.TemplateResponse(
             request,
             "public_account.html",
@@ -33,6 +37,7 @@ def register_public_auth_account_profile_routes(router: APIRouter) -> None:
                 "phone_local": phone_local,
                 "loyalty_program_rows": _s.loyalty_program_table_rows(center_loyalty),
                 **loyalty_ctx,
+                **subscription_ctx,
                 **_s._analytics_context("public_account"),
             },
         )

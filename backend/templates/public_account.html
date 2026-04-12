@@ -184,6 +184,52 @@
     .loyalty-program-mini tr.loyalty-program__row--bronze td:first-child { box-shadow: inset 3px 0 0 #cd7f32; }
     .loyalty-program-mini tr.loyalty-program__row--silver td:first-child { box-shadow: inset 3px 0 0 #94a3b8; }
     .loyalty-program-mini tr.loyalty-program__row--gold td:first-child { box-shadow: inset 3px 0 0 #ca8a04; }
+    .subscription-account-card {
+      margin-bottom: 20px;
+      padding: 14px 16px;
+      border-radius: 14px;
+      border: 1px solid rgba(197, 160, 89, 0.55);
+      background: linear-gradient(145deg, #fffbeb, #fff);
+    }
+    .subscription-account-card h2 {
+      margin: 0 0 8px;
+      font-size: 1rem;
+      font-weight: 800;
+      color: #92400e;
+    }
+    .subscription-account-card p { margin: 0 0 6px; font-size: 0.92rem; color: #475569; line-height: 1.55; }
+    .subscription-account-card .sub-meta { font-size: 0.84rem; color: #64748b; margin-bottom: 10px; }
+    .subscription-account-card .sub-actions {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 10px;
+      margin-top: 4px;
+    }
+    .subscription-account-card .session-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 6px 12px;
+      border-radius: 999px;
+      font-size: 0.85rem;
+      font-weight: 800;
+      background: rgba(197, 160, 89, 0.28);
+      border: 1px solid rgba(197, 160, 89, 0.5);
+      color: #422006;
+    }
+    .subscription-account-card .session-badge.is-low {
+      background: rgba(239, 68, 68, 0.12);
+      border-color: rgba(220, 38, 38, 0.35);
+      color: #991b1b;
+    }
+    .subscription-account-card a.sub-book {
+      font-size: 0.88rem;
+      font-weight: 800;
+      color: #0f766e;
+      text-decoration: none;
+    }
+    .subscription-account-card a.sub-book:hover { text-decoration: underline; }
     form[action="/public/account"] {
       display: flex;
       flex-direction: column;
@@ -218,6 +264,26 @@
         {% endif %}
         <p style="margin:10px 0 0;font-size:0.8rem;color:#94a3b8;">العتبات الحالية (مع التسلسل برونزي ثم فضي +1 ثم ذهبي +1): برونزي من {{ loyalty_thresholds.bronze }}، فضي من {{ loyalty_thresholds.silver }}، ذهبي من {{ loyalty_thresholds.gold }}. يضبطها المدير من لوحة الإدارة → تبويب «برنامج الولاء» (★).</p>
       </div>
+
+      {% if public_sub_active %}
+      <section class="subscription-account-card" aria-label="اشتراكك الحالي">
+        <h2>اشتراكك في هذا المركز</h2>
+        <p><strong>{{ public_sub_plan_name }}</strong> — باقة {{ public_sub_plan_type_label }}.</p>
+        <p class="sub-meta">بداية الاشتراك: {{ public_sub_starts_at_display }} · صالح حتى {{ public_sub_ends_at_display }}</p>
+        {% if public_sub_session_cap %}
+        <p class="sub-meta">جلسات مؤكدة ضمن فترة الاشتراك: <strong>{{ public_sub_sessions_used }}</strong> من <strong>{{ public_sub_sessions_limit }}</strong>.</p>
+        <div class="sub-actions">
+          <span class="session-badge{% if public_sub_at_cap %} is-low{% endif %}" title="متبقٍ ضمن حد الخطة"><span aria-hidden="true">+</span> {{ public_sub_sessions_remaining }} متبقٍ</span>
+          <a class="sub-book" href="{{ public_sub_book_url }}">إضافة جلسة من الجدول</a>
+        </div>
+        {% else %}
+        <p class="sub-meta">حد الجلسات غير محدد لهذه الخطة ضمن النظام؛ يمكنك حجز الجلسات وفق توفر المركز.</p>
+        <div class="sub-actions">
+          <a class="sub-book" href="{{ public_sub_book_url }}">عرض الجلسات واحجز</a>
+        </div>
+        {% endif %}
+      </section>
+      {% endif %}
 
       <section class="loyalty-program-mini" aria-label="جدول أوسمة الولاء والمكافآت">
         <h2>أوسمة الولاء والمكافآت (هذا المركز)</h2>

@@ -79,9 +79,13 @@ def build_public_index_template_context(
     feedback_enabled: bool,
     public_content_version: str,
     loyalty_ctx: dict,
+    subscription_ctx: dict | None,
     analytics_ctx: dict,
     index_hero_app_name: str,
 ) -> dict:
+    from .public_subscription_helpers import empty_public_subscription_context
+
+    sub_ctx = subscription_ctx if subscription_ctx is not None else empty_public_subscription_context(center.id)
     return {
         "center": center,
         "center_id": center.id,
@@ -107,6 +111,7 @@ def build_public_index_template_context(
         "feedback_enabled": feedback_enabled,
         "public_content_version": public_content_version,
         **loyalty_ctx,
+        **sub_ctx,
         **analytics_ctx,
         "index_hero_app_name": index_hero_app_name,
     }

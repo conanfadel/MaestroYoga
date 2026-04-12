@@ -58,7 +58,11 @@ def register_public_index_routes(router: APIRouter) -> None:
             type_labels=_s.CENTER_POST_TYPE_LABELS,
         )
         loyalty_ctx = _s.build_public_loyalty_context(db, center.id, public_user, center=center)
-    
+        plan_labels = _s.default_plan_labels()
+        subscription_ctx = _s.build_public_active_subscription_context(
+            db, center.id, public_user, plan_labels
+        )
+
         public_news_meta = _s.build_public_news_index_meta(
             center_id=center.id,
             total_published_posts=total_published_posts,
@@ -66,8 +70,6 @@ def register_public_index_routes(router: APIRouter) -> None:
             public_posts_teasers=public_posts_teasers,
             url_with_params_fn=_s._url_with_params,
         )
-        plan_labels = _s.default_plan_labels()
-    
         index_page = _s.merge_index_page_config(center)
         idx_refund_p1 = _s._index_refund_p1_rendered(str(index_page.get("refund", {}).get("p1", "")), center.name)
     
@@ -94,6 +96,7 @@ def register_public_index_routes(router: APIRouter) -> None:
             feedback_enabled=bool(_s.feedback_destination_email()) and _s.validate_mailer_settings()[0],
             public_content_version=_s.compute_public_center_content_version(db, center.id),
             loyalty_ctx=loyalty_ctx,
+            subscription_ctx=subscription_ctx,
             analytics_ctx=_s._analytics_context("index", center_id=str(center.id)),
             index_hero_app_name=_s.os.getenv("APP_NAME", "Maestro Yoga").strip() or "Maestro Yoga",
         )

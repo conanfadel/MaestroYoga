@@ -118,6 +118,7 @@ from ...public_news_helpers import (
     preview_text,
 )
 from ...public_plan_helpers import build_public_plan_rows, default_plan_labels
+from ...public_subscription_helpers import build_public_active_subscription_context
 from ...public_redirect_helpers import (
     redirect_public_index_paid_mock,
     redirect_public_index_with_msg,
