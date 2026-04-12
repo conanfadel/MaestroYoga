@@ -129,26 +129,20 @@ class PaymobPaymentProvider(BasePaymentProvider):
             )
         self._integration_id = int(iid)
         fid = os.getenv("PAYMOB_IFRAME_ID", "").strip()
-        mirror = os.getenv("PAYMOB_MIRROR_IFRAME_TO_INTEGRATION", "").strip().lower() in (
-            "1",
-            "true",
-            "yes",
-        )
-        if not fid.isdigit():
-            if mirror:
-                fid = iid
-                logger.warning(
-                    "PAYMOB_IFRAME_ID unset: using PAYMOB_INTEGRATION_ID for iframe URL "
-                    "(PAYMOB_MIRROR_IFRAME_TO_INTEGRATION=1). If checkout fails, obtain a separate Iframe ID "
-                    "from Paymob Dashboard → Developers → iframes."
-                )
-            else:
-                raise RuntimeError(
-                    "PAYMOB_IFRAME_ID must be a numeric iframe id (Paymob Dashboard → Developers → iframes). "
-                    "If your account only shows one id for card checkout, set PAYMOB_INTEGRATION_ID to that "
-                    "number and add PAYMOB_MIRROR_IFRAME_TO_INTEGRATION=1 to reuse it for the iframe URL."
-                )
-        self._iframe_id = int(fid)
+        if fid.isdigit():
+            self._iframe_id = int(fid)
+        elif not fid:
+            # لوحة Paymob أحياناً لا تعرض iframe id منفصلاً؛ مسار Accept الكلاسيكي يقبل غالباً نفس رقم التكامل هنا.
+            self._iframe_id = int(iid)
+            logger.info(
+                "PAYMOB_IFRAME_ID unset: using PAYMOB_INTEGRATION_ID (%s) in the hosted checkout URL. "
+                "If the payment page fails, set PAYMOB_IFRAME_ID from Dashboard → Developers → iframes.",
+                iid,
+            )
+        else:
+            raise RuntimeError(
+                "PAYMOB_IFRAME_ID must be numeric or left unset (then the integration id is used for the iframe URL)."
+            )
         self._api_base = os.getenv("PAYMOB_API_BASE", "https://accept.paymob.com").strip().rstrip("/")
         self._auth_token: str | None = None
 

@@ -459,7 +459,7 @@ stripe listen --forward-to http://127.0.0.1:8000/payments/webhook/stripe
 
 - عيّن `PAYMENT_PROVIDER=paymob` والمتغيرات في `.env.example`: للتوثيق استخدم `PAYMOB_API_KEY` أو `PAYMOB_SECRET_KEY`؛ للـ webhook استخدم `PAYMOB_HMAC_SECRET` أو `PAYMOB_HMAC`. **Public Key** للواجهة (Pixel وغيره) وليس لمسار iframe الحالي في الخادم. كذلك `PAYMOB_API_BASE` حسب بلد الحساب.
 - **Integration ID:** في لوحة Paymob غالباً **Developers** → **Payment Integrations** — رقم تكامل **Online Card**. استخدم `PAYMOB_INTEGRATION_ID` أو `PAYMOB_CARD_INTEGRATION_ID`.
-- **Iframe ID:** غالباً **Developers** → **iframes**. إن لم يظهر سوى رقم واحد للبطاقة: ضعه في `PAYMOB_INTEGRATION_ID` وأضف `PAYMOB_MIRROR_IFRAME_TO_INTEGRATION=1` ليُستخدم نفس الرقم في رابط الدفع (إن فشل، اطلب من Paymob تفعيل iframe منفصل).
+- **Iframe ID (اختياري):** إن وُجد تحت **Developers** → **iframes** ضعه في `PAYMOB_IFRAME_ID`. إن **لم** يكن لديك رقم iframe منفصل، اترك `PAYMOB_IFRAME_ID` فارغاً؛ الخادم يستخدم تلقائياً نفس رقم التكامل في رابط الدفع. إن فشلت صفحة الدفع، أضف رقم الـ iframe الصحيح من اللوحة.
 - في لوحة Paymob: Webhook نحو `https://<نطاقك>/payments/webhook/paymob`.
 - إن رفض إنشاء مفتاح الدفع الحقل `redirection_url`، عيّن `PAYMOB_SKIP_REDIRECTION_URL=1`.
 
