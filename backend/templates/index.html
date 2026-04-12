@@ -1762,7 +1762,13 @@
       font-variant-numeric: tabular-nums;
     }
     .session-card__when-relative:not(:empty) {
-      min-width: 9.5rem;
+      min-width: 11.5rem;
+      max-width: 100%;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      margin-inline: auto;
+      box-sizing: border-box;
     }
     .session-card__when-relative:empty { display: none; }
     .session-card__when-label {
@@ -3621,12 +3627,56 @@
   </aside>
 
   <script>
+    (function initScrollRestoreFromReload() {
+      window.__maestro_index_scroll_restore = null;
+      try {
+        var raw = sessionStorage.getItem("maestro_index_scroll_v1");
+        if (raw) {
+          sessionStorage.removeItem("maestro_index_scroll_v1");
+          var o = JSON.parse(raw);
+          if (
+            o &&
+            typeof o.y === "number" &&
+            typeof o.t === "number" &&
+            Date.now() - o.t < 30000
+          ) {
+            window.__maestro_index_scroll_restore = o;
+            if ("scrollRestoration" in history) history.scrollRestoration = "manual";
+          }
+        }
+      } catch (e0) {}
+      function applyStoredScroll() {
+        var p = window.__maestro_index_scroll_restore;
+        if (!p) return;
+        window.__maestro_index_scroll_restore = null;
+        window.scrollTo(typeof p.x === "number" ? p.x : 0, p.y);
+      }
+      if (window.__maestro_index_scroll_restore) {
+        if (document.readyState === "complete") {
+          requestAnimationFrame(function () {
+            requestAnimationFrame(applyStoredScroll);
+          });
+        } else {
+          window.addEventListener("load", function once() {
+            window.removeEventListener("load", once);
+            requestAnimationFrame(function () {
+              requestAnimationFrame(applyStoredScroll);
+            });
+          });
+        }
+      }
+    })();
+
     (function () {
       // على الهاتف/اللوح: ثبّت الدخول على قسم الجلسات بدل القفز إلى خطط الاشتراك.
+      // لا تعيد الجذب إذا كنا نستعيد التمرير بعد إعادة تحميل المحتوى، وليس مع كل pageshow.
       try {
         var isSmall = window.matchMedia && window.matchMedia("(max-width: 1024px)").matches;
         var hash = (window.location.hash || "").toLowerCase();
-        var shouldForceSessions = isSmall && (!hash || hash === "#plans-section");
+        var shouldForceSessions =
+          isSmall &&
+          (!hash || hash === "#plans-section") &&
+          !window.__maestro_index_scroll_restore;
         function forceSessionsEntryPosition() {
           var sessions = document.getElementById("sessions-section");
           if ("scrollRestoration" in history) history.scrollRestoration = "manual";
@@ -3641,9 +3691,6 @@
         }
         if (shouldForceSessions) {
           requestAnimationFrame(function () {
-            requestAnimationFrame(forceSessionsEntryPosition);
-          });
-          window.addEventListener("pageshow", function () {
             requestAnimationFrame(forceSessionsEntryPosition);
           });
         }
@@ -3749,6 +3796,16 @@
             .then(function (data) {
               if (!data || !data.version) return;
               if (String(data.version) !== String(PUBLIC_CONTENT_VERSION)) {
+                try {
+                  sessionStorage.setItem(
+                    "maestro_index_scroll_v1",
+                    JSON.stringify({
+                      x: window.scrollX || 0,
+                      y: window.scrollY || 0,
+                      t: Date.now(),
+                    })
+                  );
+                } catch (e2) {}
                 window.location.reload();
               }
             })
@@ -3786,7 +3843,7 @@
           var diffSec = Math.round((then.getTime() - Date.now()) / 1000);
           var abs = Math.abs(diffSec);
           if (abs > 86400 * 21) {
-            el.textContent = "";
+            if (el.textContent !== "") el.textContent = "";
             return;
           }
           var text = "";
@@ -3795,7 +3852,7 @@
           else if (abs < 86400) text = rtf.format(Math.round(diffSec / 3600), "hour");
           else if (abs < 86400 * 7) text = rtf.format(Math.round(diffSec / 86400), "day");
           else text = rtf.format(Math.round(diffSec / 604800), "week");
-          el.textContent = text;
+          if (el.textContent !== text) el.textContent = text;
         });
       }
 
@@ -4278,7 +4335,7 @@
         window.setInterval(function () {
           hideEndedPublicSessions();
           fillSessionRelativeTimes();
-          applyFilters();
+          updateUpcomingStrip();
         }, 60000);
       }
 
