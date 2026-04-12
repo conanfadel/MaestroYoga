@@ -150,12 +150,35 @@ class PaymobPaymentProvider(BasePaymentProvider):
             os.getenv("PAYMOB_INTEGRATION_ID", "").strip()
             or os.getenv("PAYMOB_CARD_INTEGRATION_ID", "").strip()
         )
-        if not iid.isdigit():
+        apple_iid = os.getenv("PAYMOB_APPLE_PAY_INTEGRATION_ID", "").strip()
+        use_apple = os.getenv("PAYMOB_USE_APPLE_PAY_INTEGRATION", "").strip().lower() in ("1", "true", "yes")
+        if use_apple:
+            if not apple_iid.isdigit():
+                raise RuntimeError(
+                    "PAYMOB_USE_APPLE_PAY_INTEGRATION is set but PAYMOB_APPLE_PAY_INTEGRATION_ID must be a numeric "
+                    "Apple Pay integration id from Paymob Dashboard → Developers → Payment Integrations."
+                )
+            self._integration_id = int(apple_iid)
+            if iid.isdigit():
+                logger.info(
+                    "Paymob: payment_keys uses Apple Pay integration id %s (card integration id %s unchanged in env).",
+                    apple_iid,
+                    iid,
+                )
+            else:
+                logger.info(
+                    "Paymob: payment_keys uses Apple Pay integration id %s.",
+                    apple_iid,
+                )
+        elif iid.isdigit():
+            self._integration_id = int(iid)
+        else:
             raise RuntimeError(
                 "PAYMOB_INTEGRATION_ID (or PAYMOB_CARD_INTEGRATION_ID) must be a numeric "
-                "Online Card / payment integration id from Paymob Dashboard → Developers → Payment Integrations."
+                "Online Card / payment integration id from Paymob Dashboard → Developers → Payment Integrations. "
+                "For Apple Pay only, set PAYMOB_USE_APPLE_PAY_INTEGRATION=1 and PAYMOB_APPLE_PAY_INTEGRATION_ID."
             )
-        self._integration_id = int(iid)
+        iframe_mirror_id = str(self._integration_id)
         raw_iframe = (
             os.getenv("PAYMOB_IFRAME_CHECKOUT_BASE", "").strip()
             or os.getenv("PAYMOB_IFRAME_LINK", "").strip()
@@ -164,18 +187,18 @@ class PaymobPaymentProvider(BasePaymentProvider):
 
         fid = os.getenv("PAYMOB_IFRAME_ID", "").strip()
         if self._iframe_checkout_base:
-            self._iframe_id = int(iid)
+            self._iframe_id = int(iframe_mirror_id)
             logger.info(
                 "Using PAYMOB_IFRAME_CHECKOUT_BASE / PAYMOB_IFRAME_LINK for the payment redirect URL."
             )
         elif fid.isdigit():
             self._iframe_id = int(fid)
         elif not fid:
-            self._iframe_id = int(iid)
+            self._iframe_id = int(iframe_mirror_id)
             logger.info(
-                "PAYMOB_IFRAME_ID unset: using PAYMOB_INTEGRATION_ID (%s) in the hosted checkout URL. "
+                "PAYMOB_IFRAME_ID unset: using integration id %s in the default hosted checkout URL. "
                 "If the payment page fails, set PAYMOB_IFRAME_ID or PAYMOB_IFRAME_LINK from the Paymob dashboard.",
-                iid,
+                iframe_mirror_id,
             )
         else:
             raise RuntimeError(
