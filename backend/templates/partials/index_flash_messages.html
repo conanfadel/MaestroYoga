@@ -32,6 +32,10 @@
 {% if msg == 'session_started' %}<div class="alert warn">بدأت الجلسة بالفعل؛ لا يمكن بدء دفع حجز جديد لها. اختر جلسة لاحقة.</div>{% endif %}
 {% if msg == 'cart_session_ended' %}<div class="alert err">تتضمن السلة جلسة انتهى وقتها. أفرغ السلة أو أعد التحميل واختر جلسات حالية.</div>{% endif %}
 {% if msg == 'cart_session_started' %}<div class="alert err">تتضمن السلة جلسة بدأ وقتها. أزلها من السلة واختر مواعيد قادمة.</div>{% endif %}
+{% if msg == 'plan_booked' %}<div class="alert ok">تمت إضافة الجلسة إلى اشتراكك ضمن حصة الخطة.</div>{% endif %}
+{% if msg == 'plan_sessions_exhausted' %}<div class="alert warn">استنفدت جلسات اشتراكك لهذه الفترة. جرّب «أضف للسلة» للدفع لكل جلسة أو جدّد اشتراكك.</div>{% endif %}
+{% if msg == 'plan_booking_no_subscription' %}<div class="alert err">لا يوجد اشتراك فعّال يسمح بحجز الجلسة ضمن الخطة.</div>{% endif %}
+{% if msg == 'plan_booking_no_cap' %}<div class="alert err">خطتك الحالية لا تحدد عدد جلسات؛ استخدم «أضف للسلة» للحجز.</div>{% endif %}
 {% if msg == 'feedback_sent' %}<div class="alert">تم إرسال رسالتك. شكرًا لتواصلك معنا.</div>{% endif %}
 {% if msg == 'feedback_error' %}<div class="alert err">تعذر إرسال الرسالة. حاول لاحقًا أو تواصل مع المركز مباشرة.</div>{% endif %}
 {% if msg == 'feedback_auth_required' %}<div class="alert warn">يجب تسجيل الدخول لإرسال الملاحظات من صفحة الحجز.</div>{% endif %}

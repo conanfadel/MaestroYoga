@@ -1757,6 +1757,14 @@
       flex-direction: column;
       gap: 12px;
     }
+    .plan-slot-book-form {
+      width: 100%;
+      margin: 0;
+    }
+    .plan-slot-book-form__btn {
+      width: 100%;
+      box-sizing: border-box;
+    }
     @media (max-width: 720px) {
       .session-card__footer {
         padding: 0 12px 14px;
@@ -4205,10 +4213,19 @@
       if (msgStatus === "subscribed" || msgStatus === "subscribed_mock") {
         track("subscription_activated", { mode: msgStatus });
       }
+      if (msgStatus === "plan_booked") {
+        track("plan_session_booked", { source: "index" });
+      }
       if (msgStatus === "paid_mock") {
         track("booking_paid_mock", { mode: "mock" });
       }
-      if (paymentStatus === "success" || msgStatus === "paid_mock" || msgStatus === "subscribed" || msgStatus === "subscribed_mock") {
+      if (
+        paymentStatus === "success" ||
+        msgStatus === "paid_mock" ||
+        msgStatus === "subscribed" ||
+        msgStatus === "subscribed_mock" ||
+        msgStatus === "plan_booked"
+      ) {
         try {
           sessionStorage.removeItem(CART_KEY);
           renderCart();

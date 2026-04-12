@@ -109,6 +109,7 @@ def payment_method_label_ar(method: str | None) -> str:
         "in_app_mock": "وهمي / تجريبي",
         "public_checkout": "دفع صفحة الحجز",
         "public_cart_checkout": "دفع السلة العامة",
+        "plan_sessions_included": "جلسة ضمن حصة الاشتراك",
     }.get(m, m or "—")
 
 

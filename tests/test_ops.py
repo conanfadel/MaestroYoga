@@ -111,6 +111,7 @@ def test_empty_public_subscription_context_has_book_url() -> None:
 
     ctx = empty_public_subscription_context(3)
     assert ctx["public_sub_active"] is False
+    assert ctx["public_sub_plan_slot_booking"] is False
     assert ctx["public_sub_book_url"] == "/index?center_id=3#sessions-section"
 
 

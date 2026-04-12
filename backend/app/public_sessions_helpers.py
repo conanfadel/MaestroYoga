@@ -10,6 +10,8 @@ def build_public_session_rows(
     sessions: list[models.YogaSession],
     rooms_by_id: dict[int, models.Room],
     spots_by_session: dict[int, int],
+    *,
+    plan_session_booking_enabled: bool = False,
 ) -> list[dict]:
     level_labels = {
         "beginner": "مبتدئ",
@@ -39,6 +41,7 @@ def build_public_session_rows(
                 "room_name": room.name if room else "-",
                 "spots_available": spots_by_session.get(int(s.id), 0),
                 "allows_public_booking": yoga_session_accepts_new_public_booking(s, now=now),
+                "use_plan_slot_cta": bool(plan_session_booking_enabled),
             }
         )
     return rows

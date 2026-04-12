@@ -129,3 +129,56 @@ def register_public_commerce_book_routes(router: APIRouter) -> None:
         )
 
         return _s.redirect_public_index_paid_mock(center_id=center_id, booking_id=booking.id)
+
+    @router.post("/public/book-plan-session")
+    def public_book_plan_session(
+        request: _s.Request,
+        center_id: int = _s.Form(...),
+        session_id: int = _s.Form(...),
+        db: _s.Session = _s.Depends(_s.get_db),
+    ):
+        """حجز جلسة ضمن حصة اشتراك بحد جلسات (بدون دفع منفصل)."""
+        if _s._is_ip_blocked(db, request):
+            return _s.redirect_public_index_with_msg(center_id=center_id, msg="ip_blocked")
+        public_user = _s._current_public_user(request, db)
+        if not public_user:
+            return _s._public_login_redirect(next_url=f"/index?center_id={center_id}", msg="auth_required")
+        if _s._is_email_verification_required() and not public_user.email_verified:
+            return _s.RedirectResponse(
+                url=_s._url_with_params("/public/verify-pending", next=f"/index?center_id={center_id}"),
+                status_code=303,
+            )
+
+        _s.get_center_or_404(db, center_id)
+
+        if _s.is_sqlite:
+            db.execute(_s.text("BEGIN IMMEDIATE"))
+
+        client = _s.get_or_sync_public_client(db, center_id=center_id, public_user=public_user)
+        ok, code = _s.confirm_public_plan_session_booking(
+            db,
+            center_id=center_id,
+            session_id=session_id,
+            client=client,
+            models_module=_s.models,
+            utcnow_fn=_s.utcnow_naive,
+            count_active_bookings_fn=_s.count_active_bookings,
+            integrity_error_cls=_s.IntegrityError,
+        )
+        if ok:
+            _s.log_security_event(
+                "public_plan_session_book",
+                request,
+                "success",
+                email=public_user.email,
+                details={"center_id": center_id, "session_id": session_id, "client_id": client.id},
+            )
+            return _s.redirect_public_index_with_msg(center_id=center_id, msg=code)
+        _s.log_security_event(
+            "public_plan_session_book",
+            request,
+            "blocked",
+            email=public_user.email,
+            details={"center_id": center_id, "session_id": session_id, "reason": code},
+        )
+        return _s.redirect_public_index_with_msg(center_id=center_id, msg=code)

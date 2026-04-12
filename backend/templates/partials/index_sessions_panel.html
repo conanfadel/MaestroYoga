@@ -40,7 +40,15 @@
                     {% endif %}
                   </div>
                   <button type="button" class="session-card__details-toggle" aria-expanded="false">تفاصيل</button>
-                  {% if s.spots_available > 0 and s.allows_public_booking %}
+                  {% if s.use_plan_slot_cta and s.spots_available > 0 and s.allows_public_booking %}
+                    <form method="post" action="/public/book-plan-session" class="plan-slot-book-form">
+                      <input type="hidden" name="center_id" value="{{ center_id }}" />
+                      <input type="hidden" name="session_id" value="{{ s.id }}" />
+                      <button type="submit" class="book-btn book-btn-lg plan-slot-book-form__btn">
+                        إضافة إلى الخطة
+                      </button>
+                    </form>
+                  {% elif s.spots_available > 0 and s.allows_public_booking %}
                     <button
                       type="button"
                       class="book-btn book-btn-lg js-add-session"

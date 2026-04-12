@@ -124,6 +124,7 @@ from ...public_session_visibility import (
     yoga_session_accepts_new_public_booking,
     yoga_session_still_on_public_schedule,
 )
+from ...public_plan_session_booking import confirm_public_plan_session_booking
 from ...public_subscription_helpers import build_public_active_subscription_context
 from ...public_redirect_helpers import (
     redirect_public_index_paid_mock,

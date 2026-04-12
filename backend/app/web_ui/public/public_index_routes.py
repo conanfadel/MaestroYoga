@@ -49,8 +49,17 @@ def register_public_index_routes(router: APIRouter) -> None:
                 for r in db.query(_s.models.Room).filter(_s.models.Room.center_id == center.id, _s.models.Room.id.in_(room_ids)).all()
             }
         spots_by_session = _s._spots_available_map(db, center.id, [int(s.id) for s in sessions])
-        rows = _s.build_public_session_rows(sessions, rooms_by_id, spots_by_session)
-    
+        plan_labels = _s.default_plan_labels()
+        subscription_ctx = _s.build_public_active_subscription_context(
+            db, center.id, public_user, plan_labels
+        )
+        rows = _s.build_public_session_rows(
+            sessions,
+            rooms_by_id,
+            spots_by_session,
+            plan_session_booking_enabled=bool(subscription_ctx.get("public_sub_plan_slot_booking")),
+        )
+
         index_data = _s.load_public_index_data(db, center.id)
         plans = index_data["plans"]
         faq_items = index_data["faq_items"]
@@ -64,10 +73,6 @@ def register_public_index_routes(router: APIRouter) -> None:
             type_labels=_s.CENTER_POST_TYPE_LABELS,
         )
         loyalty_ctx = _s.build_public_loyalty_context(db, center.id, public_user, center=center)
-        plan_labels = _s.default_plan_labels()
-        subscription_ctx = _s.build_public_active_subscription_context(
-            db, center.id, public_user, plan_labels
-        )
 
         public_news_meta = _s.build_public_news_index_meta(
             center_id=center.id,
