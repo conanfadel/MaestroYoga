@@ -68,6 +68,10 @@ def register_public_commerce_book_routes(router: APIRouter) -> None:
         if duplicate:
             return _s.redirect_public_index_with_msg(center_id=center_id, msg="duplicate")
 
+        provider, payment_cfg_msg = _s.resolve_public_payment_provider()
+        if payment_cfg_msg or provider is None:
+            return _s.redirect_public_index_with_msg(center_id=center_id, msg=payment_cfg_msg or "payment_provider_config")
+
         amount = float(yoga_session.price_drop_in)
         booking, payment_row, booking_error = _s.create_pending_single_booking_payment(
             db=db,
@@ -84,7 +88,6 @@ def register_public_commerce_book_routes(router: APIRouter) -> None:
             return _s.redirect_public_index_with_msg(center_id=center_id, msg="duplicate")
         assert booking is not None and payment_row is not None
 
-        provider = _s.get_payment_provider()
         base = _s._public_base(request)
 
         if _s.payment_provider_supports_hosted_checkout(provider):

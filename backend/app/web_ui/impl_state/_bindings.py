@@ -65,7 +65,11 @@ from ...mailer import (
     send_mail_with_attachments,
     validate_mailer_settings,
 )
-from ...payments import get_payment_provider, payment_provider_supports_hosted_checkout
+from ...payments import (
+    get_payment_provider,
+    payment_provider_supports_hosted_checkout,
+    resolve_public_payment_provider,
+)
 from ...public_account_helpers import build_account_delete_confirm_url, public_account_phone_prefill
 from ...public_auth_flow_helpers import (
     is_public_account_delete_request_rate_limited,

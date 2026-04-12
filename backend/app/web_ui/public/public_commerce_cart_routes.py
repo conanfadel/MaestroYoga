@@ -26,6 +26,10 @@ def register_public_commerce_cart_routes(router: APIRouter) -> None:
                 status_code=303,
             )
 
+        provider, payment_cfg_msg = _s.resolve_public_payment_provider()
+        if payment_cfg_msg or provider is None:
+            return _s.redirect_public_index_with_msg(center_id=center_id, msg=payment_cfg_msg or "payment_provider_config")
+
         session_ids, cart_error = _s.parse_cart_session_ids(cart_json, max_sessions=_s.MAX_PUBLIC_CART_SESSIONS)
         if cart_error:
             return _s.redirect_public_index_with_msg(center_id=center_id, msg=cart_error)
@@ -49,7 +53,6 @@ def register_public_commerce_cart_routes(router: APIRouter) -> None:
 
         db.commit()
 
-        provider = _s.get_payment_provider()
         base = _s._public_base(request)
 
         if _s.payment_provider_supports_hosted_checkout(provider):

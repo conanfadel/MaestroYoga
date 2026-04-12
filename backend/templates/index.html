@@ -4136,7 +4136,12 @@
       } else if (paymentStatus === "cancelled") {
         track("purchase_cancelled", { source: "index_return" });
       }
-      if (msgStatus === "stripe_error" || msgStatus === "stripe_no_url" || msgStatus === "subscription_cancelled") {
+      if (
+        msgStatus === "stripe_error" ||
+        msgStatus === "stripe_no_url" ||
+        msgStatus === "payment_provider_config" ||
+        msgStatus === "subscription_cancelled"
+      ) {
         track("purchase_failed", { reason: msgStatus });
       }
       if (msgStatus === "subscribed" || msgStatus === "subscribed_mock") {

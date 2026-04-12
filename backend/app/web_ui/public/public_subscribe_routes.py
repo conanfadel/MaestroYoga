@@ -37,7 +37,11 @@ def register_public_subscribe_routes(router: APIRouter) -> None:
         )
     
         client = _s.get_or_sync_public_client(db, center_id=center_id, public_user=public_user)
-    
+
+        provider, payment_cfg_msg = _s.resolve_public_payment_provider()
+        if payment_cfg_msg or provider is None:
+            return _s.redirect_public_index_with_msg(center_id=center_id, msg=payment_cfg_msg or "payment_provider_config")
+
         subscription, payment_row = _s.create_pending_subscription_payment(
             db=db,
             models_module=_s.models,
@@ -47,8 +51,7 @@ def register_public_subscribe_routes(router: APIRouter) -> None:
             utcnow_fn=_s.utcnow_naive,
             plan_duration_days_fn=_s._plan_duration_days,
         )
-    
-        provider = _s.get_payment_provider()
+
         base = _s._public_base(request)
         if _s.payment_provider_supports_hosted_checkout(provider):
             checkout_url, hosted_error = _s.process_hosted_subscription_checkout(
