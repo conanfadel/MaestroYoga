@@ -131,6 +131,10 @@ def confirm_public_plan_session_booking(
     if not yoga_session_accepts_new_public_booking(yoga_session, now=now):
         return False, "session_started"
 
+    sa = yoga_session.starts_at
+    if sa is None or sa < sub_locked.start_date or sa > sub_locked.end_date:
+        return False, "plan_booking_session_outside_period"
+
     room = db.get(models_module.Room, yoga_session.room_id)
     if not room:
         return False, "full"

@@ -35,14 +35,21 @@ def count_confirmed_plan_sessions_in_period(
     center_id: int,
     subscription: models.ClientSubscription,
 ) -> int:
-    """جلسات مؤكدة ضمن [start_date, end_date] للاشتراك (نفس منطق العداد في الواجهة)."""
+    """حجوزات «ضمن حصة الخطة» المؤكدة (دفع plan_sessions_included) التي تقع جلساتها في [start_date, end_date].
+
+    لا تُحسب جلسات الدفع لكل موعد ولا غيرها، حتى لا يُستنزف سقف الخطة خطأً ولا يُسمح بتجاوزه
+    بجلسات ضمن الخطة خارج نافذة الاشتراك كانت تُستثنى سابقاً من العداد.
+    """
     raw = (
-        db.query(func.count(models.Booking.id))
+        db.query(func.count(func.distinct(models.Booking.id)))
         .join(models.YogaSession, models.YogaSession.id == models.Booking.session_id)
+        .join(models.Payment, models.Payment.booking_id == models.Booking.id)
         .filter(
             models.Booking.client_id == client_id,
             models.Booking.center_id == center_id,
             models.Booking.status == "confirmed",
+            models.Payment.payment_method == "plan_sessions_included",
+            models.Payment.status == "paid",
             models.YogaSession.starts_at >= subscription.start_date,
             models.YogaSession.starts_at <= subscription.end_date,
         )
