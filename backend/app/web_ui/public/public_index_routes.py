@@ -53,11 +53,31 @@ def register_public_index_routes(router: APIRouter) -> None:
         subscription_ctx = _s.build_public_active_subscription_context(
             db, center.id, public_user, plan_labels
         )
+        plan_booked_session_ids: set[int] = set()
+        if public_user and sessions:
+            email = (getattr(public_user, "email", None) or "").strip().lower()
+            if email:
+                client = (
+                    db.query(_s.models.Client)
+                    .filter(
+                        _s.models.Client.center_id == center.id,
+                        _s.models.Client.email == email,
+                    )
+                    .first()
+                )
+                if client:
+                    plan_booked_session_ids = _s.session_ids_booked_via_plan_for_client(
+                        db,
+                        center_id=center.id,
+                        client_id=client.id,
+                        session_ids=[int(s.id) for s in sessions],
+                    )
         rows = _s.build_public_session_rows(
             sessions,
             rooms_by_id,
             spots_by_session,
             plan_session_booking_enabled=bool(subscription_ctx.get("public_sub_plan_slot_booking")),
+            plan_booked_session_ids=plan_booked_session_ids,
         )
 
         index_data = _s.load_public_index_data(db, center.id)

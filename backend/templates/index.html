@@ -729,11 +729,14 @@
     .public-user-menu__session-badge {
       display: inline-flex;
       align-items: center;
+      justify-content: center;
       gap: 4px;
       padding: 4px 10px;
       border-radius: 999px;
       font-size: 0.78rem;
       font-weight: 800;
+      min-width: 7.25rem;
+      font-variant-numeric: tabular-nums;
       background: rgba(197, 160, 89, 0.28);
       border: 1px solid rgba(197, 160, 89, 0.5);
       color: #422006;
@@ -996,6 +999,27 @@
     }
     .session-card--scarce .session-card__bar {
       background: linear-gradient(135deg, #3d3428 0%, var(--charcoal) 100%);
+    }
+    .session-card--booked-plan {
+      border-color: rgba(13, 148, 136, 0.42);
+      box-shadow: 0 0 0 1px rgba(13, 148, 136, 0.12), 0 10px 28px rgba(13, 148, 136, 0.08);
+      background: linear-gradient(180deg, rgba(240, 253, 250, 0.5) 0%, var(--white) 52%);
+    }
+    .session-card--booked-plan .session-card__bar {
+      background: linear-gradient(135deg, #0f766e 0%, #134e4a 100%);
+    }
+    .session-card__plan-badge {
+      flex-shrink: 0;
+      display: inline-flex;
+      align-items: center;
+      padding: 3px 10px;
+      border-radius: 999px;
+      font-size: 0.68rem;
+      font-weight: 800;
+      letter-spacing: 0.02em;
+      background: rgba(255, 255, 255, 0.22);
+      border: 1px solid rgba(255, 255, 255, 0.45);
+      color: #ecfdf5;
     }
     .availability .bar > span {
       transition: width 0.55s cubic-bezier(0.22, 1, 0.36, 1);
@@ -1655,6 +1679,14 @@
       font-weight: 800;
       font-size: 1.05rem;
       line-height: 1.35;
+      display: flex;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+    .session-card__bar-title {
+      min-width: 0;
+      flex: 1 1 auto;
     }
     .session-card__body {
       display: grid;
@@ -1708,6 +1740,11 @@
       font-weight: 700;
       color: var(--gold-dark);
       line-height: 1.35;
+      min-height: 1.35em;
+      font-variant-numeric: tabular-nums;
+    }
+    .session-card__when-relative:not(:empty) {
+      min-width: 9.5rem;
     }
     .session-card__when-relative:empty { display: none; }
     .session-card__when-label {
@@ -3176,6 +3213,18 @@
       background: #222a33;
       color: #f4f6f8;
     }
+    html[data-theme="dark"] .session-card--booked-plan {
+      background: linear-gradient(180deg, rgba(13, 148, 136, 0.14) 0%, var(--white) 52%);
+      border-color: rgba(45, 212, 191, 0.35);
+    }
+    html[data-theme="dark"] .session-card--booked-plan .session-card__bar {
+      background: linear-gradient(135deg, #115e59 0%, #0f172a 100%);
+    }
+    html[data-theme="dark"] .session-card__plan-badge {
+      background: rgba(45, 212, 191, 0.18);
+      border-color: rgba(165, 243, 252, 0.35);
+      color: #ccfbf1;
+    }
     html[data-theme="dark"] .cart-drawer__foot {
       background: linear-gradient(180deg, var(--white) 0%, var(--mint-bg) 100%);
     }
@@ -4067,7 +4116,7 @@
           upcomingWrap.hidden = false;
           upcomingList.innerHTML = "";
           top.forEach(function (art) {
-            const titleEl = art.querySelector(".session-card__bar");
+            const titleEl = art.querySelector(".session-card__bar-title") || art.querySelector(".session-card__bar");
             const whenEl = art.querySelector(".session-card__when-main");
             const priceEl = art.querySelector(".session-card__price");
             const item = document.createElement("div");

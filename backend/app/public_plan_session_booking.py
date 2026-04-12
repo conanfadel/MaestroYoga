@@ -13,6 +13,36 @@ from .public_session_visibility import (
 from .public_subscription_helpers import count_confirmed_plan_sessions_in_period, get_active_subscription_bundle
 
 
+def session_ids_booked_via_plan_for_client(
+    db: Session,
+    *,
+    center_id: int,
+    client_id: int,
+    session_ids: list[int],
+) -> set[int]:
+    """معرفات الجلسات التي للعميل حجز مؤكد مرتبط بدفع «ضمن الخطة»."""
+    if not session_ids:
+        return set()
+    rows = (
+        db.query(models.Booking.session_id)
+        .join(models.Payment, models.Payment.booking_id == models.Booking.id)
+        .filter(
+            models.Booking.client_id == client_id,
+            models.Booking.center_id == center_id,
+            models.Booking.status == "confirmed",
+            models.Booking.session_id.in_(session_ids),
+            models.Payment.payment_method == "plan_sessions_included",
+        )
+        .distinct()
+        .all()
+    )
+    out: set[int] = set()
+    for (sid,) in rows:
+        if sid is not None:
+            out.add(int(sid))
+    return out
+
+
 def confirm_public_plan_session_booking(
     db: Session,
     *,

@@ -7,7 +7,7 @@
               {% for s in sessions %}
               <article
                 id="session-{{ s.id }}"
-                class="session-card session-row{% if s.spots_available > 0 and s.spots_available <= 3 %} session-card--scarce{% endif %} reveal-on-scroll"
+                class="session-card session-row{% if s.spots_available > 0 and s.spots_available <= 3 %} session-card--scarce{% endif %}{% if s.booked_via_plan %} session-card--booked-plan{% endif %} reveal-on-scroll"
                 data-session-id="{{ s.id }}"
                 data-title="{{ s.title }} {{ s.trainer_name }}"
                 data-level="{{ s.level_label }}"
@@ -16,7 +16,12 @@
                 data-time="{{ s.starts_at.isoformat() if s.starts_at else '' }}"
                 data-session-end="{{ s.ends_at_iso }}"
               >
-                <header class="session-card__bar">{{ s.title }}</header>
+                <header class="session-card__bar">
+                  <span class="session-card__bar-title">{{ s.title }}</span>
+                  {% if s.booked_via_plan %}
+                  <span class="session-card__plan-badge">ضمن خطتك</span>
+                  {% endif %}
+                </header>
                 <div class="session-card__body">
                   <div class="session-card__price">{{ s.price_drop_in }}<span>ر.س</span></div>
                   <div class="session-card__when">
@@ -40,7 +45,9 @@
                     {% endif %}
                   </div>
                   <button type="button" class="session-card__details-toggle" aria-expanded="false">تفاصيل</button>
-                  {% if s.use_plan_slot_cta and s.spots_available > 0 and s.allows_public_booking %}
+                  {% if s.booked_via_plan %}
+                    <button class="book-btn book-btn-lg" type="button" disabled aria-disabled="true">محجوز ضمن خطتك</button>
+                  {% elif s.use_plan_slot_cta and s.spots_available > 0 and s.allows_public_booking %}
                     <form method="post" action="/public/book-plan-session" class="plan-slot-book-form">
                       <input type="hidden" name="center_id" value="{{ center_id }}" />
                       <input type="hidden" name="session_id" value="{{ s.id }}" />

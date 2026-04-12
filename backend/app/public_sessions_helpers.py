@@ -12,6 +12,7 @@ def build_public_session_rows(
     spots_by_session: dict[int, int],
     *,
     plan_session_booking_enabled: bool = False,
+    plan_booked_session_ids: set[int] | None = None,
 ) -> list[dict]:
     level_labels = {
         "beginner": "مبتدئ",
@@ -19,6 +20,7 @@ def build_public_session_rows(
         "advanced": "متقدم",
     }
     now = utcnow_naive()
+    booked_ids = plan_booked_session_ids or set()
     rows: list[dict] = []
     for s in sessions:
         room = rooms_by_id.get(s.room_id)
@@ -42,6 +44,7 @@ def build_public_session_rows(
                 "spots_available": spots_by_session.get(int(s.id), 0),
                 "allows_public_booking": yoga_session_accepts_new_public_booking(s, now=now),
                 "use_plan_slot_cta": bool(plan_session_booking_enabled),
+                "booked_via_plan": int(s.id) in booked_ids,
             }
         )
     return rows
