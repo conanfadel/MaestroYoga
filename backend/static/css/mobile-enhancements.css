@@ -39,3 +39,28 @@ article img,
   -webkit-overflow-scrolling: touch;
   scrollbar-gutter: stable;
 }
+
+/* —— بعد الدفع: لوحة نجاح أوضح —— */
+.payment-success-banner .payment-success-lead {
+  margin: 0.5rem 0 0.35rem;
+  line-height: 1.45;
+}
+.payment-success-banner .payment-success-actions {
+  margin: 0.25rem 0 0.35rem;
+}
+.payment-success-banner .payment-success-actions a {
+  font-weight: 600;
+}
+.payment-success-banner .small {
+  font-size: 0.9em;
+  opacity: 0.92;
+}
+.payment-success-policy {
+  margin-top: 0.65rem;
+  border-top: 1px solid rgba(0, 0, 0, 0.08);
+  padding-top: 0.45rem;
+}
+.payment-success-policy summary {
+  cursor: pointer;
+  font-weight: 600;
+}

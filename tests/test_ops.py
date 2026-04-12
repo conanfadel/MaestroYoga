@@ -74,6 +74,31 @@ def test_health_exempt_when_maintenance(client: TestClient, monkeypatch: pytest.
     assert client.get("/health/ready").status_code == 200
 
 
+def test_build_bookings_calendar_ics_contains_vevent() -> None:
+    from backend.app.checkout_finalize.payment_notifications import build_bookings_calendar_ics
+    from backend.app.models.commerce import Booking
+    from backend.app.models.schedule import YogaSession
+    from backend.app.time_utils import utcnow_naive
+
+    start = utcnow_naive()
+    b = Booking(id=99, center_id=1, session_id=1, client_id=1, status="confirmed")
+    s = YogaSession(
+        id=1,
+        center_id=1,
+        room_id=1,
+        title="Test Session",
+        trainer_name="Coach",
+        level="beginner",
+        starts_at=start,
+        duration_minutes=45,
+        price_drop_in=40.0,
+    )
+    raw = build_bookings_calendar_ics(center_name="Test Center", booking_sessions=[(b, s)])
+    assert b"BEGIN:VCALENDAR" in raw
+    assert b"BEGIN:VEVENT" in raw
+    assert b"maestro-booking-99" in raw
+
+
 def test_normalize_paymob_iframe_strips_paymob_placeholder_token() -> None:
     from backend.app.payments.paymob_provider import normalize_paymob_iframe_checkout_base
 

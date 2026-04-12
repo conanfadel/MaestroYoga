@@ -464,6 +464,12 @@ stripe listen --forward-to http://127.0.0.1:8000/payments/webhook/stripe
 - في لوحة Paymob: Webhook نحو `https://<نطاقك>/payments/webhook/paymob`.
 - إن رفض إنشاء مفتاح الدفع الحقل `redirection_url`، عيّن `PAYMOB_SKIP_REDIRECTION_URL=1`.
 
+## بريد وتجربة بعد الدفع الناجح
+
+- بعد تأكيد الدفع (Stripe أو Paymob)، يُرسَل للعميل **بريد تأكيد** (إن وُجدت إعدادات البريد في `SMTP_*` أو Resend أو relay) وقد يتضمّن ملف **`bookings.ics`** للحجوزات المؤكّدة (لا يُرسل مع `MAIL_PROVIDER=apps_script`/`http_relay` لأن المرفقات غير مدعومة هناك).
+- لتعطيل الإرسال في بيئة اختبار: `DISABLE_PAYMENT_SUCCESS_EMAIL=1`.
+- صفحة `/index` تعرض بعد النجاح لوحة أوضح مع روابط للجلسات والحساب وسياسة مختصرة.
+
 ## سجل المدفوعات في التطبيق
 
 - توجد الآن لوحة تحكم رئيسية في أعلى التطبيق تعرض:

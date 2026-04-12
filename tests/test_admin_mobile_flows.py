@@ -276,7 +276,8 @@ def test_admin_logout_requires_post_and_clears_cookie(client):
     assert post_logout.headers["location"] == "/admin/login"
 
 
-def test_finalize_checkout_paid_is_idempotent(client):
+def test_finalize_checkout_paid_is_idempotent(client, monkeypatch):
+    monkeypatch.setenv("DISABLE_PAYMENT_SUCCESS_EMAIL", "1")
     db = SessionLocal()
     stamp = int(time.time())
     center = models.Center(name=f"Pytest Center {stamp}", city="Riyadh")

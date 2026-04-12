@@ -8,6 +8,7 @@ from ._queue import (
     queue_account_delete_confirmation_email,
     queue_email_verification_email,
     queue_password_reset_email,
+    queue_payment_success_email,
     validate_mailer_settings,
 )
 from ._transactional import (
@@ -22,6 +23,7 @@ __all__ = [
     "queue_account_delete_confirmation_email",
     "queue_email_verification_email",
     "queue_password_reset_email",
+    "queue_payment_success_email",
     "send_account_delete_confirmation_email",
     "send_email_verification_email",
     "send_mail_with_attachments",

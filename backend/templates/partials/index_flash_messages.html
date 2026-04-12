@@ -1,4 +1,16 @@
-{% if payment == 'success' %}<div class="alert">تم إتمام الدفع بنجاح. تم تأكيد طلبك.</div>{% endif %}
+{% if payment == 'success' or msg == 'subscribed' %}
+<div class="alert payment-success-banner">
+  <strong>تم تأكيد الدفع بنجاح.</strong>
+  <p class="payment-success-lead">طلبك مفعّل في النظام. انتقل إلى <strong>الجلسات</strong> لاختيار مواعيدك، أو راجع حسابك لاحقًا.</p>
+  <p class="payment-success-actions"><a href="#sessions-section">عرض الجلسات المتاحة</a> · <a href="/public/account">حسابي</a></p>
+  <p class="payment-success-mail small">إن كان البريد مفعّلاً على الخادم، تلقّيت أو ستتلقى رسالة تأكيد قد تتضمّن ملف تقويم للحجوزات المؤكدة.</p>
+  <p class="payment-success-loyalty small">برنامج الولاء: تُحتسب الجلسات عند <strong>الحضور</strong>؛ راجع بطاقة الولاء في الصفحة لمستواك والمزايا.</p>
+  <details class="payment-success-policy">
+    <summary>سياسة الاسترداد وتغيير الموعد</summary>
+    <p>للاستفسار عن الاسترداد أو تغيير موعد جلسة، تواصل مع إدارة المركز مباشرة؛ تطبّق شروط المركز المعتمدة.</p>
+  </details>
+</div>
+{% endif %}
 {% if payment == 'cancelled' %}<div class="alert warn">تم إلغاء عملية الدفع. يمكنك المحاولة مرة أخرى.</div>{% endif %}
 {% if msg == 'email_verified' %}<div class="alert">تم تأكيد البريد بنجاح. يمكنك الآن إكمال الحجز والدفع.</div>{% endif %}
 {% if msg == 'logged_out' %}<div class="alert">تم تسجيل الخروج بنجاح.</div>{% endif %}
@@ -7,7 +19,7 @@
 {% if msg == 'full' %}<div class="alert err">لا توجد أماكن متاحة في هذه الجلسة.</div>{% endif %}
 {% if msg == 'duplicate' %}<div class="alert err">لديك حجز فعّال لهذه الجلسة بالفعل.</div>{% endif %}
 {% if msg == 'paid_mock' %}<div class="alert">تم تأكيد الحجز (وضع تجريبي للدفع).</div>{% endif %}
-{% if msg == 'subscribed' or msg == 'subscribed_mock' %}<div class="alert">تم تفعيل الاشتراك بنجاح، أهلًا بك في رحلتك الصحية.</div>{% endif %}
+{% if msg == 'subscribed_mock' %}<div class="alert">تم تفعيل الاشتراك (وضع تجريبي للدفع)، أهلًا بك في رحلتك الصحية.</div>{% endif %}
 {% if msg == 'subscription_cancelled' %}<div class="alert warn">لم يكتمل دفع الاشتراك.</div>{% endif %}
 {% if msg == 'payment_provider_config' %}<div class="alert err">إعدادات الدفع الإلكتروني غير مكتملة على الخادم (مثلاً مفاتيح Paymob أو Stripe). راجع متغيرات البيئة أو تواصل مع الإدارة.</div>{% endif %}
 {% if msg == 'stripe_error' %}<div class="alert err">تعذر بدء الدفع الإلكتروني. تحقق من مفاتيح البوابة (Paymob / Stripe) وعنوان الـ API.</div>{% endif %}

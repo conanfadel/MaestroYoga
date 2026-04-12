@@ -6,6 +6,7 @@ import os
 from concurrent.futures import Future, ThreadPoolExecutor
 
 from ._env import MAILER_ASYNC_WORKERS, _looks_like_placeholder, _mailer_delivery_mode, _relay_endpoint
+from ._payment_receipt import deliver_payment_success_email
 from ._transactional import (
     send_account_delete_confirmation_email,
     send_email_verification_email,
@@ -83,6 +84,42 @@ def queue_password_reset_email(to_email: str, reset_url: str, full_name: str = "
     if not sent_ok:
         print(f"[MAILER][ERROR] password_reset send failed: {sent_reason}")
     return sent_ok, sent_reason
+
+
+def queue_payment_success_email(
+    *,
+    to_email: str,
+    subject: str,
+    body: str,
+    html_body: str | None = None,
+    attachments: list[tuple[str, bytes, str]] | None = None,
+) -> None:
+    """إرسال بريد تأكيد الدفع؛ يتخطى الإرسال بهدوء إن لم يُضبط البريد."""
+    ok, reason = validate_mailer_settings()
+    if not ok:
+        print(f"[MAILER][CONFIG] payment_success blocked: {reason}")
+        return
+    att = attachments or []
+    if _mailer_delivery_mode() == "sync":
+        sent_ok, sent_reason = deliver_payment_success_email(
+            to_email=to_email,
+            subject=subject,
+            body=body,
+            html_body=html_body,
+            attachments=att,
+        )
+        if not sent_ok:
+            print(f"[MAILER][ERROR] payment_success send failed: {sent_reason}")
+        return
+    fut = _MAILER_EXECUTOR.submit(
+        deliver_payment_success_email,
+        to_email=to_email,
+        subject=subject,
+        body=body,
+        html_body=html_body,
+        attachments=att,
+    )
+    fut.add_done_callback(lambda done: _log_mail_future("payment_success", done))
 
 
 def queue_account_delete_confirmation_email(to_email: str, confirm_url: str, full_name: str = "") -> tuple[bool, str]:
