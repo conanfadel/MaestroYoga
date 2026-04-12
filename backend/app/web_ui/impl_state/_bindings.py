@@ -118,6 +118,12 @@ from ...public_news_helpers import (
     preview_text,
 )
 from ...public_plan_helpers import build_public_plan_rows, default_plan_labels
+from ...public_session_visibility import (
+    filter_sessions_for_public_index,
+    public_schedule_query_lower_bound_starts_at,
+    yoga_session_accepts_new_public_booking,
+    yoga_session_still_on_public_schedule,
+)
 from ...public_subscription_helpers import build_public_active_subscription_context
 from ...public_redirect_helpers import (
     redirect_public_index_paid_mock,

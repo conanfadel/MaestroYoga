@@ -1,5 +1,10 @@
 import json
 
+from .public_session_visibility import (
+    yoga_session_accepts_new_public_booking,
+    yoga_session_still_on_public_schedule,
+)
+
 
 def parse_cart_session_ids(
     cart_json: str,
@@ -56,6 +61,10 @@ def build_cart_booking_bundle(
         yoga_session = db.get(models_module.YogaSession, session_id)
         if not yoga_session or yoga_session.center_id != center_id:
             return [], "cart_invalid"
+        if not yoga_session_still_on_public_schedule(yoga_session, now=utcnow_fn()):
+            return [], "cart_session_ended"
+        if not yoga_session_accepts_new_public_booking(yoga_session, now=utcnow_fn()):
+            return [], "cart_session_started"
         if spots_available_fn(db, yoga_session) <= 0:
             return [], "cart_session_full"
 

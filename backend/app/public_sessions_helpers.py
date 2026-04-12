@@ -1,6 +1,8 @@
 from datetime import timedelta
 
 from . import models
+from .public_session_visibility import yoga_session_accepts_new_public_booking
+from .time_utils import utcnow_naive
 from .web_shared import _fmt_dt_weekday_ar
 
 
@@ -14,6 +16,7 @@ def build_public_session_rows(
         "intermediate": "متوسط",
         "advanced": "متقدم",
     }
+    now = utcnow_naive()
     rows: list[dict] = []
     for s in sessions:
         room = rooms_by_id.get(s.room_id)
@@ -35,6 +38,7 @@ def build_public_session_rows(
                 "price_drop_in": s.price_drop_in,
                 "room_name": room.name if room else "-",
                 "spots_available": spots_by_session.get(int(s.id), 0),
+                "allows_public_booking": yoga_session_accepts_new_public_booking(s, now=now),
             }
         )
     return rows

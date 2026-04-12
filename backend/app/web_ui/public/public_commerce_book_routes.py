@@ -37,6 +37,10 @@ def register_public_commerce_book_routes(router: APIRouter) -> None:
         yoga_session = yoga_session_query.first()
         if not yoga_session or yoga_session.center_id != center_id:
             raise _s.HTTPException(status_code=404, detail="Session not found")
+        if not _s.yoga_session_still_on_public_schedule(yoga_session):
+            return _s.redirect_public_index_with_msg(center_id=center_id, msg="session_ended")
+        if not _s.yoga_session_accepts_new_public_booking(yoga_session):
+            return _s.redirect_public_index_with_msg(center_id=center_id, msg="session_started")
 
         room_query = db.query(_s.models.Room).filter(_s.models.Room.id == yoga_session.room_id)
         if not _s.is_sqlite:

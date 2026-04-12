@@ -114,6 +114,46 @@ def test_empty_public_subscription_context_has_book_url() -> None:
     assert ctx["public_sub_book_url"] == "/index?center_id=3#sessions-section"
 
 
+def test_yoga_session_visibility_end_and_booking_rules() -> None:
+    from datetime import timedelta
+
+    from backend.app.models.schedule import YogaSession
+    from backend.app.public_session_visibility import (
+        yoga_session_accepts_new_public_booking,
+        yoga_session_end_naive,
+        yoga_session_still_on_public_schedule,
+    )
+    from backend.app.time_utils import utcnow_naive
+
+    now = utcnow_naive()
+    s = YogaSession(
+        center_id=1,
+        room_id=1,
+        title="t",
+        trainer_name="x",
+        level="beginner",
+        starts_at=now - timedelta(hours=2),
+        duration_minutes=60,
+        price_drop_in=10.0,
+    )
+    assert yoga_session_still_on_public_schedule(s, now=now) is False
+    assert yoga_session_accepts_new_public_booking(s, now=now) is False
+    s2 = YogaSession(
+        center_id=1,
+        room_id=1,
+        title="t",
+        trainer_name="x",
+        level="beginner",
+        starts_at=now + timedelta(hours=1),
+        duration_minutes=60,
+        price_drop_in=10.0,
+    )
+    assert yoga_session_still_on_public_schedule(s2, now=now) is True
+    assert yoga_session_accepts_new_public_booking(s2, now=now) is True
+    end = yoga_session_end_naive(s2)
+    assert end == s2.starts_at + timedelta(minutes=60)
+
+
 def test_build_public_active_subscription_without_user_returns_empty() -> None:
     from backend.app.database import SessionLocal
     from backend.app.public_subscription_helpers import build_public_active_subscription_context

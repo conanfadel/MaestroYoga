@@ -29,12 +29,18 @@ def register_public_index_routes(router: APIRouter) -> None:
     
         _s._clear_center_branding_urls_if_files_missing(db, center)
     
+        now_na = _s.utcnow_naive()
+        lb = _s.public_schedule_query_lower_bound_starts_at(now=now_na)
         sessions = (
             db.query(_s.models.YogaSession)
-            .filter(_s.models.YogaSession.center_id == center.id)
+            .filter(
+                _s.models.YogaSession.center_id == center.id,
+                _s.models.YogaSession.starts_at >= lb,
+            )
             .order_by(_s.models.YogaSession.starts_at.asc())
             .all()
         )
+        sessions = _s.filter_sessions_for_public_index(sessions, now=now_na)
         room_ids = sorted({s.room_id for s in sessions if s.room_id is not None})
         rooms_by_id = {}
         if room_ids:

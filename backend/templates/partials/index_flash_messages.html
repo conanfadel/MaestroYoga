@@ -28,6 +28,10 @@
 {% if msg == 'cart_invalid' %}<div class="alert err">تعذر قراءة السلة. أعد تحميل الصفحة وحاول مرة أخرى.</div>{% endif %}
 {% if msg == 'cart_too_many' %}<div class="alert warn">تجاوزت السلة الحد المسموح للجلسات في طلب واحد.</div>{% endif %}
 {% if msg == 'cart_session_full' %}<div class="alert err">إحدى الجلسات في السلة لم تعد متاحة. حدّث السلة وحاول مرة أخرى.</div>{% endif %}
+{% if msg == 'session_ended' %}<div class="alert err">انتهى وقت هذه الجلسة ولم يعد الحجز متاحًا. اختر موعدًا قادمًا من القائمة.</div>{% endif %}
+{% if msg == 'session_started' %}<div class="alert warn">بدأت الجلسة بالفعل؛ لا يمكن بدء دفع حجز جديد لها. اختر جلسة لاحقة.</div>{% endif %}
+{% if msg == 'cart_session_ended' %}<div class="alert err">تتضمن السلة جلسة انتهى وقتها. أفرغ السلة أو أعد التحميل واختر جلسات حالية.</div>{% endif %}
+{% if msg == 'cart_session_started' %}<div class="alert err">تتضمن السلة جلسة بدأ وقتها. أزلها من السلة واختر مواعيد قادمة.</div>{% endif %}
 {% if msg == 'feedback_sent' %}<div class="alert">تم إرسال رسالتك. شكرًا لتواصلك معنا.</div>{% endif %}
 {% if msg == 'feedback_error' %}<div class="alert err">تعذر إرسال الرسالة. حاول لاحقًا أو تواصل مع المركز مباشرة.</div>{% endif %}
 {% if msg == 'feedback_auth_required' %}<div class="alert warn">يجب تسجيل الدخول لإرسال الملاحظات من صفحة الحجز.</div>{% endif %}

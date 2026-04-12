@@ -14,6 +14,7 @@
                 data-available="{{ s.spots_available }}"
                 data-price="{{ s.price_drop_in }}"
                 data-time="{{ s.starts_at.isoformat() if s.starts_at else '' }}"
+                data-session-end="{{ s.ends_at_iso }}"
               >
                 <header class="session-card__bar">{{ s.title }}</header>
                 <div class="session-card__body">
@@ -39,7 +40,7 @@
                     {% endif %}
                   </div>
                   <button type="button" class="session-card__details-toggle" aria-expanded="false">تفاصيل</button>
-                  {% if s.spots_available > 0 %}
+                  {% if s.spots_available > 0 and s.allows_public_booking %}
                     <button
                       type="button"
                       class="book-btn book-btn-lg js-add-session"
@@ -50,6 +51,8 @@
                     >
                       أضف للسلة
                     </button>
+                  {% elif s.spots_available > 0 %}
+                  <button class="book-btn book-btn-lg" type="button" disabled title="انتهى وقت بدء الحجز لهذه الجلسة">بدأت — لا يمكن الإضافة</button>
                   {% else %}
                   <button class="book-btn book-btn-lg" type="button" disabled>ممتلئة</button>
                   {% endif %}

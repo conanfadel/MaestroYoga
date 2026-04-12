@@ -4028,10 +4028,24 @@
         });
         const upcomingWrap = document.getElementById("upcoming-sessions-wrap");
         const upcomingList = document.getElementById("upcoming-sessions-list");
+        function hideEndedPublicSessions() {
+          const nowMs = Date.now();
+          rows.forEach(function (row) {
+            const endMs = Date.parse(row.dataset.sessionEnd || "") || 0;
+            if (endMs > 0 && endMs <= nowMs) {
+              row.setAttribute("data-past-session", "1");
+              row.style.display = "none";
+            }
+          });
+        }
         function updateUpcomingStrip() {
           if (!upcomingWrap || !upcomingList) return;
           const visible = rows.filter(function (a) {
-            return a.style.display !== "none" && parseInt(a.dataset.available || "0", 10) > 0;
+            return (
+              a.style.display !== "none" &&
+              a.getAttribute("data-past-session") !== "1" &&
+              parseInt(a.dataset.available || "0", 10) > 0
+            );
           });
           visible.sort(function (a, b) {
             return (Date.parse(a.dataset.time || "") || 0) - (Date.parse(b.dataset.time || "") || 0);
@@ -4097,6 +4111,10 @@
             }
           });
           rows.forEach(function (row) {
+            if (row.getAttribute("data-past-session") === "1") {
+              row.style.display = "none";
+              return;
+            }
             const title = (row.dataset.title || "").toLowerCase();
             const rowLevel = row.dataset.level || "";
             const avail = parseInt(row.dataset.available || "0", 10);
@@ -4142,9 +4160,14 @@
           if (el) el.addEventListener("input", applyFilters);
           if (el) el.addEventListener("change", applyFilters);
         });
+        hideEndedPublicSessions();
         applyFilters();
         fillSessionRelativeTimes();
-        window.setInterval(fillSessionRelativeTimes, 60000);
+        window.setInterval(function () {
+          hideEndedPublicSessions();
+          fillSessionRelativeTimes();
+          applyFilters();
+        }, 60000);
       }
 
       function track(eventName, payload) {
@@ -4171,7 +4194,11 @@
         msgStatus === "stripe_error" ||
         msgStatus === "stripe_no_url" ||
         msgStatus === "payment_provider_config" ||
-        msgStatus === "subscription_cancelled"
+        msgStatus === "subscription_cancelled" ||
+        msgStatus === "session_ended" ||
+        msgStatus === "session_started" ||
+        msgStatus === "cart_session_ended" ||
+        msgStatus === "cart_session_started"
       ) {
         track("purchase_failed", { reason: msgStatus });
       }
