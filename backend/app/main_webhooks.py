@@ -1,8 +1,9 @@
-"""Stripe and Moyasar payment webhooks (mounted at app root)."""
+"""Stripe and Paymob payment webhooks (mounted at app root)."""
 
 from __future__ import annotations
 
 import logging
+import os
 
 from fastapi import APIRouter, Depends, Header, HTTPException, Request
 from sqlalchemy.orm import Session
@@ -10,13 +11,13 @@ from sqlalchemy.orm import Session
 try:
     from .checkout_finalize import finalize_checkout_failed, finalize_checkout_paid
     from .database import get_db
-    from .main_rest_api import _moyasar_extract_invoice_id
-    from .payments import MoyasarPaymentProvider, StripePaymentProvider
+    from .payments import StripePaymentProvider
+    from .payments.paymob_provider import metadata_from_paymob_obj, verify_paymob_processed_hmac
 except ImportError:
     from backend.app.checkout_finalize import finalize_checkout_failed, finalize_checkout_paid
     from backend.app.database import get_db
-    from backend.app.main_rest_api import _moyasar_extract_invoice_id
-    from backend.app.payments import MoyasarPaymentProvider, StripePaymentProvider
+    from backend.app.payments import StripePaymentProvider
+    from backend.app.payments.paymob_provider import metadata_from_paymob_obj, verify_paymob_processed_hmac
 
 logger = logging.getLogger(__name__)
 
@@ -50,23 +51,39 @@ async def stripe_webhook(
     return {"received": True}
 
 
-@webhooks_router.post("/payments/webhook/moyasar")
-async def moyasar_invoice_webhook(request: Request, db: Session = Depends(get_db)):
-    """إشعار ميسر عند دفع الفاتورة (callback_url). يُنصح بالتحقق عبر API."""
+@webhooks_router.post("/payments/webhook/paymob")
+async def paymob_transaction_webhook(request: Request, db: Session = Depends(get_db)):
+    """إشعار Paymob (Transaction processed). يُفعَّل من لوحة Paymob → Webhooks."""
     try:
         payload = await request.json()
     except Exception:
         raise HTTPException(status_code=400, detail="invalid json")
-    invoice_id = _moyasar_extract_invoice_id(payload)
-    if not invoice_id:
+    if not isinstance(payload, dict):
         return {"received": True}
-    try:
-        fresh = MoyasarPaymentProvider.fetch_invoice(str(invoice_id))
-    except Exception as exc:
-        logger.warning("moyasar invoice fetch failed: %s", exc)
+
+    hmac_secret = os.getenv("PAYMOB_HMAC_SECRET", "").strip() or os.getenv("PAYMOB_HMAC", "").strip()
+    received = str(payload.get("hmac") or payload.get("HMAC") or "").strip()
+    if not hmac_secret or not received:
+        logger.warning("paymob webhook missing PAYMOB_HMAC_SECRET (or PAYMOB_HMAC) or hmac in payload")
+        raise HTTPException(status_code=400, detail="paymob hmac not configured")
+
+    if not verify_paymob_processed_hmac(payload, received, hmac_secret):
+        raise HTTPException(status_code=400, detail="invalid paymob hmac")
+
+    obj = payload.get("obj")
+    if not isinstance(obj, dict):
         return {"received": True}
-    if fresh.get("status") != "paid":
-        return {"received": True}
-    meta = dict(fresh.get("metadata") or {})
-    finalize_checkout_paid(db, meta, str(invoice_id))
+
+    meta = metadata_from_paymob_obj(obj)
+    order = obj.get("order")
+    order_id = ""
+    if isinstance(order, dict) and order.get("id") is not None:
+        order_id = str(order.get("id"))
+    if not order_id and obj.get("id") is not None:
+        order_id = str(obj.get("id"))
+
+    if bool(obj.get("success")):
+        finalize_checkout_paid(db, meta, order_id)
+    else:
+        finalize_checkout_failed(db, meta, order_id)
     return {"received": True}

@@ -17,7 +17,7 @@
 
 - جميع مسارات JSON التي كانت على الجذر (مثل `/health`، `/auth/login`، `/sessions`، …) متاحة أيضاً تحت البادئة **`/api/v1`** (مثال: **`GET /api/v1/health`**، **`POST /api/v1/auth/login`**).
 - **`GET /api/v1/meta`**: معلومات إصدار الـ API وروابط OpenAPI — نقطة انطلاق مناسبة لتطبيق أندرويد.
-- مسارات **webhook** الدفع (`/payments/webhook/stripe` و `/payments/webhook/moyasar`) تبقى **بدون** تكرار تحت `/api/v1` لأن مزودي الدفع يُعدّون عناوين ثابتة.
+- مسارات **webhook** الدفع (`/payments/webhook/stripe` و `/payments/webhook/paymob`) تبقى **بدون** تكرار تحت `/api/v1` لأن مزودي الدفع يُعدّون عناوين ثابتة.
 - الرؤوس **`X-API-Version: 1`** و **`X-App-Version-Accepted`** (عند إرسال **`X-App-Version`** من العميل) تساعد على مطابقة إصدارات التطبيق والخادم.
 
 ## مسارات الصحة

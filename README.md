@@ -27,7 +27,7 @@
   - تنفيذ دفع تجريبي داخل التطبيق
 - **صفحات ويب** (لوحة إدارة + صفحة عامة للجمهور):
   - `/admin/login` ثم `/admin` — المسؤول يضيف الغرف والجلسات (الوقت، المدة، السعر، الغرفة).
-  - `/index?center_id=1` — الجمهور يحجز ثم يدفع؛ الحجز يصبح **مؤكدًا** بعد نجاح الدفع (Stripe أو وضع mock). المسار الافتراضي نفسه معرّف في الكود كـ `PUBLIC_INDEX_DEFAULT_PATH` في `backend/app/web_shared.py`.
+  - `/index?center_id=1` — الجمهور يحجز ثم يدفع؛ الحجز يصبح **مؤكدًا** بعد نجاح الدفع (Stripe أو Paymob أو وضع mock). المسار الافتراضي نفسه معرّف في الكود كـ `PUBLIC_INDEX_DEFAULT_PATH` في `backend/app/web_shared.py`.
   - مصادقة جمهور مستقلة:
     - `/public/register` — إنشاء حساب جمهور
     - `/public/login` و`/public/logout`
@@ -46,7 +46,7 @@
     - إجراءات جماعية (تفعيل/تعطيل/توثيق/إعادة إرسال/استعادة)
     - حذف آمن بنمط Soft Delete بدل الحذف النهائي
 
-> ملاحظة: الدفع يعمل عبر مزود قابل للتبديل (`PAYMENT_PROVIDER=mock|stripe`). مع Stripe يُفضّل تشغيل `stripe listen` لاستقبال Webhook وتأكيد الحجز.
+> ملاحظة: الدفع يعمل عبر مزود قابل للتبديل (`PAYMENT_PROVIDER=mock|stripe|paymob`). مع Stripe يُفضّل تشغيل `stripe listen` لاستقبال Webhook وتأكيد الحجز. مع Paymob يُضبط Webhook في لوحة Paymob نحو `POST /payments/webhook/paymob` ويُستخدم `PAYMOB_HMAC_SECRET` للتحقق.
 
 بعد تحديث قاعدة البيانات (عمود `booking_id` في المدفوعات)، إن واجهت أخطاء قديمة احذف ملف `maestro_yoga.db` وأعد التشغيل.
 
@@ -454,6 +454,12 @@ curl -X POST http://127.0.0.1:8000/seed-demo -H "X-Seed-Demo-Key: replace-with-s
 ```bash
 stripe listen --forward-to http://127.0.0.1:8000/payments/webhook/stripe
 ```
+
+## Paymob (Hosted iframe)
+
+- عيّن `PAYMENT_PROVIDER=paymob` والمتغيرات في `.env.example`: للتوثيق استخدم `PAYMOB_API_KEY` أو `PAYMOB_SECRET_KEY` (قيمة واحدة من لوحة Paymob تُرسل كـ `api_key` لـ Accept API)؛ للـ webhook استخدم `PAYMOB_HMAC_SECRET` أو `PAYMOB_HMAC` (قيمة **HMAC** في اللوحة). **Public Key** يُستخدم عادة في الواجهة (Pixel وغيره) وليس في مسار iframe الحالي في الخادم. كذلك `PAYMOB_INTEGRATION_ID`، `PAYMOB_IFRAME_ID`، و`PAYMOB_API_BASE` حسب بلد الحساب.
+- في لوحة Paymob: أضف عنوان Webhook للمعاملات المكتملة نحو `https://<نطاقك>/payments/webhook/paymob`.
+- إن رفض إنشاء مفتاح الدفع الحقل `redirection_url`، عيّن `PAYMOB_SKIP_REDIRECTION_URL=1`.
 
 ## سجل المدفوعات في التطبيق
 

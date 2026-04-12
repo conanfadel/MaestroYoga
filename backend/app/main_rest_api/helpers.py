@@ -45,18 +45,3 @@ def is_local_client(request: Request) -> bool:
         return False
     host = request.client.host or ""
     return host in {"127.0.0.1", "::1", "localhost"}
-
-
-def moyasar_extract_invoice_id(payload: object) -> str | None:
-    if not isinstance(payload, dict):
-        return None
-    pid = payload.get("id")
-    if isinstance(pid, str) and len(pid) > 10:
-        return pid
-    data = payload.get("data")
-    if isinstance(data, dict) and data.get("id"):
-        return str(data["id"])
-    inv = payload.get("invoice")
-    if isinstance(inv, dict) and inv.get("id"):
-        return str(inv["id"])
-    return str(pid) if pid else None

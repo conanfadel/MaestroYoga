@@ -2,8 +2,11 @@
 
 from __future__ import annotations
 
+import logging
 import os
 from pathlib import Path
+
+logger = logging.getLogger(__name__)
 
 try:
     from dotenv import load_dotenv
@@ -43,6 +46,8 @@ from .main_webhooks import webhooks_router
 
 def create_app() -> FastAPI:
     load_dotenv()
+    _pm = os.getenv("PAYMENT_PROVIDER", "mock").strip().lower() or "mock"
+    logger.info("PAYMENT_PROVIDER effective value: %s (hosted checkout only for stripe|paymob)", _pm)
     app = FastAPI(title="Maestro Yoga API", version="1.0.0", lifespan=app_lifespan)
 
     init_db()

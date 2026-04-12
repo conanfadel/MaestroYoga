@@ -7,7 +7,7 @@ try:
     from ..booking_utils import count_active_bookings
     from ..database import get_db
     from ..payments import (
-        MoyasarPaymentProvider,
+        PaymobPaymentProvider,
         StripePaymentProvider,
         get_payment_provider,
         payment_provider_supports_hosted_checkout,
@@ -28,7 +28,7 @@ except ImportError:
     from backend.app.booking_utils import count_active_bookings
     from backend.app.database import get_db
     from backend.app.payments import (
-        MoyasarPaymentProvider,
+        PaymobPaymentProvider,
         StripePaymentProvider,
         get_payment_provider,
         payment_provider_supports_hosted_checkout,

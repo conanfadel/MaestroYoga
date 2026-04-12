@@ -33,7 +33,7 @@ def register_routes(router: APIRouter) -> None:
         if _d.payment_provider_supports_hosted_checkout(provider):
             raise HTTPException(
                 status_code=400,
-                detail="Use /payments/checkout-session for Stripe or Moyasar payments",
+                detail="Use /payments/checkout-session for Stripe or Paymob payments",
             )
         provider_result = provider.charge(
             amount=payload.amount,
@@ -67,7 +67,7 @@ def register_routes(router: APIRouter) -> None:
 
         provider = _d.get_payment_provider()
         if not _d.payment_provider_supports_hosted_checkout(provider):
-            raise HTTPException(status_code=400, detail="Checkout session requires Stripe or Moyasar provider")
+            raise HTTPException(status_code=400, detail="Checkout session requires Stripe or Paymob provider")
         if not is_checkout_redirect_allowed(payload.success_url) or not is_checkout_redirect_allowed(
             payload.cancel_url
         ):
@@ -76,7 +76,7 @@ def register_routes(router: APIRouter) -> None:
                 detail="success_url/cancel_url must match allowed checkout origins",
             )
 
-        pm = "moyasar_checkout" if isinstance(provider, _d.MoyasarPaymentProvider) else "stripe_checkout"
+        pm = "paymob_checkout" if isinstance(provider, _d.PaymobPaymentProvider) else "stripe_checkout"
         payment = _d.models.Payment(
             center_id=center_id,
             client_id=payload.client_id,
@@ -107,7 +107,7 @@ def register_routes(router: APIRouter) -> None:
                 cancel_url=payload.cancel_url,
             )
         except Exception as exc:
-            logger.exception("Failed to create Stripe checkout session: %s", exc)
+            logger.exception("Failed to create hosted checkout session: %s", exc)
             raise HTTPException(status_code=500, detail="Checkout session creation failed")
 
         payment.provider_ref = provider_result.provider_ref
