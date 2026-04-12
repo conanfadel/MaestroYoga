@@ -72,3 +72,10 @@ def test_health_exempt_when_maintenance(client: TestClient, monkeypatch: pytest.
     monkeypatch.setenv("MAINTENANCE_MODE", "1")
     assert client.get("/health").status_code == 200
     assert client.get("/health/ready").status_code == 200
+
+
+def test_normalize_paymob_iframe_strips_paymob_placeholder_token() -> None:
+    from backend.app.payments.paymob_provider import normalize_paymob_iframe_checkout_base
+
+    raw = "https://ksa.paymob.com/api/acceptance/iframes/10190?payment_token={payment_key_obtained_previously}"
+    assert normalize_paymob_iframe_checkout_base(raw) == "https://ksa.paymob.com/api/acceptance/iframes/10190"
