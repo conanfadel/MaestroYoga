@@ -138,6 +138,7 @@ def register_public_index_routes(router: APIRouter) -> None:
             plans=plans,
             payment=payment,
             msg=msg,
+            session_id=request.query_params.get("session_id"),
             public_user=public_user,
             faq_items=faq_items,
             pinned_public_post=pinned_public_post,

@@ -1,7 +1,27 @@
+from urllib.parse import urlencode
+
 from sqlalchemy import func, nullslast
 from sqlalchemy.orm import Session
 
 from . import models
+
+
+def public_index_next_path(
+    center_id: int,
+    *,
+    payment: str | None = None,
+    msg: str | None = None,
+    session_id: str | None = None,
+) -> str:
+    """مسار العودة للفهرس (تسجيل الدخول / التسجيل / الحساب) مع الحفاظ على حالة الدفع إن وُجدت."""
+    pairs: list[tuple[str, str]] = [("center_id", str(center_id))]
+    if payment is not None and str(payment).strip() != "":
+        pairs.append(("payment", str(payment).strip()))
+    if msg is not None and str(msg).strip() != "":
+        pairs.append(("msg", str(msg).strip()))
+    if session_id is not None and str(session_id).strip() != "":
+        pairs.append(("session_id", str(session_id).strip()))
+    return "/index?" + urlencode(pairs)
 
 
 def load_public_index_data(db: Session, center_id: int) -> dict:
@@ -82,10 +102,14 @@ def build_public_index_template_context(
     subscription_ctx: dict | None,
     analytics_ctx: dict,
     index_hero_app_name: str,
+    session_id: str | None = None,
 ) -> dict:
     from .public_subscription_helpers import empty_public_subscription_context
 
     sub_ctx = subscription_ctx if subscription_ctx is not None else empty_public_subscription_context(center.id)
+    index_next_path = public_index_next_path(
+        int(center.id), payment=payment, msg=msg, session_id=session_id
+    )
     return {
         "center": center,
         "center_id": center.id,
@@ -114,4 +138,5 @@ def build_public_index_template_context(
         **sub_ctx,
         **analytics_ctx,
         "index_hero_app_name": index_hero_app_name,
+        "index_next_path": index_next_path,
     }

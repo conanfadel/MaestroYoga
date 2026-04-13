@@ -3900,6 +3900,7 @@
       const stickySelection = document.getElementById("sticky-selection");
       const CART_KEY = "maestro_cart_v1";
       const PAGE_CENTER_ID = {{ center_id|tojson }};
+      const PAGE_INDEX_NEXT = {{ index_next_path|tojson }};
       const plansDetails = document.getElementById("plans-section-details");
       var PUBLIC_CONTENT_VERSION = {{ public_content_version|tojson }};
       const PLAN_BATCH_ENABLED = {{ public_sub_plan_slot_booking|tojson }};
@@ -3989,7 +3990,7 @@
         function go() {
           if (done) return;
           done = true;
-          var next = encodeURIComponent("/index?center_id=" + PAGE_CENTER_ID);
+          var next = encodeURIComponent(PAGE_INDEX_NEXT || "/index?center_id=" + PAGE_CENTER_ID);
           var link = document.createElement("link");
           link.rel = "prefetch";
           link.href = "/public/login?next=" + next;

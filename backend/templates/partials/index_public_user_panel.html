@@ -110,9 +110,9 @@
       </div>
     </div>
     <div class="public-user-menu__actions">
-      <a class="btn ghost" href="/public/account?next={{ ('/index?center_id=' ~ center_id|string)|urlencode }}">الإعدادات</a>
+      <a class="btn ghost" href="/public/account?next={{ index_next_path|urlencode }}">الإعدادات</a>
       {% if not public_user.email_verified %}
-      <a class="btn ghost" href="/public/verify-pending?next={{ ('/index?center_id=' ~ center_id|string)|urlencode }}">تأكيد البريد</a>
+      <a class="btn ghost" href="/public/verify-pending?next={{ index_next_path|urlencode }}">تأكيد البريد</a>
       {% endif %}
       <a class="btn primary" href="/public/logout">تسجيل الخروج</a>
     </div>
