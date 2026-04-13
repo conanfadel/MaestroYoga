@@ -1,9 +1,12 @@
 import json
+import logging
 
 from .public_session_visibility import (
     yoga_session_accepts_new_public_booking,
     yoga_session_still_on_public_schedule,
 )
+
+logger = logging.getLogger(__name__)
 
 
 def parse_cart_session_ids(
@@ -144,6 +147,11 @@ def process_hosted_cart_checkout(
             idempotency_key=idem,
         )
     except Exception as exc:
+        logger.exception(
+            "hosted cart checkout failed center_id=%s provider=%s",
+            center_id,
+            prov_name,
+        )
         for booking, payment, _ in bundle:
             booking.status = "cancelled"
             payment.status = "failed"
@@ -236,6 +244,12 @@ def process_hosted_single_booking_checkout(
             idempotency_key=f"book-{payment_row.id}"[:255],
         )
     except Exception as exc:
+        logger.exception(
+            "hosted single booking checkout failed center_id=%s session_id=%s provider=%s",
+            center_id,
+            session_id,
+            prov_name,
+        )
         booking.status = "cancelled"
         payment_row.status = "failed"
         db.commit()

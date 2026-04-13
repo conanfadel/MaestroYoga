@@ -1,5 +1,9 @@
+import logging
 from datetime import timedelta
+
 from fastapi import HTTPException
+
+logger = logging.getLogger(__name__)
 
 
 def create_pending_subscription_payment(
@@ -87,6 +91,12 @@ def process_hosted_subscription_checkout(
             idempotency_key=f"sub-{subscription.id}-p{payment_row.id}"[:255],
         )
     except Exception as exc:
+        logger.exception(
+            "hosted subscription checkout failed center_id=%s plan_id=%s provider=%s",
+            center_id,
+            plan.id,
+            prov_name,
+        )
         payment_row.status = "failed"
         subscription.status = "cancelled"
         db.commit()
