@@ -8,7 +8,7 @@
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <link rel="manifest" href="/static/manifest.json" />
   <link rel="stylesheet" href="/static/css/mobile-enhancements.css" />
-  <title>إعدادات الحساب — Maestro Yoga</title>
+  <title>حسابي — Maestro Yoga</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet" />
@@ -41,13 +41,12 @@
         radial-gradient(ellipse 100% 80% at 100% 0%, var(--mint-bg) 0%, transparent 55%),
         #fafcfb;
       padding: max(20px, env(safe-area-inset-top, 0px)) max(14px, env(safe-area-inset-right, 0px)) max(32px, env(safe-area-inset-bottom, 0px)) max(14px, env(safe-area-inset-left, 0px));
-      display: grid;
-      place-items: center;
+      display: block;
     }
     .shell {
-      width: min(100%, 520px);
-      max-width: 520px;
-      margin: 0;
+      width: min(100%, 880px);
+      max-width: 880px;
+      margin: 0 auto;
     }
     .card {
       background: #fff;
@@ -235,14 +234,199 @@
       flex-direction: column;
       gap: 0;
     }
+    .account-hub-top {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 14px;
+    }
+    .account-hub-top a {
+      font-weight: 800;
+      font-size: 0.92rem;
+      color: #0f766e;
+      text-decoration: none;
+    }
+    .account-hub-top a:hover { text-decoration: underline; }
+    .account-hub-top__logout { color: #991b1b !important; }
+    .account-hub-nav {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin: 0 0 16px;
+    }
+    .account-hub-nav a {
+      display: inline-flex;
+      align-items: center;
+      padding: 8px 12px;
+      border-radius: 999px;
+      font-size: 0.82rem;
+      font-weight: 800;
+      color: #0f766e;
+      background: rgba(232, 252, 244, 0.95);
+      border: 1px solid rgba(125, 211, 174, 0.55);
+      text-decoration: none;
+    }
+    .account-hub-nav a:hover { background: #fff; }
+    .account-section { margin-bottom: 22px; scroll-margin-top: 16px; }
+    .account-section-title {
+      margin: 0 0 10px;
+      font-size: 1.02rem;
+      font-weight: 800;
+      color: #0f766e;
+    }
+    .account-profile-summary {
+      padding: 14px 16px;
+      border-radius: 14px;
+      border: 1px solid rgba(125, 211, 174, 0.55);
+      background: #fff;
+      line-height: 1.65;
+      font-size: 0.92rem;
+    }
+    .account-profile-summary p { margin: 0 0 6px; color: #475569; }
+    .account-profile-summary strong { color: var(--charcoal); }
+    .trainee-schedule {
+      margin-bottom: 20px;
+      padding: 14px 16px 16px;
+      border-radius: 14px;
+      border: 1px solid rgba(197, 160, 89, 0.4);
+      background: #fffefb;
+    }
+    .trainee-schedule__head {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 10px;
+      margin-bottom: 10px;
+    }
+    .trainee-schedule__head h2 {
+      margin: 0;
+      font-size: 1rem;
+      font-weight: 800;
+      color: #92400e;
+    }
+    .trainee-schedule__toolbar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+    .trainee-schedule__icon-btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 42px;
+      height: 42px;
+      border-radius: 12px;
+      border: 1px solid rgba(197, 160, 89, 0.55);
+      background: #fff;
+      color: #92400e;
+      cursor: pointer;
+      padding: 0;
+    }
+    .trainee-schedule__icon-btn:hover { background: #fffbeb; }
+    .trainee-schedule__icon-btn svg { width: 22px; height: 22px; }
+    .trainee-schedule__print-title {
+      margin: 0 0 8px;
+      font-size: 0.95rem;
+      font-weight: 800;
+      color: var(--charcoal);
+      display: none;
+    }
+    .trainee-schedule__table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+    .trainee-schedule table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.86rem;
+      min-width: 420px;
+    }
+    .trainee-schedule th,
+    .trainee-schedule td {
+      padding: 10px 10px;
+      text-align: start;
+      border-bottom: 1px solid rgba(45, 52, 54, 0.1);
+    }
+    .trainee-schedule th {
+      background: rgba(254, 243, 199, 0.45);
+      font-weight: 800;
+      font-size: 0.78rem;
+      color: var(--charcoal);
+    }
+    @media print {
+      body {
+        background: #fff !important;
+        padding: 12mm !important;
+      }
+      .no-print { display: none !important; }
+      .shell { max-width: 100% !important; width: 100% !important; }
+      .card { box-shadow: none !important; border: none !important; }
+      .trainee-schedule__print-title { display: block !important; }
+    }
   </style>
 </head>
 <body>
   <div class="shell">
+    <header class="account-hub-top no-print">
+      <a href="{{ next }}">← العودة للموقع</a>
+      <a class="account-hub-top__logout" href="/public/logout">تسجيل الخروج</a>
+    </header>
+    <nav class="account-hub-nav no-print" aria-label="أقسام الحساب">
+      <a href="#section-profile">معلوماتي</a>
+      <a href="#section-loyalty">الولاء</a>
+      <a href="#section-plan">الخطة</a>
+      <a href="#section-schedule">جدول المتدرب</a>
+      <a href="#section-edit">تعديل البيانات</a>
+      <a href="#section-settings">الإعدادات</a>
+    </nav>
     <div class="card">
-      <h1>إعدادات الحساب</h1>
-      <p class="sub">عدّل اسمك ورقم جوالك. البريد الإلكتروني ثابت لأنه مرتبط بالتحقق والحجوزات.</p>
+      <h1>حسابي</h1>
+      <p class="sub">نظرة على بياناتك وبرنامج الولاء والاشتراك وجدول حجوزاتك القادمة في <strong>{{ center_display_name }}</strong>. يمكنك تعديل الاسم والجوال أدناه؛ البريد ثابت لأنه مرتبط بالتحقق والحجوزات.</p>
 
+      {% if request.query_params.get('msg') == 'saved' %}
+        <div class="alert ok">تم حفظ التعديلات بنجاح.</div>
+      {% endif %}
+      {% if request.query_params.get('msg') == 'required_fields' %}
+        <div class="alert warn">يرجى تعبئة الاسم ورقم الجوال.</div>
+      {% endif %}
+      {% if request.query_params.get('msg') == 'invalid_phone' %}
+        <div class="alert warn">رقم الجوال غير صحيح بالنسبة لمفتاح الدولة المختار.</div>
+      {% endif %}
+      {% if request.query_params.get('msg') == 'phone_exists' %}
+        <div class="alert warn">رقم الجوال مستخدم من حساب آخر.</div>
+      {% endif %}
+      {% if request.query_params.get('msg') == 'delete_mail_sent' %}
+        <div class="alert ok">أرسلنا رسالة تأكيد حذف الحساب إلى بريدك. افتح الرسالة واضغط رابط التأكيد لإتمام الحذف.</div>
+      {% endif %}
+      {% if request.query_params.get('msg') == 'delete_mail_failed' %}
+        <div class="alert warn">تعذر إرسال رسالة تأكيد حذف الحساب الآن. حاول لاحقًا.</div>
+      {% endif %}
+      {% if request.query_params.get('msg') == 'delete_rate_limited' %}
+        <div class="alert warn">تم تجاوز عدد طلبات حذف الحساب. حاول بعد قليل.</div>
+      {% endif %}
+      {% if request.query_params.get('msg') == 'delete_invalid_link' %}
+        <div class="alert warn">رابط تأكيد حذف الحساب غير صالح أو منتهي الصلاحية.</div>
+      {% endif %}
+
+      <section id="section-profile" class="account-section" aria-labelledby="profile-heading">
+        <h2 class="account-section-title" id="profile-heading">معلوماتي</h2>
+        <div class="account-profile-summary">
+          <p><strong>الاسم:</strong> {{ user.full_name }}</p>
+          <p><strong>البريد:</strong> {{ user.email }}</p>
+          {% if user.phone %}<p><strong>الجوال:</strong> {{ user.phone }}</p>{% endif %}
+          <p><strong>التحقق:</strong> {% if user.email_verified %}بريد موثّق{% else %}بانتظار تأكيد البريد{% endif %}</p>
+        </div>
+      </section>
+
+      <style>
+        .tier-tag { display:inline-flex;align-items:center;margin-inline-start:6px;padding:4px 10px;border-radius:999px;font-size:0.78rem;font-weight:800;vertical-align:middle; }
+        .tier-tag--bronze { background:linear-gradient(135deg,#cd7f32,#8b5a2b);color:#fff; }
+        .tier-tag--silver { background:linear-gradient(135deg,#e2e8f0,#94a3b8);color:#1e293b; }
+        .tier-tag--gold { background:linear-gradient(135deg,#fcd34d,#ca8a04);color:#422006; }
+        .tier-tag--none { background:#f1f5f9;color:#64748b; }
+      </style>
+
+      <div id="section-loyalty" class="account-section">
       <div class="loyalty-card" style="margin-bottom:20px;padding:14px 16px;border-radius:14px;border:1px solid rgba(125,211,174,0.65);background:linear-gradient(145deg,#f0fdf4,#fff);">
         <p style="margin:0 0 6px;font-weight:800;color:#0f766e;font-size:1rem;">برنامج الولاء (حسب الجلسات المؤكدة في المركز)</p>
         <p style="margin:0 0 8px;font-size:0.92rem;color:#475569;line-height:1.55;">
@@ -264,26 +448,6 @@
         {% endif %}
         <p style="margin:10px 0 0;font-size:0.8rem;color:#94a3b8;">العتبات الحالية (مع التسلسل برونزي ثم فضي +1 ثم ذهبي +1): برونزي من {{ loyalty_thresholds.bronze }}، فضي من {{ loyalty_thresholds.silver }}، ذهبي من {{ loyalty_thresholds.gold }}. يضبطها المدير من لوحة الإدارة → تبويب «برنامج الولاء» (★).</p>
       </div>
-
-      {% if public_sub_active %}
-      <section class="subscription-account-card" aria-label="اشتراكك الحالي">
-        <h2>اشتراكك في هذا المركز</h2>
-        <p><strong>{{ public_sub_plan_name }}</strong> — باقة {{ public_sub_plan_type_label }}.</p>
-        <p class="sub-meta">بداية الاشتراك: {{ public_sub_starts_at_display }} · صالح حتى {{ public_sub_ends_at_display }}</p>
-        {% if public_sub_session_cap %}
-        <p class="sub-meta">جلسات مؤكدة ضمن فترة الاشتراك: <strong>{{ public_sub_sessions_used }}</strong> من <strong>{{ public_sub_sessions_limit }}</strong>.</p>
-        <div class="sub-actions">
-          <span class="session-badge{% if public_sub_at_cap %} is-low{% endif %}" title="متبقٍ ضمن حد الخطة"><span aria-hidden="true">+</span> {{ public_sub_sessions_remaining }} متبقٍ</span>
-          <a class="sub-book" href="{{ public_sub_book_url }}">إضافة جلسة من الجدول</a>
-        </div>
-        {% else %}
-        <p class="sub-meta">حد الجلسات غير محدد لهذه الخطة ضمن النظام؛ يمكنك حجز الجلسات وفق توفر المركز.</p>
-        <div class="sub-actions">
-          <a class="sub-book" href="{{ public_sub_book_url }}">عرض الجلسات واحجز</a>
-        </div>
-        {% endif %}
-      </section>
-      {% endif %}
 
       <section class="loyalty-program-mini" aria-label="جدول أوسمة الولاء والمكافآت">
         <h2>أوسمة الولاء والمكافآت (هذا المركز)</h2>
@@ -311,42 +475,84 @@
           </table>
         </div>
       </section>
+      </div>
 
-      <style>
-        .tier-tag { display:inline-flex;align-items:center;margin-inline-start:6px;padding:4px 10px;border-radius:999px;font-size:0.78rem;font-weight:800;vertical-align:middle; }
-        .tier-tag--bronze { background:linear-gradient(135deg,#cd7f32,#8b5a2b);color:#fff; }
-        .tier-tag--silver { background:linear-gradient(135deg,#e2e8f0,#94a3b8);color:#1e293b; }
-        .tier-tag--gold { background:linear-gradient(135deg,#fcd34d,#ca8a04);color:#422006; }
-        .tier-tag--none { background:#f1f5f9;color:#64748b; }
-      </style>
-
-      {% if request.query_params.get('msg') == 'saved' %}
-        <div class="alert ok">تم حفظ التعديلات بنجاح.</div>
-      {% endif %}
-      {% if request.query_params.get('msg') == 'required_fields' %}
-        <div class="alert warn">يرجى تعبئة الاسم ورقم الجوال.</div>
-      {% endif %}
-      {% if request.query_params.get('msg') == 'invalid_phone' %}
-        <div class="alert warn">رقم الجوال غير صحيح بالنسبة لمفتاح الدولة المختار.</div>
-      {% endif %}
-      {% if request.query_params.get('msg') == 'phone_exists' %}
-        <div class="alert warn">رقم الجوال مستخدم من حساب آخر.</div>
-      {% endif %}
-      {% if request.query_params.get('msg') == 'delete_mail_sent' %}
-        <div class="alert ok">أرسلنا رسالة تأكيد حذف الحساب إلى بريدك. افتح الرسالة واضغط رابط التأكيد لإتمام الحذف.</div>
-      {% endif %}
-      {% if request.query_params.get('msg') == 'delete_mail_failed' %}
-        <div class="alert warn">تعذر إرسال رسالة تأكيد حذف الحساب الآن. حاول لاحقًا.</div>
-      {% endif %}
-      {% if request.query_params.get('msg') == 'delete_rate_limited' %}
-        <div class="alert warn">تم تجاوز عدد طلبات حذف الحساب. حاول بعد قليل.</div>
-      {% endif %}
-      {% if request.query_params.get('msg') == 'delete_invalid_link' %}
-        <div class="alert warn">رابط تأكيد حذف الحساب غير صالح أو منتهي الصلاحية.</div>
+      {% if public_sub_active %}
+      <section id="section-plan" class="subscription-account-card account-section" aria-label="اشتراكك الحالي">
+        <h2>اشتراكك في هذا المركز</h2>
+        <p><strong>{{ public_sub_plan_name }}</strong> — باقة {{ public_sub_plan_type_label }}.</p>
+        <p class="sub-meta">بداية الاشتراك: {{ public_sub_starts_at_display }} · صالح حتى {{ public_sub_ends_at_display }}</p>
+        {% if public_sub_session_cap %}
+        <p class="sub-meta">جلسات مؤكدة ضمن فترة الاشتراك: <strong>{{ public_sub_sessions_used }}</strong> من <strong>{{ public_sub_sessions_limit }}</strong>.</p>
+        <div class="sub-actions">
+          <span class="session-badge{% if public_sub_at_cap %} is-low{% endif %}" title="متبقٍ ضمن حد الخطة"><span aria-hidden="true">+</span> {{ public_sub_sessions_remaining }} متبقٍ</span>
+          <a class="sub-book" href="{{ public_sub_book_url }}">إضافة جلسة من الجدول</a>
+        </div>
+        {% else %}
+        <p class="sub-meta">حد الجلسات غير محدد لهذه الخطة ضمن النظام؛ يمكنك حجز الجلسات وفق توفر المركز.</p>
+        <div class="sub-actions">
+          <a class="sub-book" href="{{ public_sub_book_url }}">عرض الجلسات واحجز</a>
+        </div>
+        {% endif %}
+      </section>
+      {% else %}
+      <section id="section-plan" class="account-section" aria-label="الخطة">
+        <h2 class="account-section-title">الخطة</h2>
+        <p class="sub" style="margin-top:0;">لا يوجد لديك اشتراك فعّال في هذا المركز حاليًا.</p>
+      </section>
       {% endif %}
 
+      <section id="section-schedule" class="trainee-schedule account-section" aria-labelledby="schedule-heading">
+        <div id="trainee-schedule-print-zone">
+          <p class="trainee-schedule__print-title">جدول المتدرب — {{ user.full_name }} — {{ center_display_name }}</p>
+          <div class="trainee-schedule__head">
+            <h2 id="schedule-heading">جدول المتدرب</h2>
+            <div class="trainee-schedule__toolbar no-print">
+              <button type="button" class="trainee-schedule__icon-btn" onclick="window.print()" title="طباعة الجدول" aria-label="طباعة جدول المتدرب">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
+              </button>
+              <button type="button" class="trainee-schedule__icon-btn" onclick="window.print()" title="حفظ PDF — اختر «حفظ كـ PDF» في نافذة الطباعة" aria-label="حفظ جدول المتدرب كملف PDF">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><path d="M9 15h6"/><path d="M9 11h6"/></svg>
+              </button>
+            </div>
+          </div>
+          <p class="sub no-print" style="margin-top:0;margin-bottom:12px;">الجلسات القادمة التي لديك حجز نشط (محجوز أو مؤكد أو في انتظار الدفع) في {{ center_display_name }}.</p>
+          {% if trainee_schedule_rows %}
+          <div class="trainee-schedule__table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th scope="col">الجلسة</th>
+                  <th scope="col">المدرّب</th>
+                  <th scope="col">القاعة</th>
+                  <th scope="col">الموعد</th>
+                  <th scope="col">الحجز</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for row in trainee_schedule_rows %}
+                <tr>
+                  <td>{{ row.title }}</td>
+                  <td>{{ row.trainer }}</td>
+                  <td>{{ row.room_name }}</td>
+                  <td>{{ row.starts_at_display }}</td>
+                  <td>{{ row.booking_status_label }}</td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+          {% else %}
+          <p class="sub" style="margin:0;">لا توجد لديك جلسات قادمة بحجز نشط في هذا المركز. عند حجز موعد من الصفحة الرئيسية سيظهر الجدول هنا.</p>
+          {% endif %}
+        </div>
+      </section>
+
+      <section id="section-edit" class="account-section" aria-labelledby="edit-heading">
+        <h2 class="account-section-title" id="edit-heading">تعديل البيانات</h2>
       <form method="post" action="/public/account">
         <input type="hidden" name="next" value="{{ next }}" />
+        <input type="hidden" name="account_center_id" value="{{ account_center_id }}" />
         <label for="full_name">الاسم الكامل</label>
         <input id="full_name" name="full_name" value="{{ user.full_name }}" required autocomplete="name" />
 
@@ -370,22 +576,24 @@
 
         <button type="submit">حفظ التعديلات</button>
       </form>
+      </section>
 
+      <section id="section-settings" class="account-section" aria-labelledby="settings-heading">
+        <h2 class="account-section-title" id="settings-heading">الإعدادات</h2>
+        <div class="links" style="margin-top:0;margin-bottom:16px;">
+          {% if not user.email_verified %}
+            <a href="/public/verify-pending?next={{ next|urlencode }}">تأكيد البريد الإلكتروني</a><br />
+          {% endif %}
+          <a href="/public/forgot-password">نسيت كلمة المرور؟</a>
+        </div>
       <form method="post" action="/public/account/delete/request" class="danger-zone">
         <input type="hidden" name="next" value="{{ next }}" />
+        <input type="hidden" name="account_center_id" value="{{ account_center_id }}" />
         <p class="danger-zone__title">حذف الحساب</p>
         <p class="danger-zone__hint">سيتم إرسال رابط تأكيد إلى بريدك الإلكتروني، ولن يتم الحذف إلا بعد الضغط على الرابط في البريد.</p>
         <button type="submit" class="btn-danger">طلب حذف الحساب</button>
       </form>
-
-      <div class="links">
-        <a href="{{ next }}">← العودة للموقع</a><br />
-        {% if not user.email_verified %}
-          <a href="/public/verify-pending?next={{ next|urlencode }}">تأكيد البريد الإلكتروني</a><br />
-        {% endif %}
-        <a href="/public/forgot-password">نسيت كلمة المرور؟</a><br />
-        <a href="/public/logout">تسجيل الخروج</a>
-      </div>
+      </section>
     </div>
   </div>
   {% include '_mobile_landscape_hint.html' %}

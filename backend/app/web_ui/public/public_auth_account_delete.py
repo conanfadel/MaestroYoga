@@ -12,9 +12,11 @@ def register_public_auth_account_delete_routes(router: APIRouter) -> None:
     def public_account_delete_request(
         request: _s.Request,
         next: str = _s.Form(_s.PUBLIC_INDEX_DEFAULT_PATH),
+        account_center_id: str = _s.Form(""),
         db: _s.Session = _s.Depends(_s.get_db),
     ):
         safe_next = _s._sanitize_next_url(next)
+        cid = _s.parse_public_account_center_id(account_center_id)
         if _s._is_ip_blocked(db, request):
             return _s._public_login_redirect(next_url=safe_next, msg="ip_blocked")
         user = _s._current_public_user(request, db)
@@ -29,7 +31,9 @@ def register_public_auth_account_delete_routes(router: APIRouter) -> None:
             log_security_event_fn=_s.log_security_event,
         ):
             return _s.RedirectResponse(
-                url=_s._url_with_params("/public/account", msg="delete_rate_limited", next=safe_next),
+                url=_s.public_account_redirect_url(
+                    msg="delete_rate_limited", next_url=safe_next, center_id=cid
+                ),
                 status_code=303,
             )
         confirm_url = _s.build_account_delete_confirm_url(request, user, safe_next)
@@ -43,7 +47,9 @@ def register_public_auth_account_delete_routes(router: APIRouter) -> None:
                 details={"mail_error": mail_info[:200]},
             )
             return _s.RedirectResponse(
-                url=_s._url_with_params("/public/account", msg="delete_mail_failed", next=safe_next),
+                url=_s.public_account_redirect_url(
+                    msg="delete_mail_failed", next_url=safe_next, center_id=cid
+                ),
                 status_code=303,
             )
         _s.log_security_event(
@@ -54,7 +60,9 @@ def register_public_auth_account_delete_routes(router: APIRouter) -> None:
             details={"mail_status": "sent"},
         )
         return _s.RedirectResponse(
-            url=_s._url_with_params("/public/account", msg="delete_mail_sent", next=safe_next),
+            url=_s.public_account_redirect_url(
+                msg="delete_mail_sent", next_url=safe_next, center_id=cid
+            ),
             status_code=303,
         )
 

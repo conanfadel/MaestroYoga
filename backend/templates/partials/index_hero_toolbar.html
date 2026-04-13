@@ -10,20 +10,15 @@
       <span class="hero-toolbar__divider" aria-hidden="true"></span>
       {% if public_user %}
       <div class="hero-toolbar__group hero-toolbar__group--account">
-        <div class="public-user-menu" id="public-user-menu">
-          <button
-            type="button"
-            class="btn ghost public-user-menu__trigger hero-toolbar__btn"
-            id="public-user-menu-trigger"
-            aria-expanded="false"
-            aria-controls="public-user-menu-panel"
-            aria-haspopup="true"
-          >
-            <svg class="hero-toolbar__ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-            <span class="public-user-menu__trigger-label">{{ public_user.full_name }}</span>
-            <span class="public-user-menu__trigger-chevron" aria-hidden="true"></span>
-          </button>
-        </div>
+        <a
+          class="btn ghost hero-toolbar__btn"
+          href="/public/account?next={{ ('/index?center_id=' ~ center_id|string)|urlencode }}&amp;center_id={{ center_id }}"
+          id="public-account-hub-link"
+          aria-label="حسابي — الملف الشخصي والولاء والخطة والجدول"
+        >
+          <svg class="hero-toolbar__ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+          <span class="hero-toolbar__label">{{ public_user.full_name }}</span>
+        </a>
       </div>
       {% else %}
       <div class="hero-toolbar__group hero-toolbar__group--auth">

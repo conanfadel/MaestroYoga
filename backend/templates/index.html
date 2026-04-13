@@ -3530,10 +3530,6 @@
       {% include "partials/index_hero_toolbar.html" %}
     </header>
 
-    {% if public_user %}
-    {% include "partials/index_public_user_panel.html" %}
-    {% endif %}
-
     {% include "partials/index_trust_bar.html" %}
 
     {% include "partials/index_content_highlights.html" %}
@@ -3874,74 +3870,6 @@
           });
         }
       } catch (e) {}
-
-      const publicUserMenu = document.getElementById("public-user-menu");
-      const publicUserMenuBtn = document.getElementById("public-user-menu-trigger");
-      const publicUserMenuPanel = document.getElementById("public-user-menu-panel");
-      if (publicUserMenu && publicUserMenuBtn && publicUserMenuPanel) {
-        function positionPublicUserPanel() {
-          if (!publicUserMenu.classList.contains("is-open")) return;
-          var r = publicUserMenuBtn.getBoundingClientRect();
-          var vw = window.innerWidth;
-          var vh = window.innerHeight;
-          var edgePad = 12;
-          var gap = 8;
-          var w = Math.min(340, vw - edgePad * 2);
-          publicUserMenuPanel.style.width = w + "px";
-          publicUserMenuPanel.style.maxHeight = "none";
-          publicUserMenuPanel.style.overflow = "visible";
-          var isRTL = document.documentElement.getAttribute("dir") === "rtl";
-          if (isRTL) {
-            publicUserMenuPanel.style.right = Math.max(edgePad, vw - r.right) + "px";
-            publicUserMenuPanel.style.left = "auto";
-          } else {
-            publicUserMenuPanel.style.left = Math.max(edgePad, r.left) + "px";
-            publicUserMenuPanel.style.right = "auto";
-          }
-          var ph = publicUserMenuPanel.offsetHeight;
-          var spaceBelow = vh - r.bottom - gap - edgePad;
-          var spaceAbove = r.top - gap - edgePad;
-          var top;
-          if (ph <= spaceBelow || spaceBelow >= spaceAbove) {
-            top = r.bottom + gap;
-          } else {
-            top = r.top - ph - gap;
-          }
-          if (top + ph + edgePad > vh) top = Math.max(edgePad, vh - ph - edgePad);
-          if (top < edgePad) top = edgePad;
-          publicUserMenuPanel.style.top = top + "px";
-        }
-        function setPublicUserMenuOpen(open) {
-          publicUserMenu.classList.toggle("is-open", open);
-          publicUserMenuPanel.classList.toggle("is-open", open);
-          publicUserMenuBtn.setAttribute("aria-expanded", open ? "true" : "false");
-          publicUserMenuPanel.setAttribute("aria-hidden", open ? "false" : "true");
-          if (open) {
-            requestAnimationFrame(function () {
-              requestAnimationFrame(positionPublicUserPanel);
-            });
-          }
-        }
-        publicUserMenuBtn.addEventListener("click", function (e) {
-          e.preventDefault();
-          e.stopPropagation();
-          setPublicUserMenuOpen(!publicUserMenu.classList.contains("is-open"));
-        });
-        publicUserMenu.addEventListener("click", function (e) {
-          e.stopPropagation();
-        });
-        publicUserMenuPanel.addEventListener("click", function (e) {
-          e.stopPropagation();
-        });
-        document.addEventListener("click", function () {
-          setPublicUserMenuOpen(false);
-        });
-        document.addEventListener("keydown", function (e) {
-          if (e.key === "Escape") setPublicUserMenuOpen(false);
-        });
-        window.addEventListener("resize", positionPublicUserPanel);
-        window.addEventListener("scroll", positionPublicUserPanel, true);
-      }
 
       const sessionsRoot = document.getElementById("sessions-cards");
       const search = document.getElementById("session-search");
