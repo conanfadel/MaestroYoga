@@ -2567,17 +2567,19 @@
         var sideToggles = mapRoot.querySelectorAll("[data-body-side-toggle]");
         var sideGroups = mapRoot.querySelectorAll("svg[data-body-side]");
         var sideLabel = mapRoot.querySelector("[data-active-side-label]");
+        var currentBodySide = "front";
         function setBodySide(side) {
+          currentBodySide = side === "back" ? "back" : "front";
           sideGroups.forEach(function (group) {
-            group.style.display = group.getAttribute("data-body-side") === side ? "" : "none";
+            group.style.display = group.getAttribute("data-body-side") === currentBodySide ? "" : "none";
           });
           sideToggles.forEach(function (btn) {
-            var active = btn.getAttribute("data-body-side-toggle") === side;
+            var active = btn.getAttribute("data-body-side-toggle") === currentBodySide;
             btn.setAttribute("aria-pressed", active ? "true" : "false");
             btn.style.background = active ? "#eff6ff" : "#fff";
           });
           if (sideLabel) {
-            sideLabel.textContent = side === "back" ? "خلفي" : "أمامي";
+            sideLabel.textContent = currentBodySide === "back" ? "خلفي" : "أمامي";
           }
         }
         sideToggles.forEach(function (btn) {
@@ -2585,15 +2587,20 @@
             var side = btn.getAttribute("data-body-side-toggle");
             if (!side) return;
             setBodySide(side);
+            var sideUrl = new URL(window.location.href);
+            sideUrl.searchParams.set("training_body_side", currentBodySide);
+            history.replaceState(null, "", sideUrl.toString());
           });
         });
-        setBodySide("front");
+        var initialSide = new URL(window.location.href).searchParams.get("training_body_side");
+        setBodySide(initialSide === "back" ? "back" : "front");
         mapRoot.querySelectorAll("[data-muscle-key]").forEach(function (node) {
           node.addEventListener("click", function () {
             var key = node.getAttribute("data-muscle-key");
             if (!key) return;
             var url = new URL(window.location.href);
             url.searchParams.set("training_muscle", key);
+            url.searchParams.set("training_body_side", currentBodySide);
             if (!url.searchParams.get("training_tab")) {
               url.searchParams.set("training_tab", "{{ training_tab }}");
             }
