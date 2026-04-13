@@ -188,7 +188,13 @@ from ...security import (
 from ...security_audit import log_security_event
 from ...tenant_utils import require_user_center_id
 from ...time_utils import utcnow_naive
-from ...training_muscles import TRAINING_MUSCLE_KEY_SET, TRAINING_MUSCLE_LABELS, TRAINING_MUSCLE_OPTIONS
+from ...training_muscles import (
+    TRAINING_EXERCISE_MUSCLE_KEYS,
+    TRAINING_EXERCISE_MUSCLE_KEYS_ORDERED,
+    TRAINING_MUSCLE_KEY_SET,
+    TRAINING_MUSCLE_LABELS,
+    TRAINING_MUSCLE_OPTIONS,
+)
 from ...training_yoga_catalog import YOGA_EXERCISES_BY_MUSCLE
 from ...web_shared import (
     PUBLIC_INDEX_DEFAULT_PATH,

@@ -251,6 +251,7 @@ def finalize_admin_dashboard_template_context(
         "payment_date_to_value": pt,
         "loyalty_admin": loyalty_admin,
         "training_muscle_options": _s.TRAINING_MUSCLE_OPTIONS,
+        "training_muscle_labels": _s.TRAINING_MUSCLE_LABELS,
         "training_selected_muscle": state.selected_muscle,
         "training_selected_muscle_label": _s.TRAINING_MUSCLE_LABELS.get(
             state.selected_muscle, state.selected_muscle

@@ -1044,36 +1044,71 @@
                 <input type="hidden" name="client_id" value="{{ training_client_id }}" />
                 <input type="hidden" id="exercise-presets-json" name="exercise_presets_json" value="" />
                 <p class="small" style="margin:8px 0 6px;">اختر التمارين، ثم لكل تمرين اختر الشدة ليتم تعبئة المجموعات/التكرارات تلقائيًا:</p>
-                <div style="max-height:230px;overflow:auto;border:1px solid rgba(45,52,54,0.12);border-radius:10px;padding:8px;background:#fff;">
-                  {% for ex in training_exercises %}
-                  <div style="padding:6px 6px 8px;border-bottom:1px solid rgba(45,52,54,0.08);">
-                    <label style="display:flex;align-items:flex-start;gap:8px;margin:0;">
-                      <input type="checkbox" name="selected_exercise_ids" value="{{ ex.id }}" style="width:auto;margin-top:2px;" />
-                      <span><strong>#{{ ex.id }} {{ ex.exercise_name }}</strong> <span class="small" style="color:#64748b;">{{ ex.notes or '' }}</span></span>
-                    </label>
-                    <div class="exercise-intensity-box" data-exercise-id="{{ ex.id }}" style="display:none;margin:8px 0 0 24px;padding:8px;border:1px dashed rgba(16,185,129,0.45);border-radius:8px;background:#f0fdf4;">
-                      <label style="margin:0 0 6px;">شدة التمرين</label>
-                      <select class="js-intensity-select" data-exercise-id="{{ ex.id }}" style="max-width:180px;">
-                        <option value="easy">سهل</option>
-                        <option value="medium" selected>متوسط</option>
-                        <option value="hard">صعب</option>
-                        <option value="custom">مخصص (يدوي)</option>
-                      </select>
-                      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px;max-width:360px;">
-                        <div>
-                          <label style="margin:0 0 4px;">المجموعات</label>
-                          <input class="js-sets-input" data-exercise-id="{{ ex.id }}" type="number" min="1" max="20" value="3" />
-                        </div>
-                        <div>
-                          <label style="margin:0 0 4px;">التكرارات</label>
-                          <input class="js-reps-input" data-exercise-id="{{ ex.id }}" maxlength="64" value="10-12" />
+                <div style="max-height:{% if training_selected_muscle == 'mixed' %}min(65vh, 560px){% else %}230px{% endif %};overflow:auto;border:1px solid rgba(45,52,54,0.12);border-radius:10px;padding:8px;background:#fff;">
+                  {% if training_exercises %}
+                    {% if training_selected_muscle == 'mixed' %}
+                      {% for mk, group in training_exercises|groupby('muscle_key') %}
+                      <div style="padding:8px 6px 4px;font-weight:800;color:#0f172a;border-bottom:1px solid rgba(45,52,54,0.12);background:#f8fafc;">{{ training_muscle_labels.get(mk, mk) }}</div>
+                      {% for ex in group %}
+                      <div style="padding:6px 6px 8px;border-bottom:1px solid rgba(45,52,54,0.08);">
+                        <label style="display:flex;align-items:flex-start;gap:8px;margin:0;">
+                          <input type="checkbox" name="selected_exercise_ids" value="{{ ex.id }}" style="width:auto;margin-top:2px;" />
+                          <span><strong>#{{ ex.id }} {{ ex.exercise_name }}</strong> <span class="small" style="color:#64748b;">{{ ex.notes or '' }}</span></span>
+                        </label>
+                        <div class="exercise-intensity-box" data-exercise-id="{{ ex.id }}" style="display:none;margin:8px 0 0 24px;padding:8px;border:1px dashed rgba(16,185,129,0.45);border-radius:8px;background:#f0fdf4;">
+                          <label style="margin:0 0 6px;">شدة التمرين</label>
+                          <select class="js-intensity-select" data-exercise-id="{{ ex.id }}" style="max-width:180px;">
+                            <option value="easy">سهل</option>
+                            <option value="medium" selected>متوسط</option>
+                            <option value="hard">صعب</option>
+                            <option value="custom">مخصص (يدوي)</option>
+                          </select>
+                          <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px;max-width:360px;">
+                            <div>
+                              <label style="margin:0 0 4px;">المجموعات</label>
+                              <input class="js-sets-input" data-exercise-id="{{ ex.id }}" type="number" min="1" max="20" value="3" />
+                            </div>
+                            <div>
+                              <label style="margin:0 0 4px;">التكرارات</label>
+                              <input class="js-reps-input" data-exercise-id="{{ ex.id }}" maxlength="64" value="10-12" />
+                            </div>
+                          </div>
                         </div>
                       </div>
-                    </div>
-                  </div>
+                      {% endfor %}
+                      {% endfor %}
+                    {% else %}
+                      {% for ex in training_exercises %}
+                      <div style="padding:6px 6px 8px;border-bottom:1px solid rgba(45,52,54,0.08);">
+                        <label style="display:flex;align-items:flex-start;gap:8px;margin:0;">
+                          <input type="checkbox" name="selected_exercise_ids" value="{{ ex.id }}" style="width:auto;margin-top:2px;" />
+                          <span><strong>#{{ ex.id }} {{ ex.exercise_name }}</strong> <span class="small" style="color:#64748b;">{{ ex.notes or '' }}</span></span>
+                        </label>
+                        <div class="exercise-intensity-box" data-exercise-id="{{ ex.id }}" style="display:none;margin:8px 0 0 24px;padding:8px;border:1px dashed rgba(16,185,129,0.45);border-radius:8px;background:#f0fdf4;">
+                          <label style="margin:0 0 6px;">شدة التمرين</label>
+                          <select class="js-intensity-select" data-exercise-id="{{ ex.id }}" style="max-width:180px;">
+                            <option value="easy">سهل</option>
+                            <option value="medium" selected>متوسط</option>
+                            <option value="hard">صعب</option>
+                            <option value="custom">مخصص (يدوي)</option>
+                          </select>
+                          <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px;max-width:360px;">
+                            <div>
+                              <label style="margin:0 0 4px;">المجموعات</label>
+                              <input class="js-sets-input" data-exercise-id="{{ ex.id }}" type="number" min="1" max="20" value="3" />
+                            </div>
+                            <div>
+                              <label style="margin:0 0 4px;">التكرارات</label>
+                              <input class="js-reps-input" data-exercise-id="{{ ex.id }}" maxlength="64" value="10-12" />
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                      {% endfor %}
+                    {% endif %}
                   {% else %}
-                  <p class="small" style="margin:0;">لا توجد تمارين ضمن العضلة المحددة.</p>
-                  {% endfor %}
+                  <p class="small" style="margin:0;">{% if training_selected_muscle == 'mixed' %}لا توجد تمارين مضافة في أي مجموعة عضلية بعد.{% else %}لا توجد تمارين ضمن العضلة المحددة.{% endif %}</p>
+                  {% endif %}
                 </div>
                 <label for="assign-session-id">ربط الخطة بجلسة المتدرب (اختياري)</label>
                 <select id="assign-session-id" name="session_id">
@@ -1119,7 +1154,19 @@
                 <h3 style="margin:0 0 8px;font-size:1rem;">العضلة المحددة: {{ training_selected_muscle_label }}</h3>
                 <form method="post" action="/admin/training/exercises/add" data-preserve-scroll="1">
                   <input type="hidden" name="return_section" value="section-training-management" />
+                  <input type="hidden" name="return_training_muscle" value="{{ training_selected_muscle }}" />
+                  {% if training_selected_muscle == 'mixed' %}
+                  <label for="add-ex-muscle">المجموعة العضلية</label>
+                  <select id="add-ex-muscle" name="muscle_key" required style="margin-bottom:8px;max-width:280px;">
+                    {% for m in training_muscle_options %}
+                    {% if m.key != 'mixed' %}
+                    <option value="{{ m.key }}">{{ m.label }}</option>
+                    {% endif %}
+                    {% endfor %}
+                  </select>
+                  {% else %}
                   <input type="hidden" name="muscle_key" value="{{ training_selected_muscle }}" />
+                  {% endif %}
                   <input type="hidden" name="training_client_q" value="{{ training_client_q }}" />
                   <input type="hidden" name="training_client_id" value="{{ training_client_id }}" />
                   <input type="hidden" name="training_tab" value="assignments" />
@@ -1137,6 +1184,9 @@
                   <thead>
                     <tr>
                       <th>#</th>
+                      {% if training_selected_muscle == 'mixed' %}
+                      <th>المجموعة</th>
+                      {% endif %}
                       <th>التمرين</th>
                       <th>ملاحظات</th>
                       <th>تاريخ الإضافة</th>
@@ -1144,27 +1194,55 @@
                     </tr>
                   </thead>
                   <tbody>
-                    {% for ex in training_exercises %}
-                    <tr>
-                      <td>{{ ex.id }}</td>
-                      <td>{{ ex.exercise_name }}</td>
-                      <td>{{ ex.notes or '-' }}</td>
-                      <td>{{ ex.created_at.strftime('%Y-%m-%d %H:%M') if ex.created_at else '-' }}</td>
-                      <td>
-                        <form method="post" action="/admin/training/exercises/delete" data-preserve-scroll="1" onsubmit="return confirm('حذف هذا التمرين؟');">
-                          <input type="hidden" name="return_section" value="section-training-management" />
-                          <input type="hidden" name="exercise_id" value="{{ ex.id }}" />
-                          <input type="hidden" name="muscle_key" value="{{ training_selected_muscle }}" />
-                          <input type="hidden" name="training_client_q" value="{{ training_client_q }}" />
-                          <input type="hidden" name="training_client_id" value="{{ training_client_id }}" />
-                          <input type="hidden" name="training_tab" value="assignments" />
-                          <button type="submit" class="danger">حذف</button>
-                        </form>
-                      </td>
-                    </tr>
+                    {% if training_exercises %}
+                      {% if training_selected_muscle == 'mixed' %}
+                        {% for mk, group in training_exercises|groupby('muscle_key') %}
+                        <tr style="background:#f8fafc;"><td colspan="6" style="font-weight:800;border-top:1px solid rgba(45,52,54,0.1);">{{ training_muscle_labels.get(mk, mk) }}</td></tr>
+                        {% for ex in group %}
+                        <tr>
+                          <td>{{ ex.id }}</td>
+                          <td>{{ training_muscle_labels.get(ex.muscle_key, ex.muscle_key) }}</td>
+                          <td>{{ ex.exercise_name }}</td>
+                          <td>{{ ex.notes or '-' }}</td>
+                          <td>{{ ex.created_at.strftime('%Y-%m-%d %H:%M') if ex.created_at else '-' }}</td>
+                          <td>
+                            <form method="post" action="/admin/training/exercises/delete" data-preserve-scroll="1" onsubmit="return confirm('حذف هذا التمرين؟');">
+                              <input type="hidden" name="return_section" value="section-training-management" />
+                              <input type="hidden" name="exercise_id" value="{{ ex.id }}" />
+                              <input type="hidden" name="muscle_key" value="{{ training_selected_muscle }}" />
+                              <input type="hidden" name="training_client_q" value="{{ training_client_q }}" />
+                              <input type="hidden" name="training_client_id" value="{{ training_client_id }}" />
+                              <input type="hidden" name="training_tab" value="assignments" />
+                              <button type="submit" class="danger">حذف</button>
+                            </form>
+                          </td>
+                        </tr>
+                        {% endfor %}
+                        {% endfor %}
+                      {% else %}
+                        {% for ex in training_exercises %}
+                        <tr>
+                          <td>{{ ex.id }}</td>
+                          <td>{{ ex.exercise_name }}</td>
+                          <td>{{ ex.notes or '-' }}</td>
+                          <td>{{ ex.created_at.strftime('%Y-%m-%d %H:%M') if ex.created_at else '-' }}</td>
+                          <td>
+                            <form method="post" action="/admin/training/exercises/delete" data-preserve-scroll="1" onsubmit="return confirm('حذف هذا التمرين؟');">
+                              <input type="hidden" name="return_section" value="section-training-management" />
+                              <input type="hidden" name="exercise_id" value="{{ ex.id }}" />
+                              <input type="hidden" name="muscle_key" value="{{ training_selected_muscle }}" />
+                              <input type="hidden" name="training_client_q" value="{{ training_client_q }}" />
+                              <input type="hidden" name="training_client_id" value="{{ training_client_id }}" />
+                              <input type="hidden" name="training_tab" value="assignments" />
+                              <button type="submit" class="danger">حذف</button>
+                            </form>
+                          </td>
+                        </tr>
+                        {% endfor %}
+                      {% endif %}
                     {% else %}
-                    <tr><td colspan="5">لا توجد تمارين مضافة لهذه العضلة بعد.</td></tr>
-                    {% endfor %}
+                    <tr><td colspan="{% if training_selected_muscle == 'mixed' %}6{% else %}5{% endif %}">{% if training_selected_muscle == 'mixed' %}لا توجد تمارين مضافة بعد.{% else %}لا توجد تمارين مضافة لهذه العضلة بعد.{% endif %}</td></tr>
+                    {% endif %}
                   </tbody>
                 </table>
               </div>

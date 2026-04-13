@@ -243,15 +243,24 @@ def load_admin_dashboard_query_state(
     selected_muscle = (training_muscle or "").strip().lower()
     if selected_muscle not in _s.TRAINING_MUSCLE_KEY_SET:
         selected_muscle = "core"
-    training_exercises = (
-        db.query(_s.models.TrainingExercise)
-        .filter(
-            _s.models.TrainingExercise.center_id == cid,
-            _s.models.TrainingExercise.muscle_key == selected_muscle,
+    Te = _s.models.TrainingExercise
+    ex_base = db.query(Te).filter(Te.center_id == cid)
+    if selected_muscle == "mixed":
+        muscle_rank = _s.case(
+            *[(Te.muscle_key == mk, i) for i, mk in enumerate(_s.TRAINING_EXERCISE_MUSCLE_KEYS_ORDERED)],
+            else_=999,
         )
-        .order_by(_s.models.TrainingExercise.created_at.desc(), _s.models.TrainingExercise.id.desc())
-        .all()
-    )
+        training_exercises = (
+            ex_base.filter(Te.muscle_key.in_(_s.TRAINING_EXERCISE_MUSCLE_KEYS))
+            .order_by(muscle_rank, Te.created_at.desc(), Te.id.desc())
+            .all()
+        )
+    else:
+        training_exercises = (
+            ex_base.filter(Te.muscle_key == selected_muscle)
+            .order_by(Te.created_at.desc(), Te.id.desc())
+            .all()
+        )
     training_client_q_clean = (training_client_q or "").strip()
     training_client_options_query = (
         db.query(_s.models.Client)

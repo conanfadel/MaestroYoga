@@ -16,6 +16,14 @@ def _normalize_muscle_key(raw: str) -> str:
     return "core"
 
 
+def _normalize_exercise_muscle_key(raw: str) -> str:
+    """Muscle key persisted on `TrainingExercise` (never the UI-only ``mixed`` filter)."""
+    key = (raw or "").strip().lower()
+    if key in _s.TRAINING_EXERCISE_MUSCLE_KEYS:
+        return key
+    return "core"
+
+
 def _parse_per_exercise_presets(raw: str) -> dict[int, dict[str, str | int]]:
     s = (raw or "").strip()
     if not s:
@@ -58,6 +66,7 @@ def register_admin_org_training_routes(router: APIRouter) -> None:
         muscle_key: str = _s.Form(...),
         exercise_name: str = _s.Form(...),
         notes: str = _s.Form(""),
+        return_training_muscle: str = _s.Form(""),
         training_client_q: str = _s.Form(""),
         training_client_id: int = _s.Form(0),
         scroll_y: str = _s.Form(default=""),
@@ -68,7 +77,10 @@ def register_admin_org_training_routes(router: APIRouter) -> None:
         ),
     ):
         cid = _s.require_user_center_id(user)
-        normalized_muscle = _normalize_muscle_key(muscle_key)
+        normalized_muscle = _normalize_exercise_muscle_key(muscle_key)
+        view_muscle = _normalize_muscle_key(
+            (return_training_muscle or "").strip() or muscle_key
+        )
         name_clean = (exercise_name or "").strip()[:180]
         notes_clean = (notes or "").strip()[:3000]
         if not name_clean:
@@ -90,7 +102,7 @@ def register_admin_org_training_routes(router: APIRouter) -> None:
                 "/admin",
                 msg=_s.ADMIN_MSG_TRAINING_EXERCISE_ADDED,
                 scroll_y=scroll_y,
-                training_muscle=normalized_muscle,
+                training_muscle=view_muscle,
                 training_client_q=(training_client_q or "").strip(),
                 training_client_id=str(max(0, int(training_client_id or 0))),
             )
@@ -161,7 +173,7 @@ def register_admin_org_training_routes(router: APIRouter) -> None:
             if (mk or "").strip() and (nm or "").strip()
         }
         for muscle_key, ex_list in _s.YOGA_EXERCISES_BY_MUSCLE.items():
-            if muscle_key not in _s.TRAINING_MUSCLE_KEY_SET:
+            if muscle_key not in _s.TRAINING_EXERCISE_MUSCLE_KEYS:
                 continue
             for ex in ex_list:
                 ex_name = (ex.get("name") or "").strip()[:180]
