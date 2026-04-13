@@ -348,6 +348,20 @@
       color: var(--charcoal);
     }
     .trainee-schedule__print-identity p:last-child { margin-bottom: 0; }
+    .trainee-schedule__loyalty-footer {
+      margin-top: 14px;
+      padding: 10px 12px;
+      border-radius: 10px;
+      border: 1px solid rgba(45, 52, 54, 0.12);
+      background: rgba(248, 250, 252, 0.95);
+    }
+    .trainee-schedule__loyalty-footer p {
+      margin: 0 0 6px;
+      font-size: 0.9rem;
+      color: var(--charcoal);
+      line-height: 1.5;
+    }
+    .trainee-schedule__loyalty-footer p:last-child { margin-bottom: 0; }
     .trainee-schedule__table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
     .trainee-schedule table {
       width: 100%;
@@ -381,6 +395,10 @@
         background: transparent !important;
         border: none !important;
         padding: 0 0 12px !important;
+      }
+      .trainee-schedule__loyalty-footer {
+        background: transparent !important;
+        border: 1px solid rgba(45, 52, 54, 0.25) !important;
       }
     }
   </style>
@@ -538,6 +556,7 @@
           </div>
           <div class="trainee-schedule__print-identity">
             <p><strong>الاسم:</strong> {{ user.full_name }}</p>
+            <p><strong>خطة الاشتراك:</strong> {% if public_sub_active %}{{ public_sub_plan_name }}{% else %}لا توجد خطة اشتراك{% endif %}</p>
           </div>
           <p class="sub no-print" style="margin-top:0;margin-bottom:12px;">الجلسات القادمة بحجز <strong>مؤكّد ومدفوع</strong> فقط في {{ center_display_name }}.</p>
           {% if trainee_schedule_rows %}
@@ -566,6 +585,19 @@
           {% else %}
           <p class="sub" style="margin:0;">لا توجد لديك جلسات قادمة بحجز مؤكّد ومدفوع في هذا المركز. بعد إتمام الدفع وتأكيد الحجز ستظهر هنا.</p>
           {% endif %}
+          <div class="trainee-schedule__loyalty-footer">
+            <p><strong>ولاء المتدرب:</strong> أنجز {{ loyalty_confirmed_count }} جلسة مؤكدة.</p>
+            <p>
+              <strong>المتبقي لأقرب مستوى:</strong>
+              {% if loyalty_sessions_to_next is not none and loyalty_sessions_to_next > 0 %}
+                {{ loyalty_sessions_to_next }} جلسة للوصول إلى مستوى {{ loyalty_next_tier_label }}.
+              {% elif loyalty_tier == 'gold' %}
+                وصل إلى أعلى مستوى ولاء (الذهبي).
+              {% else %}
+                لا توجد مستويات ولاء قادمة حاليًا.
+              {% endif %}
+            </p>
+          </div>
         </div>
       </section>
 
