@@ -90,6 +90,7 @@ class AdminDashboardQueryState:
     training_client_id: int
     training_tab: str
     training_client_options: list[dict[str, Any]]
+    training_client_sessions: list[dict[str, Any]]
     training_client_assignments: list[Any]
     training_medical_profile: Any
     training_medical_history: list[Any]
@@ -289,9 +290,35 @@ def load_admin_dashboard_query_state(
         selected_training_client_id = int(training_client_options[0]["id"])
 
     training_client_assignments: list[Any] = []
+    training_client_sessions: list[dict[str, Any]] = []
     training_medical_profile = None
     training_medical_history: list[Any] = []
     if selected_training_client_id > 0:
+        booking_rows = (
+            db.query(_s.models.Booking, _s.models.YogaSession)
+            .join(_s.models.YogaSession, _s.models.YogaSession.id == _s.models.Booking.session_id)
+            .filter(
+                _s.models.Booking.center_id == cid,
+                _s.models.Booking.client_id == selected_training_client_id,
+                _s.models.Booking.status.in_(("booked", "confirmed", "pending_payment")),
+                _s.models.YogaSession.center_id == cid,
+            )
+            .order_by(_s.models.YogaSession.starts_at.desc(), _s.models.YogaSession.id.desc())
+            .all()
+        )
+        seen_session_ids: set[int] = set()
+        for _booking, ys in booking_rows:
+            if not ys or ys.id in seen_session_ids:
+                continue
+            seen_session_ids.add(ys.id)
+            training_client_sessions.append(
+                {
+                    "id": ys.id,
+                    "title": ys.title or "-",
+                    "trainer_name": ys.trainer_name or "-",
+                    "starts_at_display": _s._fmt_dt(ys.starts_at),
+                }
+            )
         training_client_assignments = (
             db.query(_s.models.TrainingAssignmentBatch)
             .filter(
@@ -307,6 +334,7 @@ def load_admin_dashboard_query_state(
     selected_training_tab = (training_tab or "").strip().lower()
     if selected_training_tab not in {"assignments", "medical"}:
         selected_training_tab = "assignments"
+    if selected_training_client_id > 0:
         training_medical_profile = (
             db.query(_s.models.ClientMedicalProfile)
             .filter(
@@ -394,6 +422,7 @@ def load_admin_dashboard_query_state(
         training_client_id=selected_training_client_id,
         training_tab=selected_training_tab,
         training_client_options=training_client_options,
+        training_client_sessions=training_client_sessions,
         training_client_assignments=training_client_assignments,
         training_medical_profile=training_medical_profile,
         training_medical_history=training_medical_history,

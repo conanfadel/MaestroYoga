@@ -197,6 +197,7 @@ def register_admin_org_training_routes(router: APIRouter) -> None:
     @router.post("/admin/training/assignments/create")
     def admin_create_training_assignment(
         client_id: int = _s.Form(...),
+        session_id: int = _s.Form(0),
         selected_exercise_ids: list[int] = _s.Form(default=[]),
         title: str = _s.Form(""),
         notes: str = _s.Form(""),
@@ -258,6 +259,27 @@ def register_admin_org_training_routes(router: APIRouter) -> None:
                 + "#section-training-management",
                 status_code=303,
             )
+        selected_session_id = int(session_id or 0)
+        if selected_session_id > 0:
+            linked_session = (
+                db.query(_s.models.YogaSession)
+                .join(
+                    _s.models.Booking,
+                    _s.and_(
+                        _s.models.Booking.session_id == _s.models.YogaSession.id,
+                        _s.models.Booking.center_id == cid,
+                        _s.models.Booking.client_id == client.id,
+                        _s.models.Booking.status.in_(("booked", "confirmed", "pending_payment")),
+                    ),
+                )
+                .filter(
+                    _s.models.YogaSession.center_id == cid,
+                    _s.models.YogaSession.id == selected_session_id,
+                )
+                .first()
+            )
+            if not linked_session:
+                selected_session_id = 0
         exercise_rows = (
             db.query(_s.models.TrainingExercise)
             .filter(
@@ -318,6 +340,7 @@ def register_admin_org_training_routes(router: APIRouter) -> None:
             center_id=cid,
             client_id=client.id,
             assigned_by_user_id=user.id,
+            session_id=(selected_session_id if selected_session_id > 0 else None),
             title=title_clean or f"خطة تدريب للمتدرب {client.full_name}",
             notes=notes_clean or None,
             starts_at=start_dt,

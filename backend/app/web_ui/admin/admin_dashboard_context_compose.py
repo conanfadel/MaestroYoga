@@ -259,6 +259,7 @@ def finalize_admin_dashboard_template_context(
         "training_client_id": state.training_client_id,
         "training_tab": state.training_tab,
         "training_client_options": state.training_client_options,
+        "training_client_sessions": state.training_client_sessions,
         "training_client_assignments": state.training_client_assignments,
         "training_medical_profile": state.training_medical_profile,
         "training_medical_history": state.training_medical_history,

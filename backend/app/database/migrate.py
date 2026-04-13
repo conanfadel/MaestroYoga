@@ -68,6 +68,10 @@ def migrate_schema() -> None:
     needs_training_assignment_items_table = not insp.has_table("training_assignment_items")
     needs_client_medical_profiles_table = not insp.has_table("client_medical_profiles")
     needs_client_medical_history_entries_table = not insp.has_table("client_medical_history_entries")
+    needs_training_assignment_batches_session_id = False
+    if insp.has_table("training_assignment_batches"):
+        training_batch_cols = {c["name"] for c in insp.get_columns("training_assignment_batches")}
+        needs_training_assignment_batches_session_id = "session_id" not in training_batch_cols
 
     needs_public_user_phone = False
     needs_public_user_is_deleted = False
@@ -160,6 +164,7 @@ def migrate_schema() -> None:
         and not needs_training_assignment_items_table
         and not needs_client_medical_profiles_table
         and not needs_client_medical_history_entries_table
+        and not needs_training_assignment_batches_session_id
     ):
         with engine.begin() as conn:
             if has_client_subscription_number:
@@ -246,6 +251,8 @@ def migrate_schema() -> None:
             conn.execute(text("UPDATE payments SET created_at = paid_at WHERE created_at IS NULL"))
         if needs_client_subscription_number:
             conn.execute(text("ALTER TABLE clients ADD COLUMN subscription_number INTEGER"))
+        if needs_training_assignment_batches_session_id:
+            conn.execute(text("ALTER TABLE training_assignment_batches ADD COLUMN session_id INTEGER"))
         if has_client_subscription_number or needs_client_subscription_number:
             _backfill_client_subscription_numbers(conn)
         if needs_training_exercises_table:
@@ -274,6 +281,7 @@ def migrate_schema() -> None:
                     "center_id INTEGER NOT NULL, "
                     "client_id INTEGER NOT NULL, "
                     "assigned_by_user_id INTEGER, "
+                    "session_id INTEGER, "
                     "title VARCHAR(180), "
                     "notes TEXT, "
                     f"starts_at {created_at_type}, "
@@ -282,7 +290,8 @@ def migrate_schema() -> None:
                     f"created_at {created_at_type}, "
                     "FOREIGN KEY(center_id) REFERENCES centers (id), "
                     "FOREIGN KEY(client_id) REFERENCES clients (id), "
-                    "FOREIGN KEY(assigned_by_user_id) REFERENCES users (id)"
+                    "FOREIGN KEY(assigned_by_user_id) REFERENCES users (id), "
+                    "FOREIGN KEY(session_id) REFERENCES yoga_sessions (id)"
                     ")"
                 )
             )

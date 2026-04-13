@@ -672,6 +672,7 @@
                 <thead>
                   <tr>
                     <th scope="col">الخطة</th>
+                    <th scope="col">الجلسة</th>
                     <th scope="col">التمرين</th>
                     <th scope="col">تفاصيل</th>
                     <th scope="col">ملاحظات</th>
@@ -681,6 +682,14 @@
                   {% for row in trainee_training_rows %}
                   <tr>
                     <td><span class="trainee-training__meta">#{{ row.batch_id }}</span> {{ row.batch_title }}</td>
+                    <td>
+                      {% if row.session_title %}
+                        {{ row.session_title }}
+                        {% if row.session_trainer %} · {{ row.session_trainer }}{% endif %}
+                      {% else %}
+                        -
+                      {% endif %}
+                    </td>
                     <td>{{ row.exercise_name }}</td>
                     <td>
                       {% if row.sets_count %}{{ row.sets_count }} مجموعات{% endif %}

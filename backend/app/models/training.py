@@ -25,6 +25,7 @@ class TrainingAssignmentBatch(Base):
     center_id = Column(Integer, ForeignKey("centers.id"), nullable=False, index=True)
     client_id = Column(Integer, ForeignKey("clients.id"), nullable=False, index=True)
     assigned_by_user_id = Column(Integer, ForeignKey("users.id"), nullable=True, index=True)
+    session_id = Column(Integer, ForeignKey("yoga_sessions.id"), nullable=True, index=True)
     title = Column(String(180), nullable=True)
     notes = Column(Text, nullable=True)
     starts_at = Column(DateTime, nullable=True)
@@ -35,6 +36,7 @@ class TrainingAssignmentBatch(Base):
     center = relationship("Center")
     client = relationship("Client")
     assigned_by_user = relationship("User")
+    session = relationship("YogaSession")
 
 
 class TrainingAssignmentItem(Base):

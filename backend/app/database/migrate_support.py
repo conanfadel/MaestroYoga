@@ -60,6 +60,7 @@ def _ensure_performance_indexes(conn, insp) -> None:
         ("training_exercises", "idx_training_exercises_center_muscle", "center_id, muscle_key"),
         ("training_assignment_batches", "idx_training_assignment_batches_center_client", "center_id, client_id"),
         ("training_assignment_batches", "idx_training_assignment_batches_status", "status"),
+        ("training_assignment_batches", "idx_training_assignment_batches_session_id", "session_id"),
         ("training_assignment_items", "idx_training_assignment_items_center_client", "center_id, client_id"),
         ("training_assignment_items", "idx_training_assignment_items_batch_sort", "batch_id, sort_order"),
         ("client_medical_profiles", "idx_client_medical_profiles_center_client", "center_id, client_id"),

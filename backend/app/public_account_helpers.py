@@ -135,10 +135,15 @@ def build_public_training_assignment_rows(
         db.query(
             models.TrainingAssignmentItem,
             models.TrainingAssignmentBatch,
+            models.YogaSession,
         )
         .join(
             models.TrainingAssignmentBatch,
             models.TrainingAssignmentBatch.id == models.TrainingAssignmentItem.batch_id,
+        )
+        .outerjoin(
+            models.YogaSession,
+            models.YogaSession.id == models.TrainingAssignmentBatch.session_id,
         )
         .filter(
             models.TrainingAssignmentItem.center_id == center_id,
@@ -163,11 +168,15 @@ def build_public_training_assignment_rows(
         .all()
     )
     out: list[dict[str, str | int]] = []
-    for item, batch in rows:
+    for item, batch, ys in rows:
+        session_title = (ys.title or "").strip() if ys else ""
+        session_trainer = (ys.trainer_name or "").strip() if ys else ""
         out.append(
             {
                 "batch_id": batch.id,
                 "batch_title": (batch.title or "خطة تدريب")[:180],
+                "session_title": session_title,
+                "session_trainer": session_trainer,
                 "exercise_name": item.exercise_name or "-",
                 "muscle_key": item.muscle_key or "-",
                 "sets_count": item.sets_count or 0,

@@ -948,7 +948,7 @@
             <button type="submit">توليد تمارين يوجا لكل العضلات</button>
             <span class="small" style="color:#64748b;">يضيف مكتبة يوجا افتراضية للمركز الحالي فقط، بدون تكرار العناصر الموجودة.</span>
           </form>
-          <form method="get" action="/admin" class="filters" style="margin-bottom:12px;">
+          <form method="get" action="/admin" class="filters" data-preserve-scroll="1" style="margin-bottom:12px;">
             <input type="hidden" name="public_user_page" value="{{ public_user_pagination.page }}" />
             <input type="hidden" name="trash_page" value="{{ trash_pagination.page }}" />
             <input type="hidden" name="trash_q" value="{{ trash_filters.q }}" />
@@ -1051,7 +1051,7 @@
               {% endfor %}
               <div style="border:1px solid rgba(125,211,174,0.45);border-radius:12px;padding:12px;background:#f8fffc;margin-bottom:12px;">
                 <h3 style="margin:0 0 8px;font-size:1rem;">اختيار المتدرب وربط الخطة</h3>
-                <form method="get" action="/admin" class="filters" style="margin-bottom:10px;">
+                <form method="get" action="/admin" class="filters" data-preserve-scroll="1" style="margin-bottom:10px;">
                   <input type="hidden" name="public_user_page" value="{{ public_user_pagination.page }}" />
                   <input type="hidden" name="trash_page" value="{{ trash_pagination.page }}" />
                   <input type="hidden" name="trash_q" value="{{ trash_filters.q }}" />
@@ -1083,8 +1083,8 @@
                 {% endif %}
               </div>
               <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px;">
-                <a href="/admin?training_muscle={{ training_selected_muscle|urlencode }}&training_client_q={{ training_client_q|urlencode }}&training_client_id={{ training_client_id }}&training_tab=assignments#section-training-management" style="display:inline-flex;align-items:center;padding:8px 14px;border-radius:999px;text-decoration:none;font-weight:800;border:1px solid rgba(16,185,129,0.45);{{ 'background:#ecfdf5;color:#065f46;' if training_tab != 'medical' else 'background:#fff;color:#065f46;' }}">تبويب التمارين</a>
-                <a href="/admin?training_muscle={{ training_selected_muscle|urlencode }}&training_client_q={{ training_client_q|urlencode }}&training_client_id={{ training_client_id }}&training_tab=medical#section-training-management" style="display:inline-flex;align-items:center;padding:8px 14px;border-radius:999px;text-decoration:none;font-weight:800;border:1px solid rgba(59,130,246,0.45);{{ 'background:#eff6ff;color:#1d4ed8;' if training_tab == 'medical' else 'background:#fff;color:#1d4ed8;' }}">تبويب الملف الطبي</a>
+                <a data-preserve-scroll-link="1" href="/admin?training_muscle={{ training_selected_muscle|urlencode }}&training_client_q={{ training_client_q|urlencode }}&training_client_id={{ training_client_id }}&training_tab=assignments#section-training-management" style="display:inline-flex;align-items:center;padding:8px 14px;border-radius:999px;text-decoration:none;font-weight:800;border:1px solid rgba(16,185,129,0.45);{{ 'background:#ecfdf5;color:#065f46;' if training_tab != 'medical' else 'background:#fff;color:#065f46;' }}">تبويب التمارين</a>
+                <a data-preserve-scroll-link="1" href="/admin?training_muscle={{ training_selected_muscle|urlencode }}&training_client_q={{ training_client_q|urlencode }}&training_client_id={{ training_client_id }}&training_tab=medical#section-training-management" style="display:inline-flex;align-items:center;padding:8px 14px;border-radius:999px;text-decoration:none;font-weight:800;border:1px solid rgba(59,130,246,0.45);{{ 'background:#eff6ff;color:#1d4ed8;' if training_tab == 'medical' else 'background:#fff;color:#1d4ed8;' }}">تبويب الملف الطبي</a>
               </div>
 
               {% if training_tab != 'medical' %}
@@ -1095,36 +1095,6 @@
                 <input type="hidden" name="training_tab" value="assignments" />
                 <input type="hidden" name="client_id" value="{{ training_client_id }}" />
                 <input type="hidden" id="exercise-presets-json" name="exercise_presets_json" value="" />
-                <label for="assign-title">عنوان الخطة</label>
-                <input id="assign-title" name="title" maxlength="180" placeholder="مثال: خطة تعافي الكتف - الأسبوع الأول" />
-                <label for="assign-notes">ملاحظات عامة</label>
-                <textarea id="assign-notes" name="notes" rows="2" maxlength="3000" placeholder="تعليمات عامة للمتدرب..."></textarea>
-                <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:10px;">
-                  <div>
-                    <label for="assign-starts-at">تاريخ البداية (اختياري)</label>
-                    <input id="assign-starts-at" name="starts_at" type="date" />
-                  </div>
-                  <div>
-                    <label for="assign-ends-at">تاريخ النهاية (اختياري)</label>
-                    <input id="assign-ends-at" name="ends_at" type="date" />
-                  </div>
-                  <div>
-                    <label for="assign-duration">مدة التمرين (دقائق)</label>
-                    <input id="assign-duration" name="duration_minutes" type="number" min="0" max="600" value="0" />
-                  </div>
-                  <div>
-                    <label for="assign-rest">الراحة (ثانية)</label>
-                    <input id="assign-rest" name="rest_seconds" type="number" min="0" max="1200" value="60" />
-                  </div>
-                  <div>
-                    <label for="assign-default-sets">مجموعات افتراضية</label>
-                    <input id="assign-default-sets" name="default_sets_count" type="number" min="1" max="20" value="3" />
-                  </div>
-                  <div>
-                    <label for="assign-default-reps">تكرارات افتراضية</label>
-                    <input id="assign-default-reps" name="default_reps_text" maxlength="64" value="10-12" />
-                  </div>
-                </div>
                 <p class="small" style="margin:8px 0 6px;">اختر التمارين، ثم لكل تمرين اختر الشدة ليتم تعبئة المجموعات/التكرارات تلقائيًا:</p>
                 <div style="max-height:230px;overflow:auto;border:1px solid rgba(45,52,54,0.12);border-radius:10px;padding:8px;background:#fff;">
                   {% for ex in training_exercises %}
@@ -1156,6 +1126,43 @@
                   {% else %}
                   <p class="small" style="margin:0;">لا توجد تمارين ضمن العضلة المحددة.</p>
                   {% endfor %}
+                </div>
+                <label for="assign-session-id">ربط الخطة بجلسة المتدرب (اختياري)</label>
+                <select id="assign-session-id" name="session_id">
+                  <option value="0">بدون ربط بجلسة محددة</option>
+                  {% for s in training_client_sessions %}
+                  <option value="{{ s.id }}">#{{ s.id }} — {{ s.title }} · {{ s.starts_at_display }} · {{ s.trainer_name }}</option>
+                  {% endfor %}
+                </select>
+                <label for="assign-title">عنوان الخطة</label>
+                <input id="assign-title" name="title" maxlength="180" placeholder="مثال: خطة تعافي الكتف - الأسبوع الأول" />
+                <label for="assign-notes">ملاحظات عامة</label>
+                <textarea id="assign-notes" name="notes" rows="2" maxlength="3000" placeholder="تعليمات عامة للمتدرب..."></textarea>
+                <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:10px;">
+                  <div>
+                    <label for="assign-starts-at">تاريخ البداية (اختياري)</label>
+                    <input id="assign-starts-at" name="starts_at" type="date" />
+                  </div>
+                  <div>
+                    <label for="assign-ends-at">تاريخ النهاية (اختياري)</label>
+                    <input id="assign-ends-at" name="ends_at" type="date" />
+                  </div>
+                  <div>
+                    <label for="assign-duration">مدة التمرين (دقائق)</label>
+                    <input id="assign-duration" name="duration_minutes" type="number" min="0" max="600" value="0" />
+                  </div>
+                  <div>
+                    <label for="assign-rest">الراحة (ثانية)</label>
+                    <input id="assign-rest" name="rest_seconds" type="number" min="0" max="1200" value="60" />
+                  </div>
+                  <div>
+                    <label for="assign-default-sets">مجموعات افتراضية</label>
+                    <input id="assign-default-sets" name="default_sets_count" type="number" min="1" max="20" value="3" />
+                  </div>
+                  <div>
+                    <label for="assign-default-reps">تكرارات افتراضية</label>
+                    <input id="assign-default-reps" name="default_reps_text" maxlength="64" value="10-12" />
+                  </div>
                 </div>
                 <button type="submit" style="margin-top:10px;">إرسال الخطة للمتدرب</button>
               </form>
@@ -1220,6 +1227,7 @@
                     <tr>
                       <th># الخطة</th>
                       <th>العنوان</th>
+                      <th>الجلسة المرتبطة</th>
                       <th>الحالة</th>
                       <th>الفترة</th>
                       <th>الإنشاء</th>
@@ -1231,6 +1239,13 @@
                     <tr>
                       <td>{{ b.id }}</td>
                       <td>{{ b.title or '-' }}</td>
+                      <td>
+                        {% if b.session_id and b.session %}
+                          #{{ b.session_id }} — {{ b.session.title or '-' }}
+                        {% else %}
+                          -
+                        {% endif %}
+                      </td>
                       <td>{{ b.status }}</td>
                       <td>{{ b.starts_at.strftime('%Y-%m-%d') if b.starts_at else '-' }} → {{ b.ends_at.strftime('%Y-%m-%d') if b.ends_at else '-' }}</td>
                       <td>{{ b.created_at.strftime('%Y-%m-%d %H:%M') if b.created_at else '-' }}</td>
@@ -1250,7 +1265,7 @@
                       </td>
                     </tr>
                     {% else %}
-                    <tr><td colspan="6">لا توجد خطط مرسلة لهذا المتدرب بعد.</td></tr>
+                    <tr><td colspan="7">لا توجد خطط مرسلة لهذا المتدرب بعد.</td></tr>
                     {% endfor %}
                   </tbody>
                 </table>
@@ -2515,6 +2530,8 @@
               url.searchParams.set("training_tab", "{{ training_tab }}");
             }
             if (!url.hash) url.hash = "section-training-management";
+            sessionStorage.setItem(STORAGE_KEY, String(window.scrollY || 0));
+            sessionStorage.setItem(ACTIVE_SECTION_KEY, "section-training-management");
             window.location.href = url.toString();
           });
         });
