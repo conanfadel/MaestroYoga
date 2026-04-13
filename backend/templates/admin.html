@@ -940,6 +940,13 @@
           <p class="small" style="margin:0 0 12px;line-height:1.6;">
             اختر عضلة من مخطط الجسم الأنثوي، ثم أضف تمارين مناسبة لها. يمكن تخصيص أكثر من تمرين لكل عضلة حسب خطة التدريب.
           </p>
+          <form method="post" action="/admin/training/exercises/seed-yoga" data-preserve-scroll="1" style="margin:0 0 12px;display:flex;flex-wrap:wrap;gap:8px;align-items:center;">
+            <input type="hidden" name="training_muscle" value="{{ training_selected_muscle }}" />
+            <input type="hidden" name="training_client_q" value="{{ training_client_q }}" />
+            <input type="hidden" name="training_client_id" value="{{ training_client_id }}" />
+            <button type="submit">توليد تمارين يوجا لكل العضلات</button>
+            <span class="small" style="color:#64748b;">يضيف مكتبة يوجا افتراضية للمركز الحالي فقط، بدون تكرار العناصر الموجودة.</span>
+          </form>
           <form method="get" action="/admin" class="filters" style="margin-bottom:12px;">
             <input type="hidden" name="public_user_page" value="{{ public_user_pagination.page }}" />
             <input type="hidden" name="trash_page" value="{{ trash_pagination.page }}" />

@@ -97,6 +97,65 @@ def register_admin_org_training_routes(router: APIRouter) -> None:
             status_code=303,
         )
 
+    @router.post("/admin/training/exercises/seed-yoga")
+    def admin_seed_yoga_exercises(
+        training_muscle: str = _s.Form("core"),
+        training_client_q: str = _s.Form(""),
+        training_client_id: int = _s.Form(0),
+        scroll_y: str = _s.Form(default=""),
+        db: _s.Session = _s.Depends(_s.get_db),
+        user: _s.models.User = _s.Depends(
+            _s.require_permissions_cookie_or_bearer("sessions.manage")
+        ),
+    ):
+        cid = _s.require_user_center_id(user)
+        existing_rows = (
+            db.query(_s.models.TrainingExercise.muscle_key, _s.models.TrainingExercise.exercise_name)
+            .filter(_s.models.TrainingExercise.center_id == cid)
+            .all()
+        )
+        existing_pairs = {
+            (
+                (mk or "").strip().lower(),
+                (nm or "").strip().lower(),
+            )
+            for mk, nm in existing_rows
+            if (mk or "").strip() and (nm or "").strip()
+        }
+        for muscle_key, ex_list in _s.YOGA_EXERCISES_BY_MUSCLE.items():
+            if muscle_key not in _s.TRAINING_MUSCLE_KEY_SET:
+                continue
+            for ex in ex_list:
+                ex_name = (ex.get("name") or "").strip()[:180]
+                ex_notes = (ex.get("notes") or "").strip()[:3000]
+                if not ex_name:
+                    continue
+                pair = (muscle_key, ex_name.lower())
+                if pair in existing_pairs:
+                    continue
+                db.add(
+                    _s.models.TrainingExercise(
+                        center_id=cid,
+                        muscle_key=muscle_key,
+                        exercise_name=ex_name,
+                        notes=ex_notes or None,
+                    )
+                )
+                existing_pairs.add(pair)
+        db.commit()
+        return _s.RedirectResponse(
+            url=_s._url_with_params(
+                "/admin",
+                msg=_s.ADMIN_MSG_TRAINING_YOGA_SEEDED,
+                scroll_y=scroll_y,
+                training_muscle=_normalize_muscle_key(training_muscle),
+                training_client_q=(training_client_q or "").strip(),
+                training_client_id=str(max(0, int(training_client_id or 0))),
+            )
+            + "#section-training-management",
+            status_code=303,
+        )
+
     @router.post("/admin/training/assignments/create")
     def admin_create_training_assignment(
         client_id: int = _s.Form(...),

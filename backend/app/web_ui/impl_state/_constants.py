@@ -140,6 +140,7 @@ ADMIN_MSG_TRAINING_EXERCISE_ADDED = "training_exercise_added"
 ADMIN_MSG_TRAINING_EXERCISE_DELETED = "training_exercise_deleted"
 ADMIN_MSG_TRAINING_EXERCISE_INVALID = "training_exercise_invalid"
 ADMIN_MSG_TRAINING_EXERCISE_NOT_FOUND = "training_exercise_not_found"
+ADMIN_MSG_TRAINING_YOGA_SEEDED = "training_yoga_seeded"
 ADMIN_MSG_TRAINING_ASSIGNMENT_CREATED = "training_assignment_created"
 ADMIN_MSG_TRAINING_ASSIGNMENT_INVALID = "training_assignment_invalid"
 ADMIN_MSG_TRAINING_ASSIGNMENT_NOT_FOUND = "training_assignment_not_found"
@@ -237,6 +238,7 @@ ADMIN_FLASH_MESSAGES: dict[str, tuple[str, str]] = {
     ADMIN_MSG_TRAINING_EXERCISE_DELETED: ("تم حذف التمرين.", "info"),
     ADMIN_MSG_TRAINING_EXERCISE_INVALID: ("اسم التمرين مطلوب. تحقق من البيانات ثم أعد المحاولة.", "warn"),
     ADMIN_MSG_TRAINING_EXERCISE_NOT_FOUND: ("تعذر العثور على التمرين المطلوب أو لا يتبع مركزك.", "warn"),
+    ADMIN_MSG_TRAINING_YOGA_SEEDED: ("تم توليد تمارين اليوجا الافتراضية لكل العضلات دون تكرار.", "info"),
     ADMIN_MSG_TRAINING_ASSIGNMENT_CREATED: ("تم إرسال التمارين للمتدرب بنجاح وربطها برقم اشتراكه.", "info"),
     ADMIN_MSG_TRAINING_ASSIGNMENT_INVALID: ("تعذر إرسال التمارين. تحقق من المتدرب والتمارين والبيانات المدخلة.", "warn"),
     ADMIN_MSG_TRAINING_ASSIGNMENT_NOT_FOUND: ("خطة التمارين المطلوبة غير موجودة أو لا تتبع مركزك.", "warn"),
