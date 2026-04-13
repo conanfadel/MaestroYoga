@@ -7,7 +7,13 @@ from .commerce import Booking, Payment
 from .plans import FAQItem, SubscriptionPlan
 from .posts import CenterPost, CenterPostImage
 from .schedule import Room, YogaSession
-from .training import TrainingExercise
+from .training import (
+    ClientMedicalHistoryEntry,
+    ClientMedicalProfile,
+    TrainingAssignmentBatch,
+    TrainingAssignmentItem,
+    TrainingExercise,
+)
 from .users import PublicUser, User
 
 __all__ = [
@@ -24,6 +30,10 @@ __all__ = [
     "Room",
     "SecurityAuditEvent",
     "SubscriptionPlan",
+    "TrainingAssignmentBatch",
+    "TrainingAssignmentItem",
+    "ClientMedicalProfile",
+    "ClientMedicalHistoryEntry",
     "TrainingExercise",
     "User",
     "YogaSession",

@@ -948,6 +948,8 @@
             <input type="hidden" name="sessions_page" value="{{ sessions_pagination.page }}" />
             <input type="hidden" name="payments_page" value="{{ payments_pagination.page }}" />
             <input type="hidden" name="center_posts_page" value="{{ center_posts_pagination.page }}" />
+            <input type="hidden" name="training_client_q" value="{{ training_client_q }}" />
+            <input type="hidden" name="training_client_id" value="{{ training_client_id }}" />
             <label for="training-m-select" style="margin:0;">العضلة</label>
             <select id="training-m-select" name="training_muscle" onchange="this.form.submit()">
               {% for m in training_muscle_options %}
@@ -1032,11 +1034,19 @@
             </div>
 
             <div>
+              {% set tsel = namespace(client=None) %}
+              {% for c in training_client_options %}
+                {% if c.id == training_client_id %}
+                  {% set tsel.client = c %}
+                {% endif %}
+              {% endfor %}
               <div style="border:1px solid rgba(125,211,174,0.45);border-radius:12px;padding:12px;background:#f8fffc;margin-bottom:12px;">
                 <h3 style="margin:0 0 8px;font-size:1rem;">العضلة المحددة: {{ training_selected_muscle_label }}</h3>
                 <form method="post" action="/admin/training/exercises/add" data-preserve-scroll="1">
                   <input type="hidden" name="return_section" value="section-training-management" />
                   <input type="hidden" name="muscle_key" value="{{ training_selected_muscle }}" />
+                  <input type="hidden" name="training_client_q" value="{{ training_client_q }}" />
+                  <input type="hidden" name="training_client_id" value="{{ training_client_id }}" />
                   <label for="training-ex-name">اسم التمرين</label>
                   <input id="training-ex-name" name="exercise_name" type="text" maxlength="180" required placeholder="مثال: Plank Hold" />
                   <label for="training-ex-notes">ملاحظات (اختياري)</label>
@@ -1045,7 +1055,91 @@
                 </form>
               </div>
 
-              <div class="table-fluid">
+              <div style="border:1px solid rgba(125,211,174,0.45);border-radius:12px;padding:12px;background:#f8fffc;margin-bottom:12px;">
+                <h3 style="margin:0 0 8px;font-size:1rem;">اختيار المتدرب وربط الخطة</h3>
+                <form method="get" action="/admin" class="filters" style="margin-bottom:10px;">
+                  <input type="hidden" name="public_user_page" value="{{ public_user_pagination.page }}" />
+                  <input type="hidden" name="trash_page" value="{{ trash_pagination.page }}" />
+                  <input type="hidden" name="trash_q" value="{{ trash_filters.q }}" />
+                  <input type="hidden" name="audit_page" value="{{ security_pagination.page }}" />
+                  <input type="hidden" name="sessions_page" value="{{ sessions_pagination.page }}" />
+                  <input type="hidden" name="payments_page" value="{{ payments_pagination.page }}" />
+                  <input type="hidden" name="center_posts_page" value="{{ center_posts_pagination.page }}" />
+                  <input type="hidden" name="training_muscle" value="{{ training_selected_muscle }}" />
+                  <label for="training-client-q">بحث متدرب (اسم/إيميل/جوال/رقم اشتراك)</label>
+                  <input id="training-client-q" name="training_client_q" value="{{ training_client_q }}" placeholder="اكتب للبحث..." />
+                  <label for="training-client-id">المتدرب</label>
+                  <select id="training-client-id" name="training_client_id">
+                    {% for c in training_client_options %}
+                    <option value="{{ c.id }}" {{ 'selected' if c.id == training_client_id else '' }}>
+                      #{{ c.subscription_number_display }} — {{ c.full_name }} ({{ c.email }})
+                    </option>
+                    {% endfor %}
+                  </select>
+                  <button type="submit">تحديث الاختيار</button>
+                </form>
+                {% if tsel.client %}
+                <p class="small" style="margin:0;color:#065f46;">
+                  المتدرب الحالي: <strong>{{ tsel.client.full_name }}</strong> — رقم الاشتراك
+                  <strong>{{ tsel.client.subscription_number_display }}</strong>.
+                </p>
+                {% else %}
+                <p class="small" style="margin:0;color:#9f1239;">لا يوجد متدرب مطابق للبحث الحالي.</p>
+                {% endif %}
+              </div>
+
+              <form method="post" action="/admin/training/assignments/create" data-preserve-scroll="1" style="border:1px solid rgba(197,160,89,0.35);border-radius:12px;padding:12px;background:#fffdf8;margin-bottom:12px;">
+                <h3 style="margin:0 0 8px;font-size:1rem;">إرسال التمارين لمتدرب</h3>
+                <input type="hidden" name="training_muscle" value="{{ training_selected_muscle }}" />
+                <input type="hidden" name="training_client_q" value="{{ training_client_q }}" />
+                <input type="hidden" name="client_id" value="{{ training_client_id }}" />
+                <label for="assign-title">عنوان الخطة</label>
+                <input id="assign-title" name="title" maxlength="180" placeholder="مثال: خطة تعافي الكتف - الأسبوع الأول" />
+                <label for="assign-notes">ملاحظات عامة</label>
+                <textarea id="assign-notes" name="notes" rows="2" maxlength="3000" placeholder="تعليمات عامة للمتدرب..."></textarea>
+                <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:10px;">
+                  <div>
+                    <label for="assign-starts-at">تاريخ البداية (اختياري)</label>
+                    <input id="assign-starts-at" name="starts_at" type="date" />
+                  </div>
+                  <div>
+                    <label for="assign-ends-at">تاريخ النهاية (اختياري)</label>
+                    <input id="assign-ends-at" name="ends_at" type="date" />
+                  </div>
+                  <div>
+                    <label for="assign-sets-count">المجموعات</label>
+                    <input id="assign-sets-count" name="sets_count" type="number" min="1" max="20" value="3" />
+                  </div>
+                  <div>
+                    <label for="assign-reps-text">التكرارات</label>
+                    <input id="assign-reps-text" name="reps_text" maxlength="64" value="10-12" />
+                  </div>
+                  <div>
+                    <label for="assign-duration">مدة التمرين (دقائق)</label>
+                    <input id="assign-duration" name="duration_minutes" type="number" min="0" max="600" value="0" />
+                  </div>
+                  <div>
+                    <label for="assign-rest">الراحة (ثانية)</label>
+                    <input id="assign-rest" name="rest_seconds" type="number" min="0" max="1200" value="60" />
+                  </div>
+                </div>
+                <label for="assign-intensity">الشدة</label>
+                <input id="assign-intensity" name="intensity_text" maxlength="64" value="متوسط" />
+                <p class="small" style="margin:8px 0 6px;">اختر التمارين التي سيتم إرسالها للمتدرب:</p>
+                <div style="max-height:190px;overflow:auto;border:1px solid rgba(45,52,54,0.12);border-radius:10px;padding:8px;background:#fff;">
+                  {% for ex in training_exercises %}
+                  <label style="display:flex;align-items:flex-start;gap:8px;margin:6px 0;">
+                    <input type="checkbox" name="selected_exercise_ids" value="{{ ex.id }}" style="width:auto;margin-top:2px;" />
+                    <span><strong>#{{ ex.id }} {{ ex.exercise_name }}</strong> <span class="small" style="color:#64748b;">{{ ex.notes or '' }}</span></span>
+                  </label>
+                  {% else %}
+                  <p class="small" style="margin:0;">لا توجد تمارين ضمن العضلة المحددة.</p>
+                  {% endfor %}
+                </div>
+                <button type="submit" style="margin-top:10px;">إرسال الخطة للمتدرب</button>
+              </form>
+
+              <div class="table-fluid" style="margin-bottom:12px;">
                 <table class="table-card-rwd">
                   <thead>
                     <tr>
@@ -1068,6 +1162,8 @@
                           <input type="hidden" name="return_section" value="section-training-management" />
                           <input type="hidden" name="exercise_id" value="{{ ex.id }}" />
                           <input type="hidden" name="muscle_key" value="{{ training_selected_muscle }}" />
+                          <input type="hidden" name="training_client_q" value="{{ training_client_q }}" />
+                          <input type="hidden" name="training_client_id" value="{{ training_client_id }}" />
                           <button type="submit" class="danger">حذف</button>
                         </form>
                       </td>
@@ -1077,6 +1173,152 @@
                     {% endfor %}
                   </tbody>
                 </table>
+              </div>
+
+              <div class="table-fluid" style="margin-bottom:12px;">
+                <h3 style="margin:0 0 8px;font-size:1rem;">خطط التمارين المرسلة للمتدرب</h3>
+                <table class="table-card-rwd">
+                  <thead>
+                    <tr>
+                      <th># الخطة</th>
+                      <th>العنوان</th>
+                      <th>الحالة</th>
+                      <th>الفترة</th>
+                      <th>الإنشاء</th>
+                      <th>إجراء</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {% for b in training_client_assignments %}
+                    <tr>
+                      <td>{{ b.id }}</td>
+                      <td>{{ b.title or '-' }}</td>
+                      <td>{{ b.status }}</td>
+                      <td>{{ b.starts_at.strftime('%Y-%m-%d') if b.starts_at else '-' }} → {{ b.ends_at.strftime('%Y-%m-%d') if b.ends_at else '-' }}</td>
+                      <td>{{ b.created_at.strftime('%Y-%m-%d %H:%M') if b.created_at else '-' }}</td>
+                      <td>
+                        {% if b.status == 'active' %}
+                        <form method="post" action="/admin/training/assignments/cancel" data-preserve-scroll="1" onsubmit="return confirm('إيقاف هذه الخطة؟');">
+                          <input type="hidden" name="batch_id" value="{{ b.id }}" />
+                          <input type="hidden" name="training_muscle" value="{{ training_selected_muscle }}" />
+                          <input type="hidden" name="training_client_q" value="{{ training_client_q }}" />
+                          <input type="hidden" name="training_client_id" value="{{ training_client_id }}" />
+                          <button type="submit" class="danger">إيقاف</button>
+                        </form>
+                        {% else %}
+                        -
+                        {% endif %}
+                      </td>
+                    </tr>
+                    {% else %}
+                    <tr><td colspan="6">لا توجد خطط مرسلة لهذا المتدرب بعد.</td></tr>
+                    {% endfor %}
+                  </tbody>
+                </table>
+              </div>
+
+              <div style="border:1px solid rgba(59,130,246,0.35);border-radius:12px;padding:12px;background:#f8fbff;margin-bottom:12px;">
+                <h3 style="margin:0 0 8px;font-size:1rem;">ملف المتدرب الطبي (نموذج ملف مريض)</h3>
+                <form method="post" action="/admin/training/medical/save" data-preserve-scroll="1">
+                  <input type="hidden" name="client_id" value="{{ training_client_id }}" />
+                  <input type="hidden" name="training_muscle" value="{{ training_selected_muscle }}" />
+                  <input type="hidden" name="training_client_q" value="{{ training_client_q }}" />
+                  <label for="med-chronic">أمراض مزمنة</label>
+                  <textarea id="med-chronic" name="chronic_conditions" rows="2" maxlength="4000">{{ training_medical_profile.chronic_conditions if training_medical_profile else '' }}</textarea>
+                  <label for="med-meds">أدوية حالية</label>
+                  <textarea id="med-meds" name="current_medications" rows="2" maxlength="4000">{{ training_medical_profile.current_medications if training_medical_profile else '' }}</textarea>
+                  <label for="med-allergies">حساسية</label>
+                  <textarea id="med-allergies" name="allergies" rows="2" maxlength="4000">{{ training_medical_profile.allergies if training_medical_profile else '' }}</textarea>
+                  <label for="med-injuries">تاريخ الإصابات</label>
+                  <textarea id="med-injuries" name="injuries_history" rows="2" maxlength="4000">{{ training_medical_profile.injuries_history if training_medical_profile else '' }}</textarea>
+                  <label for="med-surgeries">تاريخ العمليات</label>
+                  <textarea id="med-surgeries" name="surgeries_history" rows="2" maxlength="4000">{{ training_medical_profile.surgeries_history if training_medical_profile else '' }}</textarea>
+                  <label for="med-contra">موانع تدريب</label>
+                  <textarea id="med-contra" name="contraindications" rows="2" maxlength="4000">{{ training_medical_profile.contraindications if training_medical_profile else '' }}</textarea>
+                  <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+                    <div>
+                      <label for="med-emg-name">اسم طوارئ</label>
+                      <input id="med-emg-name" name="emergency_contact_name" maxlength="120" value="{{ training_medical_profile.emergency_contact_name if training_medical_profile else '' }}" />
+                    </div>
+                    <div>
+                      <label for="med-emg-phone">جوال الطوارئ</label>
+                      <input id="med-emg-phone" name="emergency_contact_phone" maxlength="40" value="{{ training_medical_profile.emergency_contact_phone if training_medical_profile else '' }}" />
+                    </div>
+                  </div>
+                  <label for="med-coach-notes">ملاحظات المدرب</label>
+                  <textarea id="med-coach-notes" name="coach_notes" rows="3" maxlength="4000">{{ training_medical_profile.coach_notes if training_medical_profile else '' }}</textarea>
+                  <button type="submit">حفظ الملف الطبي</button>
+                </form>
+              </div>
+
+              <div style="border:1px solid rgba(59,130,246,0.35);border-radius:12px;padding:12px;background:#f8fbff;">
+                <h3 style="margin:0 0 8px;font-size:1rem;">السجل المرضي الزمني</h3>
+                <form method="post" action="/admin/training/medical/history/add" data-preserve-scroll="1" style="margin-bottom:10px;">
+                  <input type="hidden" name="client_id" value="{{ training_client_id }}" />
+                  <input type="hidden" name="training_muscle" value="{{ training_selected_muscle }}" />
+                  <input type="hidden" name="training_client_q" value="{{ training_client_q }}" />
+                  <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;">
+                    <div>
+                      <label for="hist-category">النوع</label>
+                      <select id="hist-category" name="category">
+                        <option value="condition">حالة مرضية</option>
+                        <option value="injury">إصابة</option>
+                        <option value="surgery">عملية</option>
+                        <option value="allergy">حساسية</option>
+                        <option value="note">ملاحظة</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label for="hist-event-date">التاريخ</label>
+                      <input id="hist-event-date" name="event_date" type="date" />
+                    </div>
+                    <div>
+                      <label for="hist-severity">الحدة</label>
+                      <input id="hist-severity" name="severity" maxlength="32" placeholder="خفيف/متوسط/شديد" />
+                    </div>
+                  </div>
+                  <label for="hist-title">العنوان</label>
+                  <input id="hist-title" name="title" maxlength="180" required />
+                  <label for="hist-details">التفاصيل</label>
+                  <textarea id="hist-details" name="details" rows="2" maxlength="4000"></textarea>
+                  <button type="submit">إضافة سجل جديد</button>
+                </form>
+                <div class="table-fluid">
+                  <table class="table-card-rwd">
+                    <thead>
+                      <tr>
+                        <th>النوع</th>
+                        <th>العنوان</th>
+                        <th>التاريخ</th>
+                        <th>الحدة</th>
+                        <th>التفاصيل</th>
+                        <th>إجراء</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {% for h in training_medical_history %}
+                      <tr>
+                        <td>{{ h.category }}</td>
+                        <td>{{ h.title }}</td>
+                        <td>{{ h.event_date.strftime('%Y-%m-%d') if h.event_date else '-' }}</td>
+                        <td>{{ h.severity or '-' }}</td>
+                        <td>{{ h.details or '-' }}</td>
+                        <td>
+                          <form method="post" action="/admin/training/medical/history/delete" data-preserve-scroll="1" onsubmit="return confirm('حذف هذا السجل؟');">
+                            <input type="hidden" name="history_id" value="{{ h.id }}" />
+                            <input type="hidden" name="training_muscle" value="{{ training_selected_muscle }}" />
+                            <input type="hidden" name="training_client_q" value="{{ training_client_q }}" />
+                            <input type="hidden" name="training_client_id" value="{{ training_client_id }}" />
+                            <button type="submit" class="danger">حذف</button>
+                          </form>
+                        </td>
+                      </tr>
+                      {% else %}
+                      <tr><td colspan="6">لا توجد سجلات مرضية مضافة بعد.</td></tr>
+                      {% endfor %}
+                    </tbody>
+                  </table>
+                </div>
               </div>
             </div>
           </div>

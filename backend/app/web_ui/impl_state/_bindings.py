@@ -73,6 +73,7 @@ from ...payments import (
 )
 from ...public_account_helpers import (
     build_account_delete_confirm_url,
+    build_public_training_assignment_rows,
     build_public_trainee_schedule_rows,
     public_account_phone_prefill,
     public_account_redirect_url,

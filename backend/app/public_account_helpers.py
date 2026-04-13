@@ -119,3 +119,63 @@ def build_public_trainee_schedule_rows(
             }
         )
     return out
+
+
+def build_public_training_assignment_rows(
+    db: Session,
+    *,
+    center_id: int,
+    client_id: int,
+    active_only: bool = True,
+    limit: int = 200,
+) -> list[dict[str, str | int]]:
+    """تمارين المتدرب المرسلة من الإدارة، مرتبة حسب آخر خطة ثم ترتيب التمرين داخلها."""
+    now = utcnow_naive()
+    q = (
+        db.query(
+            models.TrainingAssignmentItem,
+            models.TrainingAssignmentBatch,
+        )
+        .join(
+            models.TrainingAssignmentBatch,
+            models.TrainingAssignmentBatch.id == models.TrainingAssignmentItem.batch_id,
+        )
+        .filter(
+            models.TrainingAssignmentItem.center_id == center_id,
+            models.TrainingAssignmentItem.client_id == client_id,
+            models.TrainingAssignmentBatch.center_id == center_id,
+            models.TrainingAssignmentBatch.client_id == client_id,
+        )
+    )
+    if active_only:
+        q = q.filter(
+            models.TrainingAssignmentBatch.status == "active",
+            ((models.TrainingAssignmentBatch.starts_at.is_(None)) | (models.TrainingAssignmentBatch.starts_at <= now)),
+            ((models.TrainingAssignmentBatch.ends_at.is_(None)) | (models.TrainingAssignmentBatch.ends_at >= now)),
+        )
+    rows = (
+        q.order_by(
+            models.TrainingAssignmentBatch.created_at.desc(),
+            models.TrainingAssignmentItem.sort_order.asc(),
+            models.TrainingAssignmentItem.id.asc(),
+        )
+        .limit(limit)
+        .all()
+    )
+    out: list[dict[str, str | int]] = []
+    for item, batch in rows:
+        out.append(
+            {
+                "batch_id": batch.id,
+                "batch_title": (batch.title or "خطة تدريب")[:180],
+                "exercise_name": item.exercise_name or "-",
+                "muscle_key": item.muscle_key or "-",
+                "sets_count": item.sets_count or 0,
+                "reps_text": (item.reps_text or "").strip(),
+                "duration_minutes": item.duration_minutes or 0,
+                "rest_seconds": item.rest_seconds or 0,
+                "intensity_text": (item.intensity_text or "").strip(),
+                "notes": (item.notes or "").strip(),
+            }
+        )
+    return out

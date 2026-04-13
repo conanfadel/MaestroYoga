@@ -38,8 +38,12 @@ def register_public_auth_account_profile_routes(router: APIRouter) -> None:
             .first()
         )
         trainee_schedule_rows: list[dict[str, str | int]] = []
+        trainee_training_rows: list[dict[str, str | int]] = []
         if client:
             trainee_schedule_rows = _s.build_public_trainee_schedule_rows(
+                db, center_id=center_id_loyalty, client_id=client.id
+            )
+            trainee_training_rows = _s.build_public_training_assignment_rows(
                 db, center_id=center_id_loyalty, client_id=client.id
             )
         subscription_number_display = _s.format_client_subscription_number(
@@ -58,6 +62,7 @@ def register_public_auth_account_profile_routes(router: APIRouter) -> None:
                 "phone_local": phone_local,
                 "subscription_number_display": subscription_number_display,
                 "trainee_schedule_rows": trainee_schedule_rows,
+                "trainee_training_rows": trainee_training_rows,
                 "loyalty_program_rows": _s.loyalty_program_table_rows(center_loyalty),
                 **loyalty_ctx,
                 **subscription_ctx,

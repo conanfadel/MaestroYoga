@@ -381,6 +381,7 @@
       border: 1px solid rgba(197, 160, 89, 0.3);
       border-radius: 12px;
       background: #fff;
+      margin-bottom: 10px;
     }
     .trainee-schedule table {
       width: 100%;
@@ -406,6 +407,31 @@
     .trainee-schedule tbody td:first-child {
       font-weight: 700;
       color: #1f2937;
+    }
+    .trainee-training {
+      margin-top: 10px;
+      border: 1px solid rgba(16, 185, 129, 0.28);
+      border-radius: 12px;
+      background: #fcfffd;
+      padding: 10px 10px 8px;
+    }
+    .trainee-training__title {
+      margin: 0 0 8px;
+      font-size: 0.94rem;
+      color: #065f46;
+      font-weight: 800;
+    }
+    .trainee-training__meta {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 2px 8px;
+      border-radius: 999px;
+      border: 1px solid rgba(16, 185, 129, 0.35);
+      background: rgba(236, 253, 245, 0.9);
+      color: #065f46;
+      font-size: 0.76rem;
+      font-weight: 800;
     }
     @media (max-width: 520px) {
       .trainee-schedule {
@@ -447,6 +473,10 @@
       .trainee-schedule__loyalty-footer {
         background: transparent !important;
         border: 1px solid rgba(45, 52, 54, 0.25) !important;
+      }
+      .trainee-training {
+        border-color: rgba(45, 52, 54, 0.2) !important;
+        background: transparent !important;
       }
     }
   </style>
@@ -634,6 +664,41 @@
           {% else %}
           <p class="sub" style="margin:0;">لا توجد لديك جلسات قادمة بحجز مؤكّد ومدفوع في هذا المركز. بعد إتمام الدفع وتأكيد الحجز ستظهر هنا.</p>
           {% endif %}
+          <div class="trainee-training">
+            <p class="trainee-training__title">التمارين المخصصة لك</p>
+            {% if trainee_training_rows %}
+            <div class="trainee-schedule__table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th scope="col">الخطة</th>
+                    <th scope="col">التمرين</th>
+                    <th scope="col">تفاصيل</th>
+                    <th scope="col">ملاحظات</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {% for row in trainee_training_rows %}
+                  <tr>
+                    <td><span class="trainee-training__meta">#{{ row.batch_id }}</span> {{ row.batch_title }}</td>
+                    <td>{{ row.exercise_name }}</td>
+                    <td>
+                      {% if row.sets_count %}{{ row.sets_count }} مجموعات{% endif %}
+                      {% if row.reps_text %} · {{ row.reps_text }}{% endif %}
+                      {% if row.duration_minutes %} · {{ row.duration_minutes }} دقيقة{% endif %}
+                      {% if row.rest_seconds %} · راحة {{ row.rest_seconds }} ث{% endif %}
+                      {% if row.intensity_text %} · {{ row.intensity_text }}{% endif %}
+                    </td>
+                    <td>{{ row.notes or "-" }}</td>
+                  </tr>
+                  {% endfor %}
+                </tbody>
+              </table>
+            </div>
+            {% else %}
+            <p class="sub" style="margin:0;">لا توجد تمارين مخصصة لك حاليًا.</p>
+            {% endif %}
+          </div>
           <div class="trainee-schedule__loyalty-footer">
             <p><strong>ولاء المتدرب:</strong> أنجز {{ loyalty_confirmed_count }} جلسة مؤكدة.</p>
             <p>

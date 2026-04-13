@@ -140,6 +140,14 @@ ADMIN_MSG_TRAINING_EXERCISE_ADDED = "training_exercise_added"
 ADMIN_MSG_TRAINING_EXERCISE_DELETED = "training_exercise_deleted"
 ADMIN_MSG_TRAINING_EXERCISE_INVALID = "training_exercise_invalid"
 ADMIN_MSG_TRAINING_EXERCISE_NOT_FOUND = "training_exercise_not_found"
+ADMIN_MSG_TRAINING_ASSIGNMENT_CREATED = "training_assignment_created"
+ADMIN_MSG_TRAINING_ASSIGNMENT_INVALID = "training_assignment_invalid"
+ADMIN_MSG_TRAINING_ASSIGNMENT_NOT_FOUND = "training_assignment_not_found"
+ADMIN_MSG_TRAINING_ASSIGNMENT_CANCELLED = "training_assignment_cancelled"
+ADMIN_MSG_TRAINING_MEDICAL_PROFILE_SAVED = "training_medical_profile_saved"
+ADMIN_MSG_TRAINING_MEDICAL_HISTORY_ADDED = "training_medical_history_added"
+ADMIN_MSG_TRAINING_MEDICAL_HISTORY_INVALID = "training_medical_history_invalid"
+ADMIN_MSG_TRAINING_MEDICAL_HISTORY_DELETED = "training_medical_history_deleted"
 
 CENTER_LOGO_MAX_BYTES = 2 * 1024 * 1024
 CENTER_LOGO_ALLOWED_EXT = frozenset({"png", "jpg", "jpeg", "webp", "gif"})
@@ -229,6 +237,14 @@ ADMIN_FLASH_MESSAGES: dict[str, tuple[str, str]] = {
     ADMIN_MSG_TRAINING_EXERCISE_DELETED: ("تم حذف التمرين.", "info"),
     ADMIN_MSG_TRAINING_EXERCISE_INVALID: ("اسم التمرين مطلوب. تحقق من البيانات ثم أعد المحاولة.", "warn"),
     ADMIN_MSG_TRAINING_EXERCISE_NOT_FOUND: ("تعذر العثور على التمرين المطلوب أو لا يتبع مركزك.", "warn"),
+    ADMIN_MSG_TRAINING_ASSIGNMENT_CREATED: ("تم إرسال التمارين للمتدرب بنجاح وربطها برقم اشتراكه.", "info"),
+    ADMIN_MSG_TRAINING_ASSIGNMENT_INVALID: ("تعذر إرسال التمارين. تحقق من المتدرب والتمارين والبيانات المدخلة.", "warn"),
+    ADMIN_MSG_TRAINING_ASSIGNMENT_NOT_FOUND: ("خطة التمارين المطلوبة غير موجودة أو لا تتبع مركزك.", "warn"),
+    ADMIN_MSG_TRAINING_ASSIGNMENT_CANCELLED: ("تم إيقاف خطة التمارين للمتدرب.", "info"),
+    ADMIN_MSG_TRAINING_MEDICAL_PROFILE_SAVED: ("تم حفظ الملف الطبي للمتدرب.", "info"),
+    ADMIN_MSG_TRAINING_MEDICAL_HISTORY_ADDED: ("تمت إضافة سجل مرضي جديد لملف المتدرب.", "info"),
+    ADMIN_MSG_TRAINING_MEDICAL_HISTORY_INVALID: ("بيانات السجل المرضي غير مكتملة أو غير صالحة.", "warn"),
+    ADMIN_MSG_TRAINING_MEDICAL_HISTORY_DELETED: ("تم حذف السجل المرضي.", "info"),
     "report_settings_saved": ("تم حفظ أهداف التقارير وإعدادات الضريبة والبريد.", "info"),
     "digest_email_sent": ("تم إرسال الملخص إلى البريد المحدد.", "info"),
     "digest_email_failed": ("تعذر إرسال البريد. تحقق من SMTP والعنوان.", "warn"),

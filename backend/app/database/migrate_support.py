@@ -58,6 +58,13 @@ def _ensure_performance_indexes(conn, insp) -> None:
         ("center_posts", "idx_center_posts_published_at", "published_at"),
         ("center_post_images", "idx_center_post_images_post_id", "post_id"),
         ("training_exercises", "idx_training_exercises_center_muscle", "center_id, muscle_key"),
+        ("training_assignment_batches", "idx_training_assignment_batches_center_client", "center_id, client_id"),
+        ("training_assignment_batches", "idx_training_assignment_batches_status", "status"),
+        ("training_assignment_items", "idx_training_assignment_items_center_client", "center_id, client_id"),
+        ("training_assignment_items", "idx_training_assignment_items_batch_sort", "batch_id, sort_order"),
+        ("client_medical_profiles", "idx_client_medical_profiles_center_client", "center_id, client_id"),
+        ("client_medical_history_entries", "idx_client_medical_history_center_client", "center_id, client_id"),
+        ("client_medical_history_entries", "idx_client_medical_history_category_date", "category, event_date"),
     ]
     for table_name, index_name, columns in index_specs:
         if insp.has_table(table_name):
@@ -85,6 +92,16 @@ def _ensure_performance_indexes(conn, insp) -> None:
             )
         except Exception:
             # Legacy data may contain duplicates before the backfill/cleanup pass.
+            pass
+    if insp.has_table("client_medical_profiles"):
+        try:
+            conn.execute(
+                text(
+                    "CREATE UNIQUE INDEX IF NOT EXISTS uq_client_medical_profiles_center_client "
+                    "ON client_medical_profiles (center_id, client_id)"
+                )
+            )
+        except Exception:
             pass
 
 

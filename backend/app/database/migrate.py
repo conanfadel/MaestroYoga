@@ -64,6 +64,10 @@ def migrate_schema() -> None:
         needs_client_subscription_number = "subscription_number" not in client_cols
         has_client_subscription_number = not needs_client_subscription_number
     needs_training_exercises_table = not insp.has_table("training_exercises")
+    needs_training_assignment_batches_table = not insp.has_table("training_assignment_batches")
+    needs_training_assignment_items_table = not insp.has_table("training_assignment_items")
+    needs_client_medical_profiles_table = not insp.has_table("client_medical_profiles")
+    needs_client_medical_history_entries_table = not insp.has_table("client_medical_history_entries")
 
     needs_public_user_phone = False
     needs_public_user_is_deleted = False
@@ -152,6 +156,10 @@ def migrate_schema() -> None:
         and not needs_payment_created_at
         and not needs_client_subscription_number
         and not needs_training_exercises_table
+        and not needs_training_assignment_batches_table
+        and not needs_training_assignment_items_table
+        and not needs_client_medical_profiles_table
+        and not needs_client_medical_history_entries_table
     ):
         with engine.begin() as conn:
             if has_client_subscription_number:
@@ -253,6 +261,103 @@ def migrate_schema() -> None:
                     "notes TEXT, "
                     f"created_at {created_at_type}, "
                     "FOREIGN KEY(center_id) REFERENCES centers (id)"
+                    ")"
+                )
+            )
+        if needs_training_assignment_batches_table:
+            created_at_type = "TIMESTAMP" if dialect == "postgresql" else "DATETIME"
+            pk_type = "SERIAL PRIMARY KEY" if dialect == "postgresql" else "INTEGER PRIMARY KEY"
+            conn.execute(
+                text(
+                    f"CREATE TABLE training_assignment_batches ("
+                    f"id {pk_type}, "
+                    "center_id INTEGER NOT NULL, "
+                    "client_id INTEGER NOT NULL, "
+                    "assigned_by_user_id INTEGER, "
+                    "title VARCHAR(180), "
+                    "notes TEXT, "
+                    f"starts_at {created_at_type}, "
+                    f"ends_at {created_at_type}, "
+                    "status VARCHAR(24) NOT NULL, "
+                    f"created_at {created_at_type}, "
+                    "FOREIGN KEY(center_id) REFERENCES centers (id), "
+                    "FOREIGN KEY(client_id) REFERENCES clients (id), "
+                    "FOREIGN KEY(assigned_by_user_id) REFERENCES users (id)"
+                    ")"
+                )
+            )
+        if needs_training_assignment_items_table:
+            created_at_type = "TIMESTAMP" if dialect == "postgresql" else "DATETIME"
+            pk_type = "SERIAL PRIMARY KEY" if dialect == "postgresql" else "INTEGER PRIMARY KEY"
+            conn.execute(
+                text(
+                    f"CREATE TABLE training_assignment_items ("
+                    f"id {pk_type}, "
+                    "center_id INTEGER NOT NULL, "
+                    "batch_id INTEGER NOT NULL, "
+                    "client_id INTEGER NOT NULL, "
+                    "exercise_id INTEGER, "
+                    "muscle_key VARCHAR(64) NOT NULL, "
+                    "exercise_name VARCHAR(180) NOT NULL, "
+                    "sets_count INTEGER, "
+                    "reps_text VARCHAR(64), "
+                    "duration_minutes INTEGER, "
+                    "rest_seconds INTEGER, "
+                    "intensity_text VARCHAR(64), "
+                    "notes TEXT, "
+                    "sort_order INTEGER NOT NULL DEFAULT 0, "
+                    f"created_at {created_at_type}, "
+                    "FOREIGN KEY(center_id) REFERENCES centers (id), "
+                    "FOREIGN KEY(batch_id) REFERENCES training_assignment_batches (id), "
+                    "FOREIGN KEY(client_id) REFERENCES clients (id), "
+                    "FOREIGN KEY(exercise_id) REFERENCES training_exercises (id)"
+                    ")"
+                )
+            )
+        if needs_client_medical_profiles_table:
+            created_at_type = "TIMESTAMP" if dialect == "postgresql" else "DATETIME"
+            pk_type = "SERIAL PRIMARY KEY" if dialect == "postgresql" else "INTEGER PRIMARY KEY"
+            conn.execute(
+                text(
+                    f"CREATE TABLE client_medical_profiles ("
+                    f"id {pk_type}, "
+                    "center_id INTEGER NOT NULL, "
+                    "client_id INTEGER NOT NULL, "
+                    "chronic_conditions TEXT, "
+                    "current_medications TEXT, "
+                    "allergies TEXT, "
+                    "injuries_history TEXT, "
+                    "surgeries_history TEXT, "
+                    "contraindications TEXT, "
+                    "emergency_contact_name VARCHAR(120), "
+                    "emergency_contact_phone VARCHAR(40), "
+                    "coach_notes TEXT, "
+                    f"updated_at {created_at_type}, "
+                    f"created_at {created_at_type}, "
+                    "FOREIGN KEY(center_id) REFERENCES centers (id), "
+                    "FOREIGN KEY(client_id) REFERENCES clients (id)"
+                    ")"
+                )
+            )
+        if needs_client_medical_history_entries_table:
+            created_at_type = "TIMESTAMP" if dialect == "postgresql" else "DATETIME"
+            pk_type = "SERIAL PRIMARY KEY" if dialect == "postgresql" else "INTEGER PRIMARY KEY"
+            conn.execute(
+                text(
+                    f"CREATE TABLE client_medical_history_entries ("
+                    f"id {pk_type}, "
+                    "center_id INTEGER NOT NULL, "
+                    "client_id INTEGER NOT NULL, "
+                    "category VARCHAR(40) NOT NULL, "
+                    "title VARCHAR(180) NOT NULL, "
+                    "details TEXT, "
+                    f"event_date {created_at_type}, "
+                    "severity VARCHAR(32), "
+                    "created_by_user_id INTEGER, "
+                    f"created_at {created_at_type}, "
+                    "FOREIGN KEY(center_id) REFERENCES centers (id), "
+                    "FOREIGN KEY(client_id) REFERENCES clients (id), "
+                    "FOREIGN KEY(created_by_user_id) REFERENCES users (id)"
                     ")"
                 )
             )

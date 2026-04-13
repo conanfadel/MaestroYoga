@@ -48,6 +48,8 @@ def finalize_admin_dashboard_template_context(
         _s.ADMIN_QP_PAYMENT_DATE_TO: (state.payment_date_to or "").strip()[:32],
         "center_posts_page": str(max(1, int(state.center_posts_page or 1))),
         "training_muscle": state.selected_muscle,
+        "training_client_q": state.training_client_q,
+        "training_client_id": str(max(0, int(state.training_client_id or 0))),
     }
 
     def _admin_page_url(**overrides: str) -> str:
@@ -252,6 +254,12 @@ def finalize_admin_dashboard_template_context(
             state.selected_muscle, state.selected_muscle
         ),
         "training_exercises": state.training_exercises,
+        "training_client_q": state.training_client_q,
+        "training_client_id": state.training_client_id,
+        "training_client_options": state.training_client_options,
+        "training_client_assignments": state.training_client_assignments,
+        "training_medical_profile": state.training_medical_profile,
+        "training_medical_history": state.training_medical_history,
         **_s.admin_ui_flags(user),
         "permission_catalog": _s.PERMISSION_CATALOG,
         "assignable_staff_roles": tuple(

@@ -86,6 +86,12 @@ class AdminDashboardQueryState:
     post_edit: int
     training_exercises: list[Any]
     selected_muscle: str
+    training_client_q: str
+    training_client_id: int
+    training_client_options: list[dict[str, Any]]
+    training_client_assignments: list[Any]
+    training_medical_profile: Any
+    training_medical_history: list[Any]
 
 
 def load_admin_dashboard_query_state(
@@ -111,6 +117,8 @@ def load_admin_dashboard_query_state(
     post_edit: int,
     center_posts_page: int,
     training_muscle: str,
+    training_client_q: str,
+    training_client_id: int,
 ) -> AdminDashboardQueryState:
     cid = _s.require_user_center_id(user)
     center = db.get(_s.models.Center, cid)
@@ -239,6 +247,83 @@ def load_admin_dashboard_query_state(
         .order_by(_s.models.TrainingExercise.created_at.desc(), _s.models.TrainingExercise.id.desc())
         .all()
     )
+    training_client_q_clean = (training_client_q or "").strip()
+    training_client_options_query = (
+        db.query(_s.models.Client)
+        .filter(_s.models.Client.center_id == cid)
+        .order_by(_s.models.Client.created_at.desc(), _s.models.Client.id.desc())
+    )
+    if training_client_q_clean:
+        like_q = f"%{training_client_q_clean.lower()}%"
+        numeric_q = None
+        try:
+            numeric_q = int(training_client_q_clean)
+        except ValueError:
+            numeric_q = None
+        conditions = [
+            _s.func.lower(_s.models.Client.full_name).like(like_q),
+            _s.func.lower(_s.models.Client.email).like(like_q),
+            _s.func.coalesce(_s.models.Client.phone, "").like(f"%{training_client_q_clean}%"),
+        ]
+        if numeric_q is not None and numeric_q > 0:
+            conditions.append(_s.models.Client.subscription_number == numeric_q)
+        training_client_options_query = training_client_options_query.filter(
+            _s.or_(*conditions)
+        )
+    training_client_rows = training_client_options_query.limit(100).all()
+    training_client_options: list[dict[str, Any]] = []
+    for c in training_client_rows:
+        training_client_options.append(
+            {
+                "id": c.id,
+                "full_name": c.full_name or "-",
+                "email": c.email or "-",
+                "phone": c.phone or "-",
+                "subscription_number_display": _s.format_client_subscription_number(c.subscription_number),
+            }
+        )
+    selected_training_client_id = int(training_client_id or 0)
+    if selected_training_client_id <= 0 and training_client_options:
+        selected_training_client_id = int(training_client_options[0]["id"])
+
+    training_client_assignments: list[Any] = []
+    training_medical_profile = None
+    training_medical_history: list[Any] = []
+    if selected_training_client_id > 0:
+        training_client_assignments = (
+            db.query(_s.models.TrainingAssignmentBatch)
+            .filter(
+                _s.models.TrainingAssignmentBatch.center_id == cid,
+                _s.models.TrainingAssignmentBatch.client_id == selected_training_client_id,
+            )
+            .order_by(
+                _s.models.TrainingAssignmentBatch.created_at.desc(),
+                _s.models.TrainingAssignmentBatch.id.desc(),
+            )
+            .all()
+        )
+        training_medical_profile = (
+            db.query(_s.models.ClientMedicalProfile)
+            .filter(
+                _s.models.ClientMedicalProfile.center_id == cid,
+                _s.models.ClientMedicalProfile.client_id == selected_training_client_id,
+            )
+            .first()
+        )
+        training_medical_history = (
+            db.query(_s.models.ClientMedicalHistoryEntry)
+            .filter(
+                _s.models.ClientMedicalHistoryEntry.center_id == cid,
+                _s.models.ClientMedicalHistoryEntry.client_id == selected_training_client_id,
+            )
+            .order_by(
+                _s.models.ClientMedicalHistoryEntry.event_date.desc(),
+                _s.models.ClientMedicalHistoryEntry.created_at.desc(),
+                _s.models.ClientMedicalHistoryEntry.id.desc(),
+            )
+            .limit(200)
+            .all()
+        )
 
     return AdminDashboardQueryState(
         cid=cid,
@@ -300,4 +385,10 @@ def load_admin_dashboard_query_state(
         post_edit=post_edit,
         training_exercises=training_exercises,
         selected_muscle=selected_muscle,
+        training_client_q=training_client_q_clean,
+        training_client_id=selected_training_client_id,
+        training_client_options=training_client_options,
+        training_client_assignments=training_client_assignments,
+        training_medical_profile=training_medical_profile,
+        training_medical_history=training_medical_history,
     )
