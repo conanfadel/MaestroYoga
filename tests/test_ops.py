@@ -165,3 +165,27 @@ def test_build_public_active_subscription_without_user_returns_empty() -> None:
         assert ctx["public_sub_active"] is False
     finally:
         db.close()
+
+
+def test_checkout_status_signature_roundtrip(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setenv("JWT_SECRET", "unit-test-checkout-status-secret")
+    from backend.app.checkout_status_urls import (
+        build_checkout_status_url,
+        checkout_status_signature,
+        verify_checkout_status_signature,
+    )
+
+    assert verify_checkout_status_signature(1, [9, 5], checkout_status_signature(1, [5, 9]))
+    assert not verify_checkout_status_signature(1, [5], checkout_status_signature(1, [5, 9]))
+    url = build_checkout_status_url("https://example.test", 2, [100], result="cancelled")
+    assert url.startswith("https://example.test/checkout-status?")
+    assert "center_id=2" in url
+    assert "payment_id=100" in url
+    assert "result=cancelled" in url
+    assert "sig=" in url
+
+
+def test_checkout_status_page_invalid_link(client: TestClient) -> None:
+    r = client.get("/checkout-status")
+    assert r.status_code == 200
+    assert "غير صالح" in r.text

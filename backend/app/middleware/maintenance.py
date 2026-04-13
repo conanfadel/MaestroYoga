@@ -52,6 +52,8 @@ def _path_exempt_from_maintenance(path: str) -> bool:
     # webhooks للدفع يجب أن تبقى قابلة للوصول أثناء الصيانة
     if path.startswith("/payments/webhook"):
         return True
+    if path == "/checkout-status":
+        return True
     return False
 
 

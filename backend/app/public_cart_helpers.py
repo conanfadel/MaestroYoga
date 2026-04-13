@@ -1,6 +1,7 @@
 import json
 import logging
 
+from .checkout_status_urls import build_checkout_status_url
 from .public_session_visibility import (
     yoga_session_accepts_new_public_booking,
     yoga_session_still_on_public_schedule,
@@ -130,6 +131,7 @@ def process_hosted_cart_checkout(
         for _, _, yoga_session in bundle
     ]
     payment_ids_meta = ",".join(str(payment.id) for _, payment, _ in bundle)
+    cart_payment_ids = [int(payment.id) for _, payment, _ in bundle]
     idem = f"cart-{payment_ids_meta.replace(',', '-')}"[:255]
     prov_name = type(provider).__name__
     try:
@@ -142,8 +144,10 @@ def process_hosted_cart_checkout(
                 "client_id": str(client_id),
                 "cart": "1",
             },
-            success_url=f"{base_url}/index?center_id={center_id}&payment=success",
-            cancel_url=f"{base_url}/index?center_id={center_id}&payment=cancelled",
+            success_url=build_checkout_status_url(base_url, center_id, cart_payment_ids),
+            cancel_url=build_checkout_status_url(
+                base_url, center_id, cart_payment_ids, result="cancelled"
+            ),
             idempotency_key=idem,
         )
     except Exception as exc:
@@ -228,6 +232,7 @@ def process_hosted_single_booking_checkout(
 ) -> tuple[str | None, str | None]:
     prov_name = type(provider).__name__
     try:
+        single_ids = [int(payment_row.id)]
         provider_result = provider.create_checkout_session(
             amount=amount,
             currency="sar",
@@ -237,8 +242,10 @@ def process_hosted_single_booking_checkout(
                 "center_id": str(center_id),
                 "client_id": str(client_id),
             },
-            success_url=f"{base_url}/index?center_id={center_id}&payment=success",
-            cancel_url=f"{base_url}/index?center_id={center_id}&payment=cancelled",
+            success_url=build_checkout_status_url(base_url, center_id, single_ids),
+            cancel_url=build_checkout_status_url(
+                base_url, center_id, single_ids, result="cancelled"
+            ),
             line_item_name=f"حجز جلسة — {session_title}"[:120],
             line_item_description=f"{center_name} · {fmt_dt_fn(session_starts_at)} · {session_duration_minutes} دقيقة"[:500],
             idempotency_key=f"book-{payment_row.id}"[:255],

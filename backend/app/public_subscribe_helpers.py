@@ -3,6 +3,8 @@ from datetime import timedelta
 
 from fastapi import HTTPException
 
+from .checkout_status_urls import build_checkout_status_url
+
 logger = logging.getLogger(__name__)
 
 
@@ -74,6 +76,7 @@ def process_hosted_subscription_checkout(
 ) -> tuple[str | None, str | None]:
     prov_name = type(provider).__name__
     try:
+        sub_payment_ids = [int(payment_row.id)]
         provider_result = provider.create_checkout_session(
             amount=float(plan.price),
             currency="sar",
@@ -84,8 +87,12 @@ def process_hosted_subscription_checkout(
                 "client_id": str(client_id),
                 "plan_id": str(plan.id),
             },
-            success_url=f"{base_url}/index?center_id={center_id}&payment=success&msg=subscribed",
-            cancel_url=f"{base_url}/index?center_id={center_id}&payment=cancelled&msg=subscription_cancelled",
+            success_url=build_checkout_status_url(
+                base_url, center_id, sub_payment_ids, flow="subscription"
+            ),
+            cancel_url=build_checkout_status_url(
+                base_url, center_id, sub_payment_ids, result="cancelled", flow="subscription"
+            ),
             line_item_name=f"اشتراك — {plan.name}"[:120],
             line_item_description=f"{center_name} · باقة {plan.plan_type}"[:500],
             idempotency_key=f"sub-{subscription.id}-p{payment_row.id}"[:255],
