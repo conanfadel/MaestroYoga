@@ -49,6 +49,14 @@ def _paymob_redirect_claims_payment_failed(request: _s.Request) -> bool:
     return False
 
 
+def _paymob_redirect_claims_payment_success(request: _s.Request) -> bool:
+    qp = request.query_params
+    if (qp.get("success") or "").strip().lower() in ("true", "1", "yes", "on"):
+        return True
+    txn = (qp.get("txn_response_code") or "").strip().upper()
+    return bool(txn) and txn in _PAYMOB_TXN_APPROVED
+
+
 def _maybe_redirect_clean_checkout_status_query(request: _s.Request) -> _s.RedirectResponse | None:
     qp = request.query_params
     if not qp:
@@ -124,6 +132,7 @@ def register_public_checkout_status_routes(router: APIRouter) -> None:
         failed_all = all(s == "failed" for s in statuses)
         pending_any = any(s == "pending" for s in statuses)
         paymob_declined = _paymob_redirect_claims_payment_failed(request)
+        paymob_ok = _paymob_redirect_claims_payment_success(request)
 
         ctx["valid_link"] = True
         ctx["index_href"] = f"/index?center_id={int(center_id)}"
@@ -179,10 +188,18 @@ def register_public_checkout_status_routes(router: APIRouter) -> None:
                 ctx["refresh_pending"] = False
             else:
                 ctx["status_kind"] = "pending"
-                ctx["headline"] = "جاري تأكيد الدفع"
-                ctx["body"] = (
-                    "ننتظر إشعار البوابة (Webhook). قد يستغرق ذلك بضع ثوانٍ — سيتم تحديث الصفحة تلقائياً."
-                )
+                if paymob_ok:
+                    ctx["headline"] = "اكتمل الدفع في البوابة"
+                    ctx["body"] = (
+                        "تشير Paymob إلى نجاح العملية، بينما السجل في نظامنا ما زال «قيد الانتظار» حتى يصل "
+                        "Webhook ويُحدّث الحالة. إن استمرّ التعليق فتحقّق من PAYMOB_HMAC_SECRET في بيئة الخادم "
+                        "وأن إشعار Paymob يصل كـ POST بجسم JSON (يُقبل أيضاً حقل hmac في سلسلة الاستعلام)."
+                    )
+                else:
+                    ctx["headline"] = "جاري تأكيد الدفع"
+                    ctx["body"] = (
+                        "ننتظر إشعار البوابة (Webhook). قد يستغرق ذلك بضع ثوانٍ — سيتم تحديث الصفحة تلقائياً."
+                    )
                 ctx["refresh_pending"] = True
             return _s.templates.TemplateResponse(request, "checkout_status.html", ctx)
 

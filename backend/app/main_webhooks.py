@@ -108,9 +108,14 @@ async def paymob_transaction_webhook(request: Request, db: Session = Depends(get
 
     hmac_secret = os.getenv("PAYMOB_HMAC_SECRET", "").strip() or os.getenv("PAYMOB_HMAC", "").strip()
     received = str(payload.get("hmac") or payload.get("HMAC") or "").strip()
-    if not hmac_secret or not received:
-        logger.warning("paymob webhook missing PAYMOB_HMAC_SECRET (or PAYMOB_HMAC) or hmac in payload")
-        raise HTTPException(status_code=400, detail="paymob hmac not configured")
+    if not received:
+        received = str(request.query_params.get("hmac") or request.query_params.get("HMAC") or "").strip()
+    if not hmac_secret:
+        logger.warning("paymob webhook: PAYMOB_HMAC_SECRET (or PAYMOB_HMAC) is not set")
+        raise HTTPException(status_code=400, detail="paymob hmac secret not configured")
+    if not received:
+        logger.warning("paymob webhook: hmac missing in JSON body and query string")
+        raise HTTPException(status_code=400, detail="paymob hmac missing")
 
     if not verify_paymob_processed_hmac(payload, received, hmac_secret):
         raise HTTPException(status_code=400, detail="invalid paymob hmac")

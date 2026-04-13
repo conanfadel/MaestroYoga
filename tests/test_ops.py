@@ -227,3 +227,30 @@ def test_checkout_status_clean_redirect_keeps_txn_response_code(
     loc = unquote(r.headers.get("location") or "")
     assert "txn_response_code=DECLINED" in loc
     assert "junk=1" not in loc
+
+
+def test_paymob_webhook_accepts_hmac_in_query_string(
+    client: TestClient, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """بعض إعدادات Paymob تُرسل توقيع hmac في ?hmac= بدل جسم JSON."""
+    monkeypatch.setenv("PAYMOB_HMAC_SECRET", "test-secret-paymob-webhook-query")
+    import backend.app.main_webhooks as mw
+
+    monkeypatch.setattr(mw, "verify_paymob_processed_hmac", lambda payload, received, secret: True)
+    called: list[str] = []
+    monkeypatch.setattr(mw, "finalize_checkout_paid", lambda *a, **k: called.append("paid"))
+    monkeypatch.setattr(mw, "finalize_checkout_failed", lambda *a, **k: called.append("failed"))
+
+    body = {
+        "obj": {
+            "success": True,
+            "amount_cents": 100,
+            "currency": "SAR",
+            "order": {"id": 999},
+            "merchant_order_id": "mP1",
+        }
+    }
+    r = client.post("/payments/webhook/paymob?hmac=" + "ab" * 64, json=body)
+    assert r.status_code == 200
+    assert r.json().get("received") is True
+    assert called == ["paid"]
