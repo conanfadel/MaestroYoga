@@ -60,7 +60,13 @@
   <script>
     (function () {
       var el = document.body;
-      if (!el || el.getAttribute("data-refresh-pending") !== "1") return;
+      if (!el) return;
+      if (el.getAttribute("data-refresh-pending") !== "1") {
+        try {
+          sessionStorage.removeItem("checkout_status_poll_n");
+        } catch (e) {}
+        return;
+      }
       var key = "checkout_status_poll_n";
       var n = parseInt(sessionStorage.getItem(key) || "0", 10) || 0;
       if (n >= 18) {

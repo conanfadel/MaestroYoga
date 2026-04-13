@@ -9,10 +9,19 @@ from fastapi import APIRouter
 from ...checkout_status_urls import parse_payment_ids_param, verify_checkout_status_signature
 from .. import impl_state as _s
 
-# Paymob يُلحق حقولاً كثيرة على redirection_url — نُبقي المفتاح الموقّع فقط.
+# Paymob يُلحق حقولاً كثيرة على redirection_url — نُبقي الموقّع + success (رفض فوري دون انتظار webhook).
 _CHECKOUT_STATUS_QUERY_KEEP = frozenset(
-    {"center_id", "payment_id", "payment_ids", "sig", "result", "flow", "session_id"}
+    {"center_id", "payment_id", "payment_ids", "sig", "result", "flow", "session_id", "success"}
 )
+
+
+def _query_bool_false(raw: str | None) -> bool:
+    s = (raw or "").strip().lower()
+    return s in ("false", "0", "no", "off")
+
+
+def _paymob_redirect_claims_payment_failed(request: _s.Request) -> bool:
+    return _query_bool_false(request.query_params.get("success"))
 
 
 def _maybe_redirect_clean_checkout_status_query(request: _s.Request) -> _s.RedirectResponse | None:
@@ -89,6 +98,7 @@ def register_public_checkout_status_routes(router: APIRouter) -> None:
         paid_all = all(s == "paid" for s in statuses)
         failed_all = all(s == "failed" for s in statuses)
         pending_any = any(s == "pending" for s in statuses)
+        paymob_declined = _paymob_redirect_claims_payment_failed(request)
 
         ctx["valid_link"] = True
         ctx["index_href"] = f"/index?center_id={int(center_id)}"
@@ -102,11 +112,15 @@ def register_public_checkout_status_routes(router: APIRouter) -> None:
                 ctx["body"] = (
                     "لم يُكمَل الدفع من البوابة. إذا ظهر خصم مؤقت على البطاقة فغالباً يُعاد خلال أيام عمل حسب البنك."
                 )
-                if pending_any:
+                if pending_any and not paymob_declined:
                     ctx["body"] += (
                         " حالة الطلب في نظامنا: قيد الانتظار — قد تتحدّث خلال ثوانٍ بعد إشعار البوابة."
                     )
                     ctx["refresh_pending"] = True
+                elif pending_any and paymob_declined:
+                    ctx["body"] += (
+                        " البوابة أبلغت برفض العملية؛ قد يبقى السجل قيد الانتظار لحظات حتى يصل الإشعار."
+                    )
                 elif failed_all:
                     ctx["body"] = (
                         "تم تسجيل الفشل في نظامنا. يمكنك المحاولة من جديد من صفحة الحجز أو الاشتراك."
@@ -130,12 +144,21 @@ def register_public_checkout_status_routes(router: APIRouter) -> None:
             return _s.templates.TemplateResponse(request, "checkout_status.html", ctx)
 
         if pending_any:
-            ctx["status_kind"] = "pending"
-            ctx["headline"] = "جاري تأكيد الدفع"
-            ctx["body"] = (
-                "ننتظر إشعار البوابة (Webhook). قد يستغرق ذلك بضع ثوانٍ — سيتم تحديث الصفحة تلقائياً."
-            )
-            ctx["refresh_pending"] = True
+            if paymob_declined:
+                ctx["status_kind"] = "declined_redirect"
+                ctx["headline"] = "لم يُقبل الدفع"
+                ctx["body"] = (
+                    "أبلغت بوابة الدفع أن العملية لم تُكتمل (مرفوضة أو غير مصرّح بها). "
+                    "لم نعد نحدّث الصفحة تلقائياً. إذا بقي السجل «قيد الانتظار» في نظامنا فسيُحدَّث عند وصول إشعار البوابة."
+                )
+                ctx["refresh_pending"] = False
+            else:
+                ctx["status_kind"] = "pending"
+                ctx["headline"] = "جاري تأكيد الدفع"
+                ctx["body"] = (
+                    "ننتظر إشعار البوابة (Webhook). قد يستغرق ذلك بضع ثوانٍ — سيتم تحديث الصفحة تلقائياً."
+                )
+                ctx["refresh_pending"] = True
             return _s.templates.TemplateResponse(request, "checkout_status.html", ctx)
 
         ctx["status_kind"] = "mixed"

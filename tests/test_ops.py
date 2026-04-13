@@ -189,3 +189,20 @@ def test_checkout_status_page_invalid_link(client: TestClient) -> None:
     r = client.get("/checkout-status")
     assert r.status_code == 200
     assert "غير صالح" in r.text
+
+
+def test_checkout_status_clean_redirect_keeps_success_param(
+    client: TestClient, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setenv("JWT_SECRET", "redirect-test-secret-checkout-status")
+    from backend.app.checkout_status_urls import checkout_status_signature
+
+    sig = checkout_status_signature(1, [50])
+    r = client.get(
+        f"/checkout-status?center_id=1&payment_id=50&sig={sig}&success=false&hmac=noise&order=999",
+        follow_redirects=False,
+    )
+    assert r.status_code == 303
+    loc = r.headers.get("location") or ""
+    assert "success=false" in loc
+    assert "hmac=noise" not in loc
