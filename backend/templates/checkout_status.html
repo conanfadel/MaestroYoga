@@ -41,10 +41,24 @@
     a.btn.primary { background: #0d9488; color: #fff; }
     a.btn.ghost { background: #f1f5f9; color: #334155; }
     .badge { font-size: 0.75rem; color: #64748b; margin-bottom: 0.5rem; }
+    .card--declined { border-color: #f87171; background: #fff1f2; }
+    .poll-stop {
+      margin: 0 0 1rem;
+      padding: 0.65rem 0.75rem;
+      font-size: 0.88rem;
+      line-height: 1.45;
+      color: #92400e;
+      background: #fffbeb;
+      border: 1px solid #fcd34d;
+      border-radius: 10px;
+      display: none;
+    }
+    .poll-stop.is-visible { display: block; }
   </style>
 </head>
-<body data-refresh-pending="{{ 1 if refresh_pending else 0 }}">
-  <div class="card">
+<body data-refresh-pending="{{ 1 if refresh_pending else 0 }}" data-poll-max="8">
+  <div class="card{% if status_kind in ('declined_redirect', 'failed') %} card--declined{% endif %}">
+    <p id="checkout-poll-stop" class="poll-stop" role="status">توقّف التحديث التلقائي بعد عدة محاولات. إذا بقي الوضع «قيد التأكيد» فجرّب «تحديث الآن» أو انتظر قليلاً ثم حدّث يدوياً.</p>
     {% if valid_link %}
     <div class="badge">حالة الدفع من النظام</div>
     {% endif %}
@@ -68,9 +82,12 @@
         return;
       }
       var key = "checkout_status_poll_n";
+      var maxPoll = parseInt(el.getAttribute("data-poll-max") || "8", 10) || 8;
       var n = parseInt(sessionStorage.getItem(key) || "0", 10) || 0;
-      if (n >= 18) {
+      if (n >= maxPoll) {
         sessionStorage.removeItem(key);
+        var stop = document.getElementById("checkout-poll-stop");
+        if (stop) stop.classList.add("is-visible");
         return;
       }
       sessionStorage.setItem(key, String(n + 1));

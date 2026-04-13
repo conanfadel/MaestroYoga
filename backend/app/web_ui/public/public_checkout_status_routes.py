@@ -9,10 +9,23 @@ from fastapi import APIRouter
 from ...checkout_status_urls import parse_payment_ids_param, verify_checkout_status_signature
 from .. import impl_state as _s
 
-# Paymob يُلحق حقولاً كثيرة على redirection_url — نُبقي الموقّع + success (رفض فوري دون انتظار webhook).
+# Paymob يُلحق حقولاً كثيرة على redirection_url — نُبقي الموقّع + مؤشرات الرفض (دون تسجيل pan/hmac).
 _CHECKOUT_STATUS_QUERY_KEEP = frozenset(
-    {"center_id", "payment_id", "payment_ids", "sig", "result", "flow", "session_id", "success"}
+    {
+        "center_id",
+        "payment_id",
+        "payment_ids",
+        "sig",
+        "result",
+        "flow",
+        "session_id",
+        "success",
+        "txn_response_code",
+        "error_occured",
+    }
 )
+
+_PAYMOB_TXN_APPROVED = frozenset({"APPROVED", "SUCCESS", "ACCEPTED", "AUTHORIZED", "AUTHENTICATED"})
 
 
 def _query_bool_false(raw: str | None) -> bool:
@@ -21,7 +34,19 @@ def _query_bool_false(raw: str | None) -> bool:
 
 
 def _paymob_redirect_claims_payment_failed(request: _s.Request) -> bool:
-    return _query_bool_false(request.query_params.get("success"))
+    """قراءة خفيفة من بارامترات إعادة التوجيه (ليست بديلاً عن الـ webhook أو قاعدة البيانات)."""
+    qp = request.query_params
+    if _query_bool_false(qp.get("success")):
+        return True
+    err_raw = (qp.get("error_occured") or "").strip().lower()
+    if err_raw in ("true", "1", "yes"):
+        return True
+    txn = (qp.get("txn_response_code") or "").strip().upper()
+    if txn and txn not in _PAYMOB_TXN_APPROVED:
+        return True
+    if (qp.get("success") or "").strip().lower() in ("true", "1", "yes", "on"):
+        return False
+    return False
 
 
 def _maybe_redirect_clean_checkout_status_query(request: _s.Request) -> _s.RedirectResponse | None:
@@ -146,10 +171,10 @@ def register_public_checkout_status_routes(router: APIRouter) -> None:
         if pending_any:
             if paymob_declined:
                 ctx["status_kind"] = "declined_redirect"
-                ctx["headline"] = "لم يُقبل الدفع"
+                ctx["headline"] = "تم رفض العملية من البنك أو البوابة"
                 ctx["body"] = (
-                    "أبلغت بوابة الدفع أن العملية لم تُكتمل (مرفوضة أو غير مصرّح بها). "
-                    "لم نعد نحدّث الصفحة تلقائياً. إذا بقي السجل «قيد الانتظار» في نظامنا فسيُحدَّث عند وصول إشعار البوابة."
+                    "الدفع لم يُقبل (مرفوض / غير مصرّح به). لن نُعيد تحميل الصفحة تلقائياً. "
+                    "إذا ظلّ السجل في نظامنا «قيد الانتظار» قليلاً فسيتحدّث عند وصول إشعار البوابة إلى الخادم."
                 )
                 ctx["refresh_pending"] = False
             else:

@@ -195,6 +195,8 @@ def test_checkout_status_clean_redirect_keeps_success_param(
     client: TestClient, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     monkeypatch.setenv("JWT_SECRET", "redirect-test-secret-checkout-status")
+    from urllib.parse import unquote
+
     from backend.app.checkout_status_urls import checkout_status_signature
 
     sig = checkout_status_signature(1, [50])
@@ -203,6 +205,25 @@ def test_checkout_status_clean_redirect_keeps_success_param(
         follow_redirects=False,
     )
     assert r.status_code == 303
-    loc = r.headers.get("location") or ""
+    loc = unquote(r.headers.get("location") or "")
     assert "success=false" in loc
     assert "hmac=noise" not in loc
+
+
+def test_checkout_status_clean_redirect_keeps_txn_response_code(
+    client: TestClient, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setenv("JWT_SECRET", "redirect-test-secret-checkout-status-txn")
+    from urllib.parse import unquote
+
+    from backend.app.checkout_status_urls import checkout_status_signature
+
+    sig = checkout_status_signature(1, [51])
+    r = client.get(
+        f"/checkout-status?center_id=1&payment_id=51&sig={sig}&txn_response_code=DECLINED&junk=1",
+        follow_redirects=False,
+    )
+    assert r.status_code == 303
+    loc = unquote(r.headers.get("location") or "")
+    assert "txn_response_code=DECLINED" in loc
+    assert "junk=1" not in loc
