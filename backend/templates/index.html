@@ -1848,6 +1848,134 @@
       border-color: rgba(15, 118, 110, 0.85) !important;
       background: rgba(240, 253, 250, 0.65) !important;
     }
+    .sessions-plan-batch-intro {
+      margin: 12px 0 10px;
+      padding: 12px 14px;
+      border-radius: 12px;
+      background: rgba(240, 253, 250, 0.88);
+      border: 1px solid rgba(13, 148, 136, 0.32);
+    }
+    .sessions-plan-batch-intro__text {
+      margin: 0;
+      font-size: 0.9rem;
+      font-weight: 700;
+      color: #0f172a;
+      line-height: 1.5;
+    }
+    .plan-batch-toolbar {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 8px 12px;
+      margin-top: 10px;
+    }
+    .plan-batch-toolbar__count,
+    .plan-batch-toolbar__max {
+      font-weight: 800;
+      font-variant-numeric: tabular-nums;
+      color: #0f766e;
+    }
+    .plan-batch-toolbar__label {
+      font-weight: 700;
+      font-size: 0.88rem;
+      color: #134e4a;
+    }
+    .plan-batch-toolbar__btn {
+      margin-inline-start: auto;
+      min-width: 10rem;
+    }
+    .session-card__plan-pick-row {
+      width: 100%;
+      margin-top: 4px;
+    }
+    .session-card__plan-pick-label {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      font-size: 0.88rem;
+      font-weight: 700;
+      color: #0f766e;
+      cursor: pointer;
+      line-height: 1.35;
+    }
+    .session-card__plan-pick-label input {
+      margin-top: 3px;
+      flex-shrink: 0;
+      width: 1.05rem;
+      height: 1.05rem;
+    }
+    .plan-confirm-modal {
+      position: fixed;
+      inset: 0;
+      z-index: 9500;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+      box-sizing: border-box;
+    }
+    .plan-confirm-modal[hidden] {
+      display: none !important;
+    }
+    .plan-confirm-modal__backdrop {
+      position: absolute;
+      inset: 0;
+      background: rgba(15, 23, 42, 0.48);
+    }
+    .plan-confirm-modal__panel {
+      position: relative;
+      z-index: 1;
+      max-width: 440px;
+      width: 100%;
+      background: var(--white);
+      border-radius: 16px;
+      padding: 20px 22px;
+      box-shadow: 0 22px 50px rgba(0, 0, 0, 0.2);
+      border: 1px solid rgba(197, 160, 89, 0.38);
+      box-sizing: border-box;
+    }
+    .plan-confirm-modal__title {
+      margin: 0 0 10px;
+      font-size: 1.12rem;
+      font-weight: 800;
+      color: var(--charcoal);
+    }
+    .plan-confirm-modal__lead {
+      margin: 0 0 8px;
+      font-weight: 700;
+      color: #0f766e;
+      line-height: 1.45;
+    }
+    .plan-confirm-modal__list {
+      margin: 8px 0 12px;
+      padding-inline-start: 1.2rem;
+      font-weight: 700;
+      color: var(--charcoal);
+    }
+    .plan-confirm-modal__question {
+      margin: 0 0 4px;
+      font-size: 0.95rem;
+    }
+    .plan-confirm-modal__actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 14px;
+    }
+    .plan-confirm-modal__btn-no {
+      background: transparent !important;
+      color: var(--charcoal) !important;
+      border: 2px solid rgba(100, 116, 139, 0.45) !important;
+      box-shadow: none !important;
+    }
+    .plan-batch-form-hidden {
+      display: none !important;
+    }
+    .plan-batch-success-names {
+      margin: 0.45rem 0 0;
+      font-weight: 700;
+      line-height: 1.45;
+    }
     @media (max-width: 720px) {
       .session-card__footer {
         padding: 0 12px 14px;
@@ -3456,6 +3584,7 @@
     {% endif %}
 
     {% include "partials/index_flash_messages.html" %}
+    <div id="plan-batch-success-host" class="plan-batch-success-host" hidden></div>
 
     <main id="main-content" class="grid-two">
       <div class="grid-two__main">
@@ -3670,6 +3799,7 @@
     (function captureScrollBeforePublicPostReturn() {
       var paths = {
         "/public/book-plan-session": 1,
+        "/public/book-plan-sessions": 1,
         "/public/cancel-plan-session": 1,
         "/public/book": 1,
         "/public/cart/checkout": 1,
@@ -3815,6 +3945,9 @@
       const PAGE_CENTER_ID = {{ center_id|tojson }};
       const plansDetails = document.getElementById("plans-section-details");
       var PUBLIC_CONTENT_VERSION = {{ public_content_version|tojson }};
+      const PLAN_BATCH_ENABLED = {{ public_sub_plan_slot_booking|tojson }};
+      const PLAN_BATCH_MAX = {{ (public_sub_sessions_remaining if public_sub_sessions_remaining is not none else 0)|tojson }};
+      const PLAN_BATCH_PLAN_NAME = {{ (public_sub_plan_name or "")|tojson }};
 
       (function initPublicAutoRefresh() {
         if (!PAGE_CENTER_ID || !PUBLIC_CONTENT_VERSION || !window.fetch) return;
@@ -4377,6 +4510,107 @@
         }, 60000);
       }
 
+      (function setupPlanBatchConfirm() {
+        if (!PLAN_BATCH_ENABLED || PLAN_BATCH_MAX < 1) return;
+        var form = document.getElementById("plan-batch-form");
+        var jsonField = document.getElementById("plan-batch-session-ids-json");
+        var openBtn = document.getElementById("plan-batch-open-modal");
+        var countEl = document.getElementById("plan-batch-selected-count");
+        var modal = document.getElementById("plan-confirm-modal");
+        var backdrop = document.getElementById("plan-confirm-modal-backdrop");
+        var lead = document.getElementById("plan-confirm-modal-lead");
+        var listEl = document.getElementById("plan-confirm-modal-list");
+        var btnYes = document.getElementById("plan-confirm-yes");
+        var btnNo = document.getElementById("plan-confirm-no");
+        if (!form || !jsonField || !openBtn || !modal || !lead || !listEl || !btnYes || !btnNo) return;
+
+        function selectedBoxes() {
+          return Array.prototype.slice.call(document.querySelectorAll(".js-plan-session-pick:checked"));
+        }
+
+        function refreshToolbar() {
+          var n = selectedBoxes().length;
+          if (countEl) countEl.textContent = String(n);
+          openBtn.disabled = n < 1;
+          var boxes = document.querySelectorAll(".js-plan-session-pick");
+          for (var i = 0; i < boxes.length; i++) {
+            var b = boxes[i];
+            if (b.checked) continue;
+            b.disabled = n >= PLAN_BATCH_MAX;
+          }
+        }
+
+        document.addEventListener("change", function (ev) {
+          if (!ev.target || !ev.target.classList || !ev.target.classList.contains("js-plan-session-pick")) return;
+          var el = ev.target;
+          if (el.checked) {
+            var n = selectedBoxes().length;
+            if (n > PLAN_BATCH_MAX) {
+              el.checked = false;
+              window.alert("لا يمكنك اختيار أكثر من " + PLAN_BATCH_MAX + " جلسة ضمن حصة خطتك المتبقية.");
+            }
+          }
+          refreshToolbar();
+        });
+
+        openBtn.addEventListener("click", function () {
+          var boxes = selectedBoxes();
+          if (!boxes.length) return;
+          lead.textContent =
+            "لقد اخترت إضافة الجلسات التالية إلى خطتك «" + (PLAN_BATCH_PLAN_NAME || "خطتك") + "»:";
+          listEl.innerHTML = "";
+          boxes.forEach(function (b) {
+            var li = document.createElement("li");
+            li.textContent = b.getAttribute("data-session-title") || b.value;
+            listEl.appendChild(li);
+          });
+          modal.hidden = false;
+          document.documentElement.style.overflow = "hidden";
+        });
+
+        function closeModal() {
+          modal.hidden = true;
+          document.documentElement.style.overflow = "";
+        }
+
+        btnNo.addEventListener("click", closeModal);
+        if (backdrop) backdrop.addEventListener("click", closeModal);
+
+        btnYes.addEventListener("click", function () {
+          var boxes = selectedBoxes();
+          if (!boxes.length) {
+            closeModal();
+            return;
+          }
+          var ids = boxes
+            .map(function (b) {
+              return parseInt(b.value, 10);
+            })
+            .filter(function (x) {
+              return !isNaN(x);
+            });
+          try {
+            sessionStorage.setItem(
+              "maestro_plan_batch_titles",
+              JSON.stringify(
+                boxes.map(function (b) {
+                  return b.getAttribute("data-session-title") || "";
+                })
+              )
+            );
+          } catch (e1) {}
+          jsonField.value = JSON.stringify(ids);
+          closeModal();
+          form.submit();
+        });
+
+        document.addEventListener("keydown", function (ev) {
+          if (ev.key === "Escape" && !modal.hidden) closeModal();
+        });
+
+        refreshToolbar();
+      })();
+
       function track(eventName, payload) {
         window.dataLayer = window.dataLayer || [];
         window.dataLayer.push({ event: eventName, ...payload });
@@ -4412,12 +4646,46 @@
       if (msgStatus === "subscribed" || msgStatus === "subscribed_mock") {
         track("subscription_activated", { mode: msgStatus });
       }
-      if (msgStatus === "plan_booked" || msgStatus === "plan_booked_quota_complete") {
+      if (
+        msgStatus === "plan_booked" ||
+        msgStatus === "plan_booked_quota_complete" ||
+        msgStatus === "plan_sessions_booked_batch"
+      ) {
         track("plan_session_booked", {
           source: "index",
           quota_complete: msgStatus === "plan_booked_quota_complete",
+          batch: msgStatus === "plan_sessions_booked_batch",
         });
       }
+
+      (function augmentPlanBatchSuccessBanner() {
+        var okMsgs = { plan_booked: 1, plan_booked_quota_complete: 1, plan_sessions_booked_batch: 1 };
+        if (!okMsgs[msgStatus]) return;
+        try {
+          var raw = sessionStorage.getItem("maestro_plan_batch_titles");
+          if (!raw) return;
+          sessionStorage.removeItem("maestro_plan_batch_titles");
+          var titles = JSON.parse(raw);
+          if (!Array.isArray(titles) || !titles.length) return;
+          var joined = titles.filter(Boolean).join("، ");
+          if (!joined) return;
+          var p = document.createElement("p");
+          p.className = "plan-batch-success-names";
+          p.textContent = "أسماء الجلسات: " + joined + ".";
+          var hostFlash = document.querySelector(".js-plan-flash-host");
+          if (hostFlash) {
+            hostFlash.appendChild(p);
+            return;
+          }
+          var host = document.getElementById("plan-batch-success-host");
+          if (host) {
+            host.hidden = false;
+            host.innerHTML = '<div class="alert ok"><strong>تمت الإضافة إلى خطتك.</strong></div>';
+            var inner = host.querySelector(".alert");
+            if (inner) inner.appendChild(p);
+          }
+        } catch (e2) {}
+      })();
       if (msgStatus === "plan_session_cancelled") {
         track("plan_session_cancelled", { source: "index" });
       }

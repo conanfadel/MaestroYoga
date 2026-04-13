@@ -93,19 +93,25 @@ def cancel_public_plan_session_booking(
     return True, "plan_session_cancelled"
 
 
-def confirm_public_plan_session_booking(
+def confirm_public_plan_sessions_booking(
     db: Session,
     *,
     center_id: int,
-    session_id: int,
+    session_ids: list[int],
     client: models.Client,
     models_module: type,
     utcnow_fn,
     count_active_bookings_fn,
     integrity_error_cls: type,
 ) -> tuple[bool, str]:
-    """يُنشئ حجزاً مؤكداً ودفعة صفرية ضمن الخطة. يرجع (نجاح، رمز_رسالة)."""
+    """يُنشئ حجوزات مؤكدة ودفعات صفرية ضمن حصة الخطة في معاملة واحدة (كلها أو لا شيء)."""
     now = utcnow_fn()
+    ids = sorted({int(x) for x in session_ids if int(x) > 0})
+    if not ids:
+        return False, "plan_sessions_batch_none"
+    if len(ids) > 40:
+        return False, "plan_sessions_batch_too_many"
+
     bundle = get_active_subscription_bundle(db, center_id=center_id, client_id=client.id, now=now)
     if not bundle:
         return False, "plan_booking_no_subscription"
@@ -122,69 +128,106 @@ def confirm_public_plan_session_booking(
     limit_v = plan.session_limit
     if limit_v is None or int(limit_v) <= 0:
         return False, "plan_booking_no_cap"
-
-    yoga_session = db.get(models_module.YogaSession, session_id)
-    if not yoga_session or yoga_session.center_id != center_id:
-        return False, "cart_invalid"
-    if not yoga_session_still_on_public_schedule(yoga_session, now=now):
-        return False, "session_ended"
-    if not yoga_session_accepts_new_public_booking(yoga_session, now=now):
-        return False, "session_started"
-
-    sa = yoga_session.starts_at
-    if sa is None or sa < sub_locked.start_date or sa > sub_locked.end_date:
-        return False, "plan_booking_session_outside_period"
-
-    room = db.get(models_module.Room, yoga_session.room_id)
-    if not room:
-        return False, "full"
-    if max(0, int(room.capacity or 0) - count_active_bookings_fn(db, yoga_session.id)) <= 0:
-        return False, "full"
-
-    dup = (
-        db.query(models_module.Booking)
-        .filter(
-            models_module.Booking.session_id == session_id,
-            models_module.Booking.client_id == client.id,
-            models_module.Booking.status.in_(ACTIVE_BOOKING_STATUSES),
-        )
-        .first()
-    )
-    if dup:
-        return False, "duplicate"
+    lim = int(limit_v)
 
     used = count_confirmed_plan_sessions_in_period(
         db, client_id=client.id, center_id=center_id, subscription=sub_locked
     )
-    if used >= int(limit_v):
+    if used + len(ids) > lim:
         return False, "plan_sessions_exhausted"
 
-    booking = models_module.Booking(
-        center_id=center_id,
-        session_id=session_id,
-        client_id=client.id,
-        status="confirmed",
-        booked_at=now,
-    )
-    db.add(booking)
-    db.flush()
-    payment = models_module.Payment(
-        center_id=center_id,
-        client_id=client.id,
-        booking_id=booking.id,
-        amount=0.0,
-        currency="SAR",
-        payment_method="plan_sessions_included",
-        status="paid",
-        paid_at=now,
-        created_at=now,
-    )
-    db.add(payment)
+    for session_id in ids:
+        yoga_session = db.get(models_module.YogaSession, session_id)
+        if not yoga_session or yoga_session.center_id != center_id:
+            return False, "cart_invalid"
+        if not yoga_session_still_on_public_schedule(yoga_session, now=now):
+            return False, "session_ended"
+        if not yoga_session_accepts_new_public_booking(yoga_session, now=now):
+            return False, "session_started"
+        sa = yoga_session.starts_at
+        if sa is None or sa < sub_locked.start_date or sa > sub_locked.end_date:
+            return False, "plan_booking_session_outside_period"
+        room = db.get(models_module.Room, yoga_session.room_id)
+        if not room:
+            return False, "full"
+        if max(0, int(room.capacity or 0) - count_active_bookings_fn(db, yoga_session.id)) <= 0:
+            return False, "full"
+        dup = (
+            db.query(models_module.Booking)
+            .filter(
+                models_module.Booking.session_id == session_id,
+                models_module.Booking.client_id == client.id,
+                models_module.Booking.status.in_(ACTIVE_BOOKING_STATUSES),
+            )
+            .first()
+        )
+        if dup:
+            return False, "duplicate"
+
+    for session_id in ids:
+        yoga_session = db.get(models_module.YogaSession, session_id)
+        if not yoga_session:
+            return False, "cart_invalid"
+        room = db.get(models_module.Room, yoga_session.room_id)
+        if not room:
+            return False, "full"
+        if max(0, int(room.capacity or 0) - count_active_bookings_fn(db, yoga_session.id)) <= 0:
+            return False, "full"
+        booking = models_module.Booking(
+            center_id=center_id,
+            session_id=session_id,
+            client_id=client.id,
+            status="confirmed",
+            booked_at=now,
+        )
+        db.add(booking)
+        db.flush()
+        payment = models_module.Payment(
+            center_id=center_id,
+            client_id=client.id,
+            booking_id=booking.id,
+            amount=0.0,
+            currency="SAR",
+            payment_method="plan_sessions_included",
+            status="paid",
+            paid_at=now,
+            created_at=now,
+        )
+        db.add(payment)
+        db.flush()
+
     try:
         db.commit()
     except integrity_error_cls:
         db.rollback()
         return False, "duplicate"
-    lim = int(limit_v)
-    msg = "plan_booked_quota_complete" if used + 1 >= lim else "plan_booked"
-    return True, msg
+
+    if used + len(ids) >= lim:
+        return True, "plan_booked_quota_complete"
+    if len(ids) == 1:
+        return True, "plan_booked"
+    return True, "plan_sessions_booked_batch"
+
+
+def confirm_public_plan_session_booking(
+    db: Session,
+    *,
+    center_id: int,
+    session_id: int,
+    client: models.Client,
+    models_module: type,
+    utcnow_fn,
+    count_active_bookings_fn,
+    integrity_error_cls: type,
+) -> tuple[bool, str]:
+    """يُنشئ حجزاً واحداً ضمن الخطة (يستدعي المسار المجمّع)."""
+    return confirm_public_plan_sessions_booking(
+        db,
+        center_id=center_id,
+        session_ids=[int(session_id)],
+        client=client,
+        models_module=models_module,
+        utcnow_fn=utcnow_fn,
+        count_active_bookings_fn=count_active_bookings_fn,
+        integrity_error_cls=integrity_error_cls,
+    )

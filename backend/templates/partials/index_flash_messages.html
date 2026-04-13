@@ -32,9 +32,13 @@
 {% if msg == 'session_started' %}<div class="alert warn">بدأت الجلسة بالفعل؛ لا يمكن بدء دفع حجز جديد لها. اختر جلسة لاحقة.</div>{% endif %}
 {% if msg == 'cart_session_ended' %}<div class="alert err">تتضمن السلة جلسة انتهى وقتها. أفرغ السلة أو أعد التحميل واختر جلسات حالية.</div>{% endif %}
 {% if msg == 'cart_session_started' %}<div class="alert err">تتضمن السلة جلسة بدأ وقتها. أزلها من السلة واختر مواعيد قادمة.</div>{% endif %}
-{% if msg == 'plan_booked' %}<div class="alert ok">تمت إضافة الجلسة إلى اشتراكك ضمن حصة الخطة.</div>{% endif %}
+{% if msg == 'plan_booked' %}<div class="alert ok js-plan-flash-host">تمت إضافة الجلسة إلى اشتراكك ضمن حصة الخطة.</div>{% endif %}
+{% if msg == 'plan_sessions_booked_batch' %}<div class="alert ok js-plan-flash-host" id="plan-batch-flash-placeholder">تمت إضافة الجلسات المحددة إلى خطتك.</div>{% endif %}
+{% if msg == 'plan_sessions_batch_none' %}<div class="alert warn">لم يُحدد أي جلسة للإضافة إلى الخطة.</div>{% endif %}
+{% if msg == 'plan_sessions_batch_invalid' %}<div class="alert err">تعذر قراءة قائمة الجلسات. أعد تحميل الصفحة وحاول مرة أخرى.</div>{% endif %}
+{% if msg == 'plan_sessions_batch_too_many' %}<div class="alert err">عدد الجلسات المطلوبة كبير جدًا. قلّل الاختيار وحاول مرة أخرى.</div>{% endif %}
 {% if msg == 'plan_booked_quota_complete' %}
-<div class="alert ok public-plan-quota-complete" role="status">
+<div class="alert ok public-plan-quota-complete js-plan-flash-host" role="status">
   <strong>تم تأكيد اكتمال حصة جلسات خطتك لهذه الفترة.</strong>
   <p class="small" style="margin:0.35rem 0 0;">أضفتَ آخر جلسة متاحة ضمن الحد؛ يمكنك حضور الجلسات المحجوزة، وللمزيد استخدم «أضف للسلة» أو جدّد اشتراكك عند التوفر.</p>
 </div>

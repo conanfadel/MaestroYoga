@@ -3,11 +3,29 @@
         <p class="sessions-lead">صفِّ الجلسات حسب الوقت والسعر والمستوى (بما فيها جلسات <strong>المبتدئين</strong>)، ثم أضِف ما تريد إلى السلة وأكمل الطلب بعد تسجيل الدخول.</p>
         {% include "partials/index_sessions_filters.html" %}
 
+        {% if public_sub_plan_slot_booking %}
+        <div class="sessions-plan-batch-intro" id="sessions-plan-batch-intro">
+          <p class="sessions-plan-batch-intro__text">
+            خطتك الحالية: <strong>{{ public_sub_plan_name }}</strong>
+            {% if public_sub_session_cap %}— حد الجلسات ضمن الخطة: <strong>{{ public_sub_sessions_limit }}</strong>، استُخدم <strong>{{ public_sub_sessions_used }}</strong>، يمكنك اختيار حتى <strong id="plan-batch-max-label">{{ public_sub_sessions_remaining }}</strong> جلسة إضافية ضمن الحد.{% endif %}
+          </p>
+          <div class="plan-batch-toolbar" id="plan-batch-toolbar">
+            <span class="plan-batch-toolbar__count" id="plan-batch-selected-count">0</span>
+            <span class="plan-batch-toolbar__sep" aria-hidden="true">/</span>
+            <span class="plan-batch-toolbar__max">{{ public_sub_sessions_remaining }}</span>
+            <span class="plan-batch-toolbar__label">محدد لإضافته إلى الخطة</span>
+            <button type="button" class="book-btn book-btn-lg plan-batch-toolbar__btn" id="plan-batch-open-modal" disabled>
+              مراجعة وتأكيد
+            </button>
+          </div>
+        </div>
+        {% endif %}
+
         <div class="sessions-cards" id="sessions-cards">
               {% for s in sessions %}
               <article
                 id="session-{{ s.id }}"
-                class="session-card session-row{% if s.spots_available > 0 and s.spots_available <= 3 %} session-card--scarce{% endif %}{% if s.booked_via_plan %} session-card--booked-plan{% endif %} reveal-on-scroll"
+                class="session-card session-row{% if s.spots_available > 0 and s.spots_available <= 3 %} session-card--scarce{% endif %}{% if s.booked_via_plan %} session-card--booked-plan{% endif %}{% if s.use_plan_slot_cta and s.spots_available > 0 and s.allows_public_booking and not s.booked_via_plan %} session-card--plan-pickable{% endif %} reveal-on-scroll"
                 data-session-id="{{ s.id }}"
                 data-title="{{ s.title }} {{ s.trainer_name }}"
                 data-level="{{ s.level_label }}"
@@ -62,13 +80,12 @@
                       {% endif %}
                     </div>
                   {% elif s.use_plan_slot_cta and s.spots_available > 0 and s.allows_public_booking %}
-                    <form method="post" action="/public/book-plan-session" class="plan-slot-book-form">
-                      <input type="hidden" name="center_id" value="{{ center_id }}" />
-                      <input type="hidden" name="session_id" value="{{ s.id }}" />
-                      <button type="submit" class="book-btn book-btn-lg plan-slot-book-form__btn">
-                        إضافة إلى الخطة
-                      </button>
-                    </form>
+                    <div class="session-card__plan-pick-row">
+                      <label class="session-card__plan-pick-label">
+                        <input type="checkbox" class="js-plan-session-pick" value="{{ s.id }}" data-session-title="{{ s.title|e }}" />
+                        <span>اختيار للإضافة إلى خطتك</span>
+                      </label>
+                    </div>
                   {% elif s.spots_available > 0 and s.allows_public_booking %}
                     <button
                       type="button"
@@ -101,4 +118,24 @@
               </div>
               {% endfor %}
         </div>
+
+        {% if public_sub_plan_slot_booking %}
+        <div id="plan-confirm-modal" class="plan-confirm-modal" hidden role="dialog" aria-modal="true" aria-labelledby="plan-confirm-modal-title">
+          <div class="plan-confirm-modal__backdrop" id="plan-confirm-modal-backdrop" tabindex="-1"></div>
+          <div class="plan-confirm-modal__panel" role="document">
+            <h3 id="plan-confirm-modal-title" class="plan-confirm-modal__title">تأكيد الإضافة إلى خطتك</h3>
+            <p class="plan-confirm-modal__lead" id="plan-confirm-modal-lead"></p>
+            <ul class="plan-confirm-modal__list" id="plan-confirm-modal-list"></ul>
+            <p class="plan-confirm-modal__question"><strong>هل أنت موافق؟</strong></p>
+            <div class="plan-confirm-modal__actions">
+              <button type="button" class="book-btn book-btn-lg" id="plan-confirm-yes">نعم</button>
+              <button type="button" class="book-btn book-btn-lg plan-confirm-modal__btn-no" id="plan-confirm-no">لا</button>
+            </div>
+          </div>
+        </div>
+        <form id="plan-batch-form" method="post" action="/public/book-plan-sessions" class="plan-batch-form-hidden" aria-hidden="true">
+          <input type="hidden" name="center_id" value="{{ center_id }}" />
+          <input type="hidden" name="session_ids_json" id="plan-batch-session-ids-json" value="[]" />
+        </form>
+        {% endif %}
       </section>

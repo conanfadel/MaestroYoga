@@ -24,6 +24,8 @@ def empty_public_subscription_context(center_id: int) -> dict[str, object]:
         "public_sub_sessions_remaining": None,
         "public_sub_at_cap": False,
         "public_sub_plan_slot_booking": False,
+        "public_sub_plan_id": None,
+        "public_sub_subscription_id": None,
         "public_sub_book_url": f"/index?center_id={int(center_id)}#sessions-section",
     }
 
@@ -122,6 +124,8 @@ def build_public_active_subscription_context(
     return {
         **base,
         "public_sub_active": True,
+        "public_sub_plan_id": int(plan.id),
+        "public_sub_subscription_id": int(sub.id),
         "public_sub_plan_name": plan.name,
         "public_sub_plan_type_label": plan_type_label,
         "public_sub_ends_at_display": _fmt_dt(sub.end_date),

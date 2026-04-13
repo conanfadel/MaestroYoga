@@ -127,6 +127,7 @@ from ...public_session_visibility import (
 from ...public_plan_session_booking import (
     cancel_public_plan_session_booking,
     confirm_public_plan_session_booking,
+    confirm_public_plan_sessions_booking,
     session_ids_booked_via_plan_for_client,
 )
 from ...public_subscription_helpers import build_public_active_subscription_context
