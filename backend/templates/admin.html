@@ -972,20 +972,23 @@
 
           <div style="display:grid;grid-template-columns:minmax(300px,500px) 1fr;gap:14px;">
             <div style="border:1px solid rgba(197,160,89,0.3);border-radius:14px;padding:12px;background:linear-gradient(180deg,#fff,#fffbef);">
-              <h3 class="small" style="margin:0 0 6px;font-size:0.92rem;">نموذج التشريح العضلي (أنثى)</h3>
-              <p class="small" style="margin:0 0 10px;line-height:1.5;">عرض أمامي وخلفي — اضغط على أي مجموعة عضلية للتصفية مباشرة.</p>
-              <svg viewBox="0 0 640 500" width="100%" role="img" aria-label="مخطط تشريح عضلي أنثوي أمامي وخلفي">
+              <h3 class="small" style="margin:0 0 6px;font-size:0.92rem;">Body Highlighter (أنثى)</h3>
+              <p class="small" style="margin:0 0 10px;line-height:1.5;">بدّل بين العرض الأمامي والخلفي ثم اضغط على المجموعة العضلية للتصفية مباشرة.</p>
+              <div style="display:flex;gap:8px;flex-wrap:wrap;margin:0 0 10px;">
+                <button type="button" data-body-side-toggle="front" aria-pressed="true" style="border:1px solid rgba(59,130,246,0.4);background:#eff6ff;color:#1d4ed8;border-radius:999px;padding:6px 12px;font-weight:700;cursor:pointer;">عرض أمامي</button>
+                <button type="button" data-body-side-toggle="back" aria-pressed="false" style="border:1px solid rgba(15,118,110,0.35);background:#fff;color:#0f766e;border-radius:999px;padding:6px 12px;font-weight:700;cursor:pointer;">عرض خلفي</button>
+              </div>
+              <svg viewBox="0 0 340 500" width="100%" role="img" aria-label="Body Highlighter أنثوي">
                 <defs>
                   <style>
                     .tm-bg { fill: url(#tm-bg-grad); stroke: #d0d8de; stroke-width: 1.3; }
                     .tm-body-skin { fill: url(#tm-skin-grad); stroke: #55607a; stroke-width: 1.7; filter: url(#tm-soft-shadow); }
                     .tm-body-shade { fill: rgba(39, 52, 73, 0.16); }
-                    .tm-outline { fill: none; stroke: #4f5d78; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; opacity: .9; }
                     .tm-detail { fill: none; stroke: #7783a0; stroke-width: 1.2; stroke-linecap: round; stroke-linejoin: round; opacity: .9; }
-                    .tm-muscle { fill: url(#tm-muscle-grad); fill-opacity: .72; stroke: #4f5d78; stroke-width: 1.25; cursor: pointer; transition: fill .18s ease, fill-opacity .18s ease, transform .18s ease; transform-origin: center; }
-                    .tm-muscle:hover { fill: #97c2ff; fill-opacity: .93; transform: scale(1.02); }
-                    .tm-muscle.active { fill: #0f766e; fill-opacity: 1; stroke: #064e3b; }
-                    .tm-label { fill: #374151; font-size: 18px; font-weight: 700; }
+                    .tm-muscle { fill: #74b9ff; fill-opacity: .62; stroke: #4f5d78; stroke-width: 1.2; cursor: pointer; transition: fill .18s ease, fill-opacity .18s ease, transform .18s ease; transform-origin: center; }
+                    .tm-muscle:hover { fill: #0984e3; fill-opacity: .85; transform: scale(1.02); }
+                    .tm-muscle.active { fill: #0f766e; fill-opacity: .98; stroke: #064e3b; }
+                    .tm-side-label { fill: #334155; font-size: 16px; font-weight: 700; }
                   </style>
                   <linearGradient id="tm-bg-grad" x1="0" y1="0" x2="1" y2="1">
                     <stop offset="0%" stop-color="#edf2f7" />
@@ -996,20 +999,14 @@
                     <stop offset="45%" stop-color="#e7edf5" />
                     <stop offset="100%" stop-color="#d8e0ea" />
                   </linearGradient>
-                  <linearGradient id="tm-muscle-grad" x1="0" y1="0" x2="1" y2="1">
-                    <stop offset="0%" stop-color="#b8c8f0" />
-                    <stop offset="100%" stop-color="#8fa7df" />
-                  </linearGradient>
                   <filter id="tm-soft-shadow" x="-40%" y="-40%" width="180%" height="180%">
                     <feDropShadow dx="0" dy="2" stdDeviation="2.2" flood-color="#2f3e57" flood-opacity="0.24" />
                   </filter>
                 </defs>
                 {% set ms = training_selected_muscle %}
-                <rect x="2" y="2" width="636" height="496" rx="16" class="tm-bg" />
-                <text x="161" y="27" class="tm-label" text-anchor="middle">خلفي</text>
-                <text x="479" y="27" class="tm-label" text-anchor="middle">أمامي</text>
+                <rect x="2" y="2" width="336" height="496" rx="16" class="tm-bg" />
 
-                <g transform="translate(80,34)">
+                <g data-body-side="back" transform="translate(90,34)" style="display:none;">
                   <ellipse cx="80" cy="34" rx="36" ry="40" class="tm-body-skin" />
                   <path d="M66 70 H94 L99 88 H61 Z" class="tm-body-skin" />
                   <path d="M45 95 C30 145 34 214 50 265 C61 297 99 297 110 265 C126 214 130 145 115 95 Z" class="tm-body-skin" />
@@ -1035,7 +1032,7 @@
                   <ellipse cx="96" cy="426" rx="11" ry="28" class="tm-muscle {{ 'active' if ms == 'calves' else '' }}" data-muscle-key="calves"><title>السمانة</title></ellipse>
                 </g>
 
-                <g transform="translate(398,34)">
+                <g data-body-side="front" transform="translate(90,34)">
                   <ellipse cx="80" cy="34" rx="36" ry="40" class="tm-body-skin" />
                   <path d="M66 70 H94 L99 88 H61 Z" class="tm-body-skin" />
                   <path d="M45 95 C30 145 34 214 50 265 C61 297 99 297 110 265 C126 214 130 145 115 95 Z" class="tm-body-skin" />
@@ -1061,6 +1058,7 @@
                   <ellipse cx="64" cy="426" rx="11" ry="28" class="tm-muscle {{ 'active' if ms == 'calves' else '' }}" data-muscle-key="calves"><title>السمانة</title></ellipse>
                   <ellipse cx="96" cy="426" rx="11" ry="28" class="tm-muscle {{ 'active' if ms == 'calves' else '' }}" data-muscle-key="calves"><title>السمانة</title></ellipse>
                 </g>
+                <text x="170" y="27" class="tm-side-label" text-anchor="middle" data-active-side-label>أمامي</text>
               </svg>
             </div>
 
@@ -2595,6 +2593,30 @@
       (function initTrainingMuscleClickMap() {
         var mapRoot = document.querySelector("#section-training-management");
         if (!mapRoot) return;
+        var sideToggles = mapRoot.querySelectorAll("[data-body-side-toggle]");
+        var sideGroups = mapRoot.querySelectorAll("[data-body-side]");
+        var sideLabel = mapRoot.querySelector("[data-active-side-label]");
+        function setBodySide(side) {
+          sideGroups.forEach(function (group) {
+            group.style.display = group.getAttribute("data-body-side") === side ? "" : "none";
+          });
+          sideToggles.forEach(function (btn) {
+            var active = btn.getAttribute("data-body-side-toggle") === side;
+            btn.setAttribute("aria-pressed", active ? "true" : "false");
+            btn.style.background = active ? "#eff6ff" : "#fff";
+          });
+          if (sideLabel) {
+            sideLabel.textContent = side === "back" ? "خلفي" : "أمامي";
+          }
+        }
+        sideToggles.forEach(function (btn) {
+          btn.addEventListener("click", function () {
+            var side = btn.getAttribute("data-body-side-toggle");
+            if (!side) return;
+            setBodySide(side);
+          });
+        });
+        setBodySide("front");
         mapRoot.querySelectorAll("[data-muscle-key]").forEach(function (node) {
           node.addEventListener("click", function () {
             var key = node.getAttribute("data-muscle-key");
