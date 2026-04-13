@@ -1,5 +1,5 @@
 {% if payment == 'success' or msg == 'subscribed' %}
-<div class="alert payment-success-banner">
+<div class="alert payment-success-banner" data-index-payment-return="1" tabindex="-1">
   <strong>تم تأكيد الدفع بنجاح.</strong>
   <p class="payment-success-lead">طلبك مفعّل في النظام. انتقل إلى <strong>الجلسات</strong> لاختيار مواعيدك، أو راجع حسابك لاحقًا.</p>
   <p class="payment-success-actions"><a href="#sessions-section">عرض الجلسات المتاحة</a> · <a href="/public/account">حسابي</a></p>
@@ -11,7 +11,7 @@
   </details>
 </div>
 {% endif %}
-{% if payment == 'cancelled' %}<div class="alert warn">تم إلغاء عملية الدفع. يمكنك المحاولة مرة أخرى.</div>{% endif %}
+{% if payment == 'cancelled' %}<div class="alert warn" data-index-payment-return="1" tabindex="-1">تم إلغاء عملية الدفع. يمكنك المحاولة مرة أخرى.</div>{% endif %}
 {% if msg == 'email_verified' %}<div class="alert">تم تأكيد البريد بنجاح. يمكنك الآن إكمال الحجز والدفع.</div>{% endif %}
 {% if msg == 'logged_out' %}<div class="alert">تم تسجيل الخروج بنجاح.</div>{% endif %}
 {% if msg == 'auth_required' %}<div class="alert warn">الرجاء تسجيل الدخول أولًا قبل الحجز أو الاشتراك.</div>{% endif %}
@@ -20,7 +20,7 @@
 {% if msg == 'duplicate' %}<div class="alert err">لديك حجز فعّال لهذه الجلسة بالفعل.</div>{% endif %}
 {% if msg == 'paid_mock' %}<div class="alert">تم تأكيد الحجز (وضع تجريبي للدفع).</div>{% endif %}
 {% if msg == 'subscribed_mock' %}<div class="alert">تم تفعيل الاشتراك (وضع تجريبي للدفع)، أهلًا بك في رحلتك الصحية.</div>{% endif %}
-{% if msg == 'subscription_cancelled' %}<div class="alert warn">لم يكتمل دفع الاشتراك.</div>{% endif %}
+{% if msg == 'subscription_cancelled' %}<div class="alert warn" data-index-payment-return="1" tabindex="-1">لم يكتمل دفع الاشتراك.</div>{% endif %}
 {% if msg == 'payment_provider_config' %}<div class="alert err">إعدادات الدفع الإلكتروني غير مكتملة على الخادم (مثلاً مفاتيح Paymob أو Stripe). راجع متغيرات البيئة أو تواصل مع الإدارة.</div>{% endif %}
 {% if msg == 'stripe_error' %}<div class="alert err">تعذر بدء الدفع الإلكتروني. تحقق من مفاتيح البوابة (Paymob / Stripe) وعنوان الـ API.</div>{% endif %}
 {% if msg == 'payment_checkout_failed' %}<div class="alert err">تعذر بدء الدفع الإلكتروني. تحقق من مفاتيح البوابة (Paymob / Stripe) وعنوان الـ API.</div>{% endif %}

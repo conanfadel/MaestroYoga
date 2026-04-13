@@ -3848,10 +3848,19 @@
       try {
         var isSmall = window.matchMedia && window.matchMedia("(max-width: 1024px)").matches;
         var hash = (window.location.hash || "").toLowerCase();
+        var qs = window.location.search || "";
+        /* بعد الدفع يعيد المزود المستخدم إلى /index?payment=success&… — لا تُجبر التمرير على الجلسات
+           لأن شريط «تم تأكيد الدفع» يقع *فوق* قسم الجلسات في الصفحة فيختفي عن العين. */
+        var paymentReturnBanner =
+          /[?&]payment=(success|cancelled)(?:&|$)/i.test(qs) ||
+          /[?&]msg=subscribed(?:&|$)/i.test(qs) ||
+          /[?&]msg=subscribed_mock(?:&|$)/i.test(qs) ||
+          /[?&]msg=subscription_cancelled(?:&|$)/i.test(qs);
         var shouldForceSessions =
           isSmall &&
           (!hash || hash === "#plans-section") &&
-          !window.__maestro_index_scroll_restore;
+          !window.__maestro_index_scroll_restore &&
+          !paymentReturnBanner;
         function forceSessionsEntryPosition() {
           var sessions = document.getElementById("sessions-section");
           if ("scrollRestoration" in history) history.scrollRestoration = "manual";
@@ -3867,6 +3876,15 @@
         if (shouldForceSessions) {
           requestAnimationFrame(function () {
             requestAnimationFrame(forceSessionsEntryPosition);
+          });
+        } else if (paymentReturnBanner) {
+          requestAnimationFrame(function () {
+            requestAnimationFrame(function () {
+              var banner = document.querySelector("[data-index-payment-return=\"1\"]");
+              if (banner && typeof banner.scrollIntoView === "function") {
+                banner.scrollIntoView({ block: "center", behavior: "smooth" });
+              }
+            });
           });
         }
       } catch (e) {}
