@@ -76,3 +76,33 @@ def register_admin_dashboard_routes(router: APIRouter) -> None:
                 training_plan_view=training_plan_view,
             ),
         )
+
+    @router.get("/admin/musclemap", response_class=_s.HTMLResponse)
+    def admin_musclemap_fullscreen(
+        request: _s.Request,
+        training_muscle: str = "core",
+        training_client_q: str = "",
+        training_client_id: int = 0,
+        training_tab: str = "assignments",
+        training_plan_view: str = "current",
+        training_body_gender: str = "female",
+        training_body_side: str = "front",
+        db: _s.Session = _s.Depends(_s.get_db),
+    ):
+        user, redirect = _s._require_admin_user_or_redirect(request, db)
+        if redirect:
+            return redirect
+        assert user is not None
+        return _s.templates.TemplateResponse(
+            request,
+            "admin_musclemap_fullscreen.html",
+            {
+                "training_selected_muscle": training_muscle,
+                "training_client_q": training_client_q,
+                "training_client_id": training_client_id,
+                "training_tab": training_tab,
+                "training_plan_view": training_plan_view,
+                "training_body_gender": training_body_gender,
+                "training_body_side": training_body_side,
+            },
+        )

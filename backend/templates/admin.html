@@ -981,6 +981,7 @@
               <div style="display:flex;gap:8px;flex-wrap:wrap;margin:0 0 10px;">
                 <button type="button" data-map-side-toggle="front" aria-pressed="true" style="border:1px solid rgba(59,130,246,0.4);background:#eff6ff;color:#1d4ed8;border-radius:999px;padding:6px 12px;font-weight:700;cursor:pointer;">عرض أمامي</button>
                 <button type="button" data-map-side-toggle="back" aria-pressed="false" style="border:1px solid rgba(15,118,110,0.35);background:#fff;color:#0f766e;border-radius:999px;padding:6px 12px;font-weight:700;cursor:pointer;">عرض خلفي</button>
+                <a data-preserve-scroll-link="1" href="/admin/musclemap?training_muscle={{ training_selected_muscle|urlencode }}&training_client_q={{ training_client_q|urlencode }}&training_client_id={{ training_client_id }}&training_tab={{ training_tab|urlencode }}&training_plan_view={{ training_plan_view|urlencode }}&training_body_gender={{ training_body_gender|default('female')|urlencode }}&training_body_side={{ training_body_side|default('front')|urlencode }}" style="text-decoration:none;border:1px solid rgba(2,132,199,0.45);background:#f0f9ff;color:#0369a1;border-radius:999px;padding:6px 12px;font-weight:800;display:inline-flex;align-items:center;">فتح بملء الشاشة</a>
               </div>
               {% set ms = training_selected_muscle %}
               <svg viewBox="0 0 420 520" width="100%" height="78vh" preserveAspectRatio="xMidYMid meet" style="display:block;max-width:100%;margin:0 auto;" role="img" aria-label="MuscleMap interactive model">
