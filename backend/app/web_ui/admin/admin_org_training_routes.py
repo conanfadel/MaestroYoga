@@ -40,7 +40,7 @@ def _parse_per_exercise_presets(raw: str) -> dict[int, dict[str, str | int]]:
             sets_count = int(payload.get("sets_count") or 0)
         except (TypeError, ValueError):
             sets_count = 0
-        if intensity not in {"easy", "medium", "hard"}:
+        if intensity not in {"easy", "medium", "hard", "custom"}:
             intensity = "medium"
         out[ex_id] = {
             "intensity": intensity,
@@ -313,7 +313,7 @@ def register_admin_org_training_routes(router: APIRouter) -> None:
         except (TypeError, ValueError):
             rest_clean = 0
         preset_map = _parse_per_exercise_presets(exercise_presets_json)
-        intensity_label_map = {"easy": "سهل", "medium": "متوسط", "hard": "صعب"}
+        intensity_label_map = {"easy": "سهل", "medium": "متوسط", "hard": "صعب", "custom": "مخصص"}
         batch = _s.models.TrainingAssignmentBatch(
             center_id=cid,
             client_id=client.id,
