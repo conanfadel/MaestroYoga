@@ -957,44 +957,69 @@
             <button type="submit">عرض</button>
           </form>
 
-          <div style="display:grid;grid-template-columns:minmax(220px,320px) 1fr;gap:14px;">
+          <div style="display:grid;grid-template-columns:minmax(280px,420px) 1fr;gap:14px;">
             <div style="border:1px solid rgba(197,160,89,0.3);border-radius:14px;padding:12px;background:linear-gradient(180deg,#fff,#fffbef);">
-              <h3 class="small" style="margin:0 0 10px;font-size:0.92rem;">تشريح العضلات (نموذج أنثى)</h3>
-              <svg viewBox="0 0 220 460" width="100%" role="img" aria-label="مخطط تشريح العضلات لجسم أنثى">
+              <h3 class="small" style="margin:0 0 6px;font-size:0.92rem;">نموذج التشريح العضلي (أنثى)</h3>
+              <p class="small" style="margin:0 0 10px;line-height:1.5;">عرض أمامي وخلفي — اضغط على أي مجموعة عضلية للتصفية مباشرة.</p>
+              <svg viewBox="0 0 560 470" width="100%" role="img" aria-label="مخطط تشريح عضلي أنثوي أمامي وخلفي">
                 <defs>
                   <style>
-                    .body-base { fill: #f8d9cd; stroke: #d19a82; stroke-width: 1.4; }
-                    .muscle { fill: #f0b79d; stroke: #8b4a32; stroke-width: 1.1; cursor: pointer; }
-                    .muscle.active { fill: #0f766e; stroke: #064e3b; }
+                    .tm-body { fill: #f9f6f1; stroke: #626892; stroke-width: 1.8; }
+                    .tm-muscle { fill: #dde3f6; stroke: #59608c; stroke-width: 1.5; cursor: pointer; transition: fill .18s ease; }
+                    .tm-muscle:hover { fill: #cfd7f1; }
+                    .tm-muscle.active { fill: #0f766e; stroke: #064e3b; }
+                    .tm-label { fill: #374151; font-size: 17px; font-weight: 700; }
                   </style>
                 </defs>
-                <title>تشريح العضلات - نموذج أنثى</title>
-                <ellipse cx="110" cy="42" rx="26" ry="30" class="body-base" />
-                <rect x="92" y="70" width="36" height="18" rx="8" class="body-base" />
-                <rect x="62" y="90" width="96" height="140" rx="34" class="body-base" />
-                <rect x="56" y="110" width="14" height="118" rx="7" class="body-base" />
-                <rect x="150" y="110" width="14" height="118" rx="7" class="body-base" />
-                <rect x="80" y="228" width="24" height="118" rx="12" class="body-base" />
-                <rect x="116" y="228" width="24" height="118" rx="12" class="body-base" />
-                <rect x="82" y="346" width="20" height="90" rx="10" class="body-base" />
-                <rect x="118" y="346" width="20" height="90" rx="10" class="body-base" />
-
                 {% set ms = training_selected_muscle %}
-                <ellipse cx="110" cy="68" rx="17" ry="8" class="muscle {{ 'active' if ms == 'neck' else '' }}" data-muscle-key="neck" />
-                <ellipse cx="82" cy="106" rx="16" ry="11" class="muscle {{ 'active' if ms == 'shoulders' else '' }}" data-muscle-key="shoulders" />
-                <ellipse cx="138" cy="106" rx="16" ry="11" class="muscle {{ 'active' if ms == 'shoulders' else '' }}" data-muscle-key="shoulders" />
-                <ellipse cx="110" cy="132" rx="22" ry="18" class="muscle {{ 'active' if ms == 'chest' else '' }}" data-muscle-key="chest" />
-                <ellipse cx="110" cy="170" rx="22" ry="17" class="muscle {{ 'active' if ms == 'core' else '' }}" data-muscle-key="core" />
-                <ellipse cx="64" cy="166" rx="9" ry="28" class="muscle {{ 'active' if ms == 'arms' else '' }}" data-muscle-key="arms" />
-                <ellipse cx="156" cy="166" rx="9" ry="28" class="muscle {{ 'active' if ms == 'arms' else '' }}" data-muscle-key="arms" />
-                <ellipse cx="110" cy="208" rx="20" ry="14" class="muscle {{ 'active' if ms == 'glutes' else '' }}" data-muscle-key="glutes" />
-                <ellipse cx="92" cy="272" rx="12" ry="36" class="muscle {{ 'active' if ms == 'quads' else '' }}" data-muscle-key="quads" />
-                <ellipse cx="128" cy="272" rx="12" ry="36" class="muscle {{ 'active' if ms == 'quads' else '' }}" data-muscle-key="quads" />
-                <ellipse cx="92" cy="320" rx="10" ry="26" class="muscle {{ 'active' if ms == 'hamstrings' else '' }}" data-muscle-key="hamstrings" />
-                <ellipse cx="128" cy="320" rx="10" ry="26" class="muscle {{ 'active' if ms == 'hamstrings' else '' }}" data-muscle-key="hamstrings" />
-                <ellipse cx="92" cy="384" rx="9" ry="22" class="muscle {{ 'active' if ms == 'calves' else '' }}" data-muscle-key="calves" />
-                <ellipse cx="128" cy="384" rx="9" ry="22" class="muscle {{ 'active' if ms == 'calves' else '' }}" data-muscle-key="calves" />
-                <rect x="90" y="146" width="40" height="12" rx="6" class="muscle {{ 'active' if ms == 'back' else '' }}" data-muscle-key="back" />
+                <text x="142" y="20" class="tm-label" text-anchor="middle">خلفي</text>
+                <text x="418" y="20" class="tm-label" text-anchor="middle">أمامي</text>
+
+                <g transform="translate(72,28)">
+                  <ellipse cx="70" cy="30" rx="24" ry="27" class="tm-body" />
+                  <rect x="56" y="55" width="28" height="16" rx="8" class="tm-body" />
+                  <path d="M36 84 C28 126 30 182 45 232 C52 256 88 256 95 232 C110 182 112 126 104 84 Z" class="tm-body" />
+                  <path d="M38 94 C22 120 18 166 23 212 C24 228 38 228 40 214 C45 170 48 132 56 98 Z" class="tm-body" />
+                  <path d="M102 94 C118 120 122 166 117 212 C116 228 102 228 100 214 C95 170 92 132 84 98 Z" class="tm-body" />
+                  <path d="M50 232 C42 292 42 372 49 436 C50 447 64 447 65 436 C73 374 78 292 71 232 Z" class="tm-body" />
+                  <path d="M90 232 C98 292 98 372 91 436 C90 447 76 447 75 436 C67 374 62 292 69 232 Z" class="tm-body" />
+
+                  <path d="M56 60 L84 60 L87 74 L53 74 Z" class="tm-muscle {{ 'active' if ms == 'neck' else '' }}" data-muscle-key="neck" />
+                  <ellipse cx="48" cy="96" rx="13" ry="10" class="tm-muscle {{ 'active' if ms == 'shoulders' else '' }}" data-muscle-key="shoulders" />
+                  <ellipse cx="92" cy="96" rx="13" ry="10" class="tm-muscle {{ 'active' if ms == 'shoulders' else '' }}" data-muscle-key="shoulders" />
+                  <path d="M50 108 C44 132 46 170 56 210 C60 226 76 226 80 210 C90 170 92 132 86 108 Z" class="tm-muscle {{ 'active' if ms == 'back' else '' }}" data-muscle-key="back" />
+                  <ellipse cx="33" cy="146" rx="8" ry="24" class="tm-muscle {{ 'active' if ms == 'arms' else '' }}" data-muscle-key="arms" />
+                  <ellipse cx="107" cy="146" rx="8" ry="24" class="tm-muscle {{ 'active' if ms == 'arms' else '' }}" data-muscle-key="arms" />
+                  <ellipse cx="60" cy="218" rx="15" ry="13" class="tm-muscle {{ 'active' if ms == 'glutes' else '' }}" data-muscle-key="glutes" />
+                  <ellipse cx="80" cy="218" rx="15" ry="13" class="tm-muscle {{ 'active' if ms == 'glutes' else '' }}" data-muscle-key="glutes" />
+                  <ellipse cx="56" cy="296" rx="10" ry="34" class="tm-muscle {{ 'active' if ms == 'hamstrings' else '' }}" data-muscle-key="hamstrings" />
+                  <ellipse cx="84" cy="296" rx="10" ry="34" class="tm-muscle {{ 'active' if ms == 'hamstrings' else '' }}" data-muscle-key="hamstrings" />
+                  <ellipse cx="56" cy="382" rx="9" ry="24" class="tm-muscle {{ 'active' if ms == 'calves' else '' }}" data-muscle-key="calves" />
+                  <ellipse cx="84" cy="382" rx="9" ry="24" class="tm-muscle {{ 'active' if ms == 'calves' else '' }}" data-muscle-key="calves" />
+                </g>
+
+                <g transform="translate(348,28)">
+                  <ellipse cx="70" cy="30" rx="24" ry="27" class="tm-body" />
+                  <rect x="56" y="55" width="28" height="16" rx="8" class="tm-body" />
+                  <path d="M36 84 C28 126 30 182 45 232 C52 256 88 256 95 232 C110 182 112 126 104 84 Z" class="tm-body" />
+                  <path d="M38 94 C22 120 18 166 23 212 C24 228 38 228 40 214 C45 170 48 132 56 98 Z" class="tm-body" />
+                  <path d="M102 94 C118 120 122 166 117 212 C116 228 102 228 100 214 C95 170 92 132 84 98 Z" class="tm-body" />
+                  <path d="M50 232 C42 292 42 372 49 436 C50 447 64 447 65 436 C73 374 78 292 71 232 Z" class="tm-body" />
+                  <path d="M90 232 C98 292 98 372 91 436 C90 447 76 447 75 436 C67 374 62 292 69 232 Z" class="tm-body" />
+
+                  <path d="M56 60 L84 60 L87 74 L53 74 Z" class="tm-muscle {{ 'active' if ms == 'neck' else '' }}" data-muscle-key="neck" />
+                  <ellipse cx="48" cy="96" rx="13" ry="10" class="tm-muscle {{ 'active' if ms == 'shoulders' else '' }}" data-muscle-key="shoulders" />
+                  <ellipse cx="92" cy="96" rx="13" ry="10" class="tm-muscle {{ 'active' if ms == 'shoulders' else '' }}" data-muscle-key="shoulders" />
+                  <ellipse cx="58" cy="124" rx="16" ry="14" class="tm-muscle {{ 'active' if ms == 'chest' else '' }}" data-muscle-key="chest" />
+                  <ellipse cx="82" cy="124" rx="16" ry="14" class="tm-muscle {{ 'active' if ms == 'chest' else '' }}" data-muscle-key="chest" />
+                  <path d="M62 142 C56 158 56 194 65 222 L75 222 C84 194 84 158 78 142 Z" class="tm-muscle {{ 'active' if ms == 'core' else '' }}" data-muscle-key="core" />
+                  <ellipse cx="33" cy="146" rx="8" ry="24" class="tm-muscle {{ 'active' if ms == 'arms' else '' }}" data-muscle-key="arms" />
+                  <ellipse cx="107" cy="146" rx="8" ry="24" class="tm-muscle {{ 'active' if ms == 'arms' else '' }}" data-muscle-key="arms" />
+                  <ellipse cx="56" cy="292" rx="10" ry="36" class="tm-muscle {{ 'active' if ms == 'quads' else '' }}" data-muscle-key="quads" />
+                  <ellipse cx="84" cy="292" rx="10" ry="36" class="tm-muscle {{ 'active' if ms == 'quads' else '' }}" data-muscle-key="quads" />
+                  <ellipse cx="56" cy="382" rx="9" ry="24" class="tm-muscle {{ 'active' if ms == 'calves' else '' }}" data-muscle-key="calves" />
+                  <ellipse cx="84" cy="382" rx="9" ry="24" class="tm-muscle {{ 'active' if ms == 'calves' else '' }}" data-muscle-key="calves" />
+                </g>
               </svg>
             </div>
 
