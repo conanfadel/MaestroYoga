@@ -372,10 +372,11 @@
         background: #fff !important;
         padding: 12mm !important;
       }
+      .card > :not(#section-schedule) { display: none !important; }
       .no-print { display: none !important; }
       .shell { max-width: 100% !important; width: 100% !important; }
       .card { box-shadow: none !important; border: none !important; }
-      .trainee-schedule__print-title { display: block !important; }
+      .trainee-schedule__print-title { display: none !important; }
       .trainee-schedule__print-identity {
         background: transparent !important;
         border: none !important;
@@ -537,7 +538,6 @@
           </div>
           <div class="trainee-schedule__print-identity">
             <p><strong>الاسم:</strong> {{ user.full_name }}</p>
-            <p><strong>الخطة:</strong> {% if public_sub_active %}{{ public_sub_plan_name }} — {{ public_sub_plan_type_label }}{% else %}غير مشترك{% endif %}</p>
           </div>
           <p class="sub no-print" style="margin-top:0;margin-bottom:12px;">الجلسات القادمة بحجز <strong>مؤكّد ومدفوع</strong> فقط في {{ center_display_name }}.</p>
           {% if trainee_schedule_rows %}
