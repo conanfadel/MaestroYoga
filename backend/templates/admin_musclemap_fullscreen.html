@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>MuscleMap — وضع ملء الشاشة</title>
+  <title>MuscleMap — عرض مطابق</title>
   <style>
     :root { color-scheme: light; }
     body {
@@ -50,32 +50,55 @@
     .stage {
       width: 100vw;
       height: calc(100vh - 74px);
-      padding: 8px;
+      padding: 10px 14px;
       box-sizing: border-box;
+      display: grid;
+      grid-template-columns: minmax(360px, 56vh) 1fr;
+      gap: 16px;
     }
-    svg {
+    .viewer {
+      background: #eef2f7;
+      border-radius: 16px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+      border: 1px solid rgba(148,163,184,0.25);
+    }
+    .viewer img {
       width: 100%;
       height: 100%;
+      object-fit: contain;
       display: block;
-      margin: 0 auto;
-      background: #e2e8f0;
-      border-radius: 18px;
     }
-    .mm-body {
-      fill: #f8fbff;
-      stroke: #64748b;
-      stroke-width: 2;
+    .muscles-panel {
+      background: #fff;
+      border: 1px solid rgba(148,163,184,0.25);
+      border-radius: 16px;
+      padding: 12px;
+      overflow: auto;
     }
-    .mm-muscle {
-      fill: #93c5fd;
-      stroke: #3b82f6;
-      stroke-width: 1.2;
+    .muscles-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill,minmax(140px,1fr));
+      gap: 8px;
+      margin-top: 8px;
+    }
+    .muscle-btn {
+      border: 1px solid rgba(59,130,246,0.35);
+      background: #eff6ff;
+      color: #1e3a8a;
+      border-radius: 10px;
+      padding: 9px 10px;
+      text-align: center;
+      font-weight: 800;
       cursor: pointer;
-      transition: transform .16s ease, fill .16s ease;
-      transform-origin: center;
     }
-    .mm-muscle:hover { fill: #60a5fa; transform: scale(1.02); }
-    .mm-muscle.active { fill: #0f766e; stroke: #065f46; }
+    .muscle-btn.active {
+      background: #ecfdf5;
+      border-color: rgba(16,185,129,0.5);
+      color: #065f46;
+    }
   </style>
 </head>
 <body>
@@ -89,122 +112,50 @@
   </div>
 
   <div class="stage">
-    {% set ms = training_selected_muscle %}
-    <svg viewBox="0 0 420 520" preserveAspectRatio="xMidYMid meet" role="img" aria-label="MuscleMap Fullscreen">
-      <g data-map-gender="female" data-map-side="front">
-        <ellipse cx="210" cy="62" rx="31" ry="33" class="mm-body" />
-        <path d="M185 98 C166 128 160 188 166 236 C171 274 186 298 210 301 C234 298 249 274 254 236 C260 188 254 128 235 98 Z" class="mm-body" />
-        <path d="M170 122 C149 150 141 198 147 244 C150 268 158 288 170 304" class="mm-body" />
-        <path d="M250 122 C271 150 279 198 273 244 C270 268 262 288 250 304" class="mm-body" />
-        <path d="M188 300 C176 338 176 427 188 490" class="mm-body" />
-        <path d="M232 300 C244 338 244 427 232 490" class="mm-body" />
-        <path d="M188 490 C190 500 198 507 206 507" class="mm-body" />
-        <path d="M232 490 C230 500 222 507 214 507" class="mm-body" />
-
-        <ellipse cx="210" cy="102" rx="16" ry="10" class="mm-muscle {{ 'active' if ms == 'neck' else '' }}" data-muscle-key="neck" />
-        <ellipse cx="176" cy="128" rx="14" ry="11" class="mm-muscle {{ 'active' if ms == 'shoulders' else '' }}" data-muscle-key="shoulders" />
-        <ellipse cx="244" cy="128" rx="14" ry="11" class="mm-muscle {{ 'active' if ms == 'shoulders' else '' }}" data-muscle-key="shoulders" />
-        <ellipse cx="186" cy="156" rx="16" ry="13" class="mm-muscle {{ 'active' if ms == 'chest' else '' }}" data-muscle-key="chest" />
-        <ellipse cx="234" cy="156" rx="16" ry="13" class="mm-muscle {{ 'active' if ms == 'chest' else '' }}" data-muscle-key="chest" />
-        <path d="M192 172 C184 214 188 245 198 272 H222 C232 245 236 214 228 172 Z" class="mm-muscle {{ 'active' if ms == 'core' else '' }}" data-muscle-key="core" />
-        <ellipse cx="148" cy="198" rx="10" ry="31" class="mm-muscle {{ 'active' if ms == 'arms' else '' }}" data-muscle-key="arms" />
-        <ellipse cx="272" cy="198" rx="10" ry="31" class="mm-muscle {{ 'active' if ms == 'arms' else '' }}" data-muscle-key="arms" />
-        <ellipse cx="190" cy="352" rx="13" ry="47" class="mm-muscle {{ 'active' if ms == 'quads' else '' }}" data-muscle-key="quads" />
-        <ellipse cx="230" cy="352" rx="13" ry="47" class="mm-muscle {{ 'active' if ms == 'quads' else '' }}" data-muscle-key="quads" />
-        <ellipse cx="190" cy="438" rx="11" ry="30" class="mm-muscle {{ 'active' if ms == 'calves' else '' }}" data-muscle-key="calves" />
-        <ellipse cx="230" cy="438" rx="11" ry="30" class="mm-muscle {{ 'active' if ms == 'calves' else '' }}" data-muscle-key="calves" />
-      </g>
-
-      <g data-map-gender="female" data-map-side="back" style="display:none;">
-        <ellipse cx="210" cy="62" rx="31" ry="33" class="mm-body" />
-        <path d="M185 98 C166 130 161 194 168 241 C173 277 187 302 210 305 C233 302 247 277 252 241 C259 194 254 130 235 98 Z" class="mm-body" />
-        <path d="M170 124 C149 154 143 203 150 248 C154 273 161 292 171 308" class="mm-body" />
-        <path d="M250 124 C271 154 277 203 270 248 C266 273 259 292 249 308" class="mm-body" />
-        <path d="M188 304 C176 340 176 428 188 491" class="mm-body" />
-        <path d="M232 304 C244 340 244 428 232 491" class="mm-body" />
-        <path d="M188 491 C190 501 198 508 206 508" class="mm-body" />
-        <path d="M232 491 C230 501 222 508 214 508" class="mm-body" />
-
-        <ellipse cx="210" cy="102" rx="16" ry="10" class="mm-muscle {{ 'active' if ms == 'neck' else '' }}" data-muscle-key="neck" />
-        <ellipse cx="176" cy="128" rx="14" ry="11" class="mm-muscle {{ 'active' if ms == 'shoulders' else '' }}" data-muscle-key="shoulders" />
-        <ellipse cx="244" cy="128" rx="14" ry="11" class="mm-muscle {{ 'active' if ms == 'shoulders' else '' }}" data-muscle-key="shoulders" />
-        <path d="M188 144 C180 192 184 244 197 270 C200 276 220 276 223 270 C236 244 240 192 232 144 Z" class="mm-muscle {{ 'active' if ms == 'back' else '' }}" data-muscle-key="back" />
-        <ellipse cx="148" cy="198" rx="10" ry="31" class="mm-muscle {{ 'active' if ms == 'arms' else '' }}" data-muscle-key="arms" />
-        <ellipse cx="272" cy="198" rx="10" ry="31" class="mm-muscle {{ 'active' if ms == 'arms' else '' }}" data-muscle-key="arms" />
-        <ellipse cx="190" cy="257" rx="18" ry="15" class="mm-muscle {{ 'active' if ms == 'glutes' else '' }}" data-muscle-key="glutes" />
-        <ellipse cx="230" cy="257" rx="18" ry="15" class="mm-muscle {{ 'active' if ms == 'glutes' else '' }}" data-muscle-key="glutes" />
-        <ellipse cx="190" cy="352" rx="13" ry="45" class="mm-muscle {{ 'active' if ms == 'hamstrings' else '' }}" data-muscle-key="hamstrings" />
-        <ellipse cx="230" cy="352" rx="13" ry="45" class="mm-muscle {{ 'active' if ms == 'hamstrings' else '' }}" data-muscle-key="hamstrings" />
-        <ellipse cx="190" cy="438" rx="11" ry="30" class="mm-muscle {{ 'active' if ms == 'calves' else '' }}" data-muscle-key="calves" />
-        <ellipse cx="230" cy="438" rx="11" ry="30" class="mm-muscle {{ 'active' if ms == 'calves' else '' }}" data-muscle-key="calves" />
-      </g>
-
-      <g data-map-gender="male" data-map-side="front" style="display:none;">
-        <ellipse cx="210" cy="60" rx="34" ry="34" class="mm-body" />
-        <path d="M180 94 C158 128 152 192 159 246 C164 286 181 313 210 317 C239 313 256 286 261 246 C268 192 262 128 240 94 Z" class="mm-body" />
-        <path d="M170 122 C145 151 136 205 145 258 C149 281 158 301 171 318" class="mm-body" />
-        <path d="M250 122 C275 151 284 205 275 258 C271 281 262 301 249 318" class="mm-body" />
-        <path d="M188 318 C174 350 176 430 188 495" class="mm-body" />
-        <path d="M232 318 C246 350 244 430 232 495" class="mm-body" />
-        <path d="M188 495 C191 505 199 512 207 512" class="mm-body" />
-        <path d="M232 495 C229 505 221 512 213 512" class="mm-body" />
-
-        <ellipse cx="210" cy="102" rx="16" ry="10" class="mm-muscle {{ 'active' if ms == 'neck' else '' }}" data-muscle-key="neck" />
-        <ellipse cx="174" cy="128" rx="15" ry="12" class="mm-muscle {{ 'active' if ms == 'shoulders' else '' }}" data-muscle-key="shoulders" />
-        <ellipse cx="246" cy="128" rx="15" ry="12" class="mm-muscle {{ 'active' if ms == 'shoulders' else '' }}" data-muscle-key="shoulders" />
-        <ellipse cx="186" cy="156" rx="17" ry="14" class="mm-muscle {{ 'active' if ms == 'chest' else '' }}" data-muscle-key="chest" />
-        <ellipse cx="234" cy="156" rx="17" ry="14" class="mm-muscle {{ 'active' if ms == 'chest' else '' }}" data-muscle-key="chest" />
-        <path d="M190 172 C182 216 187 250 198 278 H222 C233 250 238 216 230 172 Z" class="mm-muscle {{ 'active' if ms == 'core' else '' }}" data-muscle-key="core" />
-        <ellipse cx="146" cy="198" rx="11" ry="32" class="mm-muscle {{ 'active' if ms == 'arms' else '' }}" data-muscle-key="arms" />
-        <ellipse cx="274" cy="198" rx="11" ry="32" class="mm-muscle {{ 'active' if ms == 'arms' else '' }}" data-muscle-key="arms" />
-        <ellipse cx="190" cy="356" rx="13" ry="48" class="mm-muscle {{ 'active' if ms == 'quads' else '' }}" data-muscle-key="quads" />
-        <ellipse cx="230" cy="356" rx="13" ry="48" class="mm-muscle {{ 'active' if ms == 'quads' else '' }}" data-muscle-key="quads" />
-        <ellipse cx="190" cy="442" rx="11" ry="30" class="mm-muscle {{ 'active' if ms == 'calves' else '' }}" data-muscle-key="calves" />
-        <ellipse cx="230" cy="442" rx="11" ry="30" class="mm-muscle {{ 'active' if ms == 'calves' else '' }}" data-muscle-key="calves" />
-      </g>
-
-      <g data-map-gender="male" data-map-side="back" style="display:none;">
-        <ellipse cx="210" cy="60" rx="34" ry="34" class="mm-body" />
-        <path d="M180 94 C158 130 153 198 161 251 C166 289 182 316 210 320 C238 316 254 289 259 251 C267 198 262 130 240 94 Z" class="mm-body" />
-        <path d="M170 124 C145 156 139 211 148 262 C152 285 160 305 172 322" class="mm-body" />
-        <path d="M250 124 C275 156 281 211 272 262 C268 285 260 305 248 322" class="mm-body" />
-        <path d="M188 320 C174 352 176 432 188 496" class="mm-body" />
-        <path d="M232 320 C246 352 244 432 232 496" class="mm-body" />
-        <path d="M188 496 C191 506 199 513 207 513" class="mm-body" />
-        <path d="M232 496 C229 506 221 513 213 513" class="mm-body" />
-
-        <ellipse cx="210" cy="102" rx="16" ry="10" class="mm-muscle {{ 'active' if ms == 'neck' else '' }}" data-muscle-key="neck" />
-        <ellipse cx="174" cy="128" rx="15" ry="12" class="mm-muscle {{ 'active' if ms == 'shoulders' else '' }}" data-muscle-key="shoulders" />
-        <ellipse cx="246" cy="128" rx="15" ry="12" class="mm-muscle {{ 'active' if ms == 'shoulders' else '' }}" data-muscle-key="shoulders" />
-        <path d="M186 144 C178 194 182 248 197 276 C200 282 220 282 223 276 C238 248 242 194 234 144 Z" class="mm-muscle {{ 'active' if ms == 'back' else '' }}" data-muscle-key="back" />
-        <ellipse cx="146" cy="198" rx="11" ry="32" class="mm-muscle {{ 'active' if ms == 'arms' else '' }}" data-muscle-key="arms" />
-        <ellipse cx="274" cy="198" rx="11" ry="32" class="mm-muscle {{ 'active' if ms == 'arms' else '' }}" data-muscle-key="arms" />
-        <ellipse cx="190" cy="262" rx="19" ry="15" class="mm-muscle {{ 'active' if ms == 'glutes' else '' }}" data-muscle-key="glutes" />
-        <ellipse cx="230" cy="262" rx="19" ry="15" class="mm-muscle {{ 'active' if ms == 'glutes' else '' }}" data-muscle-key="glutes" />
-        <ellipse cx="190" cy="356" rx="13" ry="46" class="mm-muscle {{ 'active' if ms == 'hamstrings' else '' }}" data-muscle-key="hamstrings" />
-        <ellipse cx="230" cy="356" rx="13" ry="46" class="mm-muscle {{ 'active' if ms == 'hamstrings' else '' }}" data-muscle-key="hamstrings" />
-        <ellipse cx="190" cy="442" rx="11" ry="30" class="mm-muscle {{ 'active' if ms == 'calves' else '' }}" data-muscle-key="calves" />
-        <ellipse cx="230" cy="442" rx="11" ry="30" class="mm-muscle {{ 'active' if ms == 'calves' else '' }}" data-muscle-key="calves" />
-      </g>
-    </svg>
+    <div class="viewer">
+      <img id="musclemap-image" alt="MuscleMap official render" />
+    </div>
+    <div class="muscles-panel">
+      <h2 style="margin:0 0 6px;font-size:1.05rem;">اختيار العضلة</h2>
+      <p style="margin:0;color:#475569;line-height:1.6;">
+        هذه الصفحة تعرض الشكل الرسمي المطابق لـ MuscleMap.
+        اختر العضلة من الأزرار التالية لإرسال التصفية إلى لوحة الإدارة.
+      </p>
+      <div class="muscles-grid">
+        <button class="muscle-btn {{ 'active' if training_selected_muscle == 'neck' else '' }}" data-muscle-key="neck">الرقبة</button>
+        <button class="muscle-btn {{ 'active' if training_selected_muscle == 'shoulders' else '' }}" data-muscle-key="shoulders">الأكتاف</button>
+        <button class="muscle-btn {{ 'active' if training_selected_muscle == 'chest' else '' }}" data-muscle-key="chest">الصدر</button>
+        <button class="muscle-btn {{ 'active' if training_selected_muscle == 'core' else '' }}" data-muscle-key="core">البطن</button>
+        <button class="muscle-btn {{ 'active' if training_selected_muscle == 'arms' else '' }}" data-muscle-key="arms">الذراعان</button>
+        <button class="muscle-btn {{ 'active' if training_selected_muscle == 'back' else '' }}" data-muscle-key="back">الظهر</button>
+        <button class="muscle-btn {{ 'active' if training_selected_muscle == 'glutes' else '' }}" data-muscle-key="glutes">الألوية</button>
+        <button class="muscle-btn {{ 'active' if training_selected_muscle == 'hamstrings' else '' }}" data-muscle-key="hamstrings">الخلفية</button>
+        <button class="muscle-btn {{ 'active' if training_selected_muscle == 'quads' else '' }}" data-muscle-key="quads">الرباعية</button>
+        <button class="muscle-btn {{ 'active' if training_selected_muscle == 'calves' else '' }}" data-muscle-key="calves">السمانة</button>
+      </div>
+    </div>
   </div>
 
   <script>
     (function initFullscreenMuscleMap() {
+      var imageEl = document.getElementById("musclemap-image");
       var genderToggles = document.querySelectorAll("[data-map-gender-toggle]");
       var sideToggles = document.querySelectorAll("[data-map-side-toggle]");
-      var mapGroups = document.querySelectorAll("[data-map-gender][data-map-side]");
       var stateLabel = document.getElementById("map-state-label");
       var currentGender = "{{ training_body_gender }}" === "male" ? "male" : "female";
       var currentSide = "{{ training_body_side }}" === "back" ? "back" : "front";
+      var IMAGE_MAP = {
+        female_front: "https://raw.githubusercontent.com/melihcolpan/MuscleMap/main/Screenshots/female_front_highlight.png",
+        female_back: "https://raw.githubusercontent.com/melihcolpan/MuscleMap/main/Screenshots/female_back_highlight.png",
+        male_front: "https://raw.githubusercontent.com/melihcolpan/MuscleMap/main/Screenshots/male_front_highlight.png",
+        male_back: "https://raw.githubusercontent.com/melihcolpan/MuscleMap/main/Screenshots/male_back_highlight.png"
+      };
 
       function setMapState(gender, side) {
         currentGender = gender === "male" ? "male" : "female";
         currentSide = side === "back" ? "back" : "front";
-        mapGroups.forEach(function (group) {
-          var visible = group.getAttribute("data-map-gender") === currentGender && group.getAttribute("data-map-side") === currentSide;
-          group.style.display = visible ? "" : "none";
-        });
+        var imageKey = currentGender + "_" + currentSide;
+        if (imageEl && IMAGE_MAP[imageKey]) imageEl.src = IMAGE_MAP[imageKey];
         genderToggles.forEach(function (btn) {
           var active = btn.getAttribute("data-map-gender-toggle") === currentGender;
           btn.setAttribute("aria-pressed", active ? "true" : "false");
@@ -216,6 +167,10 @@
         if (stateLabel) {
           stateLabel.textContent = (currentGender === "male" ? "ذكر" : "أنثى") + " - " + (currentSide === "back" ? "خلفي" : "أمامي");
         }
+        var stateUrl = new URL(window.location.href);
+        stateUrl.searchParams.set("training_body_gender", currentGender);
+        stateUrl.searchParams.set("training_body_side", currentSide);
+        history.replaceState(null, "", stateUrl.toString());
       }
 
       genderToggles.forEach(function (btn) {
@@ -233,7 +188,7 @@
         });
       });
 
-      document.querySelectorAll("[data-muscle-key]").forEach(function (node) {
+      document.querySelectorAll(".muscle-btn[data-muscle-key]").forEach(function (node) {
         node.addEventListener("click", function () {
           var key = node.getAttribute("data-muscle-key");
           if (!key) return;
