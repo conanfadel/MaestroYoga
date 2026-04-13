@@ -88,6 +88,7 @@ class AdminDashboardQueryState:
     selected_muscle: str
     training_client_q: str
     training_client_id: int
+    training_tab: str
     training_client_options: list[dict[str, Any]]
     training_client_assignments: list[Any]
     training_medical_profile: Any
@@ -119,6 +120,7 @@ def load_admin_dashboard_query_state(
     training_muscle: str,
     training_client_q: str,
     training_client_id: int,
+    training_tab: str,
 ) -> AdminDashboardQueryState:
     cid = _s.require_user_center_id(user)
     center = db.get(_s.models.Center, cid)
@@ -302,6 +304,9 @@ def load_admin_dashboard_query_state(
             )
             .all()
         )
+    selected_training_tab = (training_tab or "").strip().lower()
+    if selected_training_tab not in {"assignments", "medical"}:
+        selected_training_tab = "assignments"
         training_medical_profile = (
             db.query(_s.models.ClientMedicalProfile)
             .filter(
@@ -387,6 +392,7 @@ def load_admin_dashboard_query_state(
         selected_muscle=selected_muscle,
         training_client_q=training_client_q_clean,
         training_client_id=selected_training_client_id,
+        training_tab=selected_training_tab,
         training_client_options=training_client_options,
         training_client_assignments=training_client_assignments,
         training_medical_profile=training_medical_profile,

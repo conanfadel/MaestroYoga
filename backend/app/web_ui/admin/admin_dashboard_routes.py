@@ -36,6 +36,7 @@ def register_admin_dashboard_routes(router: APIRouter) -> None:
         training_muscle: str = "core",
         training_client_q: str = "",
         training_client_id: int = 0,
+        training_tab: str = "assignments",
         db: _s.Session = _s.Depends(_s.get_db),
     ):
         user, redirect = _s._require_admin_user_or_redirect(request, db)
@@ -70,5 +71,6 @@ def register_admin_dashboard_routes(router: APIRouter) -> None:
                 training_muscle=training_muscle,
                 training_client_q=training_client_q,
                 training_client_id=training_client_id,
+                training_tab=training_tab,
             ),
         )

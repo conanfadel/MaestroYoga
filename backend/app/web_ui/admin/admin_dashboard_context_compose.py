@@ -50,6 +50,7 @@ def finalize_admin_dashboard_template_context(
         "training_muscle": state.selected_muscle,
         "training_client_q": state.training_client_q,
         "training_client_id": str(max(0, int(state.training_client_id or 0))),
+        "training_tab": state.training_tab,
     }
 
     def _admin_page_url(**overrides: str) -> str:
@@ -256,6 +257,7 @@ def finalize_admin_dashboard_template_context(
         "training_exercises": state.training_exercises,
         "training_client_q": state.training_client_q,
         "training_client_id": state.training_client_id,
+        "training_tab": state.training_tab,
         "training_client_options": state.training_client_options,
         "training_client_assignments": state.training_client_assignments,
         "training_medical_profile": state.training_medical_profile,

@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import json
+
 from fastapi import APIRouter
 
 from .. import impl_state as _s
@@ -12,6 +14,40 @@ def _normalize_muscle_key(raw: str) -> str:
     if key in _s.TRAINING_MUSCLE_KEY_SET:
         return key
     return "core"
+
+
+def _parse_per_exercise_presets(raw: str) -> dict[int, dict[str, str | int]]:
+    s = (raw or "").strip()
+    if not s:
+        return {}
+    try:
+        parsed = json.loads(s)
+    except json.JSONDecodeError:
+        return {}
+    if not isinstance(parsed, dict):
+        return {}
+    out: dict[int, dict[str, str | int]] = {}
+    for key, payload in parsed.items():
+        try:
+            ex_id = int(key)
+        except (TypeError, ValueError):
+            continue
+        if ex_id <= 0 or not isinstance(payload, dict):
+            continue
+        intensity = (payload.get("intensity") or "").strip().lower()
+        reps_text = (payload.get("reps_text") or "").strip()[:64]
+        try:
+            sets_count = int(payload.get("sets_count") or 0)
+        except (TypeError, ValueError):
+            sets_count = 0
+        if intensity not in {"easy", "medium", "hard"}:
+            intensity = "medium"
+        out[ex_id] = {
+            "intensity": intensity,
+            "sets_count": sets_count,
+            "reps_text": reps_text,
+        }
+    return out
 
 
 def register_admin_org_training_routes(router: APIRouter) -> None:
@@ -102,6 +138,7 @@ def register_admin_org_training_routes(router: APIRouter) -> None:
         training_muscle: str = _s.Form("core"),
         training_client_q: str = _s.Form(""),
         training_client_id: int = _s.Form(0),
+        training_tab: str = _s.Form("assignments"),
         scroll_y: str = _s.Form(default=""),
         db: _s.Session = _s.Depends(_s.get_db),
         user: _s.models.User = _s.Depends(
@@ -151,6 +188,7 @@ def register_admin_org_training_routes(router: APIRouter) -> None:
                 training_muscle=_normalize_muscle_key(training_muscle),
                 training_client_q=(training_client_q or "").strip(),
                 training_client_id=str(max(0, int(training_client_id or 0))),
+                training_tab=(training_tab or "assignments"),
             )
             + "#section-training-management",
             status_code=303,
@@ -164,13 +202,14 @@ def register_admin_org_training_routes(router: APIRouter) -> None:
         notes: str = _s.Form(""),
         starts_at: str = _s.Form(""),
         ends_at: str = _s.Form(""),
-        sets_count: int = _s.Form(3),
-        reps_text: str = _s.Form("10-12"),
+        default_sets_count: int = _s.Form(3),
+        default_reps_text: str = _s.Form("10-12"),
         duration_minutes: int = _s.Form(0),
         rest_seconds: int = _s.Form(60),
-        intensity_text: str = _s.Form("متوسط"),
+        exercise_presets_json: str = _s.Form(""),
         training_muscle: str = _s.Form("core"),
         training_client_q: str = _s.Form(""),
+        training_tab: str = _s.Form("assignments"),
         scroll_y: str = _s.Form(default=""),
         db: _s.Session = _s.Depends(_s.get_db),
         user: _s.models.User = _s.Depends(
@@ -195,6 +234,7 @@ def register_admin_org_training_routes(router: APIRouter) -> None:
                     training_muscle=_normalize_muscle_key(training_muscle),
                     training_client_q=(training_client_q or "").strip(),
                     training_client_id=str(max(0, int(client_id or 0))),
+                    training_tab=(training_tab or "assignments"),
                 )
                 + "#section-training-management",
                 status_code=303,
@@ -213,6 +253,7 @@ def register_admin_org_training_routes(router: APIRouter) -> None:
                     training_muscle=_normalize_muscle_key(training_muscle),
                     training_client_q=(training_client_q or "").strip(),
                     training_client_id=str(max(0, int(client_id or 0))),
+                    training_tab=(training_tab or "assignments"),
                 )
                 + "#section-training-management",
                 status_code=303,
@@ -235,6 +276,7 @@ def register_admin_org_training_routes(router: APIRouter) -> None:
                     training_muscle=_normalize_muscle_key(training_muscle),
                     training_client_q=(training_client_q or "").strip(),
                     training_client_id=str(max(0, int(client_id or 0))),
+                    training_tab=(training_tab or "assignments"),
                 )
                 + "#section-training-management",
                 status_code=303,
@@ -250,18 +292,18 @@ def register_admin_org_training_routes(router: APIRouter) -> None:
                     training_muscle=_normalize_muscle_key(training_muscle),
                     training_client_q=(training_client_q or "").strip(),
                     training_client_id=str(max(0, int(client_id or 0))),
+                    training_tab=(training_tab or "assignments"),
                 )
                 + "#section-training-management",
                 status_code=303,
             )
         title_clean = (title or "").strip()[:180]
         notes_clean = (notes or "").strip()[:3000]
-        reps_clean = (reps_text or "").strip()[:64]
-        intensity_clean = (intensity_text or "").strip()[:64]
+        reps_clean_default = (default_reps_text or "").strip()[:64]
         try:
-            sets_clean = int(sets_count or 0)
+            sets_clean_default = int(default_sets_count or 0)
         except (TypeError, ValueError):
-            sets_clean = 0
+            sets_clean_default = 0
         try:
             duration_clean = int(duration_minutes or 0)
         except (TypeError, ValueError):
@@ -270,6 +312,8 @@ def register_admin_org_training_routes(router: APIRouter) -> None:
             rest_clean = int(rest_seconds or 0)
         except (TypeError, ValueError):
             rest_clean = 0
+        preset_map = _parse_per_exercise_presets(exercise_presets_json)
+        intensity_label_map = {"easy": "سهل", "medium": "متوسط", "hard": "صعب"}
         batch = _s.models.TrainingAssignmentBatch(
             center_id=cid,
             client_id=client.id,
@@ -283,6 +327,11 @@ def register_admin_org_training_routes(router: APIRouter) -> None:
         db.add(batch)
         db.flush()
         for idx, ex in enumerate(exercise_rows):
+            preset = preset_map.get(ex.id) or {}
+            intensity_key = str(preset.get("intensity") or "medium")
+            sets_clean = int(preset.get("sets_count") or sets_clean_default or 0)
+            reps_clean = str(preset.get("reps_text") or reps_clean_default or "").strip()[:64]
+            intensity_clean = intensity_label_map.get(intensity_key, "متوسط")
             db.add(
                 _s.models.TrainingAssignmentItem(
                     center_id=cid,
@@ -309,6 +358,7 @@ def register_admin_org_training_routes(router: APIRouter) -> None:
                 training_muscle=_normalize_muscle_key(training_muscle),
                 training_client_q=(training_client_q or "").strip(),
                 training_client_id=str(client.id),
+                training_tab=(training_tab or "assignments"),
             )
             + "#section-training-management",
             status_code=303,
@@ -320,6 +370,7 @@ def register_admin_org_training_routes(router: APIRouter) -> None:
         training_muscle: str = _s.Form("core"),
         training_client_q: str = _s.Form(""),
         training_client_id: int = _s.Form(0),
+        training_tab: str = _s.Form("assignments"),
         scroll_y: str = _s.Form(default=""),
         db: _s.Session = _s.Depends(_s.get_db),
         user: _s.models.User = _s.Depends(
@@ -341,6 +392,7 @@ def register_admin_org_training_routes(router: APIRouter) -> None:
                     training_muscle=_normalize_muscle_key(training_muscle),
                     training_client_q=(training_client_q or "").strip(),
                     training_client_id=str(max(0, int(training_client_id or 0))),
+                    training_tab=(training_tab or "assignments"),
                 )
                 + "#section-training-management",
                 status_code=303,
@@ -355,6 +407,7 @@ def register_admin_org_training_routes(router: APIRouter) -> None:
                 training_muscle=_normalize_muscle_key(training_muscle),
                 training_client_q=(training_client_q or "").strip(),
                 training_client_id=str(batch.client_id),
+                training_tab=(training_tab or "assignments"),
             )
             + "#section-training-management",
             status_code=303,
@@ -374,6 +427,7 @@ def register_admin_org_training_routes(router: APIRouter) -> None:
         coach_notes: str = _s.Form(""),
         training_muscle: str = _s.Form("core"),
         training_client_q: str = _s.Form(""),
+        training_tab: str = _s.Form("medical"),
         scroll_y: str = _s.Form(default=""),
         db: _s.Session = _s.Depends(_s.get_db),
         user: _s.models.User = _s.Depends(
@@ -390,6 +444,7 @@ def register_admin_org_training_routes(router: APIRouter) -> None:
                     training_muscle=_normalize_muscle_key(training_muscle),
                     training_client_q=(training_client_q or "").strip(),
                     training_client_id=str(max(0, int(client_id or 0))),
+                    training_tab=(training_tab or "medical"),
                 )
                 + "#section-training-management",
                 status_code=303,
@@ -408,6 +463,7 @@ def register_admin_org_training_routes(router: APIRouter) -> None:
                     training_muscle=_normalize_muscle_key(training_muscle),
                     training_client_q=(training_client_q or "").strip(),
                     training_client_id=str(max(0, int(client_id or 0))),
+                    training_tab=(training_tab or "medical"),
                 )
                 + "#section-training-management",
                 status_code=303,
@@ -447,6 +503,7 @@ def register_admin_org_training_routes(router: APIRouter) -> None:
                 training_muscle=_normalize_muscle_key(training_muscle),
                 training_client_q=(training_client_q or "").strip(),
                 training_client_id=str(client_id),
+                training_tab=(training_tab or "medical"),
             )
             + "#section-training-management",
             status_code=303,
@@ -462,6 +519,7 @@ def register_admin_org_training_routes(router: APIRouter) -> None:
         severity: str = _s.Form(""),
         training_muscle: str = _s.Form("core"),
         training_client_q: str = _s.Form(""),
+        training_tab: str = _s.Form("medical"),
         scroll_y: str = _s.Form(default=""),
         db: _s.Session = _s.Depends(_s.get_db),
         user: _s.models.User = _s.Depends(
@@ -480,6 +538,7 @@ def register_admin_org_training_routes(router: APIRouter) -> None:
                     training_muscle=_normalize_muscle_key(training_muscle),
                     training_client_q=(training_client_q or "").strip(),
                     training_client_id=str(max(0, int(client_id or 0))),
+                    training_tab=(training_tab or "medical"),
                 )
                 + "#section-training-management",
                 status_code=303,
@@ -498,6 +557,7 @@ def register_admin_org_training_routes(router: APIRouter) -> None:
                     training_muscle=_normalize_muscle_key(training_muscle),
                     training_client_q=(training_client_q or "").strip(),
                     training_client_id=str(max(0, int(client_id or 0))),
+                    training_tab=(training_tab or "medical"),
                 )
                 + "#section-training-management",
                 status_code=303,
@@ -523,6 +583,7 @@ def register_admin_org_training_routes(router: APIRouter) -> None:
                 training_muscle=_normalize_muscle_key(training_muscle),
                 training_client_q=(training_client_q or "").strip(),
                 training_client_id=str(client_id),
+                training_tab=(training_tab or "medical"),
             )
             + "#section-training-management",
             status_code=303,
@@ -534,6 +595,7 @@ def register_admin_org_training_routes(router: APIRouter) -> None:
         training_muscle: str = _s.Form("core"),
         training_client_q: str = _s.Form(""),
         training_client_id: int = _s.Form(0),
+        training_tab: str = _s.Form("medical"),
         scroll_y: str = _s.Form(default=""),
         db: _s.Session = _s.Depends(_s.get_db),
         user: _s.models.User = _s.Depends(
@@ -551,6 +613,7 @@ def register_admin_org_training_routes(router: APIRouter) -> None:
                     training_muscle=_normalize_muscle_key(training_muscle),
                     training_client_q=(training_client_q or "").strip(),
                     training_client_id=str(max(0, int(training_client_id or 0))),
+                    training_tab=(training_tab or "medical"),
                 )
                 + "#section-training-management",
                 status_code=303,
@@ -566,6 +629,7 @@ def register_admin_org_training_routes(router: APIRouter) -> None:
                 training_muscle=_normalize_muscle_key(training_muscle),
                 training_client_q=(training_client_q or "").strip(),
                 training_client_id=str(target_client_id),
+                training_tab=(training_tab or "medical"),
             )
             + "#section-training-management",
             status_code=303,

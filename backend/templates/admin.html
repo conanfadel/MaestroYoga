@@ -944,6 +944,7 @@
             <input type="hidden" name="training_muscle" value="{{ training_selected_muscle }}" />
             <input type="hidden" name="training_client_q" value="{{ training_client_q }}" />
             <input type="hidden" name="training_client_id" value="{{ training_client_id }}" />
+            <input type="hidden" name="training_tab" value="{{ training_tab }}" />
             <button type="submit">توليد تمارين يوجا لكل العضلات</button>
             <span class="small" style="color:#64748b;">يضيف مكتبة يوجا افتراضية للمركز الحالي فقط، بدون تكرار العناصر الموجودة.</span>
           </form>
@@ -957,6 +958,7 @@
             <input type="hidden" name="center_posts_page" value="{{ center_posts_pagination.page }}" />
             <input type="hidden" name="training_client_q" value="{{ training_client_q }}" />
             <input type="hidden" name="training_client_id" value="{{ training_client_id }}" />
+            <input type="hidden" name="training_tab" value="{{ training_tab }}" />
             <label for="training-m-select" style="margin:0;">العضلة</label>
             <select id="training-m-select" name="training_muscle" onchange="this.form.submit()">
               {% for m in training_muscle_options %}
@@ -1054,6 +1056,7 @@
                   <input type="hidden" name="muscle_key" value="{{ training_selected_muscle }}" />
                   <input type="hidden" name="training_client_q" value="{{ training_client_q }}" />
                   <input type="hidden" name="training_client_id" value="{{ training_client_id }}" />
+                  <input type="hidden" name="training_tab" value="{{ training_tab }}" />
                   <label for="training-ex-name">اسم التمرين</label>
                   <input id="training-ex-name" name="exercise_name" type="text" maxlength="180" required placeholder="مثال: Plank Hold" />
                   <label for="training-ex-notes">ملاحظات (اختياري)</label>
@@ -1073,6 +1076,7 @@
                   <input type="hidden" name="payments_page" value="{{ payments_pagination.page }}" />
                   <input type="hidden" name="center_posts_page" value="{{ center_posts_pagination.page }}" />
                   <input type="hidden" name="training_muscle" value="{{ training_selected_muscle }}" />
+                  <input type="hidden" name="training_tab" value="{{ training_tab }}" />
                   <label for="training-client-q">بحث متدرب (اسم/إيميل/جوال/رقم اشتراك)</label>
                   <input id="training-client-q" name="training_client_q" value="{{ training_client_q }}" placeholder="اكتب للبحث..." />
                   <label for="training-client-id">المتدرب</label>
@@ -1094,12 +1098,19 @@
                 <p class="small" style="margin:0;color:#9f1239;">لا يوجد متدرب مطابق للبحث الحالي.</p>
                 {% endif %}
               </div>
+              <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px;">
+                <a href="/admin?training_muscle={{ training_selected_muscle|urlencode }}&training_client_q={{ training_client_q|urlencode }}&training_client_id={{ training_client_id }}&training_tab=assignments#section-training-management" style="display:inline-flex;align-items:center;padding:8px 14px;border-radius:999px;text-decoration:none;font-weight:800;border:1px solid rgba(16,185,129,0.45);{{ 'background:#ecfdf5;color:#065f46;' if training_tab != 'medical' else 'background:#fff;color:#065f46;' }}">تبويب التمارين</a>
+                <a href="/admin?training_muscle={{ training_selected_muscle|urlencode }}&training_client_q={{ training_client_q|urlencode }}&training_client_id={{ training_client_id }}&training_tab=medical#section-training-management" style="display:inline-flex;align-items:center;padding:8px 14px;border-radius:999px;text-decoration:none;font-weight:800;border:1px solid rgba(59,130,246,0.45);{{ 'background:#eff6ff;color:#1d4ed8;' if training_tab == 'medical' else 'background:#fff;color:#1d4ed8;' }}">تبويب الملف الطبي</a>
+              </div>
 
-              <form method="post" action="/admin/training/assignments/create" data-preserve-scroll="1" style="border:1px solid rgba(197,160,89,0.35);border-radius:12px;padding:12px;background:#fffdf8;margin-bottom:12px;">
-                <h3 style="margin:0 0 8px;font-size:1rem;">إرسال التمارين لمتدرب</h3>
+              {% if training_tab != 'medical' %}
+              <form id="assignment-form" method="post" action="/admin/training/assignments/create" data-preserve-scroll="1" style="border:1px solid rgba(197,160,89,0.35);border-radius:12px;padding:12px;background:#fffdf8;margin-bottom:12px;">
+                <h3 style="margin:0 0 8px;font-size:1rem;">اختر التمارين التي سيتم إرسالها للمتدرب</h3>
                 <input type="hidden" name="training_muscle" value="{{ training_selected_muscle }}" />
                 <input type="hidden" name="training_client_q" value="{{ training_client_q }}" />
+                <input type="hidden" name="training_tab" value="assignments" />
                 <input type="hidden" name="client_id" value="{{ training_client_id }}" />
+                <input type="hidden" id="exercise-presets-json" name="exercise_presets_json" value="" />
                 <label for="assign-title">عنوان الخطة</label>
                 <input id="assign-title" name="title" maxlength="180" placeholder="مثال: خطة تعافي الكتف - الأسبوع الأول" />
                 <label for="assign-notes">ملاحظات عامة</label>
@@ -1114,14 +1125,6 @@
                     <input id="assign-ends-at" name="ends_at" type="date" />
                   </div>
                   <div>
-                    <label for="assign-sets-count">المجموعات</label>
-                    <input id="assign-sets-count" name="sets_count" type="number" min="1" max="20" value="3" />
-                  </div>
-                  <div>
-                    <label for="assign-reps-text">التكرارات</label>
-                    <input id="assign-reps-text" name="reps_text" maxlength="64" value="10-12" />
-                  </div>
-                  <div>
                     <label for="assign-duration">مدة التمرين (دقائق)</label>
                     <input id="assign-duration" name="duration_minutes" type="number" min="0" max="600" value="0" />
                   </div>
@@ -1129,16 +1132,42 @@
                     <label for="assign-rest">الراحة (ثانية)</label>
                     <input id="assign-rest" name="rest_seconds" type="number" min="0" max="1200" value="60" />
                   </div>
+                  <div>
+                    <label for="assign-default-sets">مجموعات افتراضية</label>
+                    <input id="assign-default-sets" name="default_sets_count" type="number" min="1" max="20" value="3" />
+                  </div>
+                  <div>
+                    <label for="assign-default-reps">تكرارات افتراضية</label>
+                    <input id="assign-default-reps" name="default_reps_text" maxlength="64" value="10-12" />
+                  </div>
                 </div>
-                <label for="assign-intensity">الشدة</label>
-                <input id="assign-intensity" name="intensity_text" maxlength="64" value="متوسط" />
-                <p class="small" style="margin:8px 0 6px;">اختر التمارين التي سيتم إرسالها للمتدرب:</p>
-                <div style="max-height:190px;overflow:auto;border:1px solid rgba(45,52,54,0.12);border-radius:10px;padding:8px;background:#fff;">
+                <p class="small" style="margin:8px 0 6px;">اختر التمارين، ثم لكل تمرين اختر الشدة ليتم تعبئة المجموعات/التكرارات تلقائيًا:</p>
+                <div style="max-height:230px;overflow:auto;border:1px solid rgba(45,52,54,0.12);border-radius:10px;padding:8px;background:#fff;">
                   {% for ex in training_exercises %}
-                  <label style="display:flex;align-items:flex-start;gap:8px;margin:6px 0;">
-                    <input type="checkbox" name="selected_exercise_ids" value="{{ ex.id }}" style="width:auto;margin-top:2px;" />
-                    <span><strong>#{{ ex.id }} {{ ex.exercise_name }}</strong> <span class="small" style="color:#64748b;">{{ ex.notes or '' }}</span></span>
-                  </label>
+                  <div style="padding:6px 6px 8px;border-bottom:1px solid rgba(45,52,54,0.08);">
+                    <label style="display:flex;align-items:flex-start;gap:8px;margin:0;">
+                      <input type="checkbox" name="selected_exercise_ids" value="{{ ex.id }}" style="width:auto;margin-top:2px;" />
+                      <span><strong>#{{ ex.id }} {{ ex.exercise_name }}</strong> <span class="small" style="color:#64748b;">{{ ex.notes or '' }}</span></span>
+                    </label>
+                    <div class="exercise-intensity-box" data-exercise-id="{{ ex.id }}" style="display:none;margin:8px 0 0 24px;padding:8px;border:1px dashed rgba(16,185,129,0.45);border-radius:8px;background:#f0fdf4;">
+                      <label style="margin:0 0 6px;">شدة التمرين</label>
+                      <select class="js-intensity-select" data-exercise-id="{{ ex.id }}" style="max-width:180px;">
+                        <option value="easy">سهل</option>
+                        <option value="medium" selected>متوسط</option>
+                        <option value="hard">صعب</option>
+                      </select>
+                      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px;max-width:360px;">
+                        <div>
+                          <label style="margin:0 0 4px;">المجموعات</label>
+                          <input class="js-sets-input" data-exercise-id="{{ ex.id }}" type="number" min="1" max="20" value="3" />
+                        </div>
+                        <div>
+                          <label style="margin:0 0 4px;">التكرارات</label>
+                          <input class="js-reps-input" data-exercise-id="{{ ex.id }}" maxlength="64" value="10-12" />
+                        </div>
+                      </div>
+                    </div>
+                  </div>
                   {% else %}
                   <p class="small" style="margin:0;">لا توجد تمارين ضمن العضلة المحددة.</p>
                   {% endfor %}
@@ -1171,6 +1200,7 @@
                           <input type="hidden" name="muscle_key" value="{{ training_selected_muscle }}" />
                           <input type="hidden" name="training_client_q" value="{{ training_client_q }}" />
                           <input type="hidden" name="training_client_id" value="{{ training_client_id }}" />
+                          <input type="hidden" name="training_tab" value="assignments" />
                           <button type="submit" class="danger">حذف</button>
                         </form>
                       </td>
@@ -1210,6 +1240,7 @@
                           <input type="hidden" name="training_muscle" value="{{ training_selected_muscle }}" />
                           <input type="hidden" name="training_client_q" value="{{ training_client_q }}" />
                           <input type="hidden" name="training_client_id" value="{{ training_client_id }}" />
+                          <input type="hidden" name="training_tab" value="assignments" />
                           <button type="submit" class="danger">إيقاف</button>
                         </form>
                         {% else %}
@@ -1223,13 +1254,14 @@
                   </tbody>
                 </table>
               </div>
-
+              {% else %}
               <div style="border:1px solid rgba(59,130,246,0.35);border-radius:12px;padding:12px;background:#f8fbff;margin-bottom:12px;">
                 <h3 style="margin:0 0 8px;font-size:1rem;">ملف المتدرب الطبي (نموذج ملف مريض)</h3>
                 <form method="post" action="/admin/training/medical/save" data-preserve-scroll="1">
                   <input type="hidden" name="client_id" value="{{ training_client_id }}" />
                   <input type="hidden" name="training_muscle" value="{{ training_selected_muscle }}" />
                   <input type="hidden" name="training_client_q" value="{{ training_client_q }}" />
+                  <input type="hidden" name="training_tab" value="medical" />
                   <label for="med-chronic">أمراض مزمنة</label>
                   <textarea id="med-chronic" name="chronic_conditions" rows="2" maxlength="4000">{{ training_medical_profile.chronic_conditions if training_medical_profile else '' }}</textarea>
                   <label for="med-meds">أدوية حالية</label>
@@ -1264,6 +1296,7 @@
                   <input type="hidden" name="client_id" value="{{ training_client_id }}" />
                   <input type="hidden" name="training_muscle" value="{{ training_selected_muscle }}" />
                   <input type="hidden" name="training_client_q" value="{{ training_client_q }}" />
+                  <input type="hidden" name="training_tab" value="medical" />
                   <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;">
                     <div>
                       <label for="hist-category">النوع</label>
@@ -1316,6 +1349,7 @@
                             <input type="hidden" name="training_muscle" value="{{ training_selected_muscle }}" />
                             <input type="hidden" name="training_client_q" value="{{ training_client_q }}" />
                             <input type="hidden" name="training_client_id" value="{{ training_client_id }}" />
+                            <input type="hidden" name="training_tab" value="medical" />
                             <button type="submit" class="danger">حذف</button>
                           </form>
                         </td>
@@ -1327,6 +1361,7 @@
                   </table>
                 </div>
               </div>
+              {% endif %}
             </div>
           </div>
         </div>
@@ -2475,10 +2510,76 @@
             if (!key) return;
             var url = new URL(window.location.href);
             url.searchParams.set("training_muscle", key);
+            if (!url.searchParams.get("training_tab")) {
+              url.searchParams.set("training_tab", "{{ training_tab }}");
+            }
             if (!url.hash) url.hash = "section-training-management";
             window.location.href = url.toString();
           });
         });
+      })();
+
+      (function initTrainingAssignmentPresets() {
+        var form = document.getElementById("assignment-form");
+        if (!form) return;
+        var hidden = document.getElementById("exercise-presets-json");
+        if (!hidden) return;
+        var INTENSITY_PRESETS = {
+          easy: { sets: 2, reps: "8-10" },
+          medium: { sets: 3, reps: "10-12" },
+          hard: { sets: 4, reps: "12-15" }
+        };
+        function updateExerciseBox(checkbox) {
+          var exId = checkbox.value;
+          var box = form.querySelector('.exercise-intensity-box[data-exercise-id="' + exId + '"]');
+          if (!box) return;
+          box.style.display = checkbox.checked ? "" : "none";
+        }
+        function syncPresetField() {
+          var payload = {};
+          form.querySelectorAll('input[name="selected_exercise_ids"]').forEach(function (cb) {
+            if (!cb.checked) return;
+            var exId = cb.value;
+            var intensitySel = form.querySelector('.js-intensity-select[data-exercise-id="' + exId + '"]');
+            var setsInput = form.querySelector('.js-sets-input[data-exercise-id="' + exId + '"]');
+            var repsInput = form.querySelector('.js-reps-input[data-exercise-id="' + exId + '"]');
+            if (!intensitySel || !setsInput || !repsInput) return;
+            payload[exId] = {
+              intensity: intensitySel.value || "medium",
+              sets_count: parseInt(setsInput.value || "0", 10) || 0,
+              reps_text: (repsInput.value || "").trim()
+            };
+          });
+          hidden.value = JSON.stringify(payload);
+        }
+        form.querySelectorAll('input[name="selected_exercise_ids"]').forEach(function (cb) {
+          cb.addEventListener("change", function () {
+            updateExerciseBox(cb);
+            syncPresetField();
+          });
+          updateExerciseBox(cb);
+        });
+        form.querySelectorAll(".js-intensity-select").forEach(function (sel) {
+          sel.addEventListener("change", function () {
+            var exId = sel.getAttribute("data-exercise-id");
+            var setsInput = form.querySelector('.js-sets-input[data-exercise-id="' + exId + '"]');
+            var repsInput = form.querySelector('.js-reps-input[data-exercise-id="' + exId + '"]');
+            var preset = INTENSITY_PRESETS[sel.value] || INTENSITY_PRESETS.medium;
+            if (setsInput && !setsInput.value) setsInput.value = String(preset.sets);
+            if (repsInput && !repsInput.value) repsInput.value = preset.reps;
+            if (setsInput) setsInput.value = String(preset.sets);
+            if (repsInput) repsInput.value = preset.reps;
+            syncPresetField();
+          });
+          sel.dispatchEvent(new Event("change"));
+        });
+        form.querySelectorAll(".js-sets-input, .js-reps-input").forEach(function (input) {
+          input.addEventListener("input", syncPresetField);
+        });
+        form.addEventListener("submit", function () {
+          syncPresetField();
+        });
+        syncPresetField();
       })();
 
       const faqSearchInput = document.getElementById("faq-search-input");
