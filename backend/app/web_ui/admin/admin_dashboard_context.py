@@ -36,6 +36,7 @@ def build_admin_dashboard_template_context(
     training_client_q: str,
     training_client_id: int,
     training_tab: str,
+    training_plan_view: str,
 ) -> dict[str, Any]:
     """Load rooms, users, payments, security, posts, and aggregate KPIs for admin.html."""
     state = load_admin_dashboard_query_state(
@@ -63,5 +64,6 @@ def build_admin_dashboard_template_context(
         training_client_q=training_client_q,
         training_client_id=training_client_id,
         training_tab=training_tab,
+        training_plan_view=training_plan_view,
     )
     return finalize_admin_dashboard_template_context(db=db, user=user, msg=msg, state=state)

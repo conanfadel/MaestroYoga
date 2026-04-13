@@ -89,6 +89,7 @@ class AdminDashboardQueryState:
     training_client_q: str
     training_client_id: int
     training_tab: str
+    training_plan_view: str
     training_client_options: list[dict[str, Any]]
     training_client_sessions: list[dict[str, Any]]
     training_client_assignments: list[Any]
@@ -122,6 +123,7 @@ def load_admin_dashboard_query_state(
     training_client_q: str,
     training_client_id: int,
     training_tab: str,
+    training_plan_view: str,
 ) -> AdminDashboardQueryState:
     cid = _s.require_user_center_id(user)
     center = db.get(_s.models.Center, cid)
@@ -319,18 +321,37 @@ def load_admin_dashboard_query_state(
                     "starts_at_display": _s._fmt_dt(ys.starts_at),
                 }
             )
-        training_client_assignments = (
-            db.query(_s.models.TrainingAssignmentBatch)
-            .filter(
-                _s.models.TrainingAssignmentBatch.center_id == cid,
-                _s.models.TrainingAssignmentBatch.client_id == selected_training_client_id,
+        now_ts = _s.utcnow_naive()
+        selected_plan_view = (training_plan_view or "").strip().lower()
+        if selected_plan_view not in {"current", "history"}:
+            selected_plan_view = "current"
+        assignment_q = db.query(_s.models.TrainingAssignmentBatch).filter(
+            _s.models.TrainingAssignmentBatch.center_id == cid,
+            _s.models.TrainingAssignmentBatch.client_id == selected_training_client_id,
+        )
+        if selected_plan_view == "history":
+            assignment_q = assignment_q.filter(
+                _s.or_(
+                    _s.models.TrainingAssignmentBatch.status.in_(("cancelled", "completed")),
+                    _s.and_(
+                        _s.models.TrainingAssignmentBatch.ends_at.is_not(None),
+                        _s.models.TrainingAssignmentBatch.ends_at < now_ts,
+                    ),
+                )
             )
-            .order_by(
+        else:
+            assignment_q = assignment_q.filter(
+                _s.models.TrainingAssignmentBatch.status == "active",
+                _s.models.TrainingAssignmentBatch.ends_at >= now_ts,
+            )
+        training_client_assignments = (
+            assignment_q.order_by(
                 _s.models.TrainingAssignmentBatch.created_at.desc(),
                 _s.models.TrainingAssignmentBatch.id.desc(),
-            )
-            .all()
+            ).all()
         )
+    else:
+        selected_plan_view = "current"
     selected_training_tab = (training_tab or "").strip().lower()
     if selected_training_tab not in {"assignments", "medical"}:
         selected_training_tab = "assignments"
@@ -421,6 +442,7 @@ def load_admin_dashboard_query_state(
         training_client_q=training_client_q_clean,
         training_client_id=selected_training_client_id,
         training_tab=selected_training_tab,
+        training_plan_view=selected_plan_view,
         training_client_options=training_client_options,
         training_client_sessions=training_client_sessions,
         training_client_assignments=training_client_assignments,

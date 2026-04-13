@@ -139,6 +139,7 @@ def register_admin_org_training_routes(router: APIRouter) -> None:
         training_client_q: str = _s.Form(""),
         training_client_id: int = _s.Form(0),
         training_tab: str = _s.Form("assignments"),
+        training_plan_view: str = _s.Form("current"),
         scroll_y: str = _s.Form(default=""),
         db: _s.Session = _s.Depends(_s.get_db),
         user: _s.models.User = _s.Depends(
@@ -189,6 +190,7 @@ def register_admin_org_training_routes(router: APIRouter) -> None:
                 training_client_q=(training_client_q or "").strip(),
                 training_client_id=str(max(0, int(training_client_id or 0))),
                 training_tab=(training_tab or "assignments"),
+                training_plan_view=(training_plan_view or "current"),
             )
             + "#section-training-management",
             status_code=303,
@@ -211,6 +213,7 @@ def register_admin_org_training_routes(router: APIRouter) -> None:
         training_muscle: str = _s.Form("core"),
         training_client_q: str = _s.Form(""),
         training_tab: str = _s.Form("assignments"),
+        training_plan_view: str = _s.Form("current"),
         scroll_y: str = _s.Form(default=""),
         db: _s.Session = _s.Depends(_s.get_db),
         user: _s.models.User = _s.Depends(
@@ -236,6 +239,7 @@ def register_admin_org_training_routes(router: APIRouter) -> None:
                     training_client_q=(training_client_q or "").strip(),
                     training_client_id=str(max(0, int(client_id or 0))),
                     training_tab=(training_tab or "assignments"),
+                    training_plan_view=(training_plan_view or "current"),
                 )
                 + "#section-training-management",
                 status_code=303,
@@ -255,6 +259,7 @@ def register_admin_org_training_routes(router: APIRouter) -> None:
                     training_client_q=(training_client_q or "").strip(),
                     training_client_id=str(max(0, int(client_id or 0))),
                     training_tab=(training_tab or "assignments"),
+                    training_plan_view=(training_plan_view or "current"),
                 )
                 + "#section-training-management",
                 status_code=303,
@@ -299,6 +304,7 @@ def register_admin_org_training_routes(router: APIRouter) -> None:
                     training_client_q=(training_client_q or "").strip(),
                     training_client_id=str(max(0, int(client_id or 0))),
                     training_tab=(training_tab or "assignments"),
+                    training_plan_view=(training_plan_view or "current"),
                 )
                 + "#section-training-management",
                 status_code=303,
@@ -315,6 +321,22 @@ def register_admin_org_training_routes(router: APIRouter) -> None:
                     training_client_q=(training_client_q or "").strip(),
                     training_client_id=str(max(0, int(client_id or 0))),
                     training_tab=(training_tab or "assignments"),
+                    training_plan_view=(training_plan_view or "current"),
+                )
+                + "#section-training-management",
+                status_code=303,
+            )
+        if not start_dt or not end_dt:
+            return _s.RedirectResponse(
+                url=_s._url_with_params(
+                    "/admin",
+                    msg=_s.ADMIN_MSG_TRAINING_ASSIGNMENT_INVALID,
+                    scroll_y=scroll_y,
+                    training_muscle=_normalize_muscle_key(training_muscle),
+                    training_client_q=(training_client_q or "").strip(),
+                    training_client_id=str(max(0, int(client_id or 0))),
+                    training_tab=(training_tab or "assignments"),
+                    training_plan_view=(training_plan_view or "current"),
                 )
                 + "#section-training-management",
                 status_code=303,
@@ -382,6 +404,7 @@ def register_admin_org_training_routes(router: APIRouter) -> None:
                 training_client_q=(training_client_q or "").strip(),
                 training_client_id=str(client.id),
                 training_tab=(training_tab or "assignments"),
+                training_plan_view=(training_plan_view or "current"),
             )
             + "#section-training-management",
             status_code=303,
@@ -400,6 +423,7 @@ def register_admin_org_training_routes(router: APIRouter) -> None:
         training_client_q: str = _s.Form(""),
         training_client_id: int = _s.Form(0),
         training_tab: str = _s.Form("assignments"),
+        training_plan_view: str = _s.Form("current"),
         scroll_y: str = _s.Form(default=""),
         db: _s.Session = _s.Depends(_s.get_db),
         user: _s.models.User = _s.Depends(
@@ -422,6 +446,7 @@ def register_admin_org_training_routes(router: APIRouter) -> None:
                     training_client_q=(training_client_q or "").strip(),
                     training_client_id=str(max(0, int(training_client_id or 0))),
                     training_tab=(training_tab or "assignments"),
+                    training_plan_view=(training_plan_view or "current"),
                 )
                 + "#section-training-management",
                 status_code=303,
@@ -444,6 +469,7 @@ def register_admin_org_training_routes(router: APIRouter) -> None:
                     training_client_q=(training_client_q or "").strip(),
                     training_client_id=str(max(0, int(batch.client_id or 0))),
                     training_tab=(training_tab or "assignments"),
+                    training_plan_view=(training_plan_view or "current"),
                 )
                 + "#section-training-management",
                 status_code=303,
@@ -477,12 +503,28 @@ def register_admin_org_training_routes(router: APIRouter) -> None:
                         training_client_q=(training_client_q or "").strip(),
                         training_client_id=str(max(0, int(batch.client_id or 0))),
                         training_tab=(training_tab or "assignments"),
+                        training_plan_view=(training_plan_view or "current"),
                     )
                     + "#section-training-management",
                     status_code=303,
                 )
         start_dt = _s._parse_optional_date_str(starts_at)
         end_dt = _s._parse_optional_date_str(ends_at)
+        if not start_dt or not end_dt:
+            return _s.RedirectResponse(
+                url=_s._url_with_params(
+                    "/admin",
+                    msg=_s.ADMIN_MSG_TRAINING_ASSIGNMENT_INVALID,
+                    scroll_y=scroll_y,
+                    training_muscle=_normalize_muscle_key(training_muscle),
+                    training_client_q=(training_client_q or "").strip(),
+                    training_client_id=str(max(0, int(batch.client_id or 0))),
+                    training_tab=(training_tab or "assignments"),
+                    training_plan_view=(training_plan_view or "current"),
+                )
+                + "#section-training-management",
+                status_code=303,
+            )
         if start_dt and end_dt and end_dt < start_dt:
             return _s.RedirectResponse(
                 url=_s._url_with_params(
@@ -493,6 +535,7 @@ def register_admin_org_training_routes(router: APIRouter) -> None:
                     training_client_q=(training_client_q or "").strip(),
                     training_client_id=str(max(0, int(batch.client_id or 0))),
                     training_tab=(training_tab or "assignments"),
+                    training_plan_view=(training_plan_view or "current"),
                 )
                 + "#section-training-management",
                 status_code=303,
@@ -518,6 +561,7 @@ def register_admin_org_training_routes(router: APIRouter) -> None:
                 training_client_q=(training_client_q or "").strip(),
                 training_client_id=str(batch.client_id),
                 training_tab=(training_tab or "assignments"),
+                training_plan_view=(training_plan_view or "current"),
             )
             + "#section-training-management",
             status_code=303,
@@ -530,6 +574,7 @@ def register_admin_org_training_routes(router: APIRouter) -> None:
         training_client_q: str = _s.Form(""),
         training_client_id: int = _s.Form(0),
         training_tab: str = _s.Form("assignments"),
+        training_plan_view: str = _s.Form("current"),
         scroll_y: str = _s.Form(default=""),
         db: _s.Session = _s.Depends(_s.get_db),
         user: _s.models.User = _s.Depends(
@@ -552,6 +597,7 @@ def register_admin_org_training_routes(router: APIRouter) -> None:
                     training_client_q=(training_client_q or "").strip(),
                     training_client_id=str(max(0, int(training_client_id or 0))),
                     training_tab=(training_tab or "assignments"),
+                    training_plan_view=(training_plan_view or "current"),
                 )
                 + "#section-training-management",
                 status_code=303,
@@ -567,6 +613,7 @@ def register_admin_org_training_routes(router: APIRouter) -> None:
                 training_client_q=(training_client_q or "").strip(),
                 training_client_id=str(batch.client_id),
                 training_tab=(training_tab or "assignments"),
+                training_plan_view=(training_plan_view or "current"),
             )
             + "#section-training-management",
             status_code=303,
@@ -587,6 +634,7 @@ def register_admin_org_training_routes(router: APIRouter) -> None:
         training_muscle: str = _s.Form("core"),
         training_client_q: str = _s.Form(""),
         training_tab: str = _s.Form("medical"),
+        training_plan_view: str = _s.Form("current"),
         scroll_y: str = _s.Form(default=""),
         db: _s.Session = _s.Depends(_s.get_db),
         user: _s.models.User = _s.Depends(
@@ -604,6 +652,7 @@ def register_admin_org_training_routes(router: APIRouter) -> None:
                     training_client_q=(training_client_q or "").strip(),
                     training_client_id=str(max(0, int(client_id or 0))),
                     training_tab=(training_tab or "medical"),
+                    training_plan_view=(training_plan_view or "current"),
                 )
                 + "#section-training-management",
                 status_code=303,
@@ -623,6 +672,7 @@ def register_admin_org_training_routes(router: APIRouter) -> None:
                     training_client_q=(training_client_q or "").strip(),
                     training_client_id=str(max(0, int(client_id or 0))),
                     training_tab=(training_tab or "medical"),
+                    training_plan_view=(training_plan_view or "current"),
                 )
                 + "#section-training-management",
                 status_code=303,
@@ -663,6 +713,7 @@ def register_admin_org_training_routes(router: APIRouter) -> None:
                 training_client_q=(training_client_q or "").strip(),
                 training_client_id=str(client_id),
                 training_tab=(training_tab or "medical"),
+                training_plan_view=(training_plan_view or "current"),
             )
             + "#section-training-management",
             status_code=303,
@@ -679,6 +730,7 @@ def register_admin_org_training_routes(router: APIRouter) -> None:
         training_muscle: str = _s.Form("core"),
         training_client_q: str = _s.Form(""),
         training_tab: str = _s.Form("medical"),
+        training_plan_view: str = _s.Form("current"),
         scroll_y: str = _s.Form(default=""),
         db: _s.Session = _s.Depends(_s.get_db),
         user: _s.models.User = _s.Depends(
@@ -698,6 +750,7 @@ def register_admin_org_training_routes(router: APIRouter) -> None:
                     training_client_q=(training_client_q or "").strip(),
                     training_client_id=str(max(0, int(client_id or 0))),
                     training_tab=(training_tab or "medical"),
+                    training_plan_view=(training_plan_view or "current"),
                 )
                 + "#section-training-management",
                 status_code=303,
@@ -717,6 +770,7 @@ def register_admin_org_training_routes(router: APIRouter) -> None:
                     training_client_q=(training_client_q or "").strip(),
                     training_client_id=str(max(0, int(client_id or 0))),
                     training_tab=(training_tab or "medical"),
+                    training_plan_view=(training_plan_view or "current"),
                 )
                 + "#section-training-management",
                 status_code=303,
@@ -743,6 +797,7 @@ def register_admin_org_training_routes(router: APIRouter) -> None:
                 training_client_q=(training_client_q or "").strip(),
                 training_client_id=str(client_id),
                 training_tab=(training_tab or "medical"),
+                training_plan_view=(training_plan_view or "current"),
             )
             + "#section-training-management",
             status_code=303,
@@ -755,6 +810,7 @@ def register_admin_org_training_routes(router: APIRouter) -> None:
         training_client_q: str = _s.Form(""),
         training_client_id: int = _s.Form(0),
         training_tab: str = _s.Form("medical"),
+        training_plan_view: str = _s.Form("current"),
         scroll_y: str = _s.Form(default=""),
         db: _s.Session = _s.Depends(_s.get_db),
         user: _s.models.User = _s.Depends(
@@ -773,6 +829,7 @@ def register_admin_org_training_routes(router: APIRouter) -> None:
                     training_client_q=(training_client_q or "").strip(),
                     training_client_id=str(max(0, int(training_client_id or 0))),
                     training_tab=(training_tab or "medical"),
+                    training_plan_view=(training_plan_view or "current"),
                 )
                 + "#section-training-management",
                 status_code=303,
@@ -789,6 +846,7 @@ def register_admin_org_training_routes(router: APIRouter) -> None:
                 training_client_q=(training_client_q or "").strip(),
                 training_client_id=str(target_client_id),
                 training_tab=(training_tab or "medical"),
+                training_plan_view=(training_plan_view or "current"),
             )
             + "#section-training-management",
             status_code=303,

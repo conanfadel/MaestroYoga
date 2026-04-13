@@ -945,6 +945,7 @@
             <input type="hidden" name="training_client_q" value="{{ training_client_q }}" />
             <input type="hidden" name="training_client_id" value="{{ training_client_id }}" />
             <input type="hidden" name="training_tab" value="{{ training_tab }}" />
+            <input type="hidden" name="training_plan_view" value="{{ training_plan_view }}" />
             <button type="submit">توليد تمارين يوجا لكل العضلات</button>
             <span class="small" style="color:#64748b;">يضيف مكتبة يوجا افتراضية للمركز الحالي فقط، بدون تكرار العناصر الموجودة.</span>
           </form>
@@ -959,6 +960,7 @@
             <input type="hidden" name="training_client_q" value="{{ training_client_q }}" />
             <input type="hidden" name="training_client_id" value="{{ training_client_id }}" />
             <input type="hidden" name="training_tab" value="{{ training_tab }}" />
+            <input type="hidden" name="training_plan_view" value="{{ training_plan_view }}" />
             <label for="training-m-select" style="margin:0;">العضلة</label>
             <select id="training-m-select" name="training_muscle" onchange="if (this.form.requestSubmit) { this.form.requestSubmit(); } else { this.form.submit(); }">
               {% for m in training_muscle_options %}
@@ -975,14 +977,32 @@
               <svg viewBox="0 0 640 500" width="100%" role="img" aria-label="مخطط تشريح عضلي أنثوي أمامي وخلفي">
                 <defs>
                   <style>
-                    .tm-bg { fill: #e7ecef; stroke: #d0d8de; stroke-width: 1.3; }
-                    .tm-outline { fill: none; stroke: #5e648c; stroke-width: 2.3; stroke-linecap: round; stroke-linejoin: round; }
-                    .tm-detail { fill: none; stroke: #6f7598; stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; }
-                    .tm-muscle { fill: #cdd8f6; fill-opacity: .58; stroke: #57608c; stroke-width: 1.6; cursor: pointer; transition: fill .18s ease, fill-opacity .18s ease; }
-                    .tm-muscle:hover { fill: #b8c9f1; fill-opacity: .84; }
+                    .tm-bg { fill: url(#tm-bg-grad); stroke: #d0d8de; stroke-width: 1.3; }
+                    .tm-body-skin { fill: url(#tm-skin-grad); stroke: #55607a; stroke-width: 1.7; filter: url(#tm-soft-shadow); }
+                    .tm-body-shade { fill: rgba(39, 52, 73, 0.16); }
+                    .tm-outline { fill: none; stroke: #4f5d78; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; opacity: .9; }
+                    .tm-detail { fill: none; stroke: #7783a0; stroke-width: 1.2; stroke-linecap: round; stroke-linejoin: round; opacity: .9; }
+                    .tm-muscle { fill: url(#tm-muscle-grad); fill-opacity: .72; stroke: #4f5d78; stroke-width: 1.25; cursor: pointer; transition: fill .18s ease, fill-opacity .18s ease, transform .18s ease; transform-origin: center; }
+                    .tm-muscle:hover { fill: #97c2ff; fill-opacity: .93; transform: scale(1.02); }
                     .tm-muscle.active { fill: #0f766e; fill-opacity: 1; stroke: #064e3b; }
                     .tm-label { fill: #374151; font-size: 18px; font-weight: 700; }
                   </style>
+                  <linearGradient id="tm-bg-grad" x1="0" y1="0" x2="1" y2="1">
+                    <stop offset="0%" stop-color="#edf2f7" />
+                    <stop offset="100%" stop-color="#dbe7ee" />
+                  </linearGradient>
+                  <linearGradient id="tm-skin-grad" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stop-color="#f7fafc" />
+                    <stop offset="45%" stop-color="#e7edf5" />
+                    <stop offset="100%" stop-color="#d8e0ea" />
+                  </linearGradient>
+                  <linearGradient id="tm-muscle-grad" x1="0" y1="0" x2="1" y2="1">
+                    <stop offset="0%" stop-color="#b8c8f0" />
+                    <stop offset="100%" stop-color="#8fa7df" />
+                  </linearGradient>
+                  <filter id="tm-soft-shadow" x="-40%" y="-40%" width="180%" height="180%">
+                    <feDropShadow dx="0" dy="2" stdDeviation="2.2" flood-color="#2f3e57" flood-opacity="0.24" />
+                  </filter>
                 </defs>
                 {% set ms = training_selected_muscle %}
                 <rect x="2" y="2" width="636" height="496" rx="16" class="tm-bg" />
@@ -990,13 +1010,14 @@
                 <text x="479" y="27" class="tm-label" text-anchor="middle">أمامي</text>
 
                 <g transform="translate(80,34)">
-                  <ellipse cx="80" cy="34" rx="36" ry="40" class="tm-outline" />
-                  <path d="M66 70 H94 L99 88 H61 Z" class="tm-outline" />
-                  <path d="M45 95 C30 145 34 214 50 265 C61 297 99 297 110 265 C126 214 130 145 115 95 Z" class="tm-outline" />
-                  <path d="M44 108 C20 132 14 184 20 232 C22 249 36 252 41 237 C48 192 52 146 61 112 Z" class="tm-outline" />
-                  <path d="M116 108 C140 132 146 184 140 232 C138 249 124 252 119 237 C112 192 108 146 99 112 Z" class="tm-outline" />
-                  <path d="M60 266 C50 328 50 402 58 452 C60 466 78 466 80 452 C88 404 90 330 84 266 Z" class="tm-outline" />
-                  <path d="M100 266 C110 328 110 402 102 452 C100 466 82 466 80 452 C72 404 70 330 76 266 Z" class="tm-outline" />
+                  <ellipse cx="80" cy="34" rx="36" ry="40" class="tm-body-skin" />
+                  <path d="M66 70 H94 L99 88 H61 Z" class="tm-body-skin" />
+                  <path d="M45 95 C30 145 34 214 50 265 C61 297 99 297 110 265 C126 214 130 145 115 95 Z" class="tm-body-skin" />
+                  <path d="M44 108 C20 132 14 184 20 232 C22 249 36 252 41 237 C48 192 52 146 61 112 Z" class="tm-body-skin" />
+                  <path d="M116 108 C140 132 146 184 140 232 C138 249 124 252 119 237 C112 192 108 146 99 112 Z" class="tm-body-skin" />
+                  <path d="M60 266 C50 328 50 402 58 452 C60 466 78 466 80 452 C88 404 90 330 84 266 Z" class="tm-body-skin" />
+                  <path d="M100 266 C110 328 110 402 102 452 C100 466 82 466 80 452 C72 404 70 330 76 266 Z" class="tm-body-skin" />
+                  <path d="M45 122 C55 96 105 96 115 122 C106 116 93 113 80 113 C67 113 54 116 45 122 Z" class="tm-body-shade" />
                   <path d="M80 131 L80 252" class="tm-detail" />
                   <path d="M53 163 C69 171 91 171 107 163" class="tm-detail" />
 
@@ -1015,13 +1036,14 @@
                 </g>
 
                 <g transform="translate(398,34)">
-                  <ellipse cx="80" cy="34" rx="36" ry="40" class="tm-outline" />
-                  <path d="M66 70 H94 L99 88 H61 Z" class="tm-outline" />
-                  <path d="M45 95 C30 145 34 214 50 265 C61 297 99 297 110 265 C126 214 130 145 115 95 Z" class="tm-outline" />
-                  <path d="M44 108 C20 132 14 184 20 232 C22 249 36 252 41 237 C48 192 52 146 61 112 Z" class="tm-outline" />
-                  <path d="M116 108 C140 132 146 184 140 232 C138 249 124 252 119 237 C112 192 108 146 99 112 Z" class="tm-outline" />
-                  <path d="M60 266 C50 328 50 402 58 452 C60 466 78 466 80 452 C88 404 90 330 84 266 Z" class="tm-outline" />
-                  <path d="M100 266 C110 328 110 402 102 452 C100 466 82 466 80 452 C72 404 70 330 76 266 Z" class="tm-outline" />
+                  <ellipse cx="80" cy="34" rx="36" ry="40" class="tm-body-skin" />
+                  <path d="M66 70 H94 L99 88 H61 Z" class="tm-body-skin" />
+                  <path d="M45 95 C30 145 34 214 50 265 C61 297 99 297 110 265 C126 214 130 145 115 95 Z" class="tm-body-skin" />
+                  <path d="M44 108 C20 132 14 184 20 232 C22 249 36 252 41 237 C48 192 52 146 61 112 Z" class="tm-body-skin" />
+                  <path d="M116 108 C140 132 146 184 140 232 C138 249 124 252 119 237 C112 192 108 146 99 112 Z" class="tm-body-skin" />
+                  <path d="M60 266 C50 328 50 402 58 452 C60 466 78 466 80 452 C88 404 90 330 84 266 Z" class="tm-body-skin" />
+                  <path d="M100 266 C110 328 110 402 102 452 C100 466 82 466 80 452 C72 404 70 330 76 266 Z" class="tm-body-skin" />
+                  <path d="M48 136 C57 123 68 118 80 118 C92 118 103 123 112 136 C103 132 92 130 80 130 C68 130 57 132 48 136 Z" class="tm-body-shade" />
                   <path d="M80 131 L80 252" class="tm-detail" />
                   <path d="M64 151 C69 169 91 169 96 151" class="tm-detail" />
                   <path d="M68 177 C71 197 89 197 92 177" class="tm-detail" />
@@ -1061,6 +1083,7 @@
                   <input type="hidden" name="center_posts_page" value="{{ center_posts_pagination.page }}" />
                   <input type="hidden" name="training_muscle" value="{{ training_selected_muscle }}" />
                   <input type="hidden" name="training_tab" value="{{ training_tab }}" />
+                  <input type="hidden" name="training_plan_view" value="{{ training_plan_view }}" />
                   <label for="training-client-q">بحث متدرب (اسم/إيميل/جوال/رقم اشتراك)</label>
                   <input id="training-client-q" name="training_client_q" value="{{ training_client_q }}" placeholder="اكتب للبحث..." />
                   <label for="training-client-id">المتدرب</label>
@@ -1083,8 +1106,8 @@
                 {% endif %}
               </div>
               <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px;">
-                <a data-preserve-scroll-link="1" href="/admin?training_muscle={{ training_selected_muscle|urlencode }}&training_client_q={{ training_client_q|urlencode }}&training_client_id={{ training_client_id }}&training_tab=assignments#section-training-management" style="display:inline-flex;align-items:center;padding:8px 14px;border-radius:999px;text-decoration:none;font-weight:800;border:1px solid rgba(16,185,129,0.45);{{ 'background:#ecfdf5;color:#065f46;' if training_tab != 'medical' else 'background:#fff;color:#065f46;' }}">تبويب التمارين</a>
-                <a data-preserve-scroll-link="1" href="/admin?training_muscle={{ training_selected_muscle|urlencode }}&training_client_q={{ training_client_q|urlencode }}&training_client_id={{ training_client_id }}&training_tab=medical#section-training-management" style="display:inline-flex;align-items:center;padding:8px 14px;border-radius:999px;text-decoration:none;font-weight:800;border:1px solid rgba(59,130,246,0.45);{{ 'background:#eff6ff;color:#1d4ed8;' if training_tab == 'medical' else 'background:#fff;color:#1d4ed8;' }}">تبويب الملف الطبي</a>
+                <a data-preserve-scroll-link="1" href="/admin?training_muscle={{ training_selected_muscle|urlencode }}&training_client_q={{ training_client_q|urlencode }}&training_client_id={{ training_client_id }}&training_tab=assignments&training_plan_view={{ training_plan_view }}#section-training-management" style="display:inline-flex;align-items:center;padding:8px 14px;border-radius:999px;text-decoration:none;font-weight:800;border:1px solid rgba(16,185,129,0.45);{{ 'background:#ecfdf5;color:#065f46;' if training_tab != 'medical' else 'background:#fff;color:#065f46;' }}">تبويب التمارين</a>
+                <a data-preserve-scroll-link="1" href="/admin?training_muscle={{ training_selected_muscle|urlencode }}&training_client_q={{ training_client_q|urlencode }}&training_client_id={{ training_client_id }}&training_tab=medical&training_plan_view={{ training_plan_view }}#section-training-management" style="display:inline-flex;align-items:center;padding:8px 14px;border-radius:999px;text-decoration:none;font-weight:800;border:1px solid rgba(59,130,246,0.45);{{ 'background:#eff6ff;color:#1d4ed8;' if training_tab == 'medical' else 'background:#fff;color:#1d4ed8;' }}">تبويب الملف الطبي</a>
               </div>
 
               {% if training_tab != 'medical' %}
@@ -1093,6 +1116,7 @@
                 <input type="hidden" name="training_muscle" value="{{ training_selected_muscle }}" />
                 <input type="hidden" name="training_client_q" value="{{ training_client_q }}" />
                 <input type="hidden" name="training_tab" value="assignments" />
+                <input type="hidden" name="training_plan_view" value="{{ training_plan_view }}" />
                 <input type="hidden" name="client_id" value="{{ training_client_id }}" />
                 <input type="hidden" id="exercise-presets-json" name="exercise_presets_json" value="" />
                 <p class="small" style="margin:8px 0 6px;">اختر التمارين، ثم لكل تمرين اختر الشدة ليتم تعبئة المجموعات/التكرارات تلقائيًا:</p>
@@ -1140,12 +1164,12 @@
                 <textarea id="assign-notes" name="notes" rows="2" maxlength="3000" placeholder="تعليمات عامة للمتدرب..."></textarea>
                 <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:10px;">
                   <div>
-                    <label for="assign-starts-at">تاريخ البداية (اختياري)</label>
-                    <input id="assign-starts-at" name="starts_at" type="date" />
+                    <label for="assign-starts-at">تاريخ البداية</label>
+                    <input id="assign-starts-at" name="starts_at" type="date" required />
                   </div>
                   <div>
-                    <label for="assign-ends-at">تاريخ النهاية (اختياري)</label>
-                    <input id="assign-ends-at" name="ends_at" type="date" />
+                    <label for="assign-ends-at">تاريخ النهاية</label>
+                    <input id="assign-ends-at" name="ends_at" type="date" required />
                   </div>
                   <div>
                     <label for="assign-duration">مدة التمرين (دقائق)</label>
@@ -1175,6 +1199,7 @@
                   <input type="hidden" name="training_client_q" value="{{ training_client_q }}" />
                   <input type="hidden" name="training_client_id" value="{{ training_client_id }}" />
                   <input type="hidden" name="training_tab" value="assignments" />
+                  <input type="hidden" name="training_plan_view" value="{{ training_plan_view }}" />
                   <label for="training-ex-name">اسم التمرين</label>
                   <input id="training-ex-name" name="exercise_name" type="text" maxlength="180" required placeholder="مثال: Plank Hold" />
                   <label for="training-ex-notes">ملاحظات (اختياري)</label>
@@ -1220,8 +1245,12 @@
                 </table>
               </div>
 
+              <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:8px;">
+                <a data-preserve-scroll-link="1" href="/admin?training_muscle={{ training_selected_muscle|urlencode }}&training_client_q={{ training_client_q|urlencode }}&training_client_id={{ training_client_id }}&training_tab=assignments&training_plan_view=current#section-training-management" style="display:inline-flex;align-items:center;padding:6px 12px;border-radius:999px;text-decoration:none;font-weight:800;border:1px solid rgba(16,185,129,0.45);{{ 'background:#ecfdf5;color:#065f46;' if training_plan_view != 'history' else 'background:#fff;color:#065f46;' }}">الخطط الحالية</a>
+                <a data-preserve-scroll-link="1" href="/admin?training_muscle={{ training_selected_muscle|urlencode }}&training_client_q={{ training_client_q|urlencode }}&training_client_id={{ training_client_id }}&training_tab=assignments&training_plan_view=history#section-training-management" style="display:inline-flex;align-items:center;padding:6px 12px;border-radius:999px;text-decoration:none;font-weight:800;border:1px solid rgba(59,130,246,0.45);{{ 'background:#eff6ff;color:#1d4ed8;' if training_plan_view == 'history' else 'background:#fff;color:#1d4ed8;' }}">خطط سابقة</a>
+              </div>
               <div class="table-fluid" style="margin-bottom:12px;">
-                <h3 style="margin:0 0 8px;font-size:1rem;">خطط التمارين المرسلة للمتدرب</h3>
+                <h3 style="margin:0 0 8px;font-size:1rem;">{{ 'خطط التمارين السابقة (مؤرشفة)' if training_plan_view == 'history' else 'خطط التمارين المرسلة للمتدرب' }}</h3>
                 <table class="table-card-rwd">
                   <thead>
                     <tr>
@@ -1258,6 +1287,7 @@
                             <input type="hidden" name="training_client_q" value="{{ training_client_q }}" />
                             <input type="hidden" name="training_client_id" value="{{ training_client_id }}" />
                             <input type="hidden" name="training_tab" value="assignments" />
+                            <input type="hidden" name="training_plan_view" value="{{ training_plan_view }}" />
                             <label style="margin:0 0 4px;">عنوان الخطة</label>
                             <input name="title" maxlength="180" value="{{ b.title or '' }}" />
                             <label style="margin:6px 0 4px;">ملاحظات</label>
@@ -1265,11 +1295,11 @@
                             <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
                               <div>
                                 <label style="margin:6px 0 4px;">تاريخ البداية</label>
-                                <input name="starts_at" type="date" value="{{ b.starts_at.strftime('%Y-%m-%d') if b.starts_at else '' }}" />
+                                <input name="starts_at" type="date" value="{{ b.starts_at.strftime('%Y-%m-%d') if b.starts_at else '' }}" required />
                               </div>
                               <div>
                                 <label style="margin:6px 0 4px;">تاريخ النهاية</label>
-                                <input name="ends_at" type="date" value="{{ b.ends_at.strftime('%Y-%m-%d') if b.ends_at else '' }}" />
+                                <input name="ends_at" type="date" value="{{ b.ends_at.strftime('%Y-%m-%d') if b.ends_at else '' }}" required />
                               </div>
                             </div>
                             <label style="margin:6px 0 4px;">الجلسة المرتبطة</label>
@@ -1300,13 +1330,14 @@
                           <input type="hidden" name="training_client_q" value="{{ training_client_q }}" />
                           <input type="hidden" name="training_client_id" value="{{ training_client_id }}" />
                           <input type="hidden" name="training_tab" value="assignments" />
+                          <input type="hidden" name="training_plan_view" value="{{ training_plan_view }}" />
                           <button type="submit" class="danger">إيقاف</button>
                         </form>
                         {% endif %}
                       </td>
                     </tr>
                     {% else %}
-                    <tr><td colspan="7">لا توجد خطط مرسلة لهذا المتدرب بعد.</td></tr>
+                    <tr><td colspan="7">{{ 'لا توجد خطط سابقة لهذا المتدرب.' if training_plan_view == 'history' else 'لا توجد خطط حالية لهذا المتدرب.' }}</td></tr>
                     {% endfor %}
                   </tbody>
                 </table>
@@ -1319,6 +1350,7 @@
                   <input type="hidden" name="training_muscle" value="{{ training_selected_muscle }}" />
                   <input type="hidden" name="training_client_q" value="{{ training_client_q }}" />
                   <input type="hidden" name="training_tab" value="medical" />
+                  <input type="hidden" name="training_plan_view" value="{{ training_plan_view }}" />
                   <label for="med-chronic">أمراض مزمنة</label>
                   <textarea id="med-chronic" name="chronic_conditions" rows="2" maxlength="4000">{{ training_medical_profile.chronic_conditions if training_medical_profile else '' }}</textarea>
                   <label for="med-meds">أدوية حالية</label>
@@ -1354,6 +1386,7 @@
                   <input type="hidden" name="training_muscle" value="{{ training_selected_muscle }}" />
                   <input type="hidden" name="training_client_q" value="{{ training_client_q }}" />
                   <input type="hidden" name="training_tab" value="medical" />
+                  <input type="hidden" name="training_plan_view" value="{{ training_plan_view }}" />
                   <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;">
                     <div>
                       <label for="hist-category">النوع</label>
@@ -1407,6 +1440,7 @@
                             <input type="hidden" name="training_client_q" value="{{ training_client_q }}" />
                             <input type="hidden" name="training_client_id" value="{{ training_client_id }}" />
                             <input type="hidden" name="training_tab" value="medical" />
+                            <input type="hidden" name="training_plan_view" value="{{ training_plan_view }}" />
                             <button type="submit" class="danger">حذف</button>
                           </form>
                         </td>
