@@ -7,6 +7,7 @@ from .commerce import Booking, Payment
 from .plans import FAQItem, SubscriptionPlan
 from .posts import CenterPost, CenterPostImage
 from .schedule import Room, YogaSession
+from .training import TrainingExercise
 from .users import PublicUser, User
 
 __all__ = [
@@ -23,6 +24,7 @@ __all__ = [
     "Room",
     "SecurityAuditEvent",
     "SubscriptionPlan",
+    "TrainingExercise",
     "User",
     "YogaSession",
 ]

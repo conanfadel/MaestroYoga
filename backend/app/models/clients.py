@@ -13,6 +13,7 @@ class Client(Base):
     full_name = Column(String, nullable=False)
     email = Column(String, nullable=False)
     phone = Column(String, nullable=True)
+    subscription_number = Column(Integer, nullable=True, index=True)
     created_at = Column(DateTime, default=utcnow_naive)
 
     center = relationship("Center", back_populates="clients")

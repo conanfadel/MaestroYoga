@@ -741,6 +741,7 @@
             <tr>
               <th><input type="checkbox" id="public-users-select-all" title="تحديد الكل" /></th>
               <th>#</th>
+              <th>رقم الاشتراك</th>
               <th>الاسم</th>
               <th>البريد</th>
               <th>رقم الجوال</th>
@@ -764,6 +765,7 @@
                 />
               </td>
               <td>{{ pu.id }}</td>
+              <td><span class="mono">{{ pu.subscription_number_display }}</span></td>
               <td>{{ pu.full_name }}</td>
               <td>{{ pu.email }}</td>
               <td>{{ pu.phone }}</td>
@@ -809,7 +811,7 @@
               </td>
             </tr>
             {% else %}
-            <tr><td colspan="10">لا توجد نتائج في هذه الصفحة. غيّر الفلاتر أو عد للصفحة الأولى.<span class="admin-empty-cta"><a href="#section-public-users">قسم المستخدمين</a></span></td></tr>
+            <tr><td colspan="11">لا توجد نتائج في هذه الصفحة. غيّر الفلاتر أو عد للصفحة الأولى.<span class="admin-empty-cta"><a href="#section-public-users">قسم المستخدمين</a></span></td></tr>
             {% endfor %}
           </tbody>
         </table>
@@ -867,6 +869,7 @@
                 <tr>
                   <th><input type="checkbox" id="trash-users-select-all" title="تحديد الكل" /></th>
                   <th>#</th>
+                  <th>رقم الاشتراك</th>
                   <th>الاسم</th>
                   <th>البريد الحالي</th>
                   <th>رقم الجوال</th>
@@ -888,6 +891,7 @@
                     />
                   </td>
                   <td>{{ tu.id }}</td>
+                  <td><span class="mono">{{ tu.subscription_number_display }}</span></td>
                   <td>{{ tu.full_name }}</td>
                   <td><span class="mono">{{ tu.email }}</span></td>
                   <td>{{ tu.phone }}</td>
@@ -909,7 +913,7 @@
                   </td>
                 </tr>
                 {% else %}
-                <tr><td colspan="8">سلة المحذوفات فارغة.</td></tr>
+                <tr><td colspan="9">سلة المحذوفات فارغة.</td></tr>
                 {% endfor %}
               </tbody>
             </table>
@@ -922,6 +926,126 @@
             {% if trash_pagination.has_next %}
               <a class="soft-link" data-preserve-scroll-link="1" href="{{ trash_pagination.next_url }}">التالي</a>
             {% endif %}
+          </div>
+        </div>
+      </div>
+    </section>
+    {% endif %}
+
+    {% if perm_training_management %}
+    <section id="section-training-management" class="accordion">
+      <div class="accordion-body">
+        <div class="card" style="margin-top:0;">
+          <h2 class="admin-booking-block-heading admin-booking-block-heading--flush-top">إدارة التدريبات</h2>
+          <p class="small" style="margin:0 0 12px;line-height:1.6;">
+            اختر عضلة من مخطط الجسم الأنثوي، ثم أضف تمارين مناسبة لها. يمكن تخصيص أكثر من تمرين لكل عضلة حسب خطة التدريب.
+          </p>
+          <form method="get" action="/admin" class="filters" style="margin-bottom:12px;">
+            <input type="hidden" name="public_user_page" value="{{ public_user_pagination.page }}" />
+            <input type="hidden" name="trash_page" value="{{ trash_pagination.page }}" />
+            <input type="hidden" name="trash_q" value="{{ trash_filters.q }}" />
+            <input type="hidden" name="audit_page" value="{{ security_pagination.page }}" />
+            <input type="hidden" name="sessions_page" value="{{ sessions_pagination.page }}" />
+            <input type="hidden" name="payments_page" value="{{ payments_pagination.page }}" />
+            <input type="hidden" name="center_posts_page" value="{{ center_posts_pagination.page }}" />
+            <label for="training-m-select" style="margin:0;">العضلة</label>
+            <select id="training-m-select" name="training_muscle" onchange="this.form.submit()">
+              {% for m in training_muscle_options %}
+              <option value="{{ m.key }}" {{ 'selected' if m.key == training_selected_muscle else '' }}>{{ m.label }}</option>
+              {% endfor %}
+            </select>
+            <button type="submit">عرض</button>
+          </form>
+
+          <div style="display:grid;grid-template-columns:minmax(220px,320px) 1fr;gap:14px;">
+            <div style="border:1px solid rgba(197,160,89,0.3);border-radius:14px;padding:12px;background:linear-gradient(180deg,#fff,#fffbef);">
+              <h3 class="small" style="margin:0 0 10px;font-size:0.92rem;">تشريح العضلات (نموذج أنثى)</h3>
+              <svg viewBox="0 0 220 460" width="100%" role="img" aria-label="مخطط تشريح العضلات لجسم أنثى">
+                <defs>
+                  <style>
+                    .body-base { fill: #f8d9cd; stroke: #d19a82; stroke-width: 1.4; }
+                    .muscle { fill: #f0b79d; stroke: #8b4a32; stroke-width: 1.1; cursor: pointer; }
+                    .muscle.active { fill: #0f766e; stroke: #064e3b; }
+                  </style>
+                </defs>
+                <title>تشريح العضلات - نموذج أنثى</title>
+                <ellipse cx="110" cy="42" rx="26" ry="30" class="body-base" />
+                <rect x="92" y="70" width="36" height="18" rx="8" class="body-base" />
+                <rect x="62" y="90" width="96" height="140" rx="34" class="body-base" />
+                <rect x="56" y="110" width="14" height="118" rx="7" class="body-base" />
+                <rect x="150" y="110" width="14" height="118" rx="7" class="body-base" />
+                <rect x="80" y="228" width="24" height="118" rx="12" class="body-base" />
+                <rect x="116" y="228" width="24" height="118" rx="12" class="body-base" />
+                <rect x="82" y="346" width="20" height="90" rx="10" class="body-base" />
+                <rect x="118" y="346" width="20" height="90" rx="10" class="body-base" />
+
+                {% set ms = training_selected_muscle %}
+                <ellipse cx="110" cy="68" rx="17" ry="8" class="muscle {{ 'active' if ms == 'neck' else '' }}" data-muscle-key="neck" />
+                <ellipse cx="82" cy="106" rx="16" ry="11" class="muscle {{ 'active' if ms == 'shoulders' else '' }}" data-muscle-key="shoulders" />
+                <ellipse cx="138" cy="106" rx="16" ry="11" class="muscle {{ 'active' if ms == 'shoulders' else '' }}" data-muscle-key="shoulders" />
+                <ellipse cx="110" cy="132" rx="22" ry="18" class="muscle {{ 'active' if ms == 'chest' else '' }}" data-muscle-key="chest" />
+                <ellipse cx="110" cy="170" rx="22" ry="17" class="muscle {{ 'active' if ms == 'core' else '' }}" data-muscle-key="core" />
+                <ellipse cx="64" cy="166" rx="9" ry="28" class="muscle {{ 'active' if ms == 'arms' else '' }}" data-muscle-key="arms" />
+                <ellipse cx="156" cy="166" rx="9" ry="28" class="muscle {{ 'active' if ms == 'arms' else '' }}" data-muscle-key="arms" />
+                <ellipse cx="110" cy="208" rx="20" ry="14" class="muscle {{ 'active' if ms == 'glutes' else '' }}" data-muscle-key="glutes" />
+                <ellipse cx="92" cy="272" rx="12" ry="36" class="muscle {{ 'active' if ms == 'quads' else '' }}" data-muscle-key="quads" />
+                <ellipse cx="128" cy="272" rx="12" ry="36" class="muscle {{ 'active' if ms == 'quads' else '' }}" data-muscle-key="quads" />
+                <ellipse cx="92" cy="320" rx="10" ry="26" class="muscle {{ 'active' if ms == 'hamstrings' else '' }}" data-muscle-key="hamstrings" />
+                <ellipse cx="128" cy="320" rx="10" ry="26" class="muscle {{ 'active' if ms == 'hamstrings' else '' }}" data-muscle-key="hamstrings" />
+                <ellipse cx="92" cy="384" rx="9" ry="22" class="muscle {{ 'active' if ms == 'calves' else '' }}" data-muscle-key="calves" />
+                <ellipse cx="128" cy="384" rx="9" ry="22" class="muscle {{ 'active' if ms == 'calves' else '' }}" data-muscle-key="calves" />
+                <rect x="90" y="146" width="40" height="12" rx="6" class="muscle {{ 'active' if ms == 'back' else '' }}" data-muscle-key="back" />
+              </svg>
+            </div>
+
+            <div>
+              <div style="border:1px solid rgba(125,211,174,0.45);border-radius:12px;padding:12px;background:#f8fffc;margin-bottom:12px;">
+                <h3 style="margin:0 0 8px;font-size:1rem;">العضلة المحددة: {{ training_selected_muscle_label }}</h3>
+                <form method="post" action="/admin/training/exercises/add" data-preserve-scroll="1">
+                  <input type="hidden" name="return_section" value="section-training-management" />
+                  <input type="hidden" name="muscle_key" value="{{ training_selected_muscle }}" />
+                  <label for="training-ex-name">اسم التمرين</label>
+                  <input id="training-ex-name" name="exercise_name" type="text" maxlength="180" required placeholder="مثال: Plank Hold" />
+                  <label for="training-ex-notes">ملاحظات (اختياري)</label>
+                  <textarea id="training-ex-notes" name="notes" rows="2" maxlength="3000" placeholder="إرشادات الأداء، عدد التكرارات، الزمن..."></textarea>
+                  <button type="submit">إضافة التمرين</button>
+                </form>
+              </div>
+
+              <div class="table-fluid">
+                <table class="table-card-rwd">
+                  <thead>
+                    <tr>
+                      <th>#</th>
+                      <th>التمرين</th>
+                      <th>ملاحظات</th>
+                      <th>تاريخ الإضافة</th>
+                      <th>إجراء</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {% for ex in training_exercises %}
+                    <tr>
+                      <td>{{ ex.id }}</td>
+                      <td>{{ ex.exercise_name }}</td>
+                      <td>{{ ex.notes or '-' }}</td>
+                      <td>{{ ex.created_at.strftime('%Y-%m-%d %H:%M') if ex.created_at else '-' }}</td>
+                      <td>
+                        <form method="post" action="/admin/training/exercises/delete" data-preserve-scroll="1" onsubmit="return confirm('حذف هذا التمرين؟');">
+                          <input type="hidden" name="return_section" value="section-training-management" />
+                          <input type="hidden" name="exercise_id" value="{{ ex.id }}" />
+                          <input type="hidden" name="muscle_key" value="{{ training_selected_muscle }}" />
+                          <button type="submit" class="danger">حذف</button>
+                        </form>
+                      </td>
+                    </tr>
+                    {% else %}
+                    <tr><td colspan="5">لا توجد تمارين مضافة لهذه العضلة بعد.</td></tr>
+                    {% endfor %}
+                  </tbody>
+                </table>
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -2059,6 +2183,21 @@
           }
         });
       }
+
+      (function initTrainingMuscleClickMap() {
+        var mapRoot = document.querySelector("#section-training-management");
+        if (!mapRoot) return;
+        mapRoot.querySelectorAll("[data-muscle-key]").forEach(function (node) {
+          node.addEventListener("click", function () {
+            var key = node.getAttribute("data-muscle-key");
+            if (!key) return;
+            var url = new URL(window.location.href);
+            url.searchParams.set("training_muscle", key);
+            if (!url.hash) url.hash = "section-training-management";
+            window.location.href = url.toString();
+          });
+        });
+      })();
 
       const faqSearchInput = document.getElementById("faq-search-input");
       const faqTbody = document.getElementById("faq-tbody");

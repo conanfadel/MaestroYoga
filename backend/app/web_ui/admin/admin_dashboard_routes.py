@@ -33,6 +33,7 @@ def register_admin_dashboard_routes(router: APIRouter) -> None:
         payment_date_to: str = "",
         post_edit: int = 0,
         center_posts_page: int = 1,
+        training_muscle: str = "core",
         db: _s.Session = _s.Depends(_s.get_db),
     ):
         user, redirect = _s._require_admin_user_or_redirect(request, db)
@@ -64,5 +65,6 @@ def register_admin_dashboard_routes(router: APIRouter) -> None:
                 payment_date_to=payment_date_to,
                 post_edit=post_edit,
                 center_posts_page=center_posts_page,
+                training_muscle=training_muscle,
             ),
         )

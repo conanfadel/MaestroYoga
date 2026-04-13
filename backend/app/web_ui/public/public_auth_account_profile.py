@@ -42,6 +42,9 @@ def register_public_auth_account_profile_routes(router: APIRouter) -> None:
             trainee_schedule_rows = _s.build_public_trainee_schedule_rows(
                 db, center_id=center_id_loyalty, client_id=client.id
             )
+        subscription_number_display = _s.format_client_subscription_number(
+            client.subscription_number if client else None
+        )
         center_display = (center_loyalty.name if center_loyalty else "") or "المركز"
         return _s.templates.TemplateResponse(
             request,
@@ -53,6 +56,7 @@ def register_public_auth_account_profile_routes(router: APIRouter) -> None:
                 "user": user,
                 "country_code": cc,
                 "phone_local": phone_local,
+                "subscription_number_display": subscription_number_display,
                 "trainee_schedule_rows": trainee_schedule_rows,
                 "loyalty_program_rows": _s.loyalty_program_table_rows(center_loyalty),
                 **loyalty_ctx,

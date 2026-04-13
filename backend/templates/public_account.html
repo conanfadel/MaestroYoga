@@ -498,6 +498,7 @@
         <h2 class="account-section-title" id="profile-heading">معلوماتي</h2>
         <div class="account-profile-summary">
           <p><strong>الاسم:</strong> {{ user.full_name }}</p>
+          <p><strong>رقم الاشتراك:</strong> {{ subscription_number_display }}</p>
           <p><strong>البريد:</strong> {{ user.email }}</p>
           {% if user.phone %}<p><strong>الجوال:</strong> {{ user.phone }}</p>{% endif %}
           <p><strong>التحقق:</strong> {% if user.email_verified %}بريد موثّق{% else %}بانتظار تأكيد البريد{% endif %}</p>
@@ -603,6 +604,7 @@
           </div>
           <div class="trainee-schedule__print-identity">
             <p><strong>الاسم:</strong> {{ user.full_name }}</p>
+            <p><strong>رقم الاشتراك:</strong> {{ subscription_number_display }}</p>
             <p><strong>خطة الاشتراك:</strong> {% if public_sub_active %}{{ public_sub_plan_name }}{% else %}لا توجد خطة اشتراك{% endif %}</p>
           </div>
           <p class="sub no-print" style="margin-top:0;margin-bottom:12px;">الجلسات القادمة بحجز <strong>مؤكّد ومدفوع</strong> فقط في {{ center_display_name }}.</p>

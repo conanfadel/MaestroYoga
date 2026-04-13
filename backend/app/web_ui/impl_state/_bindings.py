@@ -47,6 +47,7 @@ from ...admin_report_helpers import (
 )
 from ...booking_utils import ACTIVE_BOOKING_STATUSES, count_active_bookings, spots_available
 from ...bootstrap import DEMO_CENTER_NAME, ensure_demo_data, ensure_demo_news_posts, should_auto_seed_demo_data
+from ...client_numbering import format_client_subscription_number
 from ...database import get_db, is_sqlite
 from ...loyalty import (
     LOYALTY_REWARD_MAX_LEN,
@@ -186,6 +187,7 @@ from ...security import (
 from ...security_audit import log_security_event
 from ...tenant_utils import require_user_center_id
 from ...time_utils import utcnow_naive
+from ...training_muscles import TRAINING_MUSCLE_KEY_SET, TRAINING_MUSCLE_LABELS, TRAINING_MUSCLE_OPTIONS
 from ...web_shared import (
     PUBLIC_INDEX_DEFAULT_PATH,
     _cookie_secure_flag,

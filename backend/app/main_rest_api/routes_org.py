@@ -5,6 +5,7 @@ from __future__ import annotations
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
+from ..client_numbering import next_client_subscription_number
 from . import deps as _d
 
 
@@ -38,7 +39,12 @@ def register_routes(router: APIRouter) -> None:
         db: Session = Depends(_d.get_db),
         user: _d.models.User = Depends(_d.require_permissions("clients.manage")),
     ):
-        client = _d.models.Client(center_id=_d.require_user_center_id(user), **payload.model_dump())
+        center_id = _d.require_user_center_id(user)
+        client = _d.models.Client(
+            center_id=center_id,
+            subscription_number=next_client_subscription_number(db, center_id=center_id),
+            **payload.model_dump(),
+        )
         db.add(client)
         db.commit()
         db.refresh(client)

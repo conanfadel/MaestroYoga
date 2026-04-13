@@ -32,6 +32,7 @@ def build_admin_dashboard_template_context(
     payment_date_to: str,
     post_edit: int,
     center_posts_page: int,
+    training_muscle: str,
 ) -> dict[str, Any]:
     """Load rooms, users, payments, security, posts, and aggregate KPIs for admin.html."""
     state = load_admin_dashboard_query_state(
@@ -55,5 +56,6 @@ def build_admin_dashboard_template_context(
         payment_date_to=payment_date_to,
         post_edit=post_edit,
         center_posts_page=center_posts_page,
+        training_muscle=training_muscle,
     )
     return finalize_admin_dashboard_template_context(db=db, user=user, msg=msg, state=state)

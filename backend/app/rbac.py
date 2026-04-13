@@ -62,6 +62,7 @@ def admin_ui_flags(user: models.User) -> dict[str, bool | str]:
         "perm_ops_cluster": perm_ops_cluster,
         "perm_clients_cluster": perm_clients_cluster,
         "perm_reports_hub": perm_reports_hub,
+        "perm_training_management": ("sessions.manage" in p),
         "perm_dashboard": "dashboard.view" in p,
         "perm_dashboard_financial": "dashboard.financial" in p,
         "perm_reminder_card": "sessions.manage" in p or "public_users.manage" in p,

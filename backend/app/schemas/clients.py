@@ -16,6 +16,7 @@ class ClientOut(BaseModel):
     full_name: str
     email: str
     phone: Optional[str] = None
+    subscription_number: Optional[int] = None
     created_at: datetime
 
     model_config = ConfigDict(from_attributes=True)

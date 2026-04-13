@@ -47,6 +47,7 @@ def finalize_admin_dashboard_template_context(
         _s.ADMIN_QP_PAYMENT_DATE_FROM: (state.payment_date_from or "").strip()[:32],
         _s.ADMIN_QP_PAYMENT_DATE_TO: (state.payment_date_to or "").strip()[:32],
         "center_posts_page": str(max(1, int(state.center_posts_page or 1))),
+        "training_muscle": state.selected_muscle,
     }
 
     def _admin_page_url(**overrides: str) -> str:
@@ -245,6 +246,12 @@ def finalize_admin_dashboard_template_context(
         "payment_date_from_value": pf,
         "payment_date_to_value": pt,
         "loyalty_admin": loyalty_admin,
+        "training_muscle_options": _s.TRAINING_MUSCLE_OPTIONS,
+        "training_selected_muscle": state.selected_muscle,
+        "training_selected_muscle_label": _s.TRAINING_MUSCLE_LABELS.get(
+            state.selected_muscle, state.selected_muscle
+        ),
+        "training_exercises": state.training_exercises,
         **_s.admin_ui_flags(user),
         "permission_catalog": _s.PERMISSION_CATALOG,
         "assignable_staff_roles": tuple(

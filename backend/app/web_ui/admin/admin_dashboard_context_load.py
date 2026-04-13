@@ -84,6 +84,8 @@ class AdminDashboardQueryState:
     payment_date_to: str
     center_posts_page: int
     post_edit: int
+    training_exercises: list[Any]
+    selected_muscle: str
 
 
 def load_admin_dashboard_query_state(
@@ -108,6 +110,7 @@ def load_admin_dashboard_query_state(
     payment_date_to: str,
     post_edit: int,
     center_posts_page: int,
+    training_muscle: str,
 ) -> AdminDashboardQueryState:
     cid = _s.require_user_center_id(user)
     center = db.get(_s.models.Center, cid)
@@ -195,8 +198,24 @@ def load_admin_dashboard_query_state(
     payments_page_size = pay_b.payments_page_size
 
     loyalty_by_email = _s.loyalty_confirmed_counts_by_email_lower(db, cid)
+    client_rows_for_numbers = (
+        db.query(_s.models.Client.email, _s.models.Client.subscription_number)
+        .filter(_s.models.Client.center_id == cid)
+        .all()
+    )
+    subscription_number_by_email: dict[str, int | None] = {}
+    for email_value, sub_number in client_rows_for_numbers:
+        email_key = (email_value or "").strip().lower()
+        if not email_key:
+            continue
+        if email_key not in subscription_number_by_email:
+            subscription_number_by_email[email_key] = int(sub_number) if sub_number else None
     public_user_rows, trash_user_rows = build_loyalty_public_and_trash_rows(
-        public_users, trash_users_list, loyalty_by_email, center
+        public_users,
+        trash_users_list,
+        loyalty_by_email,
+        center,
+        subscription_number_by_email=subscription_number_by_email,
     )
 
     sec = load_security_audit_bundle(
@@ -206,6 +225,19 @@ def load_admin_dashboard_query_state(
         audit_email=audit_email,
         audit_ip=audit_ip,
         audit_page=audit_page,
+    )
+
+    selected_muscle = (training_muscle or "").strip().lower()
+    if selected_muscle not in _s.TRAINING_MUSCLE_KEY_SET:
+        selected_muscle = "core"
+    training_exercises = (
+        db.query(_s.models.TrainingExercise)
+        .filter(
+            _s.models.TrainingExercise.center_id == cid,
+            _s.models.TrainingExercise.muscle_key == selected_muscle,
+        )
+        .order_by(_s.models.TrainingExercise.created_at.desc(), _s.models.TrainingExercise.id.desc())
+        .all()
     )
 
     return AdminDashboardQueryState(
@@ -266,4 +298,6 @@ def load_admin_dashboard_query_state(
         payment_date_to=payment_date_to,
         center_posts_page=center_posts_page,
         post_edit=post_edit,
+        training_exercises=training_exercises,
+        selected_muscle=selected_muscle,
     )

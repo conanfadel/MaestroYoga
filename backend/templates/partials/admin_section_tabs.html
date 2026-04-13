@@ -28,6 +28,12 @@
       <a class="section-tab section-tab--subitem" data-target="section-rooms" href="#section-rooms" id="tab-section-rooms">الغرف والسعة</a>
       <a class="section-tab section-tab--subitem" data-target="section-sessions" href="#section-sessions" id="tab-section-sessions">الجلسات والمدفوعات</a>
       <a class="section-tab section-tab--subitem" data-target="section-plans" href="#section-plans" id="tab-section-plans">خطط الاشتراك</a>
+      {% if perm_training_management %}
+      <a class="section-tab section-tab--subitem" data-target="section-training-management" href="#section-training-management" id="tab-section-training-management">
+        <span class="section-tab__icon" aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M6 22V8"/><path d="M18 22V8"/><path d="M3 8h18"/><path d="M8 4h8"/><path d="M7 8V4h10v4"/></svg></span>
+        إدارة التدريبات
+      </a>
+      {% endif %}
     </div>
   </div>
   {% endif %}

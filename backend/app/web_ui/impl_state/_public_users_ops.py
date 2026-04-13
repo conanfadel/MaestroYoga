@@ -8,6 +8,7 @@ from sqlalchemy.orm import Session
 
 from ... import models
 from ...booking_utils import ACTIVE_BOOKING_STATUSES
+from ...client_numbering import ensure_client_subscription_number, next_client_subscription_number
 from ...public_auth_helpers import queue_verify_email_for_user
 from ...time_utils import utcnow_naive
 from ...web_shared import public_center_id_str_from_next
@@ -46,6 +47,7 @@ def _ensure_client_for_public_register(db: Session, user: models.PublicUser, nex
         existing.full_name = user.full_name
         if user.phone:
             existing.phone = user.phone
+        ensure_client_subscription_number(db, client=existing)
         return
     db.add(
         models.Client(
@@ -53,6 +55,7 @@ def _ensure_client_for_public_register(db: Session, user: models.PublicUser, nex
             full_name=user.full_name,
             email=user.email.lower(),
             phone=user.phone,
+            subscription_number=next_client_subscription_number(db, center_id=center_id),
         )
     )
 

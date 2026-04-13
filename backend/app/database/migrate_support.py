@@ -40,6 +40,7 @@ def _clear_legacy_default_hero_url(conn, insp) -> None:
 def _ensure_performance_indexes(conn, insp) -> None:
     index_specs: list[tuple[str, str, str]] = [
         ("clients", "idx_clients_center_id", "center_id"),
+        ("clients", "idx_clients_center_subscription_number", "center_id, subscription_number"),
         ("rooms", "idx_rooms_center_id", "center_id"),
         ("subscription_plans", "idx_subscription_plans_center_active", "center_id, is_active"),
         ("yoga_sessions", "idx_yoga_sessions_center_room_start", "center_id, room_id, starts_at"),
@@ -56,6 +57,7 @@ def _ensure_performance_indexes(conn, insp) -> None:
         ("center_posts", "idx_center_posts_center_published_pinned", "center_id, is_published, is_pinned"),
         ("center_posts", "idx_center_posts_published_at", "published_at"),
         ("center_post_images", "idx_center_post_images_post_id", "post_id"),
+        ("training_exercises", "idx_training_exercises_center_muscle", "center_id, muscle_key"),
     ]
     for table_name, index_name, columns in index_specs:
         if insp.has_table(table_name):
@@ -71,6 +73,18 @@ def _ensure_performance_indexes(conn, insp) -> None:
             )
         except Exception:
             # Existing duplicate active rows can block index creation on old data sets.
+            pass
+    if insp.has_table("clients"):
+        try:
+            conn.execute(
+                text(
+                    "CREATE UNIQUE INDEX IF NOT EXISTS uq_clients_center_subscription_number "
+                    "ON clients (center_id, subscription_number) "
+                    "WHERE subscription_number IS NOT NULL"
+                )
+            )
+        except Exception:
+            # Legacy data may contain duplicates before the backfill/cleanup pass.
             pass
 
 

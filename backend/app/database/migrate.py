@@ -13,6 +13,33 @@ from .migrate_support import (
 )
 
 
+def _backfill_client_subscription_numbers(conn) -> None:
+    rows = conn.execute(
+        text(
+            "SELECT id, center_id FROM clients "
+            "WHERE subscription_number IS NULL "
+            "ORDER BY center_id ASC, created_at ASC, id ASC"
+        )
+    ).fetchall()
+    if not rows:
+        return
+    max_by_center: dict[int, int] = {}
+    for row in rows:
+        client_id = int(row[0])
+        center_id = int(row[1])
+        if center_id not in max_by_center:
+            current_max = conn.execute(
+                text("SELECT COALESCE(MAX(subscription_number), 0) FROM clients WHERE center_id = :cid"),
+                {"cid": center_id},
+            ).scalar()
+            max_by_center[center_id] = int(current_max or 0)
+        max_by_center[center_id] += 1
+        conn.execute(
+            text("UPDATE clients SET subscription_number = :n WHERE id = :id"),
+            {"n": max_by_center[center_id], "id": client_id},
+        )
+
+
 def migrate_schema() -> None:
     """Lightweight migrations for existing SQLite/Postgres DBs."""
     dialect = engine.dialect.name
@@ -29,6 +56,14 @@ def migrate_schema() -> None:
     if insp.has_table("bookings"):
         booking_cols = {c["name"] for c in insp.get_columns("bookings")}
         needs_booking_checked_in = "checked_in" not in booking_cols
+
+    needs_client_subscription_number = False
+    has_client_subscription_number = False
+    if insp.has_table("clients"):
+        client_cols = {c["name"] for c in insp.get_columns("clients")}
+        needs_client_subscription_number = "subscription_number" not in client_cols
+        has_client_subscription_number = not needs_client_subscription_number
+    needs_training_exercises_table = not insp.has_table("training_exercises")
 
     needs_public_user_phone = False
     needs_public_user_is_deleted = False
@@ -115,8 +150,12 @@ def migrate_schema() -> None:
         and not needs_users_permissions_json
         and not needs_booking_checked_in
         and not needs_payment_created_at
+        and not needs_client_subscription_number
+        and not needs_training_exercises_table
     ):
         with engine.begin() as conn:
+            if has_client_subscription_number:
+                _backfill_client_subscription_numbers(conn)
             _cleanup_stale_center_logo_urls_sql(conn)
             _clear_legacy_default_hero_url(conn, insp)
             _ensure_performance_indexes(conn, insp)
@@ -197,7 +236,28 @@ def migrate_schema() -> None:
             else:
                 conn.execute(text("ALTER TABLE payments ADD COLUMN created_at DATETIME"))
             conn.execute(text("UPDATE payments SET created_at = paid_at WHERE created_at IS NULL"))
+        if needs_client_subscription_number:
+            conn.execute(text("ALTER TABLE clients ADD COLUMN subscription_number INTEGER"))
+        if has_client_subscription_number or needs_client_subscription_number:
+            _backfill_client_subscription_numbers(conn)
+        if needs_training_exercises_table:
+            created_at_type = "TIMESTAMP" if dialect == "postgresql" else "DATETIME"
+            pk_type = "SERIAL PRIMARY KEY" if dialect == "postgresql" else "INTEGER PRIMARY KEY"
+            conn.execute(
+                text(
+                    f"CREATE TABLE training_exercises ("
+                    f"id {pk_type}, "
+                    "center_id INTEGER NOT NULL, "
+                    "muscle_key VARCHAR(64) NOT NULL, "
+                    "exercise_name VARCHAR(180) NOT NULL, "
+                    "notes TEXT, "
+                    f"created_at {created_at_type}, "
+                    "FOREIGN KEY(center_id) REFERENCES centers (id)"
+                    ")"
+                )
+            )
         _cleanup_stale_center_logo_urls_sql(conn)
         _clear_legacy_default_hero_url(conn, inspect(conn))
-        _ensure_performance_indexes(conn, insp)
-        _apply_patch_index_hide_product_clarity_and_team_strip(conn, insp)
+        fresh_insp = inspect(conn)
+        _ensure_performance_indexes(conn, fresh_insp)
+        _apply_patch_index_hide_product_clarity_and_team_strip(conn, fresh_insp)

@@ -124,17 +124,25 @@ def build_loyalty_public_and_trash_rows(
     trash_users_list: Sequence[Any],
     loyalty_by_email: dict[str, int],
     center: Any,
+    subscription_number_by_email: dict[str, int | None] | None = None,
 ) -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
+    subscription_number_by_email = subscription_number_by_email or {}
     public_user_rows: list[dict[str, Any]] = []
     for u in public_users:
-        cnt = loyalty_by_email.get((u.email or "").lower(), 0)
+        email_key = (u.email or "").lower()
+        cnt = loyalty_by_email.get(email_key, 0)
         lt = _s.loyalty_context_for_count(cnt, center=center)
+        subscription_number = subscription_number_by_email.get(email_key)
         public_user_rows.append(
             {
                 "id": u.id,
                 "full_name": u.full_name,
                 "email": u.email,
                 "phone": _s._phone_admin_display(u.phone),
+                "subscription_number": subscription_number,
+                "subscription_number_display": _s.format_client_subscription_number(
+                    subscription_number
+                ),
                 "is_active": u.is_active,
                 "email_verified": u.email_verified,
                 "is_deleted": bool(u.is_deleted),
@@ -146,14 +154,20 @@ def build_loyalty_public_and_trash_rows(
         )
     trash_user_rows: list[dict[str, Any]] = []
     for u in trash_users_list:
-        cnt = loyalty_by_email.get((u.email or "").lower(), 0)
+        email_key = (u.email or "").lower()
+        cnt = loyalty_by_email.get(email_key, 0)
         lt = _s.loyalty_context_for_count(cnt, center=center)
+        subscription_number = subscription_number_by_email.get(email_key)
         trash_user_rows.append(
             {
                 "id": u.id,
                 "full_name": u.full_name,
                 "email": u.email,
                 "phone": _s._phone_admin_display(u.phone),
+                "subscription_number": subscription_number,
+                "subscription_number_display": _s.format_client_subscription_number(
+                    subscription_number
+                ),
                 "deleted_at_display": _s._fmt_dt(u.deleted_at),
                 "created_at_display": _s._fmt_dt(u.created_at),
                 "loyalty_confirmed_count": cnt,

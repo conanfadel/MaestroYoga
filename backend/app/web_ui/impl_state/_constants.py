@@ -62,6 +62,7 @@ ALLOWED_ADMIN_RETURN_SECTIONS = frozenset(
         "section-security",
         "section-center-posts",
         "section-loyalty",
+        "section-training-management",
         "section-staff-invite",
         "section-staff-roles",
         "section-reports",
@@ -135,6 +136,10 @@ ADMIN_MSG_STAFF_CREATED = "staff_user_created"
 ADMIN_MSG_STAFF_EMAIL_EXISTS = "staff_email_exists"
 ADMIN_MSG_STAFF_INVALID = "staff_invalid"
 ADMIN_MSG_STAFF_NOT_OWNER = "staff_not_owner"
+ADMIN_MSG_TRAINING_EXERCISE_ADDED = "training_exercise_added"
+ADMIN_MSG_TRAINING_EXERCISE_DELETED = "training_exercise_deleted"
+ADMIN_MSG_TRAINING_EXERCISE_INVALID = "training_exercise_invalid"
+ADMIN_MSG_TRAINING_EXERCISE_NOT_FOUND = "training_exercise_not_found"
 
 CENTER_LOGO_MAX_BYTES = 2 * 1024 * 1024
 CENTER_LOGO_ALLOWED_EXT = frozenset({"png", "jpg", "jpeg", "webp", "gif"})
@@ -220,6 +225,10 @@ ADMIN_FLASH_MESSAGES: dict[str, tuple[str, str]] = {
     ADMIN_MSG_STAFF_EMAIL_EXISTS: ("هذا البريد مسجّل مسبقاً. استخدم بريداً آخر أو تحقق من الحسابات الحالية.", "warn"),
     ADMIN_MSG_STAFF_INVALID: ("تعذر إنشاء الحساب: تحقق من الاسم والبريد وكلمة المرور (8 أحرف على الأقل) والدور.", "warn"),
     ADMIN_MSG_STAFF_NOT_OWNER: ("إضافة أعضاء الفريق متاحة لمالك المركز فقط.", "warn"),
+    ADMIN_MSG_TRAINING_EXERCISE_ADDED: ("تمت إضافة التمرين بنجاح.", "info"),
+    ADMIN_MSG_TRAINING_EXERCISE_DELETED: ("تم حذف التمرين.", "info"),
+    ADMIN_MSG_TRAINING_EXERCISE_INVALID: ("اسم التمرين مطلوب. تحقق من البيانات ثم أعد المحاولة.", "warn"),
+    ADMIN_MSG_TRAINING_EXERCISE_NOT_FOUND: ("تعذر العثور على التمرين المطلوب أو لا يتبع مركزك.", "warn"),
     "report_settings_saved": ("تم حفظ أهداف التقارير وإعدادات الضريبة والبريد.", "info"),
     "digest_email_sent": ("تم إرسال الملخص إلى البريد المحدد.", "info"),
     "digest_email_failed": ("تعذر إرسال البريد. تحقق من SMTP والعنوان.", "warn"),
