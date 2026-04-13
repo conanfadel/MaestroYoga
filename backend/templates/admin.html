@@ -525,7 +525,7 @@
         <input type="hidden" name="audit_status" value="{{ security_filters.status }}" />
         <input type="hidden" name="audit_email" value="{{ security_filters.email }}" />
         <input type="hidden" name="audit_ip" value="{{ security_filters.ip }}" />
-        <select name="room_sort" aria-label="ترتيب الغرف" onchange="this.form.submit()">
+        <select name="room_sort" aria-label="ترتيب الغرف" onchange="if (this.form.requestSubmit) { this.form.requestSubmit(); } else { this.form.submit(); }">
           <option value="id_asc" {{ 'selected' if room_filters.sort == 'id_asc' else '' }}>حسب الإضافة من الأقدم إلى الأحدث</option>
           <option value="name" {{ 'selected' if room_filters.sort == 'name' else '' }}>ترتيب حسب الاسم</option>
           <option value="newest" {{ 'selected' if room_filters.sort == 'newest' else '' }}>ترتيب حسب الأحدث إضافة</option>
@@ -960,7 +960,7 @@
             <input type="hidden" name="training_client_id" value="{{ training_client_id }}" />
             <input type="hidden" name="training_tab" value="{{ training_tab }}" />
             <label for="training-m-select" style="margin:0;">العضلة</label>
-            <select id="training-m-select" name="training_muscle" onchange="this.form.submit()">
+            <select id="training-m-select" name="training_muscle" onchange="if (this.form.requestSubmit) { this.form.requestSubmit(); } else { this.form.submit(); }">
               {% for m in training_muscle_options %}
               <option value="{{ m.key }}" {{ 'selected' if m.key == training_selected_muscle else '' }}>{{ m.label }}</option>
               {% endfor %}
@@ -1250,6 +1250,49 @@
                       <td>{{ b.starts_at.strftime('%Y-%m-%d') if b.starts_at else '-' }} → {{ b.ends_at.strftime('%Y-%m-%d') if b.ends_at else '-' }}</td>
                       <td>{{ b.created_at.strftime('%Y-%m-%d %H:%M') if b.created_at else '-' }}</td>
                       <td>
+                        <details style="margin-bottom:6px;">
+                          <summary class="soft-link" style="cursor:pointer;">تعديل</summary>
+                          <form method="post" action="/admin/training/assignments/update" data-preserve-scroll="1" style="margin-top:8px;padding:8px;border:1px dashed rgba(16,185,129,0.45);border-radius:8px;background:#f8fffc;min-width:260px;">
+                            <input type="hidden" name="batch_id" value="{{ b.id }}" />
+                            <input type="hidden" name="training_muscle" value="{{ training_selected_muscle }}" />
+                            <input type="hidden" name="training_client_q" value="{{ training_client_q }}" />
+                            <input type="hidden" name="training_client_id" value="{{ training_client_id }}" />
+                            <input type="hidden" name="training_tab" value="assignments" />
+                            <label style="margin:0 0 4px;">عنوان الخطة</label>
+                            <input name="title" maxlength="180" value="{{ b.title or '' }}" />
+                            <label style="margin:6px 0 4px;">ملاحظات</label>
+                            <textarea name="notes" rows="2" maxlength="3000">{{ b.notes or '' }}</textarea>
+                            <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+                              <div>
+                                <label style="margin:6px 0 4px;">تاريخ البداية</label>
+                                <input name="starts_at" type="date" value="{{ b.starts_at.strftime('%Y-%m-%d') if b.starts_at else '' }}" />
+                              </div>
+                              <div>
+                                <label style="margin:6px 0 4px;">تاريخ النهاية</label>
+                                <input name="ends_at" type="date" value="{{ b.ends_at.strftime('%Y-%m-%d') if b.ends_at else '' }}" />
+                              </div>
+                            </div>
+                            <label style="margin:6px 0 4px;">الجلسة المرتبطة</label>
+                            <select name="session_id">
+                              {% if b.session_id and b.session %}
+                              <option value="{{ b.session_id }}" selected>#{{ b.session_id }} — {{ b.session.title or '-' }} (الحالية)</option>
+                              {% endif %}
+                              <option value="0" {{ 'selected' if not b.session_id else '' }}>بدون ربط بجلسة محددة</option>
+                              {% for s in training_client_sessions %}
+                              {% if not b.session_id or s.id != b.session_id %}
+                              <option value="{{ s.id }}">#{{ s.id }} — {{ s.title }} · {{ s.starts_at_display }} · {{ s.trainer_name }}</option>
+                              {% endif %}
+                              {% endfor %}
+                            </select>
+                            <label style="margin:6px 0 4px;">الحالة</label>
+                            <select name="status">
+                              <option value="active" {{ 'selected' if b.status == 'active' else '' }}>active</option>
+                              <option value="completed" {{ 'selected' if b.status == 'completed' else '' }}>completed</option>
+                              <option value="cancelled" {{ 'selected' if b.status == 'cancelled' else '' }}>cancelled</option>
+                            </select>
+                            <button type="submit" style="margin-top:8px;">حفظ التعديل</button>
+                          </form>
+                        </details>
                         {% if b.status == 'active' %}
                         <form method="post" action="/admin/training/assignments/cancel" data-preserve-scroll="1" onsubmit="return confirm('إيقاف هذه الخطة؟');">
                           <input type="hidden" name="batch_id" value="{{ b.id }}" />
@@ -1259,8 +1302,6 @@
                           <input type="hidden" name="training_tab" value="assignments" />
                           <button type="submit" class="danger">إيقاف</button>
                         </form>
-                        {% else %}
-                        -
                         {% endif %}
                       </td>
                     </tr>

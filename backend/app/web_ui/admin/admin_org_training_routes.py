@@ -387,6 +387,142 @@ def register_admin_org_training_routes(router: APIRouter) -> None:
             status_code=303,
         )
 
+    @router.post("/admin/training/assignments/update")
+    def admin_update_training_assignment(
+        batch_id: int = _s.Form(...),
+        title: str = _s.Form(""),
+        notes: str = _s.Form(""),
+        starts_at: str = _s.Form(""),
+        ends_at: str = _s.Form(""),
+        session_id: int = _s.Form(0),
+        status: str = _s.Form("active"),
+        training_muscle: str = _s.Form("core"),
+        training_client_q: str = _s.Form(""),
+        training_client_id: int = _s.Form(0),
+        training_tab: str = _s.Form("assignments"),
+        scroll_y: str = _s.Form(default=""),
+        db: _s.Session = _s.Depends(_s.get_db),
+        user: _s.models.User = _s.Depends(
+            _s.require_permissions_cookie_or_bearer("sessions.manage")
+        ),
+    ):
+        cid = _s.require_user_center_id(user)
+        batch = (
+            db.query(_s.models.TrainingAssignmentBatch)
+            .filter(_s.models.TrainingAssignmentBatch.id == batch_id)
+            .first()
+        )
+        if not batch or batch.center_id != cid:
+            return _s.RedirectResponse(
+                url=_s._url_with_params(
+                    "/admin",
+                    msg=_s.ADMIN_MSG_TRAINING_ASSIGNMENT_NOT_FOUND,
+                    scroll_y=scroll_y,
+                    training_muscle=_normalize_muscle_key(training_muscle),
+                    training_client_q=(training_client_q or "").strip(),
+                    training_client_id=str(max(0, int(training_client_id or 0))),
+                    training_tab=(training_tab or "assignments"),
+                )
+                + "#section-training-management",
+                status_code=303,
+            )
+        client = (
+            db.query(_s.models.Client)
+            .filter(
+                _s.models.Client.id == batch.client_id,
+                _s.models.Client.center_id == cid,
+            )
+            .first()
+        )
+        if not client:
+            return _s.RedirectResponse(
+                url=_s._url_with_params(
+                    "/admin",
+                    msg=_s.ADMIN_MSG_TRAINING_ASSIGNMENT_INVALID,
+                    scroll_y=scroll_y,
+                    training_muscle=_normalize_muscle_key(training_muscle),
+                    training_client_q=(training_client_q or "").strip(),
+                    training_client_id=str(max(0, int(batch.client_id or 0))),
+                    training_tab=(training_tab or "assignments"),
+                )
+                + "#section-training-management",
+                status_code=303,
+            )
+        selected_session_id = int(session_id or 0)
+        if selected_session_id > 0:
+            linked_session = (
+                db.query(_s.models.YogaSession)
+                .join(
+                    _s.models.Booking,
+                    _s.and_(
+                        _s.models.Booking.session_id == _s.models.YogaSession.id,
+                        _s.models.Booking.center_id == cid,
+                        _s.models.Booking.client_id == client.id,
+                        _s.models.Booking.status.in_(("booked", "confirmed", "pending_payment")),
+                    ),
+                )
+                .filter(
+                    _s.models.YogaSession.center_id == cid,
+                    _s.models.YogaSession.id == selected_session_id,
+                )
+                .first()
+            )
+            if not linked_session:
+                return _s.RedirectResponse(
+                    url=_s._url_with_params(
+                        "/admin",
+                        msg=_s.ADMIN_MSG_TRAINING_ASSIGNMENT_INVALID,
+                        scroll_y=scroll_y,
+                        training_muscle=_normalize_muscle_key(training_muscle),
+                        training_client_q=(training_client_q or "").strip(),
+                        training_client_id=str(max(0, int(batch.client_id or 0))),
+                        training_tab=(training_tab or "assignments"),
+                    )
+                    + "#section-training-management",
+                    status_code=303,
+                )
+        start_dt = _s._parse_optional_date_str(starts_at)
+        end_dt = _s._parse_optional_date_str(ends_at)
+        if start_dt and end_dt and end_dt < start_dt:
+            return _s.RedirectResponse(
+                url=_s._url_with_params(
+                    "/admin",
+                    msg=_s.ADMIN_MSG_TRAINING_ASSIGNMENT_INVALID,
+                    scroll_y=scroll_y,
+                    training_muscle=_normalize_muscle_key(training_muscle),
+                    training_client_q=(training_client_q or "").strip(),
+                    training_client_id=str(max(0, int(batch.client_id or 0))),
+                    training_tab=(training_tab or "assignments"),
+                )
+                + "#section-training-management",
+                status_code=303,
+            )
+        status_clean = (status or "").strip().lower()
+        if status_clean not in {"active", "cancelled", "completed"}:
+            status_clean = "active"
+        title_clean = (title or "").strip()[:180]
+        notes_clean = (notes or "").strip()[:3000]
+        batch.title = title_clean or f"خطة تدريب للمتدرب {client.full_name}"
+        batch.notes = notes_clean or None
+        batch.starts_at = start_dt
+        batch.ends_at = end_dt
+        batch.session_id = selected_session_id if selected_session_id > 0 else None
+        batch.status = status_clean
+        db.commit()
+        return _s.RedirectResponse(
+            url=_s._url_with_params(
+                "/admin",
+                msg=_s.ADMIN_MSG_TRAINING_ASSIGNMENT_UPDATED,
+                scroll_y=scroll_y,
+                training_muscle=_normalize_muscle_key(training_muscle),
+                training_client_q=(training_client_q or "").strip(),
+                training_client_id=str(batch.client_id),
+                training_tab=(training_tab or "assignments"),
+            )
+            + "#section-training-management",
+            status_code=303,
+        )
+
     @router.post("/admin/training/assignments/cancel")
     def admin_cancel_training_assignment(
         batch_id: int = _s.Form(...),
