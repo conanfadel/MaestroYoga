@@ -2,9 +2,32 @@
 
 from __future__ import annotations
 
+from urllib.parse import urlencode
+
 from fastapi import APIRouter
 
 from .. import impl_state as _s
+
+# Paymob يُلحق حقول المعاملة (hmac، pan، …) بـ success_url — نُعيد التوجيه لرابط نظيف.
+_INDEX_QUERY_KEEP = ("center_id", "payment", "msg", "session_id")
+
+
+def _maybe_redirect_clean_index_query(request: _s.Request) -> _s.RedirectResponse | None:
+    qp = request.query_params
+    if not qp:
+        return None
+    if set(qp.keys()) <= set(_INDEX_QUERY_KEEP):
+        return None
+    if not (qp.get("payment") or qp.get("msg")):
+        return None
+    pairs: list[tuple[str, str]] = []
+    for name in _INDEX_QUERY_KEEP:
+        v = qp.get(name)
+        if v is not None and str(v).strip() != "":
+            pairs.append((name, str(v).strip()))
+    if not pairs:
+        return None
+    return _s.RedirectResponse(url="/index?" + urlencode(pairs), status_code=303)
 
 
 def register_public_index_routes(router: APIRouter) -> None:
@@ -21,6 +44,10 @@ def register_public_index_routes(router: APIRouter) -> None:
         msg: str | None = None,
         db: _s.Session = _s.Depends(_s.get_db),
     ):
+        early = _maybe_redirect_clean_index_query(request)
+        if early is not None:
+            return early
+
         public_user = _s._current_public_user(request, db)
         center = _s.resolve_public_center_or_404(db, center_id)
     
