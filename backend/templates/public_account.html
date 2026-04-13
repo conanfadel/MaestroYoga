@@ -288,24 +288,37 @@
     .account-profile-summary strong { color: var(--charcoal); }
     .trainee-schedule {
       margin-bottom: 20px;
-      padding: 14px 16px 16px;
-      border-radius: 14px;
-      border: 1px solid rgba(197, 160, 89, 0.4);
-      background: #fffefb;
+      padding: 18px 18px 20px;
+      border-radius: 18px;
+      border: 1px solid rgba(197, 160, 89, 0.35);
+      background: linear-gradient(160deg, #fffefb 0%, #fffbef 100%);
+      box-shadow: 0 16px 36px rgba(146, 64, 14, 0.08);
+      position: relative;
+      overflow: hidden;
+    }
+    .trainee-schedule::before {
+      content: "";
+      position: absolute;
+      inset: 0 0 auto 0;
+      height: 4px;
+      background: linear-gradient(90deg, #c5a059, #0f766e);
+      opacity: 0.95;
+    }
+    .trainee-schedule__main-title {
+      margin: 2px 0 14px;
+      text-align: center;
+      font-size: 1.16rem;
+      font-weight: 800;
+      letter-spacing: 0.2px;
+      color: #7c2d12;
     }
     .trainee-schedule__head {
       display: flex;
       flex-wrap: wrap;
-      align-items: flex-start;
-      justify-content: space-between;
+      align-items: center;
+      justify-content: flex-end;
       gap: 10px;
-      margin-bottom: 10px;
-    }
-    .trainee-schedule__head h2 {
-      margin: 0;
-      font-size: 1rem;
-      font-weight: 800;
-      color: #92400e;
+      margin-bottom: 12px;
     }
     .trainee-schedule__toolbar {
       display: flex;
@@ -318,28 +331,28 @@
       justify-content: center;
       width: 42px;
       height: 42px;
-      border-radius: 12px;
-      border: 1px solid rgba(197, 160, 89, 0.55);
-      background: #fff;
+      border-radius: 13px;
+      border: 1px solid rgba(197, 160, 89, 0.6);
+      background: linear-gradient(145deg, #ffffff, #fff7e6);
       color: #92400e;
       cursor: pointer;
       padding: 0;
+      box-shadow: 0 8px 18px rgba(146, 64, 14, 0.11);
+      transition: transform 0.18s ease, box-shadow 0.18s ease, background 0.18s ease;
     }
-    .trainee-schedule__icon-btn:hover { background: #fffbeb; }
+    .trainee-schedule__icon-btn:hover {
+      background: #fff9ef;
+      transform: translateY(-1px);
+      box-shadow: 0 10px 22px rgba(146, 64, 14, 0.14);
+    }
     .trainee-schedule__icon-btn svg { width: 22px; height: 22px; }
-    .trainee-schedule__print-title {
-      margin: 0 0 12px;
-      font-size: 1.05rem;
-      font-weight: 800;
-      color: var(--charcoal);
-      display: none;
-    }
     .trainee-schedule__print-identity {
       margin: 0 0 14px;
       padding: 12px 14px;
       border-radius: 12px;
-      background: rgba(248, 250, 252, 0.95);
-      border: 1px solid rgba(45, 52, 54, 0.1);
+      background: rgba(255, 255, 255, 0.88);
+      border: 1px solid rgba(197, 160, 89, 0.35);
+      box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.45);
     }
     .trainee-schedule__print-identity p {
       margin: 0 0 8px;
@@ -362,24 +375,49 @@
       line-height: 1.5;
     }
     .trainee-schedule__loyalty-footer p:last-child { margin-bottom: 0; }
-    .trainee-schedule__table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+    .trainee-schedule__table-wrap {
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+      border: 1px solid rgba(197, 160, 89, 0.3);
+      border-radius: 12px;
+      background: #fff;
+    }
     .trainee-schedule table {
       width: 100%;
       border-collapse: collapse;
-      font-size: 0.86rem;
+      font-size: 0.88rem;
       min-width: 420px;
     }
     .trainee-schedule th,
     .trainee-schedule td {
       padding: 10px 10px;
       text-align: start;
-      border-bottom: 1px solid rgba(45, 52, 54, 0.1);
+      border-bottom: 1px solid rgba(45, 52, 54, 0.08);
     }
     .trainee-schedule th {
-      background: rgba(254, 243, 199, 0.45);
+      background: linear-gradient(145deg, #fff3d6, #fde8b4);
       font-weight: 800;
-      font-size: 0.78rem;
-      color: var(--charcoal);
+      font-size: 0.8rem;
+      color: #7c2d12;
+      letter-spacing: 0.15px;
+    }
+    .trainee-schedule tbody tr:nth-child(even) td { background: rgba(255, 251, 235, 0.65); }
+    .trainee-schedule tbody tr:hover td { background: rgba(236, 253, 245, 0.7); }
+    .trainee-schedule tbody td:first-child {
+      font-weight: 700;
+      color: #1f2937;
+    }
+    @media (max-width: 520px) {
+      .trainee-schedule {
+        padding: 16px 14px 16px;
+      }
+      .trainee-schedule__main-title {
+        font-size: 1.06rem;
+        margin-bottom: 12px;
+      }
+      .trainee-schedule__head {
+        justify-content: center;
+      }
     }
     @media print {
       body {
@@ -390,11 +428,21 @@
       .no-print { display: none !important; }
       .shell { max-width: 100% !important; width: 100% !important; }
       .card { box-shadow: none !important; border: none !important; }
-      .trainee-schedule__print-title { display: none !important; }
+      .trainee-schedule {
+        box-shadow: none !important;
+        background: #fff !important;
+        border: 1px solid rgba(45, 52, 54, 0.2) !important;
+      }
+      .trainee-schedule::before { display: none !important; }
+      .trainee-schedule__main-title {
+        color: #000 !important;
+        margin-bottom: 12px !important;
+      }
       .trainee-schedule__print-identity {
         background: transparent !important;
         border: none !important;
         padding: 0 0 12px !important;
+        box-shadow: none !important;
       }
       .trainee-schedule__loyalty-footer {
         background: transparent !important;
@@ -542,9 +590,8 @@
 
       <section id="section-schedule" class="trainee-schedule account-section" aria-labelledby="schedule-heading">
         <div id="trainee-schedule-print-zone">
-          <p class="trainee-schedule__print-title">جدول الجلسات</p>
+          <h2 id="schedule-heading" class="trainee-schedule__main-title">جدول التدريب</h2>
           <div class="trainee-schedule__head">
-            <h2 id="schedule-heading" class="no-print">جدول المتدرب</h2>
             <div class="trainee-schedule__toolbar no-print">
               <button type="button" class="trainee-schedule__icon-btn" onclick="window.print()" title="طباعة الجدول" aria-label="طباعة جدول المتدرب">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
