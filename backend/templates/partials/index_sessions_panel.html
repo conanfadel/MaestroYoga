@@ -136,6 +136,7 @@
         <form id="plan-batch-form" method="post" action="/public/book-plan-sessions" class="plan-batch-form-hidden" aria-hidden="true">
           <input type="hidden" name="center_id" value="{{ center_id }}" />
           <input type="hidden" name="session_ids_json" id="plan-batch-session-ids-json" value="[]" />
+          <button type="submit" id="plan-batch-form-submit-proxy" hidden aria-hidden="true" tabindex="-1"></button>
         </form>
         {% endif %}
       </section>

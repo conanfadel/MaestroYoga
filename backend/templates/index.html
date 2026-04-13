@@ -1968,8 +1968,19 @@
       border: 2px solid rgba(100, 116, 139, 0.45) !important;
       box-shadow: none !important;
     }
+    /* لا تستخدم display:none على النموذج — قد يمنع الإرسال البرمجي في بعض المتصفحات */
     .plan-batch-form-hidden {
-      display: none !important;
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      padding: 0;
+      margin: -1px;
+      overflow: hidden;
+      clip: rect(0, 0, 0, 0);
+      white-space: nowrap;
+      border: 0;
+      opacity: 0;
+      pointer-events: none;
     }
     .plan-batch-success-names {
       margin: 0.45rem 0 0;
@@ -4522,6 +4533,7 @@
         var listEl = document.getElementById("plan-confirm-modal-list");
         var btnYes = document.getElementById("plan-confirm-yes");
         var btnNo = document.getElementById("plan-confirm-no");
+        var submitProxy = document.getElementById("plan-batch-form-submit-proxy");
         if (!form || !jsonField || !openBtn || !modal || !lead || !listEl || !btnYes || !btnNo) return;
 
         function selectedBoxes() {
@@ -4576,7 +4588,9 @@
         btnNo.addEventListener("click", closeModal);
         if (backdrop) backdrop.addEventListener("click", closeModal);
 
-        btnYes.addEventListener("click", function () {
+        btnYes.addEventListener("click", function (ev) {
+          ev.preventDefault();
+          ev.stopPropagation();
           var boxes = selectedBoxes();
           if (!boxes.length) {
             closeModal();
@@ -4601,7 +4615,15 @@
           } catch (e1) {}
           jsonField.value = JSON.stringify(ids);
           closeModal();
-          form.submit();
+          window.setTimeout(function () {
+            if (submitProxy && typeof submitProxy.click === "function") {
+              submitProxy.click();
+            } else if (typeof form.requestSubmit === "function") {
+              form.requestSubmit();
+            } else {
+              form.submit();
+            }
+          }, 0);
         });
 
         document.addEventListener("keydown", function (ev) {
