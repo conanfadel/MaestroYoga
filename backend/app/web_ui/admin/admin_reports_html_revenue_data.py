@@ -237,6 +237,7 @@ def build_revenue_report_template_context(
         "pending_payment": "بانتظار الدفع",
         "failed": "فاشل",
         "refunded": "مسترد",
+        "disputed": "نزاع بطاقة",
     }
     status_rows = [
         {

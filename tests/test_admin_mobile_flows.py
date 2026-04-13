@@ -3,7 +3,11 @@ from datetime import timedelta
 
 from backend.app import models
 from backend.app.bootstrap import ensure_demo_data
-from backend.app.checkout_finalize import finalize_checkout_paid
+from backend.app.checkout_finalize import (
+    expire_stale_pending_payments,
+    finalize_checkout_paid,
+    finalize_payment_refunded,
+)
 from backend.app.database import SessionLocal
 from backend.app.security import hash_password
 from backend.app.time_utils import utcnow_naive
@@ -395,5 +399,212 @@ def test_admin_cannot_manage_public_user_of_another_center(client):
     db.delete(other_client)
     db.delete(outsider_public_user)
     db.delete(other_center)
+    db.commit()
+    db.close()
+
+
+def test_finalize_checkout_paid_rejects_amount_mismatch(monkeypatch):
+    monkeypatch.setenv("DISABLE_PAYMENT_SUCCESS_EMAIL", "1")
+    db = SessionLocal()
+    stamp = int(time.time())
+    center = models.Center(name=f"Pytest Center amt {stamp}", city="Riyadh")
+    db.add(center)
+    db.flush()
+    room = models.Room(center_id=center.id, name=f"Room {stamp}", capacity=8)
+    db.add(room)
+    db.flush()
+    yoga_session = models.YogaSession(
+        center_id=center.id,
+        room_id=room.id,
+        title="Session",
+        trainer_name="Trainer",
+        level="beginner",
+        starts_at=utcnow_naive() + timedelta(days=1),
+        duration_minutes=60,
+        price_drop_in=50.0,
+    )
+    db.add(yoga_session)
+    db.flush()
+    client_row = models.Client(center_id=center.id, full_name="Pytest User", email=f"pytest_amt_{stamp}@example.com")
+    db.add(client_row)
+    db.flush()
+    booking = models.Booking(
+        center_id=center.id,
+        session_id=yoga_session.id,
+        client_id=client_row.id,
+        status="pending_payment",
+    )
+    db.add(booking)
+    db.flush()
+    payment = models.Payment(
+        center_id=center.id,
+        client_id=client_row.id,
+        booking_id=booking.id,
+        amount=50.0,
+        currency="SAR",
+        payment_method="public_checkout",
+        provider_ref=f"pytest_ref_amt_{stamp}",
+        status="pending",
+        created_at=utcnow_naive(),
+    )
+    db.add(payment)
+    db.commit()
+
+    meta = {"payment_id": str(payment.id), "booking_id": str(booking.id), "center_id": str(center.id)}
+    finalize_checkout_paid(
+        db,
+        meta,
+        payment.provider_ref or "",
+        amount_total_minor=999999,
+        currency_from_provider="sar",
+    )
+    db.refresh(payment)
+    db.refresh(booking)
+    assert payment.status == "failed"
+    assert booking.status == "cancelled"
+
+    db.delete(payment)
+    db.delete(booking)
+    db.delete(client_row)
+    db.delete(yoga_session)
+    db.delete(room)
+    db.delete(center)
+    db.commit()
+    db.close()
+
+
+def test_finalize_payment_refunded_after_paid(monkeypatch):
+    monkeypatch.setenv("DISABLE_PAYMENT_SUCCESS_EMAIL", "1")
+    db = SessionLocal()
+    stamp = int(time.time())
+    center = models.Center(name=f"Pytest Center rf {stamp}", city="Riyadh")
+    db.add(center)
+    db.flush()
+    room = models.Room(center_id=center.id, name=f"Room {stamp}", capacity=8)
+    db.add(room)
+    db.flush()
+    yoga_session = models.YogaSession(
+        center_id=center.id,
+        room_id=room.id,
+        title="Session",
+        trainer_name="Trainer",
+        level="beginner",
+        starts_at=utcnow_naive() + timedelta(days=1),
+        duration_minutes=60,
+        price_drop_in=50.0,
+    )
+    db.add(yoga_session)
+    db.flush()
+    client_row = models.Client(center_id=center.id, full_name="Pytest User", email=f"pytest_rf_{stamp}@example.com")
+    db.add(client_row)
+    db.flush()
+    booking = models.Booking(
+        center_id=center.id,
+        session_id=yoga_session.id,
+        client_id=client_row.id,
+        status="pending_payment",
+    )
+    db.add(booking)
+    db.flush()
+    payment = models.Payment(
+        center_id=center.id,
+        client_id=client_row.id,
+        booking_id=booking.id,
+        amount=50.0,
+        currency="SAR",
+        payment_method="public_checkout",
+        provider_ref=f"pytest_ref_rf_{stamp}",
+        status="pending",
+        created_at=utcnow_naive(),
+    )
+    db.add(payment)
+    db.commit()
+
+    meta = {"payment_id": str(payment.id), "booking_id": str(booking.id), "center_id": str(center.id)}
+    finalize_checkout_paid(
+        db,
+        meta,
+        payment.provider_ref or "",
+        amount_total_minor=5000,
+        currency_from_provider="sar",
+    )
+    finalize_payment_refunded(db, meta, payment.provider_ref or "")
+    db.refresh(payment)
+    db.refresh(booking)
+    assert payment.status == "refunded"
+    assert booking.status == "cancelled"
+
+    db.delete(payment)
+    db.delete(booking)
+    db.delete(client_row)
+    db.delete(yoga_session)
+    db.delete(room)
+    db.delete(center)
+    db.commit()
+    db.close()
+
+
+def test_expire_stale_pending_payments_cleans_booking():
+    db = SessionLocal()
+    stamp = int(time.time())
+    center = models.Center(name=f"Pytest Center stale {stamp}", city="Riyadh")
+    db.add(center)
+    db.flush()
+    room = models.Room(center_id=center.id, name=f"Room {stamp}", capacity=8)
+    db.add(room)
+    db.flush()
+    yoga_session = models.YogaSession(
+        center_id=center.id,
+        room_id=room.id,
+        title="Session",
+        trainer_name="Trainer",
+        level="beginner",
+        starts_at=utcnow_naive() + timedelta(days=1),
+        duration_minutes=60,
+        price_drop_in=50.0,
+    )
+    db.add(yoga_session)
+    db.flush()
+    client_row = models.Client(center_id=center.id, full_name="Pytest User", email=f"pytest_stale_{stamp}@example.com")
+    db.add(client_row)
+    db.flush()
+    booking = models.Booking(
+        center_id=center.id,
+        session_id=yoga_session.id,
+        client_id=client_row.id,
+        status="pending_payment",
+    )
+    db.add(booking)
+    db.flush()
+    payment = models.Payment(
+        center_id=center.id,
+        client_id=client_row.id,
+        booking_id=booking.id,
+        amount=50.0,
+        currency="SAR",
+        payment_method="public_checkout",
+        provider_ref=None,
+        status="pending",
+        created_at=utcnow_naive() - timedelta(hours=4),
+    )
+    db.add(payment)
+    db.commit()
+    pid = payment.id
+    bid = booking.id
+
+    n = expire_stale_pending_payments(db, older_than_minutes=60)
+    assert n >= 1
+
+    payment = db.get(models.Payment, pid)
+    booking = db.get(models.Booking, bid)
+    assert payment.status == "failed"
+    assert booking.status == "cancelled"
+
+    db.delete(payment)
+    db.delete(booking)
+    db.delete(client_row)
+    db.delete(yoga_session)
+    db.delete(room)
+    db.delete(center)
     db.commit()
     db.close()

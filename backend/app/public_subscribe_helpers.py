@@ -68,6 +68,7 @@ def process_hosted_subscription_checkout(
     request,
     log_security_event_fn,
 ) -> tuple[str | None, str | None]:
+    prov_name = type(provider).__name__
     try:
         provider_result = provider.create_checkout_session(
             amount=float(plan.price),
@@ -83,6 +84,7 @@ def process_hosted_subscription_checkout(
             cancel_url=f"{base_url}/index?center_id={center_id}&payment=cancelled&msg=subscription_cancelled",
             line_item_name=f"اشتراك — {plan.name}"[:120],
             line_item_description=f"{center_name} · باقة {plan.plan_type}"[:500],
+            idempotency_key=f"sub-{subscription.id}-p{payment_row.id}"[:255],
         )
     except Exception as exc:
         payment_row.status = "failed"
@@ -91,10 +93,10 @@ def process_hosted_subscription_checkout(
         log_security_event_fn(
             "public_subscribe",
             request,
-            "stripe_error",
-            details={"error": str(exc)[:200], "center_id": center_id, "plan_id": plan.id},
+            "payment_checkout_failed",
+            details={"error": str(exc)[:200], "center_id": center_id, "plan_id": plan.id, "provider": prov_name},
         )
-        return None, "stripe_error"
+        return None, "payment_checkout_failed"
 
     payment_row.provider_ref = provider_result.provider_ref
     db.commit()
@@ -103,7 +105,7 @@ def process_hosted_subscription_checkout(
         payment_row.status = "failed"
         subscription.status = "cancelled"
         db.commit()
-        return None, "stripe_no_url"
+        return None, "payment_checkout_no_url"
     return checkout_url, None
 
 

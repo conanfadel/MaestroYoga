@@ -27,6 +27,7 @@ class BasePaymentProvider:
         *,
         line_item_name: str = "Maestro Yoga",
         line_item_description: str = "",
+        idempotency_key: str | None = None,
     ) -> PaymentResult:
         raise NotImplementedError
 
@@ -37,5 +38,7 @@ class BasePaymentProvider:
         metadata: dict[str, Any],
         success_url: str,
         cancel_url: str,
+        *,
+        idempotency_key: str | None = None,
     ) -> PaymentResult:
         raise NotImplementedError

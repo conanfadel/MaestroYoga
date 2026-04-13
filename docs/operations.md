@@ -8,6 +8,9 @@
 | `CORS_ORIGINS` | قائمة مفصولة بفواصل لأصول مسموح بها (مثال: `https://app.example.com,https://www.example.com`). مطلوبة إذا كان **متصفح** أو **WebView** يستدعي الـ API من نطاق مختلف. تطبيق أندرويد أصلي (OkHttp) لا يخضع لـ CORS. |
 | `LOG_LEVEL` | مستوى السجل الافتراضي للخادم (مثل `INFO`, `WARNING`). |
 | `PUBLIC_BASE_URL` | قاعدة الروابط العامة (تحقق بريد، دفع، روابط إشعارات). |
+| `PENDING_PAYMENT_EXPIRE_MINUTES` | بعد هذه الدقائق من إنشاء دفع `pending` مع حجز `pending_payment` دون إتمام، يُلغى الحجز تلقائياً (مجدول خلفي؛ الافتراضي 180). |
+| `STALE_PAYMENT_SWEEP_INTERVAL_SEC` | الفاصل بين دورات التنظيف بالثواني (افتراضي 900). |
+| `DISABLE_STALE_PAYMENT_SWEEPER` | عند `1` أو `true`: إيقاف مجدول إلغاء الدفوع المعلّقة القديمة. |
 
 المسار الافتراضي للصفحة العامة مُعرَّف في الكود كـ `PUBLIC_INDEX_DEFAULT_PATH` في `backend/app/web_shared.py` (ليس متغير بيئة).
 

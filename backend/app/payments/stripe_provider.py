@@ -47,6 +47,7 @@ class StripePaymentProvider(BasePaymentProvider):
         *,
         line_item_name: str = "Maestro Yoga",
         line_item_description: str = "",
+        idempotency_key: str | None = None,
     ) -> PaymentResult:
         """
         Checkout بالبطاقة (SAR). لحساب Stripe مسجّل في السعودية تُقبل بطاقات **مدى**
@@ -69,10 +70,15 @@ class StripePaymentProvider(BasePaymentProvider):
                 }
             ],
             "metadata": metadata,
+            "payment_intent_data": {"metadata": dict(metadata)},
         }
         create_kwargs.update(self._stripe_checkout_locale_kw())
 
-        session = stripe.checkout.Session.create(**create_kwargs)
+        idem = (idempotency_key or "").strip() or None
+        if idem:
+            session = stripe.checkout.Session.create(**create_kwargs, idempotency_key=idem[:255])
+        else:
+            session = stripe.checkout.Session.create(**create_kwargs)
         return PaymentResult(provider_ref=session.id, status="pending", checkout_url=session.url)
 
     def create_checkout_session_multi_line(
@@ -82,6 +88,8 @@ class StripePaymentProvider(BasePaymentProvider):
         metadata: dict[str, Any],
         success_url: str,
         cancel_url: str,
+        *,
+        idempotency_key: str | None = None,
     ) -> PaymentResult:
         if not line_specs:
             raise ValueError("line_specs required")
@@ -104,9 +112,14 @@ class StripePaymentProvider(BasePaymentProvider):
             "cancel_url": cancel_url,
             "line_items": line_items,
             "metadata": metadata,
+            "payment_intent_data": {"metadata": dict(metadata)},
         }
         create_kwargs.update(self._stripe_checkout_locale_kw())
-        session = stripe.checkout.Session.create(**create_kwargs)
+        idem = (idempotency_key or "").strip() or None
+        if idem:
+            session = stripe.checkout.Session.create(**create_kwargs, idempotency_key=idem[:255])
+        else:
+            session = stripe.checkout.Session.create(**create_kwargs)
         return PaymentResult(provider_ref=session.id, status="pending", checkout_url=session.url)
 
     @staticmethod

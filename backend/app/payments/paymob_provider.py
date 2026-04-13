@@ -334,7 +334,9 @@ class PaymobPaymentProvider(BasePaymentProvider):
         *,
         line_item_name: str = "Maestro Yoga",
         line_item_description: str = "",
+        idempotency_key: str | None = None,
     ) -> PaymentResult:
+        _ = idempotency_key
         cents = self._amount_to_cents(amount, currency)
         desc = f"{line_item_name} — {line_item_description}".strip()[:500] or line_item_name
         return self._create_checkout(
@@ -353,7 +355,10 @@ class PaymobPaymentProvider(BasePaymentProvider):
         metadata: dict[str, Any],
         success_url: str,
         cancel_url: str,
+        *,
+        idempotency_key: str | None = None,
     ) -> PaymentResult:
+        _ = idempotency_key
         if not line_specs:
             raise ValueError("line_specs required")
         total = sum(float(a) for a, _, _ in line_specs)

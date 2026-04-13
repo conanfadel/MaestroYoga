@@ -23,7 +23,9 @@
 {% if msg == 'subscription_cancelled' %}<div class="alert warn">لم يكتمل دفع الاشتراك.</div>{% endif %}
 {% if msg == 'payment_provider_config' %}<div class="alert err">إعدادات الدفع الإلكتروني غير مكتملة على الخادم (مثلاً مفاتيح Paymob أو Stripe). راجع متغيرات البيئة أو تواصل مع الإدارة.</div>{% endif %}
 {% if msg == 'stripe_error' %}<div class="alert err">تعذر بدء الدفع الإلكتروني. تحقق من مفاتيح البوابة (Paymob / Stripe) وعنوان الـ API.</div>{% endif %}
+{% if msg == 'payment_checkout_failed' %}<div class="alert err">تعذر بدء الدفع الإلكتروني. تحقق من مفاتيح البوابة (Paymob / Stripe) وعنوان الـ API.</div>{% endif %}
 {% if msg == 'stripe_no_url' %}<div class="alert err">لم يتم استلام رابط صفحة الدفع من بوابة الدفع.</div>{% endif %}
+{% if msg == 'payment_checkout_no_url' %}<div class="alert err">لم يتم استلام رابط صفحة الدفع من بوابة الدفع.</div>{% endif %}
 {% if msg == 'cart_empty' %}<div class="alert warn">السلة فارغة. أضف جلسات أو خطة ثم أعد المحاولة.</div>{% endif %}
 {% if msg == 'cart_invalid' %}<div class="alert err">تعذر قراءة السلة. أعد تحميل الصفحة وحاول مرة أخرى.</div>{% endif %}
 {% if msg == 'cart_too_many' %}<div class="alert warn">تجاوزت السلة الحد المسموح للجلسات في طلب واحد.</div>{% endif %}

@@ -127,6 +127,8 @@ def process_hosted_cart_checkout(
         for _, _, yoga_session in bundle
     ]
     payment_ids_meta = ",".join(str(payment.id) for _, payment, _ in bundle)
+    idem = f"cart-{payment_ids_meta.replace(',', '-')}"[:255]
+    prov_name = type(provider).__name__
     try:
         provider_result = provider.create_checkout_session_multi_line(
             currency="sar",
@@ -139,6 +141,7 @@ def process_hosted_cart_checkout(
             },
             success_url=f"{base_url}/index?center_id={center_id}&payment=success",
             cancel_url=f"{base_url}/index?center_id={center_id}&payment=cancelled",
+            idempotency_key=idem,
         )
     except Exception as exc:
         for booking, payment, _ in bundle:
@@ -148,10 +151,10 @@ def process_hosted_cart_checkout(
         log_security_event_fn(
             "public_cart_checkout",
             request,
-            "stripe_error",
-            details={"error": str(exc)[:200], "center_id": center_id},
+            "payment_checkout_failed",
+            details={"error": str(exc)[:200], "center_id": center_id, "provider": prov_name},
         )
-        return None, "stripe_error"
+        return None, "payment_checkout_failed"
 
     provider_ref = provider_result.provider_ref
     checkout_url = provider_result.checkout_url or ""
@@ -160,7 +163,7 @@ def process_hosted_cart_checkout(
             booking.status = "cancelled"
             payment.status = "failed"
         db.commit()
-        return None, "stripe_no_url"
+        return None, "payment_checkout_no_url"
 
     for _, payment, _ in bundle:
         payment.provider_ref = provider_ref
@@ -215,6 +218,7 @@ def process_hosted_single_booking_checkout(
     log_security_event_fn,
     session_id: int,
 ) -> tuple[str | None, str | None]:
+    prov_name = type(provider).__name__
     try:
         provider_result = provider.create_checkout_session(
             amount=amount,
@@ -229,6 +233,7 @@ def process_hosted_single_booking_checkout(
             cancel_url=f"{base_url}/index?center_id={center_id}&payment=cancelled",
             line_item_name=f"حجز جلسة — {session_title}"[:120],
             line_item_description=f"{center_name} · {fmt_dt_fn(session_starts_at)} · {session_duration_minutes} دقيقة"[:500],
+            idempotency_key=f"book-{payment_row.id}"[:255],
         )
     except Exception as exc:
         booking.status = "cancelled"
@@ -237,10 +242,10 @@ def process_hosted_single_booking_checkout(
         log_security_event_fn(
             "public_book",
             request,
-            "stripe_error",
-            details={"error": str(exc)[:200], "center_id": center_id, "session_id": session_id},
+            "payment_checkout_failed",
+            details={"error": str(exc)[:200], "center_id": center_id, "session_id": session_id, "provider": prov_name},
         )
-        return None, "stripe_error"
+        return None, "payment_checkout_failed"
 
     payment_row.provider_ref = provider_result.provider_ref
     db.commit()
@@ -249,7 +254,7 @@ def process_hosted_single_booking_checkout(
         booking.status = "cancelled"
         payment_row.status = "failed"
         db.commit()
-        return None, "stripe_no_url"
+        return None, "payment_checkout_no_url"
     return checkout_url, None
 
 

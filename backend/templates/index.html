@@ -4583,7 +4583,9 @@
       }
       if (
         msgStatus === "stripe_error" ||
+        msgStatus === "payment_checkout_failed" ||
         msgStatus === "stripe_no_url" ||
+        msgStatus === "payment_checkout_no_url" ||
         msgStatus === "payment_provider_config" ||
         msgStatus === "subscription_cancelled" ||
         msgStatus === "session_ended" ||

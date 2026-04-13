@@ -9,12 +9,22 @@ from fastapi import APIRouter, Depends, Header, HTTPException, Request
 from sqlalchemy.orm import Session
 
 try:
-    from .checkout_finalize import finalize_checkout_failed, finalize_checkout_paid
+    from .checkout_finalize import (
+        finalize_checkout_failed,
+        finalize_checkout_paid,
+        finalize_payment_disputed,
+        finalize_payment_refunded,
+    )
     from .database import get_db
     from .payments import StripePaymentProvider
     from .payments.paymob_provider import metadata_from_paymob_obj, verify_paymob_processed_hmac
 except ImportError:
-    from backend.app.checkout_finalize import finalize_checkout_failed, finalize_checkout_paid
+    from backend.app.checkout_finalize import (
+        finalize_checkout_failed,
+        finalize_checkout_paid,
+        finalize_payment_disputed,
+        finalize_payment_refunded,
+    )
     from backend.app.database import get_db
     from backend.app.payments import StripePaymentProvider
     from backend.app.payments.paymob_provider import metadata_from_paymob_obj, verify_paymob_processed_hmac
@@ -34,7 +44,7 @@ async def stripe_webhook(
     try:
         event = StripePaymentProvider.construct_event(payload, stripe_signature)
     except Exception as exc:
-        raise HTTPException(status_code=400, detail=f"Invalid webhook: {exc}")
+        raise HTTPException(status_code=400, detail=f"Invalid webhook: {exc}") from exc
 
     event_type = event.get("type", "")
     event_data = event.get("data", {}).get("object", {})
@@ -42,11 +52,46 @@ async def stripe_webhook(
     if event_type == "checkout.session.completed":
         session_id = event_data.get("id") or ""
         metadata = dict(event_data.get("metadata", {}) or {})
-        finalize_checkout_paid(db, metadata, str(session_id))
+        amount_total = event_data.get("amount_total")
+        currency = str(event_data.get("currency") or "").strip()
+        amount_minor: int | None = None
+        if amount_total is not None:
+            try:
+                amount_minor = int(amount_total)
+            except (TypeError, ValueError):
+                amount_minor = None
+        finalize_checkout_paid(
+            db,
+            metadata,
+            str(session_id),
+            amount_total_minor=amount_minor,
+            currency_from_provider=currency or None,
+        )
     elif event_type == "checkout.session.expired":
         session_id = event_data.get("id") or ""
         metadata = dict(event_data.get("metadata", {}) or {})
         finalize_checkout_failed(db, metadata, str(session_id))
+    elif event_type == "charge.refunded":
+        ch = event_data if isinstance(event_data, dict) else {}
+        meta = dict(ch.get("metadata") or {})
+        finalize_payment_refunded(db, meta, str(ch.get("id") or ""))
+    elif event_type == "charge.dispute.created":
+        dispute = event_data if isinstance(event_data, dict) else {}
+        ch_id = dispute.get("charge")
+        meta: dict = {}
+        if ch_id:
+            sk = os.getenv("STRIPE_SECRET_KEY", "").strip()
+            if sk:
+                try:
+                    import stripe
+
+                    stripe.api_key = sk
+                    ch = stripe.Charge.retrieve(str(ch_id))
+                    md = getattr(ch, "metadata", None) or {}
+                    meta = dict(md) if isinstance(md, dict) else {}
+                except Exception:
+                    logger.exception("dispute webhook: failed to retrieve charge %s", ch_id)
+        finalize_payment_disputed(db, meta, str(ch_id or dispute.get("id") or ""))
 
     return {"received": True}
 
@@ -82,8 +127,29 @@ async def paymob_transaction_webhook(request: Request, db: Session = Depends(get
     if not order_id and obj.get("id") is not None:
         order_id = str(obj.get("id"))
 
-    if bool(obj.get("success")):
-        finalize_checkout_paid(db, meta, order_id)
+    is_refunded = bool(obj.get("is_refunded"))
+    if is_refunded:
+        finalize_payment_refunded(db, meta, order_id)
+        return {"received": True}
+
+    success = bool(obj.get("success"))
+    amount_cents = obj.get("amount_cents")
+    amount_minor: int | None = None
+    if amount_cents is not None:
+        try:
+            amount_minor = int(amount_cents)
+        except (TypeError, ValueError):
+            amount_minor = None
+    currency = str(obj.get("currency") or "").strip()
+
+    if success:
+        finalize_checkout_paid(
+            db,
+            meta,
+            order_id,
+            amount_total_minor=amount_minor,
+            currency_from_provider=currency or None,
+        )
     else:
         finalize_checkout_failed(db, meta, order_id)
     return {"received": True}

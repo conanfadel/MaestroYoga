@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import csv
 import io
+import os
 from datetime import datetime, timezone
 from io import BytesIO
 
@@ -105,6 +106,7 @@ def register_routes(router: APIRouter) -> None:
                 metadata=meta,
                 success_url=payload.success_url,
                 cancel_url=payload.cancel_url,
+                idempotency_key=f"api-checkout-{payment.id}"[:255],
             )
         except Exception as exc:
             logger.exception("Failed to create hosted checkout session: %s", exc)
@@ -119,20 +121,6 @@ def register_routes(router: APIRouter) -> None:
             "provider_ref": provider_result.provider_ref,
             "status": payment.status,
         }
-
-    @router.get("/payments/{payment_id}", response_model=_d.schemas.PaymentOut)
-    def get_payment_status(
-        payment_id: int,
-        db: Session = Depends(_d.get_db),
-        user: _d.models.User = Depends(
-            _d.require_any_permission("payments.records", "reports.financial", "exports.payments")
-        ),
-    ):
-        center_id = _d.require_user_center_id(user)
-        payment = db.get(_d.models.Payment, payment_id)
-        if not payment or payment.center_id != center_id:
-            raise HTTPException(status_code=404, detail="Payment not found")
-        return payment
 
     @router.get("/payments", response_model=list[_d.schemas.PaymentOut])
     def list_payments(
@@ -244,3 +232,77 @@ def register_routes(router: APIRouter) -> None:
             media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
             headers=hdrs,
         )
+
+    @router.post("/payments/{payment_id}/refund", response_model=_d.schemas.PaymentOut)
+    def refund_payment_stripe(
+        payment_id: int,
+        db: Session = Depends(_d.get_db),
+        user: _d.models.User = Depends(_d.require_any_permission("payments.refund")),
+    ):
+        """Create a refund in Stripe for a paid Checkout session (center-scoped). Paymob: use dashboard."""
+        center_id = _d.require_user_center_id(user)
+        payment = db.get(_d.models.Payment, payment_id)
+        if not payment or payment.center_id != center_id:
+            raise HTTPException(status_code=404, detail="Payment not found")
+        if payment.status != "paid":
+            raise HTTPException(status_code=400, detail="Only paid payments can be refunded")
+        provider_mode = os.getenv("PAYMENT_PROVIDER", "mock").strip().lower()
+        if provider_mode != "stripe":
+            raise HTTPException(
+                status_code=501,
+                detail="Automated refund API is available when PAYMENT_PROVIDER=stripe. For Paymob, refund from the Paymob dashboard.",
+            )
+        pref = (payment.provider_ref or "").strip()
+        if not pref.startswith("cs_"):
+            raise HTTPException(
+                status_code=400,
+                detail="This payment has no Stripe Checkout session id (expected provider_ref cs_…).",
+            )
+        try:
+            import stripe
+        except ImportError as exc:  # pragma: no cover
+            raise HTTPException(status_code=500, detail="Stripe SDK not installed") from exc
+
+        sk = os.getenv("STRIPE_SECRET_KEY", "").strip()
+        if not sk:
+            raise HTTPException(status_code=500, detail="STRIPE_SECRET_KEY is not configured")
+        stripe.api_key = sk
+        try:
+            sess = stripe.checkout.Session.retrieve(pref)
+            pi = getattr(sess, "payment_intent", None)
+            if isinstance(pi, dict):
+                pi = pi.get("id")
+            if not pi:
+                raise HTTPException(status_code=400, detail="Checkout session has no payment_intent")
+            stripe.Refund.create(
+                payment_intent=pi,
+                idempotency_key=f"api-refund-{center_id}-{payment_id}"[:255],
+            )
+        except HTTPException:
+            raise
+        except Exception as exc:
+            logger.exception("Stripe refund failed: %s", exc)
+            raise HTTPException(status_code=502, detail="Refund request to Stripe failed") from exc
+
+        payment.status = "refunded"
+        if payment.booking_id:
+            booking = db.get(_d.models.Booking, payment.booking_id)
+            if booking and booking.status in ("confirmed", "booked", "pending_payment"):
+                booking.status = "cancelled"
+        db.commit()
+        db.refresh(payment)
+        return payment
+
+    @router.get("/payments/{payment_id}", response_model=_d.schemas.PaymentOut)
+    def get_payment_status(
+        payment_id: int,
+        db: Session = Depends(_d.get_db),
+        user: _d.models.User = Depends(
+            _d.require_any_permission("payments.records", "reports.financial", "exports.payments")
+        ),
+    ):
+        center_id = _d.require_user_center_id(user)
+        payment = db.get(_d.models.Payment, payment_id)
+        if not payment or payment.center_id != center_id:
+            raise HTTPException(status_code=404, detail="Payment not found")
+        return payment
