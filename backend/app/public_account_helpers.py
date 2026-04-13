@@ -4,7 +4,6 @@ from fastapi import Request
 from sqlalchemy.orm import Session
 
 from . import models
-from .booking_utils import ACTIVE_BOOKING_STATUSES
 from .security import create_public_account_delete_token
 from .time_utils import utcnow_naive
 from .web_shared import (
@@ -15,13 +14,6 @@ from .web_shared import (
     public_center_id_str_from_next,
     _fmt_dt_weekday_ar,
 )
-
-_BOOKING_STATUS_LABEL_AR: dict[str, str] = {
-    "booked": "محجوز",
-    "confirmed": "مؤكد",
-    "pending_payment": "في انتظار الدفع",
-}
-
 
 def public_account_phone_prefill(user: models.PublicUser) -> tuple[str, str]:
     """(country_code, local_digits) for account form; default +966 if unknown."""
@@ -91,8 +83,16 @@ def build_public_trainee_schedule_rows(
     upcoming_only: bool = True,
     limit: int = 100,
 ) -> list[dict[str, str | int]]:
-    """حجوزات نشطة للعميل في المركز (افتراضيًا الجلسات القادمة فقط) لجدول المتدرب."""
+    """جلسات قادمة بحجز مؤكّد مع دفع مسجّل كـ «مدفوع» (يشمل الخطة والدفع لكل جلسة)."""
     now = utcnow_naive()
+    paid_exists = (
+        db.query(models.Payment.id)
+        .filter(
+            models.Payment.booking_id == models.Booking.id,
+            models.Payment.status == "paid",
+        )
+        .exists()
+    )
     q = (
         db.query(models.Booking, models.YogaSession, models.Room)
         .join(models.YogaSession, models.YogaSession.id == models.Booking.session_id)
@@ -100,14 +100,15 @@ def build_public_trainee_schedule_rows(
         .filter(
             models.Booking.client_id == client_id,
             models.Booking.center_id == center_id,
-            models.Booking.status.in_(ACTIVE_BOOKING_STATUSES),
+            models.Booking.status == "confirmed",
+            paid_exists,
         )
     )
     if upcoming_only:
         q = q.filter(models.YogaSession.starts_at >= now)
     rows = q.order_by(models.YogaSession.starts_at.asc()).limit(limit).all()
     out: list[dict[str, str | int]] = []
-    for booking, ys, room in rows:
+    for _booking, ys, room in rows:
         out.append(
             {
                 "session_id": ys.id,
@@ -115,9 +116,6 @@ def build_public_trainee_schedule_rows(
                 "trainer": ys.trainer_name or "-",
                 "starts_at_display": _fmt_dt_weekday_ar(ys.starts_at),
                 "room_name": room.name if room else "-",
-                "booking_status_label": _BOOKING_STATUS_LABEL_AR.get(
-                    booking.status or "", booking.status or "-"
-                ),
             }
         )
     return out

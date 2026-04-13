@@ -328,12 +328,26 @@
     .trainee-schedule__icon-btn:hover { background: #fffbeb; }
     .trainee-schedule__icon-btn svg { width: 22px; height: 22px; }
     .trainee-schedule__print-title {
-      margin: 0 0 8px;
-      font-size: 0.95rem;
+      margin: 0 0 12px;
+      font-size: 1.05rem;
       font-weight: 800;
       color: var(--charcoal);
       display: none;
     }
+    .trainee-schedule__print-identity {
+      margin: 0 0 14px;
+      padding: 12px 14px;
+      border-radius: 12px;
+      background: rgba(248, 250, 252, 0.95);
+      border: 1px solid rgba(45, 52, 54, 0.1);
+    }
+    .trainee-schedule__print-identity p {
+      margin: 0 0 8px;
+      font-size: 0.95rem;
+      line-height: 1.55;
+      color: var(--charcoal);
+    }
+    .trainee-schedule__print-identity p:last-child { margin-bottom: 0; }
     .trainee-schedule__table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
     .trainee-schedule table {
       width: 100%;
@@ -362,6 +376,11 @@
       .shell { max-width: 100% !important; width: 100% !important; }
       .card { box-shadow: none !important; border: none !important; }
       .trainee-schedule__print-title { display: block !important; }
+      .trainee-schedule__print-identity {
+        background: transparent !important;
+        border: none !important;
+        padding: 0 0 12px !important;
+      }
     }
   </style>
 </head>
@@ -504,9 +523,9 @@
 
       <section id="section-schedule" class="trainee-schedule account-section" aria-labelledby="schedule-heading">
         <div id="trainee-schedule-print-zone">
-          <p class="trainee-schedule__print-title">جدول المتدرب — {{ user.full_name }} — {{ center_display_name }}</p>
+          <p class="trainee-schedule__print-title">جدول الجلسات</p>
           <div class="trainee-schedule__head">
-            <h2 id="schedule-heading">جدول المتدرب</h2>
+            <h2 id="schedule-heading" class="no-print">جدول المتدرب</h2>
             <div class="trainee-schedule__toolbar no-print">
               <button type="button" class="trainee-schedule__icon-btn" onclick="window.print()" title="طباعة الجدول" aria-label="طباعة جدول المتدرب">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
@@ -516,7 +535,11 @@
               </button>
             </div>
           </div>
-          <p class="sub no-print" style="margin-top:0;margin-bottom:12px;">الجلسات القادمة التي لديك حجز نشط (محجوز أو مؤكد أو في انتظار الدفع) في {{ center_display_name }}.</p>
+          <div class="trainee-schedule__print-identity">
+            <p><strong>الاسم:</strong> {{ user.full_name }}</p>
+            <p><strong>الخطة:</strong> {% if public_sub_active %}{{ public_sub_plan_name }} — {{ public_sub_plan_type_label }}{% else %}غير مشترك{% endif %}</p>
+          </div>
+          <p class="sub no-print" style="margin-top:0;margin-bottom:12px;">الجلسات القادمة بحجز <strong>مؤكّد ومدفوع</strong> فقط في {{ center_display_name }}.</p>
           {% if trainee_schedule_rows %}
           <div class="trainee-schedule__table-wrap">
             <table>
@@ -526,7 +549,6 @@
                   <th scope="col">المدرّب</th>
                   <th scope="col">القاعة</th>
                   <th scope="col">الموعد</th>
-                  <th scope="col">الحجز</th>
                 </tr>
               </thead>
               <tbody>
@@ -536,14 +558,13 @@
                   <td>{{ row.trainer }}</td>
                   <td>{{ row.room_name }}</td>
                   <td>{{ row.starts_at_display }}</td>
-                  <td>{{ row.booking_status_label }}</td>
                 </tr>
                 {% endfor %}
               </tbody>
             </table>
           </div>
           {% else %}
-          <p class="sub" style="margin:0;">لا توجد لديك جلسات قادمة بحجز نشط في هذا المركز. عند حجز موعد من الصفحة الرئيسية سيظهر الجدول هنا.</p>
+          <p class="sub" style="margin:0;">لا توجد لديك جلسات قادمة بحجز مؤكّد ومدفوع في هذا المركز. بعد إتمام الدفع وتأكيد الحجز ستظهر هنا.</p>
           {% endif %}
         </div>
       </section>
