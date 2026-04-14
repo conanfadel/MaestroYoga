@@ -343,13 +343,13 @@
             <input type="hidden" name="return_section" value="section-loyalty" />
             <h3 class="admin-booking-block-heading admin-booking-block-heading--flush-top">عتبات الجلسات المؤكدة</h3>
             <label for="loyalty_bronze_min">أقل عدد جلسات للوسام البرونزي</label>
-            <input id="loyalty_bronze_min" name="loyalty_bronze_min" type="number" lang="en" dir="ltr" min="1" max="5000" placeholder="فارغ = خادم"
+            <input id="loyalty_bronze_min" name="loyalty_bronze_min" type="text" inputmode="numeric" autocomplete="off" lang="en" dir="ltr" pattern="^(|[1-9][0-9]{0,4})$" maxlength="5" placeholder="فارغ = خادم"
               value="{{ center.loyalty_bronze_min if center.loyalty_bronze_min is not none else '' }}" />
             <label for="loyalty_silver_min">أقل عدد جلسات للوسام الفضي (لا يقل عن برونزي + 1)</label>
-            <input id="loyalty_silver_min" name="loyalty_silver_min" type="number" lang="en" dir="ltr" min="2" max="5000" placeholder="فارغ = خادم"
+            <input id="loyalty_silver_min" name="loyalty_silver_min" type="text" inputmode="numeric" autocomplete="off" lang="en" dir="ltr" pattern="^(|[1-9][0-9]{0,4})$" maxlength="5" placeholder="فارغ = خادم"
               value="{{ center.loyalty_silver_min if center.loyalty_silver_min is not none else '' }}" />
             <label for="loyalty_gold_min">أقل عدد جلسات للوسام الذهبي (لا يقل عن فضي + 1)</label>
-            <input id="loyalty_gold_min" name="loyalty_gold_min" type="number" lang="en" dir="ltr" min="3" max="5000" placeholder="فارغ = خادم"
+            <input id="loyalty_gold_min" name="loyalty_gold_min" type="text" inputmode="numeric" autocomplete="off" lang="en" dir="ltr" pattern="^(|[1-9][0-9]{0,4})$" maxlength="5" placeholder="فارغ = خادم"
               value="{{ center.loyalty_gold_min if center.loyalty_gold_min is not none else '' }}" />
             <p id="loyalty-cascade-hint" class="small" style="margin:10px 0 0;padding:8px 10px;background:#f8fafc;border-radius:8px;color:var(--charcoal-muted);line-height:1.5;"></p>
             <h3 class="admin-booking-block-heading">أسماء العرض (اختياري)</h3>
@@ -454,7 +454,7 @@
           <label>اسم الغرفة</label>
           <input name="name" required placeholder="مثال: قاعة التأمل" />
           <label>السعة (العدد)</label>
-          <input name="capacity" type="number" lang="en" dir="ltr" min="1" value="10" required />
+          <input name="capacity" type="text" inputmode="numeric" autocomplete="off" lang="en" dir="ltr" pattern="[1-9][0-9]*" maxlength="6" value="10" required />
           <button type="submit">حفظ الغرفة</button>
         </form>
       </div>
@@ -484,9 +484,9 @@
           <label>التاريخ والوقت</label>
           <input name="starts_at" type="datetime-local" required />
           <label>المدة (دقيقة)</label>
-          <input name="duration_minutes" type="number" lang="en" dir="ltr" min="15" value="60" required />
+          <input name="duration_minutes" type="text" inputmode="numeric" autocomplete="off" lang="en" dir="ltr" pattern="[1-9][0-9]*" maxlength="4" value="60" required />
           <label>السعر (دخول لمرة واحدة)</label>
-          <input name="price_drop_in" type="number" lang="en" dir="ltr" step="0.01" min="0" value="60" required />
+          <input name="price_drop_in" type="text" inputmode="decimal" autocomplete="off" lang="en" dir="ltr" pattern="[0-9]+(\.[0-9]{1,2})?" maxlength="12" value="60" required />
           <button type="submit">نشر الجلسة</button>
         </form>
       </div>
@@ -504,9 +504,9 @@
             <option value="yearly">سنوي</option>
           </select>
           <label>السعر (SAR)</label>
-          <input name="price" type="number" lang="en" dir="ltr" min="0" step="0.01" required />
+          <input name="price" type="text" inputmode="decimal" autocomplete="off" lang="en" dir="ltr" pattern="[0-9]+(\.[0-9]{1,2})?" maxlength="12" required />
           <label>حد الجلسات (اختياري)</label>
-          <input name="session_limit" type="number" lang="en" dir="ltr" min="1" placeholder="اتركه فارغًا لعدد غير محدود" />
+          <input name="session_limit" type="text" inputmode="numeric" autocomplete="off" lang="en" dir="ltr" pattern="^(|[1-9][0-9]*)$" maxlength="6" placeholder="اتركه فارغًا لعدد غير محدود" />
           <button type="submit">حفظ الخطة</button>
         </form>
       </div>
@@ -570,7 +570,7 @@
                 <form method="post" action="/admin/rooms/update" class="inline-form" data-preserve-scroll="1">
                   <input type="hidden" name="room_id" value="{{ r.id }}" />
                   <input name="name" value="{{ r.name }}" required />
-                  <input name="capacity" type="number" lang="en" dir="ltr" min="1" value="{{ r.capacity }}" required />
+                  <input name="capacity" type="text" inputmode="numeric" autocomplete="off" lang="en" dir="ltr" pattern="[1-9][0-9]*" maxlength="6" value="{{ r.capacity }}" required />
                   <button type="submit">تحديث</button>
                 </form>
               </td>
@@ -661,11 +661,16 @@
               <option value="monthly" {{ 'selected' if p.plan_type == 'monthly' else '' }}>شهري</option>
               <option value="yearly" {{ 'selected' if p.plan_type == 'yearly' else '' }}>سنوي</option>
             </select>
-            <input name="price" type="number" lang="en" dir="ltr" min="0" step="0.01" value="{{ p.price }}" required />
+            <input name="price" type="text" inputmode="decimal" autocomplete="off" lang="en" dir="ltr" pattern="[0-9]+(\.[0-9]{1,2})?" maxlength="12" value="{{ p.price }}" required />
             <input
               name="session_limit"
-              type="number" lang="en" dir="ltr"
-              min="1"
+              type="text"
+              inputmode="numeric"
+              autocomplete="off"
+              lang="en"
+              dir="ltr"
+              pattern="^(|[1-9][0-9]*)$"
+              maxlength="6"
               value="{{ p.session_limit if p.session_limit else '' }}"
               placeholder="غير محدود"
             />
@@ -1068,7 +1073,7 @@
                           <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px;max-width:360px;">
                             <div>
                               <label style="margin:0 0 4px;">المجموعات</label>
-                              <input class="js-sets-input" data-exercise-id="{{ ex.id }}" type="number" lang="en" dir="ltr" min="1" max="20" value="3" />
+                              <input class="js-sets-input" data-exercise-id="{{ ex.id }}" type="text" inputmode="numeric" autocomplete="off" lang="en" dir="ltr" pattern="^(?:[1-9]|1[0-9]|20)$" maxlength="2" value="3" />
                             </div>
                             <div>
                               <label style="margin:0 0 4px;">التكرارات</label>
@@ -1097,7 +1102,7 @@
                           <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px;max-width:360px;">
                             <div>
                               <label style="margin:0 0 4px;">المجموعات</label>
-                              <input class="js-sets-input" data-exercise-id="{{ ex.id }}" type="number" lang="en" dir="ltr" min="1" max="20" value="3" />
+                              <input class="js-sets-input" data-exercise-id="{{ ex.id }}" type="text" inputmode="numeric" autocomplete="off" lang="en" dir="ltr" pattern="^(?:[1-9]|1[0-9]|20)$" maxlength="2" value="3" />
                             </div>
                             <div>
                               <label style="margin:0 0 4px;">التكرارات</label>
@@ -1134,15 +1139,15 @@
                   </div>
                   <div>
                     <label for="assign-duration">مدة التمرين (دقائق)</label>
-                    <input id="assign-duration" name="duration_minutes" type="number" lang="en" dir="ltr" min="0" max="600" value="0" />
+                    <input id="assign-duration" name="duration_minutes" type="text" inputmode="numeric" autocomplete="off" lang="en" dir="ltr" pattern="^(0|[1-9][0-9]{0,2})$" maxlength="3" value="0" />
                   </div>
                   <div>
                     <label for="assign-rest">الراحة (ثانية)</label>
-                    <input id="assign-rest" name="rest_seconds" type="number" lang="en" dir="ltr" min="0" max="1200" value="60" />
+                    <input id="assign-rest" name="rest_seconds" type="text" inputmode="numeric" autocomplete="off" lang="en" dir="ltr" pattern="^(0|[1-9][0-9]{0,3})$" maxlength="4" value="60" />
                   </div>
                   <div>
                     <label for="assign-default-sets">مجموعات افتراضية</label>
-                    <input id="assign-default-sets" name="default_sets_count" type="number" lang="en" dir="ltr" min="1" max="20" value="3" />
+                    <input id="assign-default-sets" name="default_sets_count" type="text" inputmode="numeric" autocomplete="off" lang="en" dir="ltr" pattern="^(?:[1-9]|1[0-9]|20)$" maxlength="2" value="3" />
                   </div>
                   <div>
                     <label for="assign-default-reps">تكرارات افتراضية</label>
@@ -1801,13 +1806,13 @@
           <form method="post" action="/admin/center/report-settings" class="form" data-preserve-scroll="1" style="display:grid;gap:10px;max-width:520px;">
             <input type="hidden" name="return_section" value="section-reports" />
             <label>هدف إيراد شهري (SAR، اختياري)
-              <input name="monthly_revenue_goal" type="number" lang="en" dir="ltr" step="0.01" min="0" placeholder="مثال: 50000" value="{% if center and center.monthly_revenue_goal is not none %}{{ center.monthly_revenue_goal }}{% endif %}" />
+              <input name="monthly_revenue_goal" type="text" inputmode="decimal" autocomplete="off" lang="en" dir="ltr" pattern="^(|[0-9]+(\.[0-9]{1,2})?)$" maxlength="14" placeholder="مثال: 50000" value="{% if center and center.monthly_revenue_goal is not none %}{{ center.monthly_revenue_goal }}{% endif %}" />
             </label>
             <label>هدف حجوزات نشطة شهرياً (عدد، اختياري)
-              <input name="monthly_bookings_goal" type="number" lang="en" dir="ltr" step="1" min="0" placeholder="مثال: 120" value="{% if center and center.monthly_bookings_goal is not none %}{{ center.monthly_bookings_goal }}{% endif %}" />
+              <input name="monthly_bookings_goal" type="text" inputmode="numeric" autocomplete="off" lang="en" dir="ltr" pattern="^(|[0-9]+)$" maxlength="9" placeholder="مثال: 120" value="{% if center and center.monthly_bookings_goal is not none %}{{ center.monthly_bookings_goal }}{% endif %}" />
             </label>
             <label>ضريبة تقديرية للمركز % (فارغ = استخدام البيئة الافتراضية)
-              <input name="vat_rate_percent" type="number" lang="en" dir="ltr" step="0.1" min="0" max="100" placeholder="مثال: 15" value="{% if center and center.vat_rate_percent is not none %}{{ center.vat_rate_percent }}{% endif %}" />
+              <input name="vat_rate_percent" type="text" inputmode="decimal" autocomplete="off" lang="en" dir="ltr" pattern="^(|[0-9]{1,2}(\.[0-9]{1,2})?|100(\.00?)?)$" maxlength="6" placeholder="مثال: 15" value="{% if center and center.vat_rate_percent is not none %}{{ center.vat_rate_percent }}{% endif %}" />
             </label>
             <label>بريد ملخص يومي (فارغ = بريد حسابك عند الإرسال)
               <input name="report_digest_email" type="email" maxlength="220" autocomplete="email" placeholder="ops@example.com" value="{{ center.report_digest_email if center and center.report_digest_email else '' }}" />
@@ -1912,7 +1917,7 @@
         <label>الإجابة</label>
         <input name="answer" required placeholder="اكتب الإجابة المختصرة والواضحة" />
         <label>الترتيب</label>
-        <input name="sort_order" type="number" lang="en" dir="ltr" min="0" value="0" />
+        <input name="sort_order" type="text" inputmode="numeric" autocomplete="off" lang="en" dir="ltr" pattern="^(0|[1-9][0-9]*)$" maxlength="5" value="0" />
         <label style="display:flex;align-items:center;gap:8px;">
           <input type="checkbox" name="is_active" value="1" checked style="width:auto;" />
           نشط للعرض في الصفحة العامة
@@ -1952,7 +1957,7 @@
                   <input type="hidden" name="faq_id" value="{{ f.id }}" />
                   <input name="question" value="{{ f.question }}" required style="min-width:170px;" />
                   <input name="answer" value="{{ f.answer }}" required style="min-width:220px;" />
-                  <input name="sort_order" type="number" lang="en" dir="ltr" min="0" value="{{ f.sort_order }}" style="min-width:80px;" />
+                  <input name="sort_order" type="text" inputmode="numeric" autocomplete="off" lang="en" dir="ltr" pattern="^(0|[1-9][0-9]*)$" maxlength="5" value="{{ f.sort_order }}" style="min-width:80px;" />
                   <select name="is_active" style="min-width:90px;">
                     <option value="1" {{ 'selected' if f.is_active else '' }}>نشط</option>
                     <option value="0" {{ '' if f.is_active else 'selected' }}>مخفي</option>
