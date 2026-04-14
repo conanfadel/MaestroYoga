@@ -1,0 +1,36 @@
+<script>
+  (function forceEnglishDigits() {
+    var map = {
+      "\u0660": "0", "\u0661": "1", "\u0662": "2", "\u0663": "3", "\u0664": "4",
+      "\u0665": "5", "\u0666": "6", "\u0667": "7", "\u0668": "8", "\u0669": "9",
+      "\u06F0": "0", "\u06F1": "1", "\u06F2": "2", "\u06F3": "3", "\u06F4": "4",
+      "\u06F5": "5", "\u06F6": "6", "\u06F7": "7", "\u06F8": "8", "\u06F9": "9"
+    };
+    function normalizeDigits(text) {
+      return String(text || "").replace(/[\u0660-\u0669\u06F0-\u06F9]/g, function (ch) {
+        return map[ch] || ch;
+      });
+    }
+    function walk(node) {
+      if (!node) return;
+      var type = node.nodeType;
+      if (type === Node.TEXT_NODE) {
+        node.nodeValue = normalizeDigits(node.nodeValue);
+        return;
+      }
+      if (type !== Node.ELEMENT_NODE) return;
+      var tag = (node.tagName || "").toLowerCase();
+      if (tag === "script" || tag === "style") return;
+      if (node.hasAttribute("value")) {
+        node.setAttribute("value", normalizeDigits(node.getAttribute("value")));
+      }
+      if (tag === "input" || tag === "textarea") {
+        if (typeof node.value === "string") node.value = normalizeDigits(node.value);
+        if (typeof node.placeholder === "string") node.placeholder = normalizeDigits(node.placeholder);
+      }
+      var kids = node.childNodes || [];
+      for (var i = 0; i < kids.length; i += 1) walk(kids[i]);
+    }
+    walk(document.body);
+  })();
+</script>

@@ -4,6 +4,7 @@ from datetime import datetime
 from urllib.parse import parse_qs, urlencode, urlsplit
 
 from fastapi import Request
+from .time_utils import utc_naive_to_ksa
 
 # مسار الواجهة العامة الافتراضي (مركز تجريبي / افتراضي)
 PUBLIC_INDEX_DEFAULT_PATH = "/index?center_id=1"
@@ -94,7 +95,7 @@ def _plan_duration_days(plan_type: str) -> int:
 def _fmt_dt(value: datetime | None) -> str:
     if not value:
         return "-"
-    return value.strftime("%Y-%m-%d %H:%M")
+    return utc_naive_to_ksa(value).strftime("%Y-%m-%d %H:%M")
 
 
 # أسماء أيام الأسبوع (Python weekday: الاثنين=0 … الأحد=6)
@@ -113,8 +114,9 @@ def _fmt_dt_weekday_ar(value: datetime | None) -> str:
     """تاريخ ووقت مع اسم يوم الأسبوع بالعربية (للواجهة العامة)."""
     if not value:
         return "-"
-    day = _AR_WEEKDAY_NAMES[value.weekday()]
-    return f"{day}، {value.strftime('%Y-%m-%d %H:%M')}"
+    value_ksa = utc_naive_to_ksa(value)
+    day = _AR_WEEKDAY_NAMES[value_ksa.weekday()]
+    return f"{day}، {value_ksa.strftime('%Y-%m-%d %H:%M')}"
 
 
 def _mail_fail_reason_query_token(raw: str | None) -> str:
