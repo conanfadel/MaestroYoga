@@ -15,6 +15,7 @@ except Exception:  # pragma: no cover - optional in non-venv runtime
         return False
 
 from fastapi import FastAPI
+from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 
 try:
@@ -57,8 +58,19 @@ def create_app() -> FastAPI:
     _cors_origins = [x.strip() for x in os.getenv("CORS_ORIGINS", "").split(",") if x.strip()]
     attach_cors(app, _cors_origins)
     app.add_middleware(RateLimitMiddleware)
-    app.include_router(web_ui_router)
     _static_dir = Path(__file__).resolve().parent.parent / "static"
+    _sw_path = _static_dir / "sw.js"
+
+    @app.get("/sw.js", include_in_schema=False)
+    def service_worker_root() -> FileResponse:
+        """Some browsers or cached installs request /sw.js; avoid noisy 404s in logs."""
+        return FileResponse(
+            _sw_path,
+            media_type="application/javascript",
+            headers={"Cache-Control": "public, max-age=3600"},
+        )
+
+    app.include_router(web_ui_router)
     if _static_dir.is_dir():
         app.mount("/static", StaticFiles(directory=str(_static_dir)), name="static")
 
