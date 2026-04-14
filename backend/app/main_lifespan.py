@@ -104,6 +104,29 @@ async def _webhook_delay_monitor_loop() -> None:
         await asyncio.sleep(max(120, interval))
 
 
+async def _subscription_expiry_loop() -> None:
+    try:
+        from .database import SessionLocal
+        from .subscription_lifecycle import expire_active_subscriptions
+    except ImportError:
+        from backend.app.database import SessionLocal
+        from backend.app.subscription_lifecycle import expire_active_subscriptions
+
+    interval = int(os.getenv("SUBSCRIPTION_EXPIRY_SWEEP_INTERVAL_SEC", "900") or "900")
+    await asyncio.sleep(105)
+    while True:
+        db = SessionLocal()
+        try:
+            n = expire_active_subscriptions(db, max_rows=1000)
+            if n:
+                logger.info("subscription_expiry_loop: expired %s subscription(s)", n)
+        except Exception:
+            logger.exception("subscription_expiry_loop failed")
+        finally:
+            db.close()
+        await asyncio.sleep(max(180, interval))
+
+
 @asynccontextmanager
 async def app_lifespan(app: FastAPI):
     configure_logging()
@@ -115,12 +138,15 @@ async def app_lifespan(app: FastAPI):
     sweeper_task: asyncio.Task | None = None
     reconcile_task: asyncio.Task | None = None
     delay_monitor_task: asyncio.Task | None = None
+    subscription_expiry_task: asyncio.Task | None = None
     if os.getenv("DISABLE_STALE_PAYMENT_SWEEPER", "").strip().lower() not in ("1", "true", "yes"):
         sweeper_task = asyncio.create_task(_stale_payment_sweeper_loop())
     if os.getenv("DISABLE_PAYMENT_RECONCILE", "").strip().lower() not in ("1", "true", "yes"):
         reconcile_task = asyncio.create_task(_pending_payment_reconcile_loop())
     if os.getenv("DISABLE_WEBHOOK_DELAY_MONITOR", "").strip().lower() not in ("1", "true", "yes"):
         delay_monitor_task = asyncio.create_task(_webhook_delay_monitor_loop())
+    if os.getenv("DISABLE_SUBSCRIPTION_EXPIRY_SWEEPER", "").strip().lower() not in ("1", "true", "yes"):
+        subscription_expiry_task = asyncio.create_task(_subscription_expiry_loop())
 
     try:
         yield
@@ -137,3 +163,7 @@ async def app_lifespan(app: FastAPI):
             delay_monitor_task.cancel()
             with contextlib.suppress(asyncio.CancelledError, Exception):
                 await delay_monitor_task
+        if subscription_expiry_task:
+            subscription_expiry_task.cancel()
+            with contextlib.suppress(asyncio.CancelledError, Exception):
+                await subscription_expiry_task

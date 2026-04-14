@@ -434,6 +434,179 @@ def test_send_operational_alert_webhook(monkeypatch: pytest.MonkeyPatch) -> None
     assert calls and calls[0] == "https://example.test/hooks/ops"
 
 
+def test_expire_active_subscriptions_marks_expired() -> None:
+    import time
+
+    from backend.app import models
+    from backend.app.database import SessionLocal
+    from backend.app.subscription_lifecycle import expire_active_subscriptions
+    from backend.app.time_utils import utcnow_naive
+
+    db = SessionLocal()
+    sub_id: int | None = None
+    try:
+        center = db.get(models.Center, 1)
+        if center is None:
+            center = models.Center(name="Sub Expiry Center", city="Riyadh")
+            db.add(center)
+            db.commit()
+            db.refresh(center)
+
+        plan = models.SubscriptionPlan(
+            center_id=center.id,
+            name=f"Expiry Plan {int(time.time())}",
+            plan_type="monthly",
+            price=99.0,
+            session_limit=8,
+            is_active=True,
+        )
+        db.add(plan)
+        db.commit()
+        db.refresh(plan)
+
+        client_row = models.Client(
+            center_id=center.id,
+            full_name="Expiry User",
+            email=f"expiry_user_{int(time.time())}@example.com",
+            phone="+966500099993",
+        )
+        db.add(client_row)
+        db.commit()
+        db.refresh(client_row)
+
+        sub = models.ClientSubscription(
+            client_id=client_row.id,
+            plan_id=plan.id,
+            start_date=utcnow_naive() - timedelta(days=40),
+            end_date=utcnow_naive() - timedelta(days=1),
+            status="active",
+        )
+        db.add(sub)
+        db.commit()
+        db.refresh(sub)
+        sub_id = int(sub.id)
+
+        n = expire_active_subscriptions(db)
+        assert n >= 1
+        db.refresh(sub)
+        assert sub.status == "expired"
+    finally:
+        if sub_id is not None:
+            db.query(models.ClientSubscription).filter(models.ClientSubscription.id == sub_id).delete(
+                synchronize_session=False
+            )
+        db.query(models.SubscriptionPlan).filter(models.SubscriptionPlan.name.like("Expiry Plan %")).delete(
+            synchronize_session=False
+        )
+        db.query(models.Client).filter(models.Client.email.like("expiry_user_%@example.com")).delete(
+            synchronize_session=False
+        )
+        db.commit()
+        db.close()
+
+
+def test_plan_booking_returns_expired_code_for_ended_subscription() -> None:
+    import time
+
+    from backend.app import models
+    from backend.app.database import SessionLocal
+    from backend.app.public_plan_session_booking import confirm_public_plan_session_booking
+    from backend.app.time_utils import utcnow_naive
+
+    db = SessionLocal()
+    sub_id: int | None = None
+    try:
+        center = db.get(models.Center, 1)
+        if center is None:
+            center = models.Center(name="Plan Expiry Center", city="Riyadh")
+            db.add(center)
+            db.commit()
+            db.refresh(center)
+
+        room = models.Room(center_id=center.id, name=f"Plan Room {int(time.time())}", capacity=10)
+        db.add(room)
+        db.commit()
+        db.refresh(room)
+
+        session = models.YogaSession(
+            center_id=center.id,
+            room_id=room.id,
+            title="Plan Expired Session",
+            trainer_name="اختبار",
+            level="all",
+            starts_at=utcnow_naive() + timedelta(days=2),
+            duration_minutes=60,
+            price_drop_in=40.0,
+        )
+        db.add(session)
+        db.commit()
+        db.refresh(session)
+
+        plan = models.SubscriptionPlan(
+            center_id=center.id,
+            name=f"Plan Expired {int(time.time())}",
+            plan_type="monthly",
+            price=120.0,
+            session_limit=6,
+            is_active=True,
+        )
+        db.add(plan)
+        db.commit()
+        db.refresh(plan)
+
+        client_row = models.Client(
+            center_id=center.id,
+            full_name="Plan Expired User",
+            email=f"plan_expired_{int(time.time())}@example.com",
+            phone="+966500099994",
+        )
+        db.add(client_row)
+        db.commit()
+        db.refresh(client_row)
+
+        sub = models.ClientSubscription(
+            client_id=client_row.id,
+            plan_id=plan.id,
+            start_date=utcnow_naive() - timedelta(days=32),
+            end_date=utcnow_naive() - timedelta(days=1),
+            status="expired",
+        )
+        db.add(sub)
+        db.commit()
+        db.refresh(sub)
+        sub_id = int(sub.id)
+
+        ok, code = confirm_public_plan_session_booking(
+            db,
+            center_id=center.id,
+            session_id=session.id,
+            client=client_row,
+            models_module=models,
+            utcnow_fn=utcnow_naive,
+            count_active_bookings_fn=lambda _db, _sid: 0,
+            integrity_error_cls=Exception,
+        )
+        assert ok is False
+        assert code == "plan_subscription_expired"
+    finally:
+        if sub_id is not None:
+            db.query(models.ClientSubscription).filter(models.ClientSubscription.id == sub_id).delete(
+                synchronize_session=False
+            )
+        db.query(models.SubscriptionPlan).filter(models.SubscriptionPlan.name.like("Plan Expired %")).delete(
+            synchronize_session=False
+        )
+        db.query(models.YogaSession).filter(models.YogaSession.title == "Plan Expired Session").delete(
+            synchronize_session=False
+        )
+        db.query(models.Room).filter(models.Room.name.like("Plan Room %")).delete(synchronize_session=False)
+        db.query(models.Client).filter(models.Client.email.like("plan_expired_%@example.com")).delete(
+            synchronize_session=False
+        )
+        db.commit()
+        db.close()
+
+
 def test_paymob_webhook_accepts_hmac_in_query_string(
     client: TestClient, monkeypatch: pytest.MonkeyPatch
 ) -> None:

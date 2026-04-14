@@ -27,6 +27,11 @@ def empty_public_subscription_context(center_id: int) -> dict[str, object]:
         "public_sub_plan_id": None,
         "public_sub_subscription_id": None,
         "public_sub_book_url": f"/index?center_id={int(center_id)}#sessions-section",
+        "public_sub_state": "none",
+        "public_sub_status_text": "لا يوجد اشتراك نشط",
+        "public_sub_days_left": None,
+        "public_sub_expiring_soon": False,
+        "public_sub_renew_url": f"/index?center_id={int(center_id)}",
     }
 
 
@@ -108,6 +113,28 @@ def build_public_active_subscription_context(
         return base
     bundle = get_active_subscription_bundle(db, center_id=center_id, client_id=client.id)
     if not bundle:
+        now = utcnow_naive()
+        latest_row = (
+            db.query(models.ClientSubscription, models.SubscriptionPlan)
+            .join(models.SubscriptionPlan, models.SubscriptionPlan.id == models.ClientSubscription.plan_id)
+            .filter(
+                models.ClientSubscription.client_id == client.id,
+                models.SubscriptionPlan.center_id == center_id,
+            )
+            .order_by(models.ClientSubscription.end_date.desc())
+            .first()
+        )
+        if latest_row:
+            sub, plan = latest_row[0], latest_row[1]
+            if str(sub.status or "").lower() == "expired" or sub.end_date < now:
+                return {
+                    **base,
+                    "public_sub_state": "expired",
+                    "public_sub_status_text": "انتهى اشتراكك",
+                    "public_sub_plan_name": plan.name,
+                    "public_sub_plan_type_label": plan_labels.get(plan.plan_type, plan.plan_type),
+                    "public_sub_ends_at_display": _fmt_dt(sub.end_date),
+                }
         return base
     sub, plan = bundle
     used_n = count_confirmed_plan_sessions_in_period(db, client_id=client.id, center_id=center_id, subscription=sub)
@@ -121,9 +148,16 @@ def build_public_active_subscription_context(
         at_cap = remaining <= 0
     plan_type_label = plan_labels.get(plan.plan_type, plan.plan_type)
     plan_slot_booking = bool(cap and not at_cap)
+    days_left = max(0, int((sub.end_date.date() - utcnow_naive().date()).days))
+    expiring_soon = days_left <= 7
+    status_text = f"ينتهي خلال {days_left} يوم" if expiring_soon else "اشتراك نشط"
     return {
         **base,
         "public_sub_active": True,
+        "public_sub_state": "expiring_soon" if expiring_soon else "active",
+        "public_sub_status_text": status_text,
+        "public_sub_days_left": days_left,
+        "public_sub_expiring_soon": expiring_soon,
         "public_sub_plan_id": int(plan.id),
         "public_sub_subscription_id": int(sub.id),
         "public_sub_plan_name": plan.name,

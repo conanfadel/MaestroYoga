@@ -114,6 +114,18 @@ def confirm_public_plan_sessions_booking(
 
     bundle = get_active_subscription_bundle(db, center_id=center_id, client_id=client.id, now=now)
     if not bundle:
+        latest_sub = (
+            db.query(models_module.ClientSubscription)
+            .join(models_module.SubscriptionPlan, models_module.SubscriptionPlan.id == models_module.ClientSubscription.plan_id)
+            .filter(
+                models_module.ClientSubscription.client_id == client.id,
+                models_module.SubscriptionPlan.center_id == center_id,
+            )
+            .order_by(models_module.ClientSubscription.end_date.desc())
+            .first()
+        )
+        if latest_sub and (str(latest_sub.status or "").lower() == "expired" or latest_sub.end_date < now):
+            return False, "plan_subscription_expired"
         return False, "plan_booking_no_subscription"
     sub, plan = bundle
     sub_locked = (

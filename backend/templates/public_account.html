@@ -196,6 +196,29 @@
       font-weight: 800;
       color: #92400e;
     }
+    .sub-status-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 5px 10px;
+      border-radius: 999px;
+      font-size: 0.8rem;
+      font-weight: 800;
+      margin-bottom: 8px;
+      border: 1px solid rgba(15, 118, 110, 0.35);
+      background: rgba(209, 250, 229, 0.7);
+      color: #065f46;
+    }
+    .sub-status-badge.warn {
+      border-color: rgba(245, 158, 11, 0.45);
+      background: rgba(254, 243, 199, 0.9);
+      color: #92400e;
+    }
+    .sub-status-badge.err {
+      border-color: rgba(239, 68, 68, 0.45);
+      background: rgba(254, 226, 226, 0.9);
+      color: #991b1b;
+    }
     .subscription-account-card p { margin: 0 0 6px; font-size: 0.92rem; color: #475569; line-height: 1.55; }
     .subscription-account-card .sub-meta { font-size: 0.84rem; color: #64748b; margin-bottom: 10px; }
     .subscription-account-card .sub-actions {
@@ -597,6 +620,9 @@
       {% if public_sub_active %}
       <section id="section-plan" class="subscription-account-card account-section" aria-label="اشتراكك الحالي">
         <h2>اشتراكك في هذا المركز</h2>
+        <span class="sub-status-badge{% if public_sub_state == 'expiring_soon' %} warn{% endif %}">
+          {{ public_sub_status_text }}
+        </span>
         <p><strong>{{ public_sub_plan_name }}</strong> — باقة {{ public_sub_plan_type_label }}.</p>
         <p class="sub-meta">بداية الاشتراك: {{ public_sub_starts_at_display }} · صالح حتى {{ public_sub_ends_at_display }}</p>
         {% if public_sub_session_cap %}
@@ -615,7 +641,18 @@
       {% else %}
       <section id="section-plan" class="account-section" aria-label="الخطة">
         <h2 class="account-section-title">الخطة</h2>
+        {% if public_sub_state == 'expired' %}
+        <div class="subscription-account-card" style="margin-top:0;">
+          <span class="sub-status-badge err">انتهى اشتراكك</span>
+          <p class="sub" style="margin-top:0;margin-bottom:8px;">آخر خطة لديك: <strong>{{ public_sub_plan_name }}</strong> · انتهت في {{ public_sub_ends_at_display }}.</p>
+          <div class="sub-actions">
+            <a class="sub-book" href="{{ public_sub_renew_url }}">جدّد الاشتراك الآن</a>
+            <a class="sub-book" href="{{ public_sub_book_url }}">أو احجز بالدفع لكل جلسة</a>
+          </div>
+        </div>
+        {% else %}
         <p class="sub" style="margin-top:0;">لا يوجد لديك اشتراك فعّال في هذا المركز حاليًا.</p>
+        {% endif %}
       </section>
       {% endif %}
 

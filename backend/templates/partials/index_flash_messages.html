@@ -50,6 +50,7 @@
 {% if msg == 'plan_cancel_session_started' %}<div class="alert warn">بدأت الجلسة؛ لا يمكن إزالتها من الخطة من الواجهة العامة. تواصل مع المركز إن احتجت تعديلًا.</div>{% endif %}
 {% if msg == 'plan_sessions_exhausted' %}<div class="alert warn">استنفدت جلسات اشتراكك لهذه الفترة. جرّب «أضف للسلة» للدفع لكل جلسة أو جدّد اشتراكك.</div>{% endif %}
 {% if msg == 'plan_booking_no_subscription' %}<div class="alert err">لا يوجد اشتراك فعّال يسمح بحجز الجلسة ضمن الخطة.</div>{% endif %}
+{% if msg == 'plan_subscription_expired' %}<div class="alert warn">انتهت صلاحية الاشتراك. يمكنك تجديد الاشتراك أو استخدام «أضف للسلة» للدفع لكل جلسة.</div>{% endif %}
 {% if msg == 'plan_booking_no_cap' %}<div class="alert err">خطتك الحالية لا تحدد عدد جلسات؛ استخدم «أضف للسلة» للحجز.</div>{% endif %}
 {% if msg == 'plan_booking_session_outside_period' %}<div class="alert warn">موعد هذه الجلسة خارج فترة اشتراكك الحالية. اختر جلسة ضمن التواريخ الصالحة للخطة أو استخدم «أضف للسلة».</div>{% endif %}
 {% if msg == 'feedback_sent' %}<div class="alert">تم إرسال رسالتك. شكرًا لتواصلك معنا.</div>{% endif %}

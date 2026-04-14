@@ -124,6 +124,29 @@ def register_admin_report_html_health_routes(router: APIRouter) -> None:
             .scalar()
             or 0
         )
+        expiring_7d = int(
+            db.query(func.count(models.ClientSubscription.id))
+            .join(models.SubscriptionPlan, models.SubscriptionPlan.id == models.ClientSubscription.plan_id)
+            .filter(
+                models.SubscriptionPlan.center_id == cid,
+                models.ClientSubscription.status == "active",
+                models.ClientSubscription.end_date >= utcnow_naive(),
+                models.ClientSubscription.end_date <= (utcnow_naive() + timedelta(days=7)),
+            )
+            .scalar()
+            or 0
+        )
+        expired_30d = int(
+            db.query(func.count(models.ClientSubscription.id))
+            .join(models.SubscriptionPlan, models.SubscriptionPlan.id == models.ClientSubscription.plan_id)
+            .filter(
+                models.SubscriptionPlan.center_id == cid,
+                models.ClientSubscription.end_date >= (utcnow_naive() - timedelta(days=30)),
+                models.ClientSubscription.end_date < utcnow_naive(),
+            )
+            .scalar()
+            or 0
+        )
 
         return core.templates.TemplateResponse(
             request,
@@ -139,6 +162,8 @@ def register_admin_report_html_health_routes(router: APIRouter) -> None:
                 "p95_settle_minutes_7d": p95_settle_minutes,
                 "webhook_failed_24h": webhook_failed_24h,
                 "webhook_delay_alerts_24h": delay_alerts_24h,
+                "subscriptions_expiring_7d": expiring_7d,
+                "subscriptions_expired_30d": expired_30d,
                 "generated_at": _fmt_dt(utcnow_naive()),
             },
         )
