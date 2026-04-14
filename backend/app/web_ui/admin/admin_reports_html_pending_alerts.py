@@ -5,6 +5,7 @@ from __future__ import annotations
 from datetime import timedelta
 
 from fastapi import APIRouter, Depends, Request
+from fastapi import Form
 from fastapi.responses import HTMLResponse, RedirectResponse
 from sqlalchemy.orm import Session
 
@@ -12,6 +13,7 @@ from ... import models
 from ...admin_report_helpers import can_access_report_kind
 from ...database import get_db
 from ...rbac import user_has_permission
+from ...security_audit import log_security_event
 from ...tenant_utils import require_user_center_id
 from ...time_utils import utcnow_naive
 from ...web_shared import _fmt_dt, _url_with_params
@@ -19,6 +21,79 @@ from ...web_shared import _fmt_dt, _url_with_params
 
 def register_admin_report_html_pending_alerts_routes(router: APIRouter) -> None:
     from .. import impl_state as core
+
+    @router.post("/admin/reports/pending-alerts/resolve")
+    def admin_report_pending_alerts_resolve(
+        request: Request,
+        payment_id: int = Form(...),
+        stale_minutes: int = Form(60),
+        db: Session = Depends(get_db),
+    ):
+        user, redirect = core._require_admin_user_or_redirect(request, db)
+        if redirect:
+            return redirect
+        assert user is not None
+        if (user.role or "") == "trainer":
+            return RedirectResponse(
+                url=_url_with_params("/admin", msg=core.ADMIN_MSG_TRAINER_ADMIN_FORBIDDEN),
+                status_code=303,
+            )
+        if not can_access_report_kind(user=user, kind="health", user_has_permission_fn=user_has_permission):
+            return RedirectResponse(
+                url=_url_with_params("/admin", msg=core.ADMIN_MSG_REPORT_FORBIDDEN),
+                status_code=303,
+            )
+
+        cid = require_user_center_id(user)
+        stale_minutes = max(15, min(7 * 24 * 60, int(stale_minutes or 60)))
+        p = db.get(models.Payment, int(payment_id))
+        if not p or int(p.center_id) != int(cid):
+            return RedirectResponse(
+                url=_url_with_params(
+                    "/admin/reports/pending-alerts",
+                    stale_minutes=str(stale_minutes),
+                    msg="pending_alert_not_found",
+                ),
+                status_code=303,
+            )
+        if (p.status or "").lower() != "pending":
+            return RedirectResponse(
+                url=_url_with_params(
+                    "/admin/reports/pending-alerts",
+                    stale_minutes=str(stale_minutes),
+                    msg="pending_alert_already_resolved",
+                ),
+                status_code=303,
+            )
+
+        p.status = "failed"
+        booking_id = None
+        if p.booking_id:
+            b = db.get(models.Booking, p.booking_id)
+            if b and (b.status or "").lower() == "pending_payment":
+                b.status = "cancelled"
+            booking_id = int(p.booking_id)
+        db.commit()
+        log_security_event(
+            "admin_pending_payment_resolved",
+            request,
+            "success",
+            email=user.email,
+            details={
+                "center_id": int(cid),
+                "payment_id": int(p.id),
+                "booking_id": booking_id,
+                "stale_minutes": int(stale_minutes),
+            },
+        )
+        return RedirectResponse(
+            url=_url_with_params(
+                "/admin/reports/pending-alerts",
+                stale_minutes=str(stale_minutes),
+                msg="pending_alert_resolved",
+            ),
+            status_code=303,
+        )
 
     @router.get("/admin/reports/pending-alerts", response_class=HTMLResponse)
     def admin_report_pending_alerts(
@@ -88,5 +163,6 @@ def register_admin_report_html_pending_alerts_routes(router: APIRouter) -> None:
                 "stale_minutes": stale_minutes,
                 "cutoff_at": _fmt_dt(cutoff),
                 "alerts": alerts,
+                "msg": (request.query_params.get("msg") or "").strip(),
             },
         )

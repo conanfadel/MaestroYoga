@@ -320,6 +320,84 @@ def test_admin_pending_alerts_report_page(client):
     assert "مدفوعات pending المتأخرة" in r.text
 
 
+def test_admin_pending_alerts_resolve_marks_failed_and_cancels_booking(client):
+    login = client.post(
+        "/admin/login",
+        data={"email": "owner@maestroyoga.local", "password": "Admin@12345"},
+        follow_redirects=False,
+    )
+    assert login.status_code == 303
+
+    db = SessionLocal()
+    stamp = int(time.time())
+    center = db.query(models.Center).filter(models.Center.id == 1).first()
+    if center is None:
+        center = models.Center(name=f"Resolve Center {stamp}", city="Riyadh")
+        db.add(center)
+        db.commit()
+        db.refresh(center)
+    room = models.Room(center_id=center.id, name=f"Resolve Room {stamp}", capacity=6)
+    db.add(room)
+    db.flush()
+    yoga_session = models.YogaSession(
+        center_id=center.id,
+        room_id=room.id,
+        title="Resolve Session",
+        trainer_name="Trainer",
+        level="beginner",
+        starts_at=utcnow_naive() + timedelta(days=2),
+        duration_minutes=60,
+        price_drop_in=40.0,
+    )
+    db.add(yoga_session)
+    db.flush()
+    client_row = models.Client(center_id=center.id, full_name="Resolve User", email=f"resolve_{stamp}@example.com")
+    db.add(client_row)
+    db.flush()
+    booking = models.Booking(
+        center_id=center.id,
+        session_id=yoga_session.id,
+        client_id=client_row.id,
+        status="pending_payment",
+    )
+    db.add(booking)
+    db.flush()
+    payment = models.Payment(
+        center_id=center.id,
+        client_id=client_row.id,
+        booking_id=booking.id,
+        amount=40.0,
+        currency="SAR",
+        payment_method="resolve_test",
+        status="pending",
+        created_at=utcnow_naive() - timedelta(hours=3),
+    )
+    db.add(payment)
+    db.commit()
+    db.refresh(payment)
+
+    resp = client.post(
+        "/admin/reports/pending-alerts/resolve",
+        data={"payment_id": str(payment.id), "stale_minutes": "60"},
+        follow_redirects=False,
+    )
+    assert resp.status_code == 303
+    assert "msg=pending_alert_resolved" in (resp.headers.get("location") or "")
+
+    db.refresh(payment)
+    db.refresh(booking)
+    assert payment.status == "failed"
+    assert booking.status == "cancelled"
+
+    db.query(models.Payment).filter(models.Payment.id == payment.id).delete(synchronize_session=False)
+    db.query(models.Booking).filter(models.Booking.id == booking.id).delete(synchronize_session=False)
+    db.query(models.Client).filter(models.Client.id == client_row.id).delete(synchronize_session=False)
+    db.query(models.YogaSession).filter(models.YogaSession.id == yoga_session.id).delete(synchronize_session=False)
+    db.query(models.Room).filter(models.Room.id == room.id).delete(synchronize_session=False)
+    db.commit()
+    db.close()
+
+
 def test_finalize_checkout_paid_is_idempotent(client, monkeypatch):
     monkeypatch.setenv("DISABLE_PAYMENT_SUCCESS_EMAIL", "1")
     db = SessionLocal()

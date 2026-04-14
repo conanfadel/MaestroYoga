@@ -23,6 +23,13 @@
     </div>
     <h1 class="admin-booking-block-heading admin-booking-block-heading--flush-top">مدفوعات pending المتأخرة</h1>
     <p class="report-run-sheet__meta">أُنشئ في {{ generated_at }} · العتبة: {{ stale_minutes }} دقيقة · أقدم وقت مسموح: {{ cutoff_at }}</p>
+    {% if msg == "pending_alert_resolved" %}
+      <p class="small" style="color:#0f766e;">تم تعليم العملية كمرفوضة وإغلاق الحجز المعلّق إن وُجد.</p>
+    {% elif msg == "pending_alert_not_found" %}
+      <p class="small" style="color:#b45309;">لم يتم العثور على العملية أو لا تخص هذا المركز.</p>
+    {% elif msg == "pending_alert_already_resolved" %}
+      <p class="small" style="color:#b45309;">هذه العملية ليست pending حالياً.</p>
+    {% endif %}
 
     <form method="get" action="/admin/reports/pending-alerts" class="filters no-print" style="margin-bottom:12px;">
       <label>
@@ -45,6 +52,7 @@
             <th>الطريقة</th>
             <th>Provider Ref</th>
             <th>Booking</th>
+            <th class="no-print">إجراء</th>
           </tr>
         </thead>
         <tbody>
@@ -63,6 +71,13 @@
               {% else %}
                 -
               {% endif %}
+            </td>
+            <td class="no-print">
+              <form method="post" action="/admin/reports/pending-alerts/resolve" onsubmit="return confirm('تحويل العملية إلى failed وإلغاء الحجز المعلّق؟');">
+                <input type="hidden" name="payment_id" value="{{ r.payment_id }}" />
+                <input type="hidden" name="stale_minutes" value="{{ stale_minutes }}" />
+                <button class="btn btn--danger" type="submit">Resolve</button>
+              </form>
             </td>
           </tr>
           {% endfor %}
