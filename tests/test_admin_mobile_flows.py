@@ -318,6 +318,11 @@ def test_admin_pending_alerts_report_page(client):
     r = client.get("/admin/reports/pending-alerts?stale_minutes=60", follow_redirects=False)
     assert r.status_code == 200
     assert "مدفوعات pending المتأخرة" in r.text
+    r2 = client.get(
+        "/admin/reports/pending-alerts?stale_minutes=60&payment_method=public_cart_checkout&provider_ref=abc",
+        follow_redirects=False,
+    )
+    assert r2.status_code == 200
 
 
 def test_admin_pending_alerts_resolve_marks_failed_and_cancels_booking(client):

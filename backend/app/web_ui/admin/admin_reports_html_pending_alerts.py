@@ -181,6 +181,8 @@ def register_admin_report_html_pending_alerts_routes(router: APIRouter) -> None:
     def admin_report_pending_alerts(
         request: Request,
         stale_minutes: int = 60,
+        payment_method: str = "",
+        provider_ref: str = "",
         db: Session = Depends(get_db),
     ):
         user, redirect = _ensure_health_access(request, db)
@@ -191,20 +193,21 @@ def register_admin_report_html_pending_alerts_routes(router: APIRouter) -> None:
         cid = require_user_center_id(user)
         center = db.get(models.Center, cid)
         stale_minutes = max(15, min(7 * 24 * 60, int(stale_minutes or 60)))
+        payment_method = (payment_method or "").strip()[:64]
+        provider_ref = (provider_ref or "").strip()[:120]
         now = utcnow_naive()
         cutoff = now - timedelta(minutes=stale_minutes)
 
-        rows = (
-            db.query(models.Payment)
-            .filter(
-                models.Payment.center_id == cid,
-                models.Payment.status == "pending",
-                models.Payment.created_at <= cutoff,
-            )
-            .order_by(models.Payment.created_at.asc())
-            .limit(400)
-            .all()
+        q = db.query(models.Payment).filter(
+            models.Payment.center_id == cid,
+            models.Payment.status == "pending",
+            models.Payment.created_at <= cutoff,
         )
+        if payment_method:
+            q = q.filter(models.Payment.payment_method == payment_method)
+        if provider_ref:
+            q = q.filter(models.Payment.provider_ref.ilike(f"%{provider_ref}%"))
+        rows = q.order_by(models.Payment.created_at.asc()).limit(400).all()
         alerts: list[dict] = []
         for p in rows:
             client = db.get(models.Client, p.client_id)
@@ -233,6 +236,8 @@ def register_admin_report_html_pending_alerts_routes(router: APIRouter) -> None:
                 "center": center,
                 "generated_at": _fmt_dt(now),
                 "stale_minutes": stale_minutes,
+                "payment_method": payment_method,
+                "provider_ref": provider_ref,
                 "cutoff_at": _fmt_dt(cutoff),
                 "alerts": alerts,
                 "msg": (request.query_params.get("msg") or "").strip(),

@@ -42,6 +42,14 @@
         <span class="small">العتبة (دقائق)</span>
         <input type="number" min="15" max="10080" step="5" name="stale_minutes" value="{{ stale_minutes }}" />
       </label>
+      <label>
+        <span class="small">طريقة الدفع</span>
+        <input type="text" name="payment_method" value="{{ payment_method or '' }}" placeholder="public_cart_checkout" />
+      </label>
+      <label>
+        <span class="small">Provider Ref يحتوي</span>
+        <input type="text" name="provider_ref" value="{{ provider_ref or '' }}" placeholder="ch_ / paymob ..." />
+      </label>
       <button class="btn" type="submit">تحديث</button>
     </form>
 
