@@ -39,9 +39,11 @@ from .public_tokens import (
 )
 from .staff_tokens import (
     create_access_token,
-    create_refresh_token,
-    get_user_from_refresh_token_string,
     get_user_from_token_string,
+    issue_staff_refresh_token,
+    revoke_all_staff_refresh_tokens_for_user,
+    revoke_staff_refresh_token,
+    validate_staff_refresh_token,
 )
 
 __all__ = [
@@ -56,7 +58,6 @@ __all__ = [
     "PUBLIC_PASSWORD_RESET_EXPIRES_MINUTES",
     "PUBLIC_SESSION_EXPIRES_MINUTES",
     "create_access_token",
-    "create_refresh_token",
     "create_public_access_token",
     "create_public_account_delete_token",
     "create_public_email_verification_token",
@@ -70,7 +71,10 @@ __all__ = [
     "get_current_user_cookie_or_bearer",
     "get_public_user_from_token_string",
     "get_user_from_token_string",
-    "get_user_from_refresh_token_string",
+    "issue_staff_refresh_token",
+    "revoke_all_staff_refresh_tokens_for_user",
+    "revoke_staff_refresh_token",
+    "validate_staff_refresh_token",
     "hash_password",
     "http_bearer_optional",
     "oauth2_scheme",

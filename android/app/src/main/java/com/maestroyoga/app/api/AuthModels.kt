@@ -18,6 +18,10 @@ data class RefreshTokenRequest(
     @SerializedName("refresh_token") val refreshToken: String,
 )
 
+data class LogoutResponse(
+    val ok: Boolean = true,
+)
+
 data class UserDto(
     val id: Int,
     @SerializedName("center_id") val centerId: Int?,

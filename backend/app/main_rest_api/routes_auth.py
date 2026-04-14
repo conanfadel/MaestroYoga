@@ -33,7 +33,8 @@ def register_routes(router: APIRouter) -> None:
         db.refresh(owner)
 
         access_token = _d.create_access_token(owner.id)
-        refresh_token = _d.create_refresh_token(owner.id)
+        refresh_token = _d.issue_staff_refresh_token(db, owner.id)
+        db.commit()
         return {"access_token": access_token, "refresh_token": refresh_token, "user": owner}
 
     @router.post("/auth/login", response_model=_d.schemas.TokenOut)
@@ -44,15 +45,38 @@ def register_routes(router: APIRouter) -> None:
         if not user.is_active:
             raise HTTPException(status_code=403, detail="User is inactive")
         access_token = _d.create_access_token(user.id)
-        refresh_token = _d.create_refresh_token(user.id)
+        refresh_token = _d.issue_staff_refresh_token(db, user.id)
+        db.commit()
         return {"access_token": access_token, "refresh_token": refresh_token, "user": user}
 
     @router.post("/auth/refresh", response_model=_d.schemas.TokenOut)
     def refresh_token(payload: _d.schemas.RefreshTokenIn, db: Session = Depends(_d.get_db)):
-        user = _d.get_user_from_refresh_token_string(payload.refresh_token, db)
+        user, jti = _d.validate_staff_refresh_token(db, payload.refresh_token)
+        _d.revoke_staff_refresh_token(db, jti)
         access_token = _d.create_access_token(user.id)
-        refresh_token = _d.create_refresh_token(user.id)
+        refresh_token = _d.issue_staff_refresh_token(db, user.id)
+        db.commit()
         return {"access_token": access_token, "refresh_token": refresh_token, "user": user}
+
+    @router.post("/auth/logout", response_model=_d.schemas.LogoutOut)
+    def logout(payload: _d.schemas.RefreshTokenIn, db: Session = Depends(_d.get_db)):
+        try:
+            _, jti = _d.validate_staff_refresh_token(db, payload.refresh_token)
+        except HTTPException:
+            pass
+        else:
+            _d.revoke_staff_refresh_token(db, jti)
+        db.commit()
+        return {"ok": True}
+
+    @router.post("/auth/logout/all", response_model=_d.schemas.LogoutOut)
+    def logout_all(
+        user: _d.models.User = Depends(_d.get_current_user),
+        db: Session = Depends(_d.get_db),
+    ):
+        _d.revoke_all_staff_refresh_tokens_for_user(db, user.id)
+        db.commit()
+        return {"ok": True}
 
     @router.get("/auth/me", response_model=_d.schemas.UserOut)
     def me(user: _d.models.User = Depends(_d.get_current_user)):

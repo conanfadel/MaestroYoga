@@ -6,6 +6,19 @@ import retrofit2.HttpException
  * Handles one-shot auto re-login when access token expires.
  */
 object AuthSessionManager {
+    suspend fun remoteLogout() {
+        val rt = TokenStore.getRefreshToken()
+        if (rt.isNullOrBlank()) {
+            TokenStore.clearAll()
+            return
+        }
+        try {
+            NetworkModule.authApi().logout(RefreshTokenRequest(refreshToken = rt))
+        } catch (_: Exception) {
+        }
+        TokenStore.clearAll()
+    }
+
     suspend fun refreshTokenIfPossibleOn401(error: Exception): Boolean {
         if (error !is HttpException || error.code() != 401) return false
         val refresh = TokenStore.getRefreshToken() ?: return false

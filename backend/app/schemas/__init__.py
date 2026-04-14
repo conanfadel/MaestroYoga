@@ -1,6 +1,6 @@
 """Pydantic request/response models for the JSON REST API."""
 
-from .auth import RefreshTokenIn, TokenOut, UserCreateByOwner, UserLogin, UserOut, UserRegister
+from .auth import LogoutOut, RefreshTokenIn, TokenOut, UserCreateByOwner, UserLogin, UserOut, UserRegister
 from .bookings import BookingCreate, BookingOut
 from .center import CenterCreate, CenterOut
 from .clients import ClientCreate, ClientOut
@@ -23,6 +23,7 @@ __all__ = [
     "PaymentOut",
     "RoomCreate",
     "RoomOut",
+    "LogoutOut",
     "RefreshTokenIn",
     "SubscriptionPlanCreate",
     "SubscriptionPlanOut",

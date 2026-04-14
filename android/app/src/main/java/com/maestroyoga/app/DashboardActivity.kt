@@ -28,8 +28,12 @@ class DashboardActivity : AppCompatActivity() {
         binding.btnBack.setOnClickListener { finish() }
         binding.btnRefresh.setOnClickListener { loadDashboard() }
         binding.btnLogout.setOnClickListener {
-            TokenStore.clearAll()
-            finish()
+            lifecycleScope.launch {
+                withContext(Dispatchers.IO) {
+                    AuthSessionManager.remoteLogout()
+                }
+                finish()
+            }
         }
 
         loadDashboard()

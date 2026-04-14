@@ -7,6 +7,7 @@ from .commerce import Booking, Payment
 from .plans import FAQItem, SubscriptionPlan
 from .posts import CenterPost, CenterPostImage
 from .schedule import Room, YogaSession
+from .staff_refresh_tokens import StaffRefreshToken
 from .training import (
     ClientMedicalHistoryEntry,
     ClientMedicalProfile,
@@ -29,6 +30,7 @@ __all__ = [
     "PublicUser",
     "Room",
     "SecurityAuditEvent",
+    "StaffRefreshToken",
     "SubscriptionPlan",
     "TrainingAssignmentBatch",
     "TrainingAssignmentItem",

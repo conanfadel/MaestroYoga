@@ -30,8 +30,12 @@ class MainActivity : AppCompatActivity() {
         binding.btnRetry.setOnClickListener { loadMeta() }
         binding.btnLogin.setOnClickListener { login() }
         binding.btnLogout.setOnClickListener {
-            TokenStore.clearAll()
-            binding.output.text = getString(R.string.msg_logged_out)
+            lifecycleScope.launch {
+                withContext(Dispatchers.IO) {
+                    AuthSessionManager.remoteLogout()
+                }
+                binding.output.text = getString(R.string.msg_logged_out)
+            }
         }
         binding.btnOpenDashboard.setOnClickListener {
             startActivity(Intent(this, DashboardActivity::class.java))

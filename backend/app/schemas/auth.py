@@ -75,3 +75,7 @@ class TokenOut(BaseModel):
 
 class RefreshTokenIn(BaseModel):
     refresh_token: str = Field(min_length=20)
+
+
+class LogoutOut(BaseModel):
+    ok: bool = True

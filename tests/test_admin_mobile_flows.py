@@ -219,14 +219,15 @@ def test_mobile_compatible_api_flow(client):
 
     auth_response = client.post("/auth/login", json={"email": "owner@maestroyoga.local", "password": "Admin@12345"})
     assert auth_response.status_code == 200
-    token = auth_response.json()["access_token"]
     refresh = auth_response.json()["refresh_token"]
     assert refresh
     refreshed = client.post("/auth/refresh", json={"refresh_token": refresh})
     assert refreshed.status_code == 200
-    refreshed_token = refreshed.json()["access_token"]
-    assert refreshed_token
-    headers = {"Authorization": f"Bearer {token}"}
+    new_access = refreshed.json()["access_token"]
+    new_refresh = refreshed.json()["refresh_token"]
+    assert new_access and new_refresh
+    assert client.post("/auth/refresh", json={"refresh_token": refresh}).status_code == 401
+    headers = {"Authorization": f"Bearer {new_access}"}
 
     assert client.get("/dashboard/summary", headers=headers).status_code == 200
     sessions_response = client.get("/sessions", headers=headers)
@@ -267,6 +268,27 @@ def test_mobile_compatible_api_flow(client):
     db.query(models.Client).filter(models.Client.id == created_client_id).delete(synchronize_session=False)
     db.commit()
     db.close()
+
+    assert client.post("/auth/logout", json={"refresh_token": new_refresh}).status_code == 200
+    assert client.post("/auth/refresh", json={"refresh_token": new_refresh}).status_code == 401
+
+
+def test_auth_logout_all_revokes_refresh_tokens(client):
+    db = SessionLocal()
+    ensure_demo_data(db)
+    db.close()
+
+    r1 = client.post("/auth/login", json={"email": "owner@maestroyoga.local", "password": "Admin@12345"})
+    assert r1.status_code == 200
+    refresh1 = r1.json()["refresh_token"]
+    r2 = client.post("/auth/refresh", json={"refresh_token": refresh1})
+    assert r2.status_code == 200
+    refresh2 = r2.json()["refresh_token"]
+    access2 = r2.json()["access_token"]
+    assert client.post("/auth/refresh", json={"refresh_token": refresh1}).status_code == 401
+
+    assert client.post("/auth/logout/all", headers={"Authorization": f"Bearer {access2}"}).status_code == 200
+    assert client.post("/auth/refresh", json={"refresh_token": refresh2}).status_code == 401
 
 
 def test_admin_logout_requires_post_and_clears_cookie(client):
