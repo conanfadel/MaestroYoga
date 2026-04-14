@@ -4,6 +4,7 @@ import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
 import com.maestroyoga.app.api.DashboardSummaryDto
+import com.maestroyoga.app.api.AuthSessionManager
 import com.maestroyoga.app.api.NetworkModule
 import com.maestroyoga.app.api.TokenStore
 import com.maestroyoga.app.api.UserDto
@@ -27,7 +28,7 @@ class DashboardActivity : AppCompatActivity() {
         binding.btnBack.setOnClickListener { finish() }
         binding.btnRefresh.setOnClickListener { loadDashboard() }
         binding.btnLogout.setOnClickListener {
-            TokenStore.clear()
+            TokenStore.clearAll()
             finish()
         }
 
@@ -48,6 +49,26 @@ class DashboardActivity : AppCompatActivity() {
                         debug = "GET /api/v1/auth/me + GET /api/v1/dashboard/summary: OK",
                     )
                 } catch (e: Exception) {
+                    val refreshed = AuthSessionManager.refreshTokenIfPossibleOn401(e)
+                    if (refreshed) {
+                        return@withContext try {
+                            val me = NetworkModule.authApi().me()
+                            val summary = NetworkModule.dashboardApi().summary()
+                            DashboardUiState(
+                                error = null,
+                                user = me,
+                                summary = summary,
+                                debug = "Auto re-login succeeded after 401",
+                            )
+                        } catch (retryError: Exception) {
+                            DashboardUiState(
+                                error = mapFriendlyError(retryError),
+                                user = null,
+                                summary = null,
+                                debug = "retry_error=${retryError.javaClass.simpleName}",
+                            )
+                        }
+                    }
                     DashboardUiState(
                         error = mapFriendlyError(e),
                         user = null,
@@ -64,7 +85,7 @@ class DashboardActivity : AppCompatActivity() {
         return when (e) {
             is HttpException -> when (e.code()) {
                 401 -> {
-                    TokenStore.clear()
+                    TokenStore.clearAll()
                     getString(R.string.err_unauthorized)
                 }
                 403 -> getString(R.string.err_forbidden)

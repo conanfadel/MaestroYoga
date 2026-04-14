@@ -5,6 +5,7 @@ import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
 import com.maestroyoga.app.api.LoginRequest
+import com.maestroyoga.app.api.AuthSessionManager
 import com.maestroyoga.app.api.NetworkModule
 import com.maestroyoga.app.api.TokenStore
 import com.maestroyoga.app.api.UserDto
@@ -29,7 +30,7 @@ class MainActivity : AppCompatActivity() {
         binding.btnRetry.setOnClickListener { loadMeta() }
         binding.btnLogin.setOnClickListener { login() }
         binding.btnLogout.setOnClickListener {
-            TokenStore.clear()
+            TokenStore.clearAll()
             binding.output.text = getString(R.string.msg_logged_out)
         }
         binding.btnOpenDashboard.setOnClickListener {
@@ -76,6 +77,7 @@ class MainActivity : AppCompatActivity() {
                 try {
                     val token = NetworkModule.authApi().login(LoginRequest(email, password))
                     TokenStore.setAccessToken(token.accessToken)
+                    TokenStore.setLoginCredentials(email, password)
                     buildString {
                         appendLine(getString(R.string.msg_login_ok, token.user.email))
                         appendLine()
@@ -99,8 +101,17 @@ class MainActivity : AppCompatActivity() {
         try {
             "GET /api/v1/auth/me:\n" + formatUser(NetworkModule.authApi().me())
         } catch (e: Exception) {
-            TokenStore.clear()
-            "auth/me failed (token cleared): ${mapFriendlyError(e)}\n"
+            val refreshed = AuthSessionManager.refreshTokenIfPossibleOn401(e)
+            if (refreshed) {
+                return@withContext try {
+                    "GET /api/v1/auth/me (after auto refresh):\n" + formatUser(NetworkModule.authApi().me())
+                } catch (retryError: Exception) {
+                    TokenStore.clearAll()
+                    "auth/me failed (session cleared): ${mapFriendlyError(retryError)}\n"
+                }
+            }
+            TokenStore.clearAll()
+            "auth/me failed (session cleared): ${mapFriendlyError(e)}\n"
         }
     }
 
