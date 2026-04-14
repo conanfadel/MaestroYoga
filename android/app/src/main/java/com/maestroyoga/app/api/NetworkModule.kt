@@ -25,12 +25,12 @@ object NetworkModule {
             .readTimeout(30, TimeUnit.SECONDS)
             .addInterceptor(logging)
             .addInterceptor { chain ->
-                val req = chain.request().newBuilder()
+                val b = chain.request().newBuilder()
                     .header("Accept", "application/json")
                     .header("X-App-Version", BuildConfig.VERSION_NAME)
                     .header("X-Request-ID", UUID.randomUUID().toString())
-                    .build()
-                chain.proceed(req)
+                TokenStore.getAccessToken()?.let { b.header("Authorization", "Bearer $it") }
+                chain.proceed(b.build())
             }
             .build()
 
@@ -42,4 +42,8 @@ object NetworkModule {
             .build()
 
     fun metaApi(): MetaApi = retrofit(okHttp()).create(MetaApi::class.java)
+
+    fun authApi(): AuthApi = retrofit(okHttp()).create(AuthApi::class.java)
+
+    fun dashboardApi(): DashboardApi = retrofit(okHttp()).create(DashboardApi::class.java)
 }

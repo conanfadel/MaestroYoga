@@ -142,7 +142,6 @@ from ...public_plan_session_booking import (
 from ...public_subscription_helpers import build_public_active_subscription_context
 from ...public_redirect_helpers import (
     redirect_public_index_paid_mock,
-    redirect_public_index_with_msg,
     redirect_public_index_with_params,
 )
 from ...public_register_helpers import (

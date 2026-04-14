@@ -18,7 +18,7 @@ def register_public_commerce_book_routes(router: APIRouter) -> None:
         db: _s.Session = _s.Depends(_s.get_db),
     ):
         if _s._is_ip_blocked(db, request):
-            return _s.redirect_public_index_with_msg(center_id=center_id, msg="ip_blocked")
+            return _s.redirect_public_index_with_params(center_id=center_id, msg="ip_blocked")
         public_user = _s._current_public_user(request, db)
         if not public_user:
             return _s._public_login_redirect(next_url=f"/index?center_id={center_id}", msg="auth_required")
@@ -40,9 +40,9 @@ def register_public_commerce_book_routes(router: APIRouter) -> None:
         if not yoga_session or yoga_session.center_id != center_id:
             raise _s.HTTPException(status_code=404, detail="Session not found")
         if not _s.yoga_session_still_on_public_schedule(yoga_session):
-            return _s.redirect_public_index_with_msg(center_id=center_id, msg="session_ended")
+            return _s.redirect_public_index_with_params(center_id=center_id, msg="session_ended")
         if not _s.yoga_session_accepts_new_public_booking(yoga_session):
-            return _s.redirect_public_index_with_msg(center_id=center_id, msg="session_started")
+            return _s.redirect_public_index_with_params(center_id=center_id, msg="session_started")
 
         room_query = db.query(_s.models.Room).filter(_s.models.Room.id == yoga_session.room_id)
         if not _s.is_sqlite:
@@ -72,11 +72,11 @@ def register_public_commerce_book_routes(router: APIRouter) -> None:
             .first()
         )
         if duplicate:
-            return _s.redirect_public_index_with_msg(center_id=center_id, msg="duplicate")
+            return _s.redirect_public_index_with_params(center_id=center_id, msg="duplicate")
 
         provider, payment_cfg_msg = _s.resolve_public_payment_provider()
         if payment_cfg_msg or provider is None:
-            return _s.redirect_public_index_with_msg(center_id=center_id, msg=payment_cfg_msg or "payment_provider_config")
+            return _s.redirect_public_index_with_params(center_id=center_id, msg=payment_cfg_msg or "payment_provider_config")
 
         amount = float(yoga_session.price_drop_in)
         booking, payment_row, booking_error = _s.create_pending_single_booking_payment(
@@ -91,7 +91,7 @@ def register_public_commerce_book_routes(router: APIRouter) -> None:
             integrity_error_cls=_s.IntegrityError,
         )
         if booking_error:
-            return _s.redirect_public_index_with_msg(center_id=center_id, msg="duplicate")
+            return _s.redirect_public_index_with_params(center_id=center_id, msg="duplicate")
         assert booking is not None and payment_row is not None
 
         base = _s._public_base(request)
@@ -116,7 +116,7 @@ def register_public_commerce_book_routes(router: APIRouter) -> None:
                 session_id=session_id,
             )
             if hosted_error:
-                return _s.redirect_public_index_with_msg(center_id=center_id, msg=hosted_error)
+                return _s.redirect_public_index_with_params(center_id=center_id, msg=hosted_error)
             assert checkout_url
             return _s.RedirectResponse(url=checkout_url, status_code=303)
 
@@ -141,7 +141,7 @@ def register_public_commerce_book_routes(router: APIRouter) -> None:
     ):
         """حجز جلسة ضمن حصة اشتراك بحد جلسات (بدون دفع منفصل)."""
         if _s._is_ip_blocked(db, request):
-            return _s.redirect_public_index_with_msg(center_id=center_id, msg="ip_blocked")
+            return _s.redirect_public_index_with_params(center_id=center_id, msg="ip_blocked")
         public_user = _s._current_public_user(request, db)
         if not public_user:
             return _s._public_login_redirect(next_url=f"/index?center_id={center_id}", msg="auth_required")
@@ -175,7 +175,7 @@ def register_public_commerce_book_routes(router: APIRouter) -> None:
                 email=public_user.email,
                 details={"center_id": center_id, "session_id": session_id, "client_id": client.id},
             )
-            return _s.redirect_public_index_with_msg(center_id=center_id, msg=code)
+            return _s.redirect_public_index_with_params(center_id=center_id, msg=code)
         _s.log_security_event(
             "public_plan_session_book",
             request,
@@ -183,7 +183,7 @@ def register_public_commerce_book_routes(router: APIRouter) -> None:
             email=public_user.email,
             details={"center_id": center_id, "session_id": session_id, "reason": code},
         )
-        return _s.redirect_public_index_with_msg(center_id=center_id, msg=code)
+        return _s.redirect_public_index_with_params(center_id=center_id, msg=code)
 
     @router.post("/public/book-plan-sessions")
     def public_book_plan_sessions(
@@ -194,7 +194,7 @@ def register_public_commerce_book_routes(router: APIRouter) -> None:
     ):
         """حجز عدة جلسات ضمن حصة الخطة في طلب واحد (بعد التأكيد في الواجهة)."""
         if _s._is_ip_blocked(db, request):
-            return _s.redirect_public_index_with_msg(center_id=center_id, msg="ip_blocked")
+            return _s.redirect_public_index_with_params(center_id=center_id, msg="ip_blocked")
         public_user = _s._current_public_user(request, db)
         if not public_user:
             return _s._public_login_redirect(next_url=f"/index?center_id={center_id}", msg="auth_required")
@@ -213,7 +213,7 @@ def register_public_commerce_book_routes(router: APIRouter) -> None:
                 raise ValueError("not a list")
             session_ids = [int(x) for x in parsed]
         except (ValueError, TypeError, json.JSONDecodeError):
-            return _s.redirect_public_index_with_msg(center_id=center_id, msg="plan_sessions_batch_invalid")
+            return _s.redirect_public_index_with_params(center_id=center_id, msg="plan_sessions_batch_invalid")
 
         if _s.is_sqlite:
             db.execute(_s.text("BEGIN IMMEDIATE"))
@@ -242,7 +242,7 @@ def register_public_commerce_book_routes(router: APIRouter) -> None:
                     "msg": code,
                 },
             )
-            return _s.redirect_public_index_with_msg(center_id=center_id, msg=code)
+            return _s.redirect_public_index_with_params(center_id=center_id, msg=code)
         _s.log_security_event(
             "public_plan_sessions_book",
             request,
@@ -250,7 +250,7 @@ def register_public_commerce_book_routes(router: APIRouter) -> None:
             email=public_user.email,
             details={"center_id": center_id, "session_ids": session_ids, "reason": code},
         )
-        return _s.redirect_public_index_with_msg(center_id=center_id, msg=code)
+        return _s.redirect_public_index_with_params(center_id=center_id, msg=code)
 
     @router.post("/public/cancel-plan-session")
     def public_cancel_plan_session(
@@ -261,7 +261,7 @@ def register_public_commerce_book_routes(router: APIRouter) -> None:
     ):
         """إلغاء جلسة كانت محجوزة ضمن حصة الخطة (قبل بدء الجلسة)."""
         if _s._is_ip_blocked(db, request):
-            return _s.redirect_public_index_with_msg(center_id=center_id, msg="ip_blocked")
+            return _s.redirect_public_index_with_params(center_id=center_id, msg="ip_blocked")
         public_user = _s._current_public_user(request, db)
         if not public_user:
             return _s._public_login_redirect(next_url=f"/index?center_id={center_id}", msg="auth_required")
@@ -293,7 +293,7 @@ def register_public_commerce_book_routes(router: APIRouter) -> None:
                 email=public_user.email,
                 details={"center_id": center_id, "session_id": session_id, "client_id": client.id},
             )
-            return _s.redirect_public_index_with_msg(center_id=center_id, msg=code)
+            return _s.redirect_public_index_with_params(center_id=center_id, msg=code)
         _s.log_security_event(
             "public_plan_session_cancel",
             request,
@@ -301,4 +301,4 @@ def register_public_commerce_book_routes(router: APIRouter) -> None:
             email=public_user.email,
             details={"center_id": center_id, "session_id": session_id, "reason": code},
         )
-        return _s.redirect_public_index_with_msg(center_id=center_id, msg=code)
+        return _s.redirect_public_index_with_params(center_id=center_id, msg=code)

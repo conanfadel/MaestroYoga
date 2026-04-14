@@ -10,6 +10,8 @@ from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
 
+from .logging_setup import configure_logging, init_sentry
+
 logger = logging.getLogger(__name__)
 
 
@@ -40,6 +42,8 @@ async def _stale_payment_sweeper_loop() -> None:
 
 @asynccontextmanager
 async def app_lifespan(app: FastAPI):
+    configure_logging()
+    init_sentry()
     lvl_name = os.getenv("LOG_LEVEL", "INFO").upper()
     lvl = getattr(logging, lvl_name, logging.INFO)
     logging.getLogger("maestro.request").setLevel(lvl)

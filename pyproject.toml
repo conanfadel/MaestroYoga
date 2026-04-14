@@ -3,17 +3,20 @@ target-version = "py312"
 line-length = 100
 
 [tool.ruff.lint]
-# Unused imports: large legacy surface; remove in small batches (never blanket `ruff check --fix`).
-ignore = ["F401"]
+# F401: enabled; re-export barrels use per-file-ignores below.
 
 [tool.ruff.lint.per-file-ignores]
 "backend/app/main.py" = ["E402"]
-"backend/app/web_ui/impl_state/__init__.py" = ["F403", "F405"]
+"backend/app/main_app.py" = ["E402"]
+"backend/app/main_rest_api/deps.py" = ["F401"]
+"backend/app/web_ui/impl_state/_bindings.py" = ["F401"]
+"backend/app/web_ui/impl_state/__init__.py" = ["F401", "F403", "F405"]
+"tests/conftest.py" = ["E402"]
+"scripts/*.py" = ["E402"]
 
 [tool.mypy]
 python_version = "3.12"
 warn_unused_configs = true
 ignore_missing_imports = true
 explicit_package_bases = true
-# Widen to more of backend.app as typing/SQLAlchemy stubs improve.
-files = ["backend/app/schemas", "backend/app/role_definitions"]
+files = ["backend/app/schemas", "backend/app/role_definitions", "backend/app/database"]

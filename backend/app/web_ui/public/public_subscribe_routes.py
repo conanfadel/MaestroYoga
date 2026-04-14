@@ -18,7 +18,7 @@ def register_public_subscribe_routes(router: APIRouter) -> None:
         db: _s.Session = _s.Depends(_s.get_db),
     ):
         if _s._is_ip_blocked(db, request):
-            return _s.redirect_public_index_with_msg(center_id=center_id, msg="ip_blocked")
+            return _s.redirect_public_index_with_params(center_id=center_id, msg="ip_blocked")
         public_user = _s._current_public_user(request, db)
         if not public_user:
             return _s._public_login_redirect(next_url=f"/index?center_id={center_id}", msg="auth_required")
@@ -40,7 +40,7 @@ def register_public_subscribe_routes(router: APIRouter) -> None:
 
         provider, payment_cfg_msg = _s.resolve_public_payment_provider()
         if payment_cfg_msg or provider is None:
-            return _s.redirect_public_index_with_msg(center_id=center_id, msg=payment_cfg_msg or "payment_provider_config")
+            return _s.redirect_public_index_with_params(center_id=center_id, msg=payment_cfg_msg or "payment_provider_config")
 
         subscription, payment_row = _s.create_pending_subscription_payment(
             db=db,
@@ -68,7 +68,7 @@ def register_public_subscribe_routes(router: APIRouter) -> None:
                 log_security_event_fn=_s.log_security_event,
             )
             if hosted_error:
-                return _s.redirect_public_index_with_msg(center_id=center_id, msg=hosted_error)
+                return _s.redirect_public_index_with_params(center_id=center_id, msg=hosted_error)
             assert checkout_url
             return _s.RedirectResponse(url=checkout_url, status_code=303)
     
@@ -82,4 +82,4 @@ def register_public_subscribe_routes(router: APIRouter) -> None:
             plan_id=plan.id,
             amount=float(plan.price),
         )
-        return _s.redirect_public_index_with_msg(center_id=center_id, msg="subscribed_mock")
+        return _s.redirect_public_index_with_params(center_id=center_id, msg="subscribed_mock")

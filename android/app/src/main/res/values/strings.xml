@@ -1,7 +1,30 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">Maestro Yoga</string>
-    <string name="status_loading">جاري الاتصال بالخادم…</string>
+    <string name="status_loading">جاري الاتصال بالخادم...</string>
     <string name="btn_retry">إعادة المحاولة</string>
     <string name="hint_api">تأكد من MAESTRO_API_BASE_URL في local.properties (مثال: https://api.example.com بدون شرطة أخيرة)</string>
+    <string name="hint_email">البريد (حساب لوحة الإدارة)</string>
+    <string name="hint_password">كلمة المرور</string>
+    <string name="btn_login">تسجيل الدخول</string>
+    <string name="btn_logout">خروج</string>
+    <string name="btn_open_dashboard">لوحة المؤشرات</string>
+    <string name="btn_back">رجوع</string>
+    <string name="msg_logged_out">تم مسح الجلسة من الجهاز.</string>
+    <string name="err_email_password_required">أدخل البريد وكلمة المرور.</string>
+    <string name="msg_login_ok">تم تسجيل الدخول: %1$s</string>
+    <string name="err_unauthorized">فشل المصادقة: البريد أو كلمة المرور غير صحيحة.</string>
+    <string name="err_forbidden">الحساب غير مفعل أو لا يملك صلاحية كافية.</string>
+    <string name="err_server">الخادم غير متاح الآن (HTTP %1$d).</string>
+    <string name="err_network">تعذر الوصول للخادم. تحقق من MAESTRO_API_BASE_URL والإنترنت.</string>
+    <string name="dashboard_title">Dashboard</string>
+    <string name="dashboard_loading">جاري تحميل بيانات المركز...</string>
+    <string name="kpi_clients">العملاء</string>
+    <string name="kpi_sessions">الجلسات</string>
+    <string name="kpi_bookings">الحجوزات</string>
+    <string name="kpi_active_plans">الخطط النشطة</string>
+    <string name="kpi_revenue_total">الإيراد الكلي</string>
+    <string name="kpi_revenue_today">إيراد اليوم</string>
+    <string name="kpi_pending_payments">مدفوعات معلقة</string>
+    <string name="label_user">المستخدم</string>
 </resources>

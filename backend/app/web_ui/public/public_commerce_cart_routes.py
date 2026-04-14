@@ -16,7 +16,7 @@ def register_public_commerce_cart_routes(router: APIRouter) -> None:
         db: _s.Session = _s.Depends(_s.get_db),
     ):
         if _s._is_ip_blocked(db, request):
-            return _s.redirect_public_index_with_msg(center_id=center_id, msg="ip_blocked")
+            return _s.redirect_public_index_with_params(center_id=center_id, msg="ip_blocked")
         public_user = _s._current_public_user(request, db)
         if not public_user:
             return _s._public_login_redirect(next_url=f"/index?center_id={center_id}", msg="auth_required")
@@ -28,11 +28,11 @@ def register_public_commerce_cart_routes(router: APIRouter) -> None:
 
         provider, payment_cfg_msg = _s.resolve_public_payment_provider()
         if payment_cfg_msg or provider is None:
-            return _s.redirect_public_index_with_msg(center_id=center_id, msg=payment_cfg_msg or "payment_provider_config")
+            return _s.redirect_public_index_with_params(center_id=center_id, msg=payment_cfg_msg or "payment_provider_config")
 
         session_ids, cart_error = _s.parse_cart_session_ids(cart_json, max_sessions=_s.MAX_PUBLIC_CART_SESSIONS)
         if cart_error:
-            return _s.redirect_public_index_with_msg(center_id=center_id, msg=cart_error)
+            return _s.redirect_public_index_with_params(center_id=center_id, msg=cart_error)
 
         center = _s.get_center_or_404(db, center_id)
 
@@ -49,7 +49,7 @@ def register_public_commerce_cart_routes(router: APIRouter) -> None:
             utcnow_fn=_s.utcnow_naive,
         )
         if bundle_error:
-            return _s.redirect_public_index_with_msg(center_id=center_id, msg=bundle_error)
+            return _s.redirect_public_index_with_params(center_id=center_id, msg=bundle_error)
 
         db.commit()
 
@@ -69,7 +69,7 @@ def register_public_commerce_cart_routes(router: APIRouter) -> None:
                 log_security_event_fn=_s.log_security_event,
             )
             if hosted_error:
-                return _s.redirect_public_index_with_msg(center_id=center_id, msg=hosted_error)
+                return _s.redirect_public_index_with_params(center_id=center_id, msg=hosted_error)
             assert checkout_url
             return _s.RedirectResponse(url=checkout_url, status_code=303)
 
