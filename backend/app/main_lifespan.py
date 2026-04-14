@@ -6,6 +6,7 @@ import asyncio
 import contextlib
 import logging
 import os
+import time
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
@@ -66,14 +67,17 @@ async def _pending_payment_reconcile_loop() -> None:
 
 async def _webhook_delay_monitor_loop() -> None:
     try:
-        from .checkout_finalize import monitor_delayed_webhook_payments
+        from .checkout_finalize import monitor_delayed_webhook_payments, send_operational_alert
         from .database import SessionLocal
     except ImportError:
-        from backend.app.checkout_finalize import monitor_delayed_webhook_payments
+        from backend.app.checkout_finalize import monitor_delayed_webhook_payments, send_operational_alert
         from backend.app.database import SessionLocal
 
     interval = int(os.getenv("PAYMENT_WEBHOOK_DELAY_MONITOR_INTERVAL_SEC", "600") or "600")
     overdue = int(os.getenv("PAYMENT_WEBHOOK_DELAY_MINUTES", "10") or "10")
+    alert_threshold = int(os.getenv("OPS_PENDING_OVERDUE_ALERT_THRESHOLD", "5") or "5")
+    alert_cooldown_sec = int(os.getenv("OPS_ALERT_COOLDOWN_SEC", "900") or "900")
+    last_alert_at = 0.0
     await asyncio.sleep(90)
     while True:
         db = SessionLocal()
@@ -81,6 +85,18 @@ async def _webhook_delay_monitor_loop() -> None:
             n = monitor_delayed_webhook_payments(db, overdue_minutes=overdue, max_rows=100)
             if n:
                 logger.warning("webhook_delay_monitor: recorded %s delayed pending payment alert(s)", n)
+            now_mono = time.monotonic()
+            if n >= max(1, alert_threshold) and (now_mono - last_alert_at) >= max(60, alert_cooldown_sec):
+                ok = send_operational_alert(
+                    title="Pending payments overdue",
+                    body=(
+                        f"Detected {n} pending payments older than {overdue} minutes. "
+                        "Check webhook health and payment provider delivery."
+                    ),
+                    count=n,
+                )
+                if ok:
+                    last_alert_at = now_mono
         except Exception:
             logger.exception("webhook_delay_monitor loop failed")
         finally:

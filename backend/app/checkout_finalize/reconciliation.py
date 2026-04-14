@@ -7,6 +7,7 @@ import logging
 import os
 from datetime import timedelta
 from typing import Any
+from urllib import request as urllib_request
 
 from sqlalchemy.orm import Session
 
@@ -134,3 +135,30 @@ def monitor_delayed_webhook_payments(
     db.commit()
     logger.warning("monitor_delayed_webhook_payments: %s overdue pending payment(s)", len(rows))
     return len(rows)
+
+
+def send_operational_alert(*, title: str, body: str, count: int) -> bool:
+    """
+    Send external operational alert when configured.
+
+    Env:
+    - OPS_ALERT_WEBHOOK_URL
+    - OPS_ALERT_WEBHOOK_TOKEN (optional, sent as Bearer)
+    """
+    url = os.getenv("OPS_ALERT_WEBHOOK_URL", "").strip()
+    if not url:
+        return False
+    payload = {"title": title, "body": body, "count": int(count), "source": "maestroyoga"}
+    data = json.dumps(payload, ensure_ascii=True).encode("utf-8")
+    req = urllib_request.Request(url, data=data, method="POST")
+    req.add_header("Content-Type", "application/json")
+    token = os.getenv("OPS_ALERT_WEBHOOK_TOKEN", "").strip()
+    if token:
+        req.add_header("Authorization", f"Bearer {token}")
+    try:
+        with urllib_request.urlopen(req, timeout=8) as resp:
+            code = int(getattr(resp, "status", 200))
+            return 200 <= code < 300
+    except Exception:
+        logger.exception("send_operational_alert failed")
+        return False

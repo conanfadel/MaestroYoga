@@ -9,7 +9,11 @@ from .settlement import (
     finalize_payment_disputed,
     finalize_payment_refunded,
 )
-from .reconciliation import monitor_delayed_webhook_payments, reconcile_stale_pending_payments
+from .reconciliation import (
+    monitor_delayed_webhook_payments,
+    reconcile_stale_pending_payments,
+    send_operational_alert,
+)
 from .stale_pending import expire_stale_pending_payments
 
 __all__ = [
@@ -21,4 +25,5 @@ __all__ = [
     "finalize_payment_refunded",
     "monitor_delayed_webhook_payments",
     "reconcile_stale_pending_payments",
+    "send_operational_alert",
 ]

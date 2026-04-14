@@ -407,6 +407,33 @@ def test_public_payment_receipt_invalid_link(client: TestClient) -> None:
     assert "إيصال غير صالح" in r.text
 
 
+def test_send_operational_alert_webhook(monkeypatch: pytest.MonkeyPatch) -> None:
+    from backend.app.checkout_finalize.reconciliation import send_operational_alert
+
+    calls: list[str] = []
+
+    class _Resp:
+        status = 200
+
+        def __enter__(self):
+            return self
+
+        def __exit__(self, exc_type, exc, tb):
+            return False
+
+    def _fake_urlopen(req, timeout=0):  # noqa: ANN001
+        calls.append(str(getattr(req, "full_url", "")))
+        return _Resp()
+
+    monkeypatch.setenv("OPS_ALERT_WEBHOOK_URL", "https://example.test/hooks/ops")
+    monkeypatch.setenv("OPS_ALERT_WEBHOOK_TOKEN", "test-token")
+    monkeypatch.setattr("backend.app.checkout_finalize.reconciliation.urllib_request.urlopen", _fake_urlopen)
+
+    ok = send_operational_alert(title="Pending payments overdue", body="High queue", count=9)
+    assert ok is True
+    assert calls and calls[0] == "https://example.test/hooks/ops"
+
+
 def test_paymob_webhook_accepts_hmac_in_query_string(
     client: TestClient, monkeypatch: pytest.MonkeyPatch
 ) -> None:
