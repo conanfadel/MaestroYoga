@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import logging
 import os
+import json
 
 from fastapi import APIRouter, Depends, Header, HTTPException, Request
 from sqlalchemy.orm import Session
@@ -15,6 +16,7 @@ try:
         finalize_payment_disputed,
         finalize_payment_refunded,
     )
+    from . import models
     from .database import get_db
     from .payments import StripePaymentProvider
     from .payments.paymob_provider import metadata_from_paymob_obj, verify_paymob_processed_hmac
@@ -25,6 +27,7 @@ except ImportError:
         finalize_payment_disputed,
         finalize_payment_refunded,
     )
+    from backend.app import models
     from backend.app.database import get_db
     from backend.app.payments import StripePaymentProvider
     from backend.app.payments.paymob_provider import metadata_from_paymob_obj, verify_paymob_processed_hmac
@@ -32,6 +35,24 @@ except ImportError:
 logger = logging.getLogger(__name__)
 
 webhooks_router = APIRouter()
+
+
+def _audit_webhook_event(
+    db: Session,
+    *,
+    event_type: str,
+    status: str,
+    provider: str,
+    details: dict | None = None,
+) -> None:
+    row = models.SecurityAuditEvent(
+        event_type=event_type,
+        status=status,
+        path=f"/payments/webhook/{provider}",
+        details_json=json.dumps(details or {}, ensure_ascii=True),
+    )
+    db.add(row)
+    db.commit()
 
 
 @webhooks_router.post("/payments/webhook/stripe")
@@ -44,6 +65,13 @@ async def stripe_webhook(
     try:
         event = StripePaymentProvider.construct_event(payload, stripe_signature)
     except Exception as exc:
+        _audit_webhook_event(
+            db,
+            event_type="payment_webhook_invalid",
+            status="blocked",
+            provider="stripe",
+            details={"reason": "invalid_signature"},
+        )
         raise HTTPException(status_code=400, detail=f"Invalid webhook: {exc}") from exc
 
     event_type = event.get("type", "")
@@ -93,6 +121,13 @@ async def stripe_webhook(
                     logger.exception("dispute webhook: failed to retrieve charge %s", ch_id)
         finalize_payment_disputed(db, meta, str(ch_id or dispute.get("id") or ""))
 
+    _audit_webhook_event(
+        db,
+        event_type="payment_webhook_received",
+        status="success",
+        provider="stripe",
+        details={"event_type": event_type},
+    )
     return {"received": True}
 
 
@@ -112,12 +147,33 @@ async def paymob_transaction_webhook(request: Request, db: Session = Depends(get
         received = str(request.query_params.get("hmac") or request.query_params.get("HMAC") or "").strip()
     if not hmac_secret:
         logger.warning("paymob webhook: PAYMOB_HMAC_SECRET (or PAYMOB_HMAC) is not set")
+        _audit_webhook_event(
+            db,
+            event_type="payment_webhook_invalid",
+            status="blocked",
+            provider="paymob",
+            details={"reason": "missing_hmac_secret"},
+        )
         raise HTTPException(status_code=400, detail="paymob hmac secret not configured")
     if not received:
         logger.warning("paymob webhook: hmac missing in JSON body and query string")
+        _audit_webhook_event(
+            db,
+            event_type="payment_webhook_invalid",
+            status="blocked",
+            provider="paymob",
+            details={"reason": "missing_hmac"},
+        )
         raise HTTPException(status_code=400, detail="paymob hmac missing")
 
     if not verify_paymob_processed_hmac(payload, received, hmac_secret):
+        _audit_webhook_event(
+            db,
+            event_type="payment_webhook_invalid",
+            status="blocked",
+            provider="paymob",
+            details={"reason": "invalid_hmac"},
+        )
         raise HTTPException(status_code=400, detail="invalid paymob hmac")
 
     obj = payload.get("obj")
@@ -157,4 +213,11 @@ async def paymob_transaction_webhook(request: Request, db: Session = Depends(get
         )
     else:
         finalize_checkout_failed(db, meta, order_id)
+    _audit_webhook_event(
+        db,
+        event_type="payment_webhook_received",
+        status="success",
+        provider="paymob",
+        details={"order_id": order_id, "success": bool(success)},
+    )
     return {"received": True}

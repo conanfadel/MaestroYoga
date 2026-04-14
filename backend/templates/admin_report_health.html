@@ -29,6 +29,11 @@
       <div class="stat"><div class="k">مدفوعات فاشلة (٣٠ يوماً)</div><div class="v">{{ failed_30d }}</div></div>
       <div class="stat"><div class="k">مدفوعات معلّقة مفتوحة</div><div class="v">{{ pending_payments_open }}</div></div>
       <div class="stat"><div class="k">عناوين محظورة نشطة (عام)</div><div class="v">{{ blocked_ips_active }}</div></div>
+      <div class="stat"><div class="k">معلّقات متأخرة +10 دقائق</div><div class="v">{{ pending_overdue_10m }}</div></div>
+      <div class="stat"><div class="k">متوسط التحويل pending→paid (7d)</div><div class="v">{{ avg_settle_minutes_7d }} دقيقة</div></div>
+      <div class="stat"><div class="k">P95 التحويل pending→paid (7d)</div><div class="v">{{ p95_settle_minutes_7d }} دقيقة</div></div>
+      <div class="stat"><div class="k">فشل webhooks آخر 24 ساعة</div><div class="v">{{ webhook_failed_24h }}</div></div>
+      <div class="stat"><div class="k">تنبيهات تأخر webhook آخر 24 ساعة</div><div class="v">{{ webhook_delay_alerts_24h }}</div></div>
     </div>
     <p class="small report-run-sheet__footnote">لا يتتبّع النظام حالياً أخطاء البريد الإلكتروني في لوحة واحدة؛ راجع سجلات الخادم عند الحاجة. أحداث تدقيق أمني مفصّلة: صفحة «تدقيق أمني» أو تصدير CSV.</p>
   </main>

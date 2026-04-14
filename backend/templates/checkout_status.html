@@ -97,6 +97,9 @@
       {% if valid_link and status_kind == 'paid' and schedule_href %}
       <a class="btn ghost" href="{{ schedule_href }}">عرض جدولي</a>
       {% endif %}
+      {% if valid_link and status_kind == 'paid' and receipt_href %}
+      <a class="btn ghost" href="{{ receipt_href }}">تحميل الإيصال</a>
+      {% endif %}
       {% if valid_link and refresh_pending %}
       <a class="btn ghost" href="{{ request.url.path }}?{{ request.url.query }}">تحديث الآن</a>
       {% endif %}

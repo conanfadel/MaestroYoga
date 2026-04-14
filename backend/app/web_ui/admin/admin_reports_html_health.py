@@ -71,6 +71,59 @@ def register_admin_report_html_health_routes(router: APIRouter) -> None:
         blocked_ips = int(
             db.query(func.count(models.BlockedIP.id)).filter(models.BlockedIP.is_active.is_(True)).scalar() or 0
         )
+        overdue_cutoff = utcnow_naive() - timedelta(minutes=10)
+        pending_overdue = int(
+            db.query(func.count(models.Payment.id))
+            .filter(
+                models.Payment.center_id == cid,
+                models.Payment.status == "pending",
+                models.Payment.created_at < overdue_cutoff,
+            )
+            .scalar()
+            or 0
+        )
+        paid_rows = (
+            db.query(models.Payment)
+            .filter(
+                models.Payment.center_id == cid,
+                models.Payment.status == "paid",
+                models.Payment.created_at.isnot(None),
+                models.Payment.paid_at.isnot(None),
+                models.Payment.created_at >= (utcnow_naive() - timedelta(days=7)),
+            )
+            .all()
+        )
+        settle_minutes: list[float] = []
+        for p in paid_rows:
+            try:
+                mins = max(0.0, float((p.paid_at - p.created_at).total_seconds()) / 60.0)
+                settle_minutes.append(mins)
+            except Exception:
+                continue
+        settle_minutes.sort()
+        avg_settle_minutes = round(sum(settle_minutes) / len(settle_minutes), 2) if settle_minutes else 0.0
+        p95_settle_minutes = 0.0
+        if settle_minutes:
+            idx = int(round(0.95 * (len(settle_minutes) - 1)))
+            p95_settle_minutes = round(settle_minutes[idx], 2)
+        webhook_failed_24h = int(
+            db.query(func.count(models.SecurityAuditEvent.id))
+            .filter(
+                models.SecurityAuditEvent.event_type == "payment_webhook_invalid",
+                models.SecurityAuditEvent.created_at >= (utcnow_naive() - timedelta(hours=24)),
+            )
+            .scalar()
+            or 0
+        )
+        delay_alerts_24h = int(
+            db.query(func.count(models.SecurityAuditEvent.id))
+            .filter(
+                models.SecurityAuditEvent.event_type == "payment_webhook_delay",
+                models.SecurityAuditEvent.created_at >= (utcnow_naive() - timedelta(hours=24)),
+            )
+            .scalar()
+            or 0
+        )
 
         return core.templates.TemplateResponse(
             request,
@@ -80,7 +133,12 @@ def register_admin_report_html_health_routes(router: APIRouter) -> None:
                 "failed_7d": failed_7d,
                 "failed_30d": failed_30d,
                 "pending_payments_open": pending_n,
+                "pending_overdue_10m": pending_overdue,
                 "blocked_ips_active": blocked_ips,
+                "avg_settle_minutes_7d": avg_settle_minutes,
+                "p95_settle_minutes_7d": p95_settle_minutes,
+                "webhook_failed_24h": webhook_failed_24h,
+                "webhook_delay_alerts_24h": delay_alerts_24h,
                 "generated_at": _fmt_dt(utcnow_naive()),
             },
         )

@@ -3,10 +3,12 @@
 from __future__ import annotations
 
 import logging
+from sqlalchemy import func
 
 from sqlalchemy.orm import Session
 
 from .. import models
+from ..booking_utils import ACTIVE_BOOKING_STATUSES
 from ..time_utils import utcnow_naive
 from .metadata import collect_payments_from_metadata
 
@@ -39,6 +41,7 @@ def finalize_checkout_paid(
     currency_from_provider: str | None = None,
 ) -> None:
     payment_rows, subscription = collect_payments_from_metadata(db, metadata, provider_ref)
+    # Idempotency guard: if already finalized as paid, skip side effects.
     if payment_rows and all(p.status == "paid" for p in payment_rows):
         return
 
@@ -81,8 +84,38 @@ def finalize_checkout_paid(
         if payment.booking_id:
             booking = db.get(models.Booking, payment.booking_id)
             if booking and booking.status != "confirmed":
-                booking.status = "confirmed"
-                changed = True
+                ys = db.get(models.YogaSession, booking.session_id)
+                room = db.get(models.Room, ys.room_id) if ys else None
+                if ys and room:
+                    active_count = int(
+                        db.query(func.count(models.Booking.id))
+                        .filter(
+                            models.Booking.session_id == ys.id,
+                            models.Booking.status.in_(ACTIVE_BOOKING_STATUSES),
+                        )
+                        .scalar()
+                        or 0
+                    )
+                    capacity = int(room.capacity or 0)
+                    if active_count > capacity:
+                        # Rare safety fallback: payment succeeded but no safe seat left.
+                        payment.status = "refunded"
+                        booking.status = "cancelled"
+                        changed = True
+                        logger.error(
+                            "paid booking capacity conflict: payment=%s booking=%s session=%s active=%s capacity=%s",
+                            payment.id,
+                            booking.id,
+                            ys.id,
+                            active_count,
+                            capacity,
+                        )
+                    else:
+                        booking.status = "confirmed"
+                        changed = True
+                else:
+                    booking.status = "confirmed"
+                    changed = True
         elif subscription and subscription.status != "active":
             subscription.status = "active"
             changed = True

@@ -10,6 +10,7 @@ from .public_checkout_status_routes import register_public_checkout_status_route
 from .public_commerce_routes import register_public_commerce_routes
 from .public_feedback_routes import register_public_feedback_routes
 from .public_index_routes import register_public_index_routes
+from .public_payment_receipt_routes import register_public_payment_receipt_routes
 from .public_subscribe_routes import register_public_subscribe_routes
 
 
@@ -17,6 +18,7 @@ def register_public_routes(router: APIRouter) -> None:
     """Register /index, /public/*, /news, /post, feedback, commerce, auth, subscribe."""
     register_public_index_routes(router)
     register_public_checkout_status_routes(router)
+    register_public_payment_receipt_routes(router)
     register_public_browse_routes(router)
     register_public_feedback_routes(router)
     register_public_commerce_routes(router)

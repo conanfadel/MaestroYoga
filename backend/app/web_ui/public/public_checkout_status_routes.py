@@ -106,6 +106,7 @@ def register_public_checkout_status_routes(router: APIRouter) -> None:
             "schedule_href": None,
             "paid_bookings_count": 0,
             "paid_sessions_preview": [],
+            "receipt_href": None,
         }
 
         if center_id is None or center_id < 1:
@@ -139,6 +140,14 @@ def register_public_checkout_status_routes(router: APIRouter) -> None:
 
         ctx["valid_link"] = True
         ctx["index_href"] = f"/index?center_id={int(center_id)}"
+        ids_q = str(parsed[0]) if len(parsed) == 1 else ",".join(str(i) for i in parsed)
+        id_key = "payment_id" if len(parsed) == 1 else "payment_ids"
+        ctx["receipt_href"] = _s._url_with_params(
+            "/public/payment-receipt",
+            center_id=str(int(center_id)),
+            sig=str(sig or ""),
+            **{id_key: ids_q},
+        )
         ctx["schedule_href"] = _s._url_with_params(
             "/public/account",
             center_id=str(int(center_id)),

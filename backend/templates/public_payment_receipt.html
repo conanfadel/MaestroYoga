@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>{{ headline }} — Maestro Yoga</title>
+  <style>
+    body { font-family: system-ui, sans-serif; margin: 0; background: #f8fafc; color: #0f172a; }
+    .wrap { max-width: 900px; margin: 24px auto; background: #fff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 18px; }
+    h1 { margin: 0 0 6px; font-size: 1.3rem; }
+    p { margin: 0 0 12px; color: #475569; }
+    table { width: 100%; border-collapse: collapse; margin-top: 12px; }
+    th, td { border-bottom: 1px solid #e2e8f0; padding: 8px; text-align: right; font-size: 0.92rem; }
+    th { background: #f8fafc; }
+    .sum { margin-top: 12px; font-weight: 700; }
+    .actions { margin-top: 14px; display: flex; flex-wrap: wrap; gap: 8px; }
+    .btn { display: inline-block; text-decoration: none; background: #0d9488; color: #fff; padding: 8px 12px; border-radius: 9px; }
+    .btn.alt { background: #e2e8f0; color: #1e293b; }
+  </style>
+</head>
+<body>
+  <main class="wrap">
+    <h1>{{ headline }}</h1>
+    <p>{{ body }}</p>
+    <p>وقت الإصدار: {{ generated_at }}</p>
+
+    {% if valid_link and rows %}
+    <table>
+      <thead>
+        <tr>
+          <th>Payment ID</th>
+          <th>الحالة</th>
+          <th>الجلسة</th>
+          <th>الموعد</th>
+          <th>المبلغ</th>
+          <th>Provider Ref</th>
+          <th>وقت التأكيد</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for row in rows %}
+        <tr>
+          <td>{{ row.payment_id }}</td>
+          <td>{{ row.status }}</td>
+          <td>{{ row.session_title }}</td>
+          <td>{{ row.session_time }}</td>
+          <td>{{ row.amount }} {{ currency }}</td>
+          <td>{{ row.provider_ref }}</td>
+          <td>{{ row.paid_at }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    <p class="sum">الإجمالي: {{ total_amount }} {{ currency }}</p>
+    {% endif %}
+
+    <div class="actions">
+      <a class="btn" href="{{ account_href }}">عرض جدولي</a>
+      <a class="btn alt" href="{{ index_href }}">العودة للرئيسية</a>
+      <a class="btn alt" href="javascript:window.print()">طباعة / حفظ PDF</a>
+    </div>
+  </main>
+  {% include '_force_english_digits.html' %}
+</body>
+</html>

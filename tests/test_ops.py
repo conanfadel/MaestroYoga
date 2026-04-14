@@ -378,7 +378,9 @@ def test_checkout_status_paid_shows_schedule_actions(client: TestClient, monkeyp
         assert "تم الدفع بنجاح" in r.text
         assert "الجلسات المؤكدة" in r.text
         assert "عرض جدولي" in r.text
+        assert "تحميل الإيصال" in r.text
         assert "/public/account" in r.text
+        assert "/public/payment-receipt" in r.text
     finally:
         db.rollback()
         db.query(models.Payment).filter(models.Payment.payment_method == "policy_paid_test").delete(
@@ -397,6 +399,12 @@ def test_checkout_status_paid_shows_schedule_actions(client: TestClient, monkeyp
         )
         db.commit()
         db.close()
+
+
+def test_public_payment_receipt_invalid_link(client: TestClient) -> None:
+    r = client.get("/public/payment-receipt")
+    assert r.status_code == 200
+    assert "إيصال غير صالح" in r.text
 
 
 def test_paymob_webhook_accepts_hmac_in_query_string(
