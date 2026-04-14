@@ -120,6 +120,9 @@
       <h1 style="margin:0;">لوحة الإدارة</h1>
     </div>
     <p>سجّل دخولك كمسؤول عن المركز</p>
+    {% if request.query_params.get('msg') == 'idle_timeout' %}
+      <div class="err">انتهت جلسة الإدارة لعدم النشاط. سجّل الدخول من جديد.</div>
+    {% endif %}
     {% if request.query_params.get('error') == '1' %}
       <div class="err">البريد أو كلمة المرور غير صحيحة.</div>
     {% endif %}

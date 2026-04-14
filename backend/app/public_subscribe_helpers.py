@@ -73,6 +73,7 @@ def process_hosted_subscription_checkout(
     base_url: str,
     request,
     log_security_event_fn,
+    billing_email: str | None = None,
 ) -> tuple[str | None, str | None]:
     prov_name = type(provider).__name__
     try:
@@ -96,6 +97,7 @@ def process_hosted_subscription_checkout(
             line_item_name=f"اشتراك — {plan.name}"[:120],
             line_item_description=f"{center_name} · باقة {plan.plan_type}"[:500],
             idempotency_key=f"sub-{subscription.id}-p{payment_row.id}"[:255],
+            billing_email=billing_email,
         )
     except Exception as exc:
         logger.exception(

@@ -73,7 +73,13 @@ def register_public_auth_login_logout_routes(router: APIRouter) -> None:
         return response
 
     @router.get("/public/logout")
-    def public_logout():
-        response = _s.RedirectResponse(url=f"{_s.PUBLIC_INDEX_DEFAULT_PATH}&msg=logged_out", status_code=303)
-        response.delete_cookie(_s.PUBLIC_COOKIE_NAME)
+    def public_logout(reason: str | None = None):
+        from ...security.config import IDLE_COOKIE_PUBLIC
+
+        msg = "session_idle" if reason == "idle" else "logged_out"
+        base = _s.PUBLIC_INDEX_DEFAULT_PATH
+        joiner = "&" if "?" in base else "?"
+        response = _s.RedirectResponse(url=f"{base}{joiner}msg={msg}", status_code=303)
+        response.delete_cookie(_s.PUBLIC_COOKIE_NAME, path="/")
+        response.delete_cookie(IDLE_COOKIE_PUBLIC, path="/")
         return response

@@ -31,6 +31,7 @@
                 data-level="{{ s.level_label }}"
                 data-available="{{ s.spots_available }}"
                 data-price="{{ s.price_drop_in }}"
+                data-price-cents="{{ ((s.price_drop_in * 100)|round(0))|int }}"
                 data-time="{{ s.starts_at.isoformat() if s.starts_at else '' }}"
                 data-session-end="{{ s.ends_at_iso }}"
               >
@@ -93,6 +94,7 @@
                       data-session-id="{{ s.id }}"
                       data-title="{{ s.title|e }}"
                       data-price="{{ s.price_drop_in }}"
+                      data-price-cents="{{ ((s.price_drop_in * 100)|round(0))|int }}"
                       data-when="{{ s.starts_at_display|e }}"
                     >
                       أضف للسلة

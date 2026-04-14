@@ -114,6 +114,7 @@ def register_public_commerce_book_routes(router: APIRouter) -> None:
                 request=request,
                 log_security_event_fn=_s.log_security_event,
                 session_id=session_id,
+                billing_email=(public_user.email or "").strip() or None,
             )
             if hosted_error:
                 return _s.redirect_public_index_with_params(center_id=center_id, msg=hosted_error)

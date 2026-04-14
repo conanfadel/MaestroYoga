@@ -22,6 +22,7 @@ try:
     from .database import init_db
     from .middleware import (
         ApiClientHeadersMiddleware,
+        IdleTimeoutMiddleware,
         MaintenanceMiddleware,
         RateLimitMiddleware,
         RequestIDMiddleware,
@@ -32,6 +33,7 @@ except ImportError:
     from backend.app.database import init_db
     from backend.app.middleware import (
         ApiClientHeadersMiddleware,
+        IdleTimeoutMiddleware,
         MaintenanceMiddleware,
         RateLimitMiddleware,
         RequestIDMiddleware,
@@ -58,6 +60,7 @@ def create_app() -> FastAPI:
     _cors_origins = [x.strip() for x in os.getenv("CORS_ORIGINS", "").split(",") if x.strip()]
     attach_cors(app, _cors_origins)
     app.add_middleware(RateLimitMiddleware)
+    app.add_middleware(IdleTimeoutMiddleware)
     _static_dir = Path(__file__).resolve().parent.parent / "static"
     _sw_path = _static_dir / "sw.js"
 

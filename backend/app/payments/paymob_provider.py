@@ -207,13 +207,18 @@ class PaymobPaymentProvider(BasePaymentProvider):
         self._api_base = os.getenv("PAYMOB_API_BASE", "https://accept.paymob.com").strip().rstrip("/")
         self._auth_token: str | None = None
 
-    def _billing_data(self) -> dict[str, str]:
+    def _billing_data(self, email_override: str | None = None) -> dict[str, str]:
         def g(name: str, default: str) -> str:
             return os.getenv(name, default).strip() or default
 
+        em = (email_override or "").strip()
+        if not em:
+            em = g("PAYMOB_BILLING_EMAIL", "checkout@example.invalid")
+        em = em[:127]
+
         return {
             "apartment": g("PAYMOB_BILLING_APARTMENT", "NA"),
-            "email": g("PAYMOB_BILLING_EMAIL", "checkout@example.invalid"),
+            "email": em,
             "floor": g("PAYMOB_BILLING_FLOOR", "NA"),
             "first_name": g("PAYMOB_BILLING_FIRST_NAME", "Customer"),
             "street": g("PAYMOB_BILLING_STREET", "NA"),
@@ -273,6 +278,7 @@ class PaymobPaymentProvider(BasePaymentProvider):
         success_url: str,
         cancel_url: str,
         description: str,
+        billing_email: str | None = None,
     ) -> PaymentResult:
         _ = cancel_url
         _ = description
@@ -298,7 +304,7 @@ class PaymobPaymentProvider(BasePaymentProvider):
             "amount_cents": amount_cents,
             "expiration": 3600,
             "order_id": oid,
-            "billing_data": self._billing_data(),
+            "billing_data": self._billing_data(billing_email),
             "currency": cur,
             "integration_id": self._integration_id,
             "lock_order_when_paid": False,
@@ -306,6 +312,21 @@ class PaymobPaymentProvider(BasePaymentProvider):
         skip_redir = os.getenv("PAYMOB_SKIP_REDIRECTION_URL", "").strip().lower() in ("1", "true", "yes")
         if success_url.strip() and not skip_redir:
             key_body["redirection_url"] = success_url.strip()[:500]
+
+        # «Save card»: تفعيل التوكنيز في لوحة Paymob + save_token؛ بريد حقيقي في billing_data يحسّن قبول الواجهة.
+        if os.getenv("PAYMOB_ENABLE_SAVE_CARD", "1").strip().lower() not in {"0", "false", "no", "off"}:
+            if os.getenv("PAYMOB_SAVE_TOKEN_AS_STRING", "0").strip().lower() in {"1", "true", "yes", "on"}:
+                key_body["save_token"] = "true"
+            else:
+                key_body["save_token"] = True
+        extra_raw = os.getenv("PAYMOB_PAYMENT_KEYS_EXTRA_JSON", "").strip()
+        if extra_raw:
+            try:
+                extra_obj = json.loads(extra_raw)
+                if isinstance(extra_obj, dict):
+                    key_body.update(extra_obj)
+            except json.JSONDecodeError:
+                logger.warning("PAYMOB_PAYMENT_KEYS_EXTRA_JSON is not valid JSON; ignored")
 
         keys = self._post_json("/api/acceptance/payment_keys", key_body)
         pay_token = keys.get("token")
@@ -321,8 +342,14 @@ class PaymobPaymentProvider(BasePaymentProvider):
         if base:
             b = base.rstrip("/")
             joiner = "&" if "?" in b else "?"
-            return f"{b}{joiner}payment_token={tok_q}"
-        return f"{self._api_base}/api/acceptance/iframes/{self._iframe_id}?payment_token={tok_q}"
+            url = f"{b}{joiner}payment_token={tok_q}"
+        else:
+            url = f"{self._api_base}/api/acceptance/iframes/{self._iframe_id}?payment_token={tok_q}"
+        if os.getenv("PAYMOB_IFRAME_APPEND_SAVE_CARD", "1").strip().lower() not in {"0", "false", "no", "off"}:
+            if "save_card=" not in url.lower():
+                sep = "&" if "?" in url else "?"
+                url = f"{url}{sep}save_card=true"
+        return url
 
     def create_checkout_session(
         self,
@@ -335,6 +362,7 @@ class PaymobPaymentProvider(BasePaymentProvider):
         line_item_name: str = "Maestro Yoga",
         line_item_description: str = "",
         idempotency_key: str | None = None,
+        billing_email: str | None = None,
     ) -> PaymentResult:
         _ = idempotency_key
         cents = self._amount_to_cents(amount, currency)
@@ -346,6 +374,7 @@ class PaymobPaymentProvider(BasePaymentProvider):
             success_url=success_url,
             cancel_url=cancel_url,
             description=desc,
+            billing_email=billing_email,
         )
 
     def create_checkout_session_multi_line(
@@ -357,6 +386,7 @@ class PaymobPaymentProvider(BasePaymentProvider):
         cancel_url: str,
         *,
         idempotency_key: str | None = None,
+        billing_email: str | None = None,
     ) -> PaymentResult:
         _ = idempotency_key
         if not line_specs:
@@ -372,6 +402,7 @@ class PaymobPaymentProvider(BasePaymentProvider):
             success_url=success_url,
             cancel_url=cancel_url,
             description=desc,
+            billing_email=billing_email,
         )
 
     def charge(self, amount: float, currency: str, metadata: dict) -> PaymentResult:

@@ -23,6 +23,7 @@ class MockPaymentProvider(BasePaymentProvider):
         line_item_name: str = "Maestro Yoga",
         line_item_description: str = "",
         idempotency_key: str | None = None,
+        billing_email: str | None = None,
     ) -> PaymentResult:
         return PaymentResult(
             provider_ref=f"mock_checkout_{uuid4().hex[:12]}",
@@ -39,6 +40,7 @@ class MockPaymentProvider(BasePaymentProvider):
         cancel_url: str,
         *,
         idempotency_key: str | None = None,
+        billing_email: str | None = None,
     ) -> PaymentResult:
         return PaymentResult(
             provider_ref=f"mock_cart_{uuid4().hex[:12]}",

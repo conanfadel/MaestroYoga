@@ -28,6 +28,7 @@ class BasePaymentProvider:
         line_item_name: str = "Maestro Yoga",
         line_item_description: str = "",
         idempotency_key: str | None = None,
+        billing_email: str | None = None,
     ) -> PaymentResult:
         raise NotImplementedError
 
@@ -40,5 +41,6 @@ class BasePaymentProvider:
         cancel_url: str,
         *,
         idempotency_key: str | None = None,
+        billing_email: str | None = None,
     ) -> PaymentResult:
         raise NotImplementedError

@@ -67,6 +67,7 @@ def register_public_commerce_cart_routes(router: APIRouter) -> None:
                 fmt_dt_fn=_s._fmt_dt,
                 request=request,
                 log_security_event_fn=_s.log_security_event,
+                billing_email=(public_user.email or "").strip() or None,
             )
             if hosted_error:
                 return _s.redirect_public_index_with_params(center_id=center_id, msg=hosted_error)

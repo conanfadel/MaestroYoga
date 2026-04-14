@@ -48,6 +48,7 @@ class StripePaymentProvider(BasePaymentProvider):
         line_item_name: str = "Maestro Yoga",
         line_item_description: str = "",
         idempotency_key: str | None = None,
+        billing_email: str | None = None,
     ) -> PaymentResult:
         """
         Checkout بالبطاقة (SAR). لحساب Stripe مسجّل في السعودية تُقبل بطاقات **مدى**
@@ -90,6 +91,7 @@ class StripePaymentProvider(BasePaymentProvider):
         cancel_url: str,
         *,
         idempotency_key: str | None = None,
+        billing_email: str | None = None,
     ) -> PaymentResult:
         if not line_specs:
             raise ValueError("line_specs required")

@@ -121,6 +121,7 @@ def process_hosted_cart_checkout(
     fmt_dt_fn,
     request,
     log_security_event_fn,
+    billing_email: str | None = None,
 ) -> tuple[str | None, str | None]:
     line_specs = [
         (
@@ -149,6 +150,7 @@ def process_hosted_cart_checkout(
                 base_url, center_id, cart_payment_ids, result="cancelled"
             ),
             idempotency_key=idem,
+            billing_email=billing_email,
         )
     except Exception as exc:
         logger.exception(
@@ -229,6 +231,7 @@ def process_hosted_single_booking_checkout(
     request,
     log_security_event_fn,
     session_id: int,
+    billing_email: str | None = None,
 ) -> tuple[str | None, str | None]:
     prov_name = type(provider).__name__
     try:
@@ -249,6 +252,7 @@ def process_hosted_single_booking_checkout(
             line_item_name=f"حجز جلسة — {session_title}"[:120],
             line_item_description=f"{center_name} · {fmt_dt_fn(session_starts_at)} · {session_duration_minutes} دقيقة"[:500],
             idempotency_key=f"book-{payment_row.id}"[:255],
+            billing_email=billing_email,
         )
     except Exception as exc:
         logger.exception(

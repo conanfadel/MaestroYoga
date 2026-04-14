@@ -14,6 +14,7 @@
 {% if payment == 'cancelled' %}<div class="alert warn" data-index-payment-return="1" tabindex="-1">تم إلغاء عملية الدفع. يمكنك المحاولة مرة أخرى.</div>{% endif %}
 {% if msg == 'email_verified' %}<div class="alert">تم تأكيد البريد بنجاح. يمكنك الآن إكمال الحجز والدفع.</div>{% endif %}
 {% if msg == 'logged_out' %}<div class="alert">تم تسجيل الخروج بنجاح.</div>{% endif %}
+{% if msg == 'session_idle' %}<div class="alert warn">انتهت جلستك لعدم النشاط على الموقع. سجّل الدخول من جديد إن رغبت بالمتابعة.</div>{% endif %}
 {% if msg == 'auth_required' %}<div class="alert warn">الرجاء تسجيل الدخول أولًا قبل الحجز أو الاشتراك.</div>{% endif %}
 {% if msg == 'ip_blocked' %}<div class="alert err">تم حظر هذا الـ IP مؤقتًا لأسباب أمنية. حاول لاحقًا أو تواصل مع الإدارة.</div>{% endif %}
 {% if msg == 'full' %}<div class="alert err">لا توجد أماكن متاحة في هذه الجلسة.</div>{% endif %}

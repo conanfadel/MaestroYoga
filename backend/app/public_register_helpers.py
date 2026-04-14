@@ -124,6 +124,10 @@ def set_public_auth_cookie(
     token: str,
     secure: bool,
 ) -> None:
+    import time
+
+    from .security.config import IDLE_COOKIE_PUBLIC
+
     response.set_cookie(
         key=cookie_name,
         value=token,
@@ -131,4 +135,14 @@ def set_public_auth_cookie(
         samesite="lax",
         secure=secure,
         max_age=60 * 60 * 24 * 7,
+        path="/",
+    )
+    response.set_cookie(
+        key=IDLE_COOKIE_PUBLIC,
+        value=str(int(time.time())),
+        httponly=True,
+        samesite="lax",
+        secure=secure,
+        max_age=60 * 60 * 24 * 8,
+        path="/",
     )

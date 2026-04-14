@@ -107,6 +107,7 @@ def register_routes(router: APIRouter) -> None:
                 success_url=payload.success_url,
                 cancel_url=payload.cancel_url,
                 idempotency_key=f"api-checkout-{payment.id}"[:255],
+                billing_email=(client.email or "").strip() or None,
             )
         except Exception as exc:
             logger.exception("Failed to create hosted checkout session: %s", exc)

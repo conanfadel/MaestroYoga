@@ -16,6 +16,12 @@ PUBLIC_EMAIL_VERIFY_FLASH_EXPIRES_MINUTES = int(
 PUBLIC_PASSWORD_RESET_EXPIRES_MINUTES = int(os.getenv("PUBLIC_PASSWORD_RESET_EXPIRES_MINUTES", "30"))
 PUBLIC_ACCOUNT_DELETE_EXPIRES_MINUTES = int(os.getenv("PUBLIC_ACCOUNT_DELETE_EXPIRES_MINUTES", "30"))
 APP_ENV = os.getenv("APP_ENV", "development").strip().lower()
+
+# انتهاء الجلسة عند عدم النشاط (كوكي آخر نشاط منفصل عن JWT). يُحدَّث عند كل طلب ناجح.
+# الافتراضي 15 دقيقة؛ غيّر عبر IDLE_SESSION_TIMEOUT_MINUTES (مثلاً 30).
+IDLE_SESSION_TIMEOUT_MINUTES = int(os.getenv("IDLE_SESSION_TIMEOUT_MINUTES", "15"))
+IDLE_COOKIE_PUBLIC = os.getenv("IDLE_COOKIE_PUBLIC", "maestro_pub_idle").strip() or "maestro_pub_idle"
+IDLE_COOKIE_ADMIN = os.getenv("IDLE_COOKIE_ADMIN", "maestro_adm_idle").strip() or "maestro_adm_idle"
 _INSECURE_SECRET_VALUES = {
     "",
     "change-this-in-production",

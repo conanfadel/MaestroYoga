@@ -291,7 +291,7 @@ def test_auth_logout_all_revokes_refresh_tokens(client):
     assert client.post("/auth/refresh", json={"refresh_token": refresh2}).status_code == 401
 
 
-def test_admin_logout_requires_post_and_clears_cookie(client):
+def test_admin_logout_via_get_or_post_clears_cookie(client):
     login = client.post(
         "/admin/login",
         data={"email": "owner@maestroyoga.local", "password": "Admin@12345"},
@@ -301,8 +301,15 @@ def test_admin_logout_requires_post_and_clears_cookie(client):
     assert login.headers["location"] == "/admin"
 
     get_logout = client.get("/admin/logout", follow_redirects=False)
-    assert get_logout.status_code == 405
+    assert get_logout.status_code == 303
+    assert get_logout.headers["location"] == "/admin/login"
 
+    login2 = client.post(
+        "/admin/login",
+        data={"email": "owner@maestroyoga.local", "password": "Admin@12345"},
+        follow_redirects=False,
+    )
+    assert login2.status_code == 303
     post_logout = client.post("/admin/logout", follow_redirects=False)
     assert post_logout.status_code == 303
     assert post_logout.headers["location"] == "/admin/login"

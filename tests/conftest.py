@@ -15,6 +15,7 @@ from backend.app.main import app  # noqa: E402
 def _disable_rate_limit_for_tests(monkeypatch) -> None:
     """تفادي فشل الاختبارات بسبب وسيط حد الطلبات (يُفعّل يدوياً في اختبار مخصّص)."""
     monkeypatch.setenv("RATE_LIMIT_ENABLED", "0")
+    monkeypatch.setenv("DISABLE_IDLE_TIMEOUT", "1")
 
 
 @pytest.fixture()

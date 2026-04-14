@@ -6,6 +6,7 @@ from __future__ import annotations
 
 from .api_client_headers import ApiClientHeadersMiddleware
 from .cors import attach_cors
+from .idle_timeout import IdleTimeoutMiddleware
 from .maintenance import MaintenanceMiddleware, maintenance_enabled
 from .rate_limit import (
     RateLimitMiddleware,
@@ -16,6 +17,7 @@ from .request_id import RequestIDMiddleware
 
 __all__ = [
     "ApiClientHeadersMiddleware",
+    "IdleTimeoutMiddleware",
     "MaintenanceMiddleware",
     "RateLimitMiddleware",
     "RequestIDMiddleware",
