@@ -308,6 +308,18 @@ def test_admin_logout_requires_post_and_clears_cookie(client):
     assert post_logout.headers["location"] == "/admin/login"
 
 
+def test_admin_pending_alerts_report_page(client):
+    login = client.post(
+        "/admin/login",
+        data={"email": "owner@maestroyoga.local", "password": "Admin@12345"},
+        follow_redirects=False,
+    )
+    assert login.status_code == 303
+    r = client.get("/admin/reports/pending-alerts?stale_minutes=60", follow_redirects=False)
+    assert r.status_code == 200
+    assert "مدفوعات pending المتأخرة" in r.text
+
+
 def test_finalize_checkout_paid_is_idempotent(client, monkeypatch):
     monkeypatch.setenv("DISABLE_PAYMENT_SUCCESS_EMAIL", "1")
     db = SessionLocal()

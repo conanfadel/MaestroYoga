@@ -49,7 +49,7 @@ def build_admin_insight_cards(
         admin_insights.append(
             {
                 "label": f"معلّقات قديمة (+8 أيام): {kpi.pending_payments_stale_8d}",
-                "href": "/admin/reports/health",
+                "href": "/admin/reports/pending-alerts?stale_minutes=11520",
                 "kind": "warn",
             }
         )

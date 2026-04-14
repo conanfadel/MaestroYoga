@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>تنبيهات مدفوعات معلّقة — {{ center.name if center else 'المركز' }}</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/static/css/admin-dashboard.css" />
+</head>
+<body class="report-run-sheet">
+  <header class="report-run-sheet__toolbar no-print">
+    <a class="soft-link" href="/admin#section-reports">← العودة إلى التقارير</a>
+  </header>
+
+  <main class="report-run-sheet__main">
+    <div class="report-run-sheet__brand">
+      <div>
+        <p class="report-run-sheet__brand-title">{{ center.name if center else 'المركز' }}</p>
+        <p class="report-run-sheet__brand-sub">تنبيه تشغيلي للمدفوعات المعلّقة القديمة</p>
+      </div>
+    </div>
+    <h1 class="admin-booking-block-heading admin-booking-block-heading--flush-top">مدفوعات pending المتأخرة</h1>
+    <p class="report-run-sheet__meta">أُنشئ في {{ generated_at }} · العتبة: {{ stale_minutes }} دقيقة · أقدم وقت مسموح: {{ cutoff_at }}</p>
+
+    <form method="get" action="/admin/reports/pending-alerts" class="filters no-print" style="margin-bottom:12px;">
+      <label>
+        <span class="small">العتبة (دقائق)</span>
+        <input type="number" min="15" max="10080" step="5" name="stale_minutes" value="{{ stale_minutes }}" />
+      </label>
+      <button class="btn" type="submit">تحديث</button>
+    </form>
+
+    {% if alerts %}
+    <div class="table-wrap">
+      <table class="table table--report">
+        <thead>
+          <tr>
+            <th>#Payment</th>
+            <th>العمر (دقيقة)</th>
+            <th>أنشئ في</th>
+            <th>العميل</th>
+            <th>المبلغ</th>
+            <th>الطريقة</th>
+            <th>Provider Ref</th>
+            <th>Booking</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for r in alerts %}
+          <tr>
+            <td>{{ r.payment_id }}</td>
+            <td>{{ r.age_min }}</td>
+            <td>{{ r.created_at }}</td>
+            <td>{{ r.client_name }}<br><span class="small">{{ r.client_email }}</span></td>
+            <td>{{ '%.2f'|format(r.amount) }} {{ r.currency }}</td>
+            <td>{{ r.payment_method }}</td>
+            <td>{{ r.provider_ref }}</td>
+            <td>
+              {% if r.booking_id %}
+                #{{ r.booking_id }} · {{ r.booking_status }}
+              {% else %}
+                -
+              {% endif %}
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% else %}
+      <div class="empty-state">
+        <p>لا توجد مدفوعات معلّقة أقدم من العتبة المحددة حالياً.</p>
+      </div>
+    {% endif %}
+  </main>
+</body>
+</html>
