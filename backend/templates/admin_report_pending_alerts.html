@@ -25,6 +25,12 @@
     <p class="report-run-sheet__meta">أُنشئ في {{ generated_at }} · العتبة: {{ stale_minutes }} دقيقة · أقدم وقت مسموح: {{ cutoff_at }}</p>
     {% if msg == "pending_alert_resolved" %}
       <p class="small" style="color:#0f766e;">تم تعليم العملية كمرفوضة وإغلاق الحجز المعلّق إن وُجد.</p>
+    {% elif msg == "pending_alert_batch_done" %}
+      <p class="small" style="color:#0f766e;">تم تنفيذ المعالجة الجماعية بنجاح.</p>
+    {% elif msg == "pending_alert_batch_none_resolved" %}
+      <p class="small" style="color:#b45309;">لم يتم حل أي عملية (ربما تم حلها مسبقاً أو لا تخص المركز).</p>
+    {% elif msg == "pending_alert_batch_empty" %}
+      <p class="small" style="color:#b45309;">اختر عملية واحدة على الأقل قبل التنفيذ الجماعي.</p>
     {% elif msg == "pending_alert_not_found" %}
       <p class="small" style="color:#b45309;">لم يتم العثور على العملية أو لا تخص هذا المركز.</p>
     {% elif msg == "pending_alert_already_resolved" %}
@@ -40,10 +46,19 @@
     </form>
 
     {% if alerts %}
+    <form method="post" action="/admin/reports/pending-alerts/resolve-batch" class="no-print" id="batchResolveForm" style="margin:0 0 8px;">
+      <input type="hidden" name="payment_ids" id="batchPaymentIds" value="" />
+      <input type="hidden" name="stale_minutes" value="{{ stale_minutes }}" />
+      <button class="btn btn--danger" type="submit" id="batchResolveBtn" disabled>Resolve المحدد</button>
+      <button class="btn" type="button" id="selectAllBtn">تحديد الكل</button>
+      <button class="btn" type="button" id="clearAllBtn">إلغاء التحديد</button>
+      <span class="small" id="batchCount" style="margin-inline-start:8px;">0 محدد</span>
+    </form>
     <div class="table-wrap">
       <table class="table table--report">
         <thead>
           <tr>
+            <th class="no-print">اختيار</th>
             <th>#Payment</th>
             <th>العمر (دقيقة)</th>
             <th>أنشئ في</th>
@@ -58,6 +73,9 @@
         <tbody>
           {% for r in alerts %}
           <tr>
+            <td class="no-print">
+              <input type="checkbox" class="batch-item" value="{{ r.payment_id }}" />
+            </td>
             <td>{{ r.payment_id }}</td>
             <td>{{ r.age_min }}</td>
             <td>{{ r.created_at }}</td>
@@ -90,5 +108,44 @@
       </div>
     {% endif %}
   </main>
+  <script>
+    (function () {
+      const form = document.getElementById("batchResolveForm");
+      if (!form) return;
+      const checkboxes = Array.from(document.querySelectorAll(".batch-item"));
+      const hidden = document.getElementById("batchPaymentIds");
+      const btn = document.getElementById("batchResolveBtn");
+      const count = document.getElementById("batchCount");
+      const selectAllBtn = document.getElementById("selectAllBtn");
+      const clearAllBtn = document.getElementById("clearAllBtn");
+
+      function sync() {
+        const selected = checkboxes.filter(cb => cb.checked).map(cb => cb.value);
+        hidden.value = selected.join(",");
+        btn.disabled = selected.length === 0;
+        count.textContent = selected.length + " محدد";
+      }
+
+      checkboxes.forEach(cb => cb.addEventListener("change", sync));
+      selectAllBtn.addEventListener("click", () => {
+        checkboxes.forEach(cb => { cb.checked = true; });
+        sync();
+      });
+      clearAllBtn.addEventListener("click", () => {
+        checkboxes.forEach(cb => { cb.checked = false; });
+        sync();
+      });
+      form.addEventListener("submit", (e) => {
+        if (!hidden.value) {
+          e.preventDefault();
+          return;
+        }
+        if (!confirm("تحويل كل العمليات المحددة إلى failed وإلغاء الحجوزات المعلقة المرتبطة؟")) {
+          e.preventDefault();
+        }
+      });
+      sync();
+    })();
+  </script>
 </body>
 </html>

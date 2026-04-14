@@ -398,6 +398,97 @@ def test_admin_pending_alerts_resolve_marks_failed_and_cancels_booking(client):
     db.close()
 
 
+def test_admin_pending_alerts_batch_resolve(client):
+    login = client.post(
+        "/admin/login",
+        data={"email": "owner@maestroyoga.local", "password": "Admin@12345"},
+        follow_redirects=False,
+    )
+    assert login.status_code == 303
+
+    db = SessionLocal()
+    stamp = int(time.time())
+    center = db.query(models.Center).filter(models.Center.id == 1).first()
+    assert center is not None
+    room = models.Room(center_id=center.id, name=f"Batch Room {stamp}", capacity=6)
+    db.add(room)
+    db.flush()
+    yoga_session = models.YogaSession(
+        center_id=center.id,
+        room_id=room.id,
+        title="Batch Session",
+        trainer_name="Trainer",
+        level="beginner",
+        starts_at=utcnow_naive() + timedelta(days=3),
+        duration_minutes=60,
+        price_drop_in=35.0,
+    )
+    db.add(yoga_session)
+    db.flush()
+    c1 = models.Client(center_id=center.id, full_name="Batch User 1", email=f"batch1_{stamp}@example.com")
+    c2 = models.Client(center_id=center.id, full_name="Batch User 2", email=f"batch2_{stamp}@example.com")
+    db.add(c1)
+    db.add(c2)
+    db.flush()
+    b1 = models.Booking(center_id=center.id, session_id=yoga_session.id, client_id=c1.id, status="pending_payment")
+    b2 = models.Booking(center_id=center.id, session_id=yoga_session.id, client_id=c2.id, status="pending_payment")
+    db.add(b1)
+    db.add(b2)
+    db.flush()
+    p1 = models.Payment(
+        center_id=center.id,
+        client_id=c1.id,
+        booking_id=b1.id,
+        amount=35.0,
+        currency="SAR",
+        payment_method="resolve_batch_test",
+        status="pending",
+        created_at=utcnow_naive() - timedelta(hours=4),
+    )
+    p2 = models.Payment(
+        center_id=center.id,
+        client_id=c2.id,
+        booking_id=b2.id,
+        amount=35.0,
+        currency="SAR",
+        payment_method="resolve_batch_test",
+        status="pending",
+        created_at=utcnow_naive() - timedelta(hours=4),
+    )
+    db.add(p1)
+    db.add(p2)
+    db.commit()
+    db.refresh(p1)
+    db.refresh(p2)
+
+    resp = client.post(
+        "/admin/reports/pending-alerts/resolve-batch",
+        data={"payment_ids": f"{p1.id},{p2.id}", "stale_minutes": "60"},
+        follow_redirects=False,
+    )
+    assert resp.status_code == 303
+    assert "msg=pending_alert_batch_done" in (resp.headers.get("location") or "")
+
+    db.refresh(p1)
+    db.refresh(p2)
+    db.refresh(b1)
+    db.refresh(b2)
+    assert p1.status == "failed"
+    assert p2.status == "failed"
+    assert b1.status == "cancelled"
+    assert b2.status == "cancelled"
+
+    db.query(models.Payment).filter(models.Payment.payment_method == "resolve_batch_test").delete(
+        synchronize_session=False
+    )
+    db.query(models.Booking).filter(models.Booking.id.in_([b1.id, b2.id])).delete(synchronize_session=False)
+    db.query(models.Client).filter(models.Client.id.in_([c1.id, c2.id])).delete(synchronize_session=False)
+    db.query(models.YogaSession).filter(models.YogaSession.id == yoga_session.id).delete(synchronize_session=False)
+    db.query(models.Room).filter(models.Room.id == room.id).delete(synchronize_session=False)
+    db.commit()
+    db.close()
+
+
 def test_finalize_checkout_paid_is_idempotent(client, monkeypatch):
     monkeypatch.setenv("DISABLE_PAYMENT_SUCCESS_EMAIL", "1")
     db = SessionLocal()
