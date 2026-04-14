@@ -80,7 +80,7 @@ def _client_ip_for_rate_limit(request: Request) -> str:
     return "unknown"
 
 
-def _path_exempt_from_rate_limit(path: str) -> bool:
+def _path_exempt_from_rate_limit(path: str, method: str) -> bool:
     if path == "/health" or path.startswith("/health/"):
         return True
     if path == "/api/v1/health" or path.startswith("/api/v1/health/"):
@@ -92,6 +92,10 @@ def _path_exempt_from_rate_limit(path: str) -> bool:
     if path.startswith("/docs") or path.startswith("/redoc"):
         return True
     if path.startswith("/payments/webhook"):
+        return True
+    # لوحة الإدارة صفحة واحدة ثقيلة + تحميلات متتابعة؛ لا تُحسب ضمن الحد العام لتفادي 429 ورسالة «انتظر».
+    m = (method or "GET").upper()
+    if m in {"GET", "HEAD"} and (path == "/admin" or path.startswith("/admin/")):
         return True
     return False
 
@@ -167,7 +171,7 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
         if request.method.upper() == "OPTIONS":
             return await call_next(request)
         path = request.url.path
-        if _path_exempt_from_rate_limit(path):
+        if _path_exempt_from_rate_limit(path, request.method):
             return await call_next(request)
         ok, remaining, window = _rate_limit_check(request)
         if ok:

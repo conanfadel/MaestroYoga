@@ -11,7 +11,6 @@
         return map[ch] || ch;
       });
     }
-    /** Chromium uses Indic digits in numeric inputs when html lang is Arabic; lang=en on the control fixes display. */
     var NUMERIC_INPUT_SELECTOR = [
       'input[type="number"]',
       'input[type="tel"]',
@@ -39,6 +38,33 @@
         }
       } catch (e) {}
     }
+    /** فقط حقول الإدخال — تجنّب اجتياز كل نصوص DOM (صفحة الإدارة ضخمة وتجمّد الواجهة). */
+    function normalizeInputsUnder(root) {
+      if (!root) return;
+      var nt = root.nodeType;
+      if (nt !== 1 && nt !== 11) return;
+      var list;
+      try {
+        if (nt === 1 && (root.matches("input") || root.matches("textarea"))) {
+          list = [root];
+        } else {
+          list = root.querySelectorAll ? root.querySelectorAll("input, textarea") : [];
+        }
+      } catch (e2) {
+        return;
+      }
+      for (var i = 0; i < list.length; i += 1) {
+        var node = list[i];
+        var tag = (node.tagName || "").toLowerCase();
+        if (tag === "input" || tag === "textarea") {
+          if (typeof node.value === "string") node.value = normalizeDigits(node.value);
+          if (typeof node.placeholder === "string") node.placeholder = normalizeDigits(node.placeholder);
+          if (node.hasAttribute("value")) {
+            node.setAttribute("value", normalizeDigits(node.getAttribute("value")));
+          }
+        }
+      }
+    }
     function isNumericishInput(el) {
       if (!el || (el.tagName || "").toLowerCase() !== "input") return false;
       var t = (el.type || "").toLowerCase();
@@ -48,31 +74,15 @@
       var im = (el.getAttribute("inputmode") || "").toLowerCase();
       return im === "numeric" || im === "decimal" || im === "tel";
     }
-    function walk(node) {
-      if (!node) return;
-      var type = node.nodeType;
-      if (type === Node.TEXT_NODE) {
-        node.nodeValue = normalizeDigits(node.nodeValue);
-        return;
-      }
-      if (type !== Node.ELEMENT_NODE) return;
-      var tag = (node.tagName || "").toLowerCase();
-      if (tag === "script" || tag === "style") return;
-      if (node.hasAttribute("value")) {
-        node.setAttribute("value", normalizeDigits(node.getAttribute("value")));
-      }
-      if (tag === "input" || tag === "textarea") {
-        if (typeof node.value === "string") node.value = normalizeDigits(node.value);
-        if (typeof node.placeholder === "string") node.placeholder = normalizeDigits(node.placeholder);
-      }
-      var kids = node.childNodes || [];
-      for (var i = 0; i < kids.length; i += 1) walk(kids[i]);
+    function applyUnder(root) {
+      normalizeInputsUnder(root);
+      stampNumericInputLang(root);
     }
-    function normalizeRoot() {
-      walk(document.body);
-      stampNumericInputLang(document.body);
+    function applyAll() {
+      if (!document.body) return;
+      applyUnder(document.body);
     }
-    normalizeRoot();
+    applyAll();
 
     document.addEventListener(
       "input",
@@ -87,25 +97,25 @@
     );
 
     if (window.MutationObserver && document.body) {
+      var t = 0;
+      function flush() {
+        t = 0;
+        applyAll();
+      }
       var obs = new MutationObserver(function (mutations) {
+        var need = false;
         for (var i = 0; i < mutations.length; i += 1) {
           var m = mutations[i];
-          if (m.type === "characterData" && m.target) {
-            walk(m.target);
-            continue;
-          }
-          var added = m.addedNodes || [];
-          for (var j = 0; j < added.length; j += 1) {
-            walk(added[j]);
-            stampNumericInputLang(added[j]);
+          if (m.addedNodes && m.addedNodes.length) {
+            need = true;
+            break;
           }
         }
+        if (!need) return;
+        if (t) clearTimeout(t);
+        t = setTimeout(flush, 50);
       });
-      obs.observe(document.body, {
-        childList: true,
-        subtree: true,
-        characterData: true,
-      });
+      obs.observe(document.body, { childList: true, subtree: true });
     }
   })();
 </script>
