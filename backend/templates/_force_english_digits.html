@@ -31,10 +31,14 @@
       try {
         if (nt === 1 && root.matches && root.matches(NUMERIC_INPUT_SELECTOR)) {
           root.setAttribute("lang", "en");
+          root.setAttribute("dir", "ltr");
         }
         if (root.querySelectorAll) {
           var nodes = root.querySelectorAll(NUMERIC_INPUT_SELECTOR);
-          for (var i = 0; i < nodes.length; i += 1) nodes[i].setAttribute("lang", "en");
+          for (var i = 0; i < nodes.length; i += 1) {
+            nodes[i].setAttribute("lang", "en");
+            nodes[i].setAttribute("dir", "ltr");
+          }
         }
       } catch (e) {}
     }

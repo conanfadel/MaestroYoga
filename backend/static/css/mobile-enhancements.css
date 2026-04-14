@@ -3,6 +3,8 @@
  *
  * يشمل: منع التكبير غير المرغوب، لمس أوضح، تباعد آمن، وتماسك بصري على الشاشات الصغيرة والمتوسطة.
  */
+@import url("/static/css/latin-numeric-form-controls.css");
+
 html {
   -webkit-text-size-adjust: 100%;
   text-size-adjust: 100%;

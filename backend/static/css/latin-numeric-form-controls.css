@@ -1,0 +1,20 @@
+/*
+  Chromium يعرض أرقامًا هندية شرقية داخل حقول number/tel/date تحت html[lang=ar].
+  -webkit-locale + اتجاه ltr يفرضان أرقامًا لاتينية في مربع الإدخال.
+*/
+input[type="number"],
+input[type="tel"],
+input[type="date"],
+input[type="time"],
+input[type="datetime-local"],
+input[type="week"],
+input[type="month"],
+input[type="range"],
+input[inputmode="numeric"],
+input[inputmode="decimal"],
+input[inputmode="tel"] {
+  -webkit-locale: "en";
+  direction: ltr;
+  unicode-bidi: isolate;
+  text-align: start;
+}
