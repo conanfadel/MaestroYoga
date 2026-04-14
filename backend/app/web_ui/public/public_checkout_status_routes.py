@@ -103,6 +103,9 @@ def register_public_checkout_status_routes(router: APIRouter) -> None:
             "refresh_pending": False,
             "cancel_requested": bool((result or "").strip().lower() == "cancelled"),
             "subscription_flow": bool((flow or "").strip().lower() == "subscription"),
+            "schedule_href": None,
+            "paid_bookings_count": 0,
+            "paid_sessions_preview": [],
         }
 
         if center_id is None or center_id < 1:
@@ -136,6 +139,48 @@ def register_public_checkout_status_routes(router: APIRouter) -> None:
 
         ctx["valid_link"] = True
         ctx["index_href"] = f"/index?center_id={int(center_id)}"
+        ctx["schedule_href"] = _s._url_with_params(
+            "/public/account",
+            center_id=str(int(center_id)),
+            next=ctx["index_href"],
+        )
+
+        booking_ids = [int(p.booking_id) for p in rows if getattr(p, "booking_id", None)]
+        if booking_ids:
+            booking_rows = (
+                db.query(_s.models.Booking)
+                .filter(
+                    _s.models.Booking.center_id == int(center_id),
+                    _s.models.Booking.id.in_(booking_ids),
+                )
+                .all()
+            )
+            session_ids = [int(b.session_id) for b in booking_rows if getattr(b, "session_id", None)]
+            session_map: dict[int, _s.models.YogaSession] = {}
+            if session_ids:
+                session_rows = (
+                    db.query(_s.models.YogaSession)
+                    .filter(
+                        _s.models.YogaSession.center_id == int(center_id),
+                        _s.models.YogaSession.id.in_(session_ids),
+                    )
+                    .all()
+                )
+                session_map = {int(s.id): s for s in session_rows}
+
+            paid_preview: list[dict[str, str]] = []
+            for b in sorted(booking_rows, key=lambda r: int(r.id)):
+                session_row = session_map.get(int(b.session_id))
+                if not session_row:
+                    continue
+                paid_preview.append(
+                    {
+                        "session_title": str(session_row.title or "جلسة"),
+                        "starts_at_display": _s._fmt_dt(session_row.starts_at),
+                    }
+                )
+            ctx["paid_bookings_count"] = len(paid_preview)
+            ctx["paid_sessions_preview"] = paid_preview[:5]
 
         if ctx["cancel_requested"]:
             if paid_all:
@@ -165,10 +210,16 @@ def register_public_checkout_status_routes(router: APIRouter) -> None:
             ctx["status_kind"] = "paid"
             if ctx["subscription_flow"]:
                 ctx["headline"] = "تم الاشتراك بنجاح"
-                ctx["body"] = "شكراً لك. تم تفعيل الاشتراك في النظام."
+                ctx["body"] = "شكراً لك. تم تفعيل الاشتراك في النظام. يمكنك الآن فتح صفحة الحساب لمراجعة الجدول والحجوزات."
             else:
                 ctx["headline"] = "تم الدفع بنجاح"
-                ctx["body"] = "شكراً لك. تم تأكيد الدفع في النظام."
+                if int(ctx["paid_bookings_count"] or 0) > 0:
+                    ctx["body"] = (
+                        f"تم تأكيد الدفع وتثبيت {int(ctx['paid_bookings_count'])} جلسة في جدولك. "
+                        "افتح «جدولي» لمراجعة المواعيد والتفاصيل."
+                    )
+                else:
+                    ctx["body"] = "شكراً لك. تم تأكيد الدفع في النظام."
             return _s.templates.TemplateResponse(request, "checkout_status.html", ctx)
 
         if failed_all:

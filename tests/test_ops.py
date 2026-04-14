@@ -1,5 +1,7 @@
 """عمليات التشغيل: صحة، صيانة، معرّفات الطلبات."""
 
+from datetime import timedelta
+
 import pytest
 from fastapi.testclient import TestClient
 
@@ -286,6 +288,111 @@ def test_checkout_status_pending_even_when_redirect_claims_success(
             synchronize_session=False
         )
         db.query(models.Client).filter(models.Client.email.like("policy_pending_%@example.com")).delete(
+            synchronize_session=False
+        )
+        db.commit()
+        db.close()
+
+
+def test_checkout_status_paid_shows_schedule_actions(client: TestClient, monkeypatch: pytest.MonkeyPatch) -> None:
+    import time
+
+    from backend.app import models
+    from backend.app.checkout_status_urls import checkout_status_signature
+    from backend.app.database import SessionLocal
+    from backend.app.time_utils import utcnow_naive
+
+    monkeypatch.setenv("JWT_SECRET", "paid-status-actions-secret")
+    db = SessionLocal()
+    client_id_cleanup: int | None = None
+    try:
+        center = db.get(models.Center, 1)
+        if center is None:
+            center = models.Center(name="Paid Center", city="Riyadh")
+            db.add(center)
+            db.commit()
+            db.refresh(center)
+
+        room = models.Room(center_id=center.id, name=f"Room Paid {int(time.time())}", capacity=20)
+        db.add(room)
+        db.commit()
+        db.refresh(room)
+
+        ys = models.YogaSession(
+            center_id=center.id,
+            room_id=room.id,
+            title="جلسة اختبار الدفع",
+            trainer_name="اختبار",
+            level="all",
+            starts_at=utcnow_naive() + timedelta(days=1),
+            duration_minutes=60,
+            price_drop_in=45.0,
+        )
+        db.add(ys)
+        db.commit()
+        db.refresh(ys)
+
+        client_row = models.Client(
+            center_id=center.id,
+            full_name="Paid Flow User",
+            email=f"paid_flow_{int(time.time())}@example.com",
+            phone="+966500099992",
+        )
+        db.add(client_row)
+        db.commit()
+        db.refresh(client_row)
+        client_id_cleanup = int(client_row.id)
+
+        booking = models.Booking(
+            center_id=center.id,
+            session_id=ys.id,
+            client_id=client_row.id,
+            status="confirmed",
+            booked_at=utcnow_naive(),
+        )
+        db.add(booking)
+        db.commit()
+        db.refresh(booking)
+
+        payment = models.Payment(
+            center_id=center.id,
+            client_id=client_row.id,
+            booking_id=booking.id,
+            amount=45.0,
+            currency="SAR",
+            payment_method="policy_paid_test",
+            status="paid",
+            created_at=utcnow_naive(),
+            paid_at=utcnow_naive(),
+        )
+        db.add(payment)
+        db.commit()
+        db.refresh(payment)
+
+        sig = checkout_status_signature(center.id, [payment.id])
+        r = client.get(
+            f"/checkout-status?center_id={center.id}&payment_id={payment.id}&sig={sig}",
+            follow_redirects=False,
+        )
+        assert r.status_code == 200
+        assert "تم الدفع بنجاح" in r.text
+        assert "الجلسات المؤكدة" in r.text
+        assert "عرض جدولي" in r.text
+        assert "/public/account" in r.text
+    finally:
+        db.rollback()
+        db.query(models.Payment).filter(models.Payment.payment_method == "policy_paid_test").delete(
+            synchronize_session=False
+        )
+        if client_id_cleanup is not None:
+            db.query(models.Booking).filter(models.Booking.client_id == client_id_cleanup).delete(
+                synchronize_session=False
+            )
+        db.query(models.YogaSession).filter(models.YogaSession.title == "جلسة اختبار الدفع").delete(
+            synchronize_session=False
+        )
+        db.query(models.Room).filter(models.Room.name.like("Room Paid %")).delete(synchronize_session=False)
+        db.query(models.Client).filter(models.Client.email.like("paid_flow_%@example.com")).delete(
             synchronize_session=False
         )
         db.commit()

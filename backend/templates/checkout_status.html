@@ -54,6 +54,24 @@
       display: none;
     }
     .poll-stop.is-visible { display: block; }
+    .paid-preview {
+      margin: 0 0 1rem;
+      padding: 0.75rem;
+      border: 1px solid #dbeafe;
+      background: #f8fbff;
+      border-radius: 10px;
+    }
+    .paid-preview h2 {
+      margin: 0 0 0.5rem;
+      font-size: 0.95rem;
+      color: #1e3a8a;
+    }
+    .paid-preview ul {
+      margin: 0;
+      padding-right: 1rem;
+      color: #334155;
+      font-size: 0.9rem;
+    }
   </style>
 </head>
 <body data-refresh-pending="{{ 1 if refresh_pending else 0 }}" data-poll-max="8">
@@ -64,8 +82,21 @@
     {% endif %}
     <h1>{{ headline }}</h1>
     <p>{{ body }}</p>
+    {% if status_kind == 'paid' and paid_sessions_preview %}
+    <div class="paid-preview">
+      <h2>الجلسات المؤكدة</h2>
+      <ul>
+        {% for row in paid_sessions_preview %}
+        <li>{{ row.session_title }} — {{ row.starts_at_display }}</li>
+        {% endfor %}
+      </ul>
+    </div>
+    {% endif %}
     <div class="actions">
       <a class="btn primary" href="{{ index_href }}">العودة للصفحة الرئيسية</a>
+      {% if valid_link and status_kind == 'paid' and schedule_href %}
+      <a class="btn ghost" href="{{ schedule_href }}">عرض جدولي</a>
+      {% endif %}
       {% if valid_link and refresh_pending %}
       <a class="btn ghost" href="{{ request.url.path }}?{{ request.url.query }}">تحديث الآن</a>
       {% endif %}
