@@ -11,6 +11,43 @@
         return map[ch] || ch;
       });
     }
+    /** Chromium uses Indic digits in numeric inputs when html lang is Arabic; lang=en on the control fixes display. */
+    var NUMERIC_INPUT_SELECTOR = [
+      'input[type="number"]',
+      'input[type="tel"]',
+      'input[type="date"]',
+      'input[type="time"]',
+      'input[type="datetime-local"]',
+      'input[type="week"]',
+      'input[type="month"]',
+      'input[type="range"]',
+      'input[inputmode="numeric"]',
+      'input[inputmode="decimal"]',
+      'input[inputmode="tel"]'
+    ].join(",");
+    function stampNumericInputLang(root) {
+      if (!root) return;
+      var nt = root.nodeType;
+      if (nt !== 1 && nt !== 11) return;
+      try {
+        if (nt === 1 && root.matches && root.matches(NUMERIC_INPUT_SELECTOR)) {
+          root.setAttribute("lang", "en");
+        }
+        if (root.querySelectorAll) {
+          var nodes = root.querySelectorAll(NUMERIC_INPUT_SELECTOR);
+          for (var i = 0; i < nodes.length; i += 1) nodes[i].setAttribute("lang", "en");
+        }
+      } catch (e) {}
+    }
+    function isNumericishInput(el) {
+      if (!el || (el.tagName || "").toLowerCase() !== "input") return false;
+      var t = (el.type || "").toLowerCase();
+      if (t === "number" || t === "tel" || t === "date" || t === "time" || t === "datetime-local" || t === "week" || t === "month" || t === "range") {
+        return true;
+      }
+      var im = (el.getAttribute("inputmode") || "").toLowerCase();
+      return im === "numeric" || im === "decimal" || im === "tel";
+    }
     function walk(node) {
       if (!node) return;
       var type = node.nodeType;
@@ -31,6 +68,44 @@
       var kids = node.childNodes || [];
       for (var i = 0; i < kids.length; i += 1) walk(kids[i]);
     }
-    walk(document.body);
+    function normalizeRoot() {
+      walk(document.body);
+      stampNumericInputLang(document.body);
+    }
+    normalizeRoot();
+
+    document.addEventListener(
+      "input",
+      function (ev) {
+        var el = ev.target;
+        if (!isNumericishInput(el)) return;
+        var nv = normalizeDigits(el.value);
+        if (nv === el.value) return;
+        el.value = nv;
+      },
+      true
+    );
+
+    if (window.MutationObserver && document.body) {
+      var obs = new MutationObserver(function (mutations) {
+        for (var i = 0; i < mutations.length; i += 1) {
+          var m = mutations[i];
+          if (m.type === "characterData" && m.target) {
+            walk(m.target);
+            continue;
+          }
+          var added = m.addedNodes || [];
+          for (var j = 0; j < added.length; j += 1) {
+            walk(added[j]);
+            stampNumericInputLang(added[j]);
+          }
+        }
+      });
+      obs.observe(document.body, {
+        childList: true,
+        subtree: true,
+        characterData: true,
+      });
+    }
   })();
 </script>
