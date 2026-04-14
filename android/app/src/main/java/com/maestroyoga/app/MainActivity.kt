@@ -77,7 +77,7 @@ class MainActivity : AppCompatActivity() {
                 try {
                     val token = NetworkModule.authApi().login(LoginRequest(email, password))
                     TokenStore.setAccessToken(token.accessToken)
-                    TokenStore.setLoginCredentials(email, password)
+                    TokenStore.setRefreshToken(token.refreshToken)
                     buildString {
                         appendLine(getString(R.string.msg_login_ok, token.user.email))
                         appendLine()

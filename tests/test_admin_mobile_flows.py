@@ -220,6 +220,12 @@ def test_mobile_compatible_api_flow(client):
     auth_response = client.post("/auth/login", json={"email": "owner@maestroyoga.local", "password": "Admin@12345"})
     assert auth_response.status_code == 200
     token = auth_response.json()["access_token"]
+    refresh = auth_response.json()["refresh_token"]
+    assert refresh
+    refreshed = client.post("/auth/refresh", json={"refresh_token": refresh})
+    assert refreshed.status_code == 200
+    refreshed_token = refreshed.json()["access_token"]
+    assert refreshed_token
     headers = {"Authorization": f"Bearer {token}"}
 
     assert client.get("/dashboard/summary", headers=headers).status_code == 200

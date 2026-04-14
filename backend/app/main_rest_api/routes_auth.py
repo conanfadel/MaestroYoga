@@ -32,8 +32,9 @@ def register_routes(router: APIRouter) -> None:
         db.commit()
         db.refresh(owner)
 
-        token = _d.create_access_token(owner.id)
-        return {"access_token": token, "user": owner}
+        access_token = _d.create_access_token(owner.id)
+        refresh_token = _d.create_refresh_token(owner.id)
+        return {"access_token": access_token, "refresh_token": refresh_token, "user": owner}
 
     @router.post("/auth/login", response_model=_d.schemas.TokenOut)
     def login(payload: _d.schemas.UserLogin, db: Session = Depends(_d.get_db)):
@@ -42,8 +43,16 @@ def register_routes(router: APIRouter) -> None:
             raise HTTPException(status_code=401, detail="Incorrect credentials")
         if not user.is_active:
             raise HTTPException(status_code=403, detail="User is inactive")
-        token = _d.create_access_token(user.id)
-        return {"access_token": token, "user": user}
+        access_token = _d.create_access_token(user.id)
+        refresh_token = _d.create_refresh_token(user.id)
+        return {"access_token": access_token, "refresh_token": refresh_token, "user": user}
+
+    @router.post("/auth/refresh", response_model=_d.schemas.TokenOut)
+    def refresh_token(payload: _d.schemas.RefreshTokenIn, db: Session = Depends(_d.get_db)):
+        user = _d.get_user_from_refresh_token_string(payload.refresh_token, db)
+        access_token = _d.create_access_token(user.id)
+        refresh_token = _d.create_refresh_token(user.id)
+        return {"access_token": access_token, "refresh_token": refresh_token, "user": user}
 
     @router.get("/auth/me", response_model=_d.schemas.UserOut)
     def me(user: _d.models.User = Depends(_d.get_current_user)):

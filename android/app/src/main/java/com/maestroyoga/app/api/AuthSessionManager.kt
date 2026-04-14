@@ -8,15 +8,11 @@ import retrofit2.HttpException
 object AuthSessionManager {
     suspend fun refreshTokenIfPossibleOn401(error: Exception): Boolean {
         if (error !is HttpException || error.code() != 401) return false
-        val creds = TokenStore.getLoginCredentials() ?: return false
+        val refresh = TokenStore.getRefreshToken() ?: return false
         return try {
-            val token = NetworkModule.authApi().login(
-                LoginRequest(
-                    email = creds.first,
-                    password = creds.second,
-                ),
-            )
+            val token = NetworkModule.authApi().refresh(RefreshTokenRequest(refreshToken = refresh))
             TokenStore.setAccessToken(token.accessToken)
+            TokenStore.setRefreshToken(token.refreshToken)
             true
         } catch (_: Exception) {
             TokenStore.clearAll()

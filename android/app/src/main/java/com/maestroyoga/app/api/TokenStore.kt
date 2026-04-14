@@ -12,8 +12,7 @@ object TokenStore {
 
     private const val PREFS_NAME = "maestro_auth_enc"
     private const val KEY_ACCESS = "access_token"
-    private const val KEY_EMAIL = "login_email"
-    private const val KEY_PASSWORD = "login_password"
+    private const val KEY_REFRESH = "refresh_token"
 
     private var prefs: SharedPreferences? = null
 
@@ -48,25 +47,18 @@ object TokenStore {
         prefs?.edit()?.remove(KEY_ACCESS)?.apply()
     }
 
-    fun setLoginCredentials(email: String, password: String) {
+    fun setRefreshToken(token: String?) {
         prefs?.edit()
-            ?.putString(KEY_EMAIL, email)
-            ?.putString(KEY_PASSWORD, password)
+            ?.putString(KEY_REFRESH, token)
             ?.apply()
     }
 
-    fun getLoginCredentials(): Pair<String, String>? {
-        val email = prefs?.getString(KEY_EMAIL, null)
-        val password = prefs?.getString(KEY_PASSWORD, null)
-        if (email.isNullOrBlank() || password.isNullOrBlank()) return null
-        return email to password
-    }
+    fun getRefreshToken(): String? = prefs?.getString(KEY_REFRESH, null)
 
     fun clearAll() {
         prefs?.edit()
             ?.remove(KEY_ACCESS)
-            ?.remove(KEY_EMAIL)
-            ?.remove(KEY_PASSWORD)
+            ?.remove(KEY_REFRESH)
             ?.apply()
     }
 }
