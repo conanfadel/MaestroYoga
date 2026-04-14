@@ -229,6 +229,69 @@ def test_checkout_status_clean_redirect_keeps_txn_response_code(
     assert "junk=1" not in loc
 
 
+def test_checkout_status_pending_even_when_redirect_claims_success(
+    client: TestClient, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    import time
+
+    from backend.app import models
+    monkeypatch.setenv("JWT_SECRET", "pending-success-redirect-secret")
+    from backend.app.checkout_status_urls import checkout_status_signature
+    from backend.app.database import SessionLocal
+    from backend.app.time_utils import utcnow_naive
+
+    db = SessionLocal()
+    try:
+        center = db.get(models.Center, 1)
+        if center is None:
+            center = models.Center(name="Policy Center", city="Riyadh")
+            db.add(center)
+            db.commit()
+            db.refresh(center)
+
+        client_row = models.Client(
+            center_id=center.id,
+            full_name="Policy Pending",
+            email=f"policy_pending_{int(time.time())}@example.com",
+            phone="+966500099991",
+        )
+        db.add(client_row)
+        db.commit()
+        db.refresh(client_row)
+
+        payment = models.Payment(
+            center_id=center.id,
+            client_id=client_row.id,
+            amount=25.0,
+            currency="SAR",
+            payment_method="policy_test",
+            status="pending",
+            created_at=utcnow_naive(),
+        )
+        db.add(payment)
+        db.commit()
+        db.refresh(payment)
+
+        sig = checkout_status_signature(center.id, [payment.id])
+        r = client.get(
+            f"/checkout-status?center_id={center.id}&payment_id={payment.id}&sig={sig}&success=true",
+            follow_redirects=False,
+        )
+        assert r.status_code == 200
+        assert "جاري تأكيد الدفع" in r.text or "ما زال «قيد الانتظار»" in r.text
+        db.refresh(payment)
+        assert payment.status == "pending"
+    finally:
+        db.query(models.Payment).filter(models.Payment.payment_method == "policy_test").delete(
+            synchronize_session=False
+        )
+        db.query(models.Client).filter(models.Client.email.like("policy_pending_%@example.com")).delete(
+            synchronize_session=False
+        )
+        db.commit()
+        db.close()
+
+
 def test_paymob_webhook_accepts_hmac_in_query_string(
     client: TestClient, monkeypatch: pytest.MonkeyPatch
 ) -> None:

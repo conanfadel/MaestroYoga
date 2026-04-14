@@ -2,6 +2,9 @@
 
 ## متغيرات بيئة مفيدة
 
+> سياسة ما بعد الدفع والاشتراك (Webhook كمصدر حقيقة، pending/paid/failed، والتنظيف) موجودة في:
+> [`payment_policy.md`](payment_policy.md)
+
 | المتغير | الوصف |
 |--------|--------|
 | `MAINTENANCE_MODE` | عند `1` أو `true`: تعطيل الواجهة للمستخدمين مع الإبقاء على `/health` و`/health/ready` و`/static/*` ومسارات webhook الدفع (`/payments/webhook/*`). يُعاد `503` مع `Retry-After`. |
