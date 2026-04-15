@@ -3633,6 +3633,86 @@
       background: rgba(15, 23, 42, 0.28);
       border-color: rgba(90, 175, 142, 0.3);
     }
+    /* Version 4: ultra-compact cards for mobile/tablet */
+    @media (max-width: 1024px) {
+      .sessions-cards {
+        gap: 6px;
+      }
+      .session-card {
+        border-radius: 9px;
+      }
+      .session-card__bar {
+        padding: 6px 8px;
+        font-size: 0.78rem !important;
+      }
+      .session-card__bar-title {
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+      .session-card__plan-badge {
+        margin-inline-start: auto;
+      }
+      .session-card__body {
+        grid-template-columns: minmax(60px, auto) 1fr;
+        gap: 4px 7px;
+        padding: 7px 8px;
+      }
+      .session-card__price {
+        font-size: 0.92rem !important;
+      }
+      .session-card__price span {
+        font-size: 0.62rem !important;
+      }
+      .session-card__when {
+        padding: 4px 6px;
+      }
+      .session-card__when-label {
+        display: none;
+      }
+      .session-card__when-main {
+        font-size: 0.72rem !important;
+        line-height: 1.18;
+      }
+      .session-card__when-relative {
+        display: none !important;
+      }
+      .session-card__details-toggle,
+      .session-card__info,
+      .session-card.is-expanded .session-card__info,
+      .session-card__row {
+        display: none !important;
+      }
+      .session-card__footer {
+        padding: 0 8px 7px;
+        gap: 5px;
+      }
+      #sessions-section .book-btn.book-btn-lg,
+      #sessions-section .sub-btn.book-btn-lg,
+      .plan-slot-book-form__btn,
+      .plan-slot-cancel-form__btn {
+        min-height: 32px;
+        font-size: 0.7rem;
+        padding: 5px 7px;
+      }
+      .session-card__plan-pick-row {
+        margin-top: 0;
+      }
+      .session-card__plan-pick-label {
+        font-size: 0.66rem;
+      }
+    }
+    @media (max-width: 520px) {
+      .session-card__body {
+        grid-template-columns: 1fr;
+      }
+      .session-card__when {
+        margin-top: 0;
+      }
+      #sessions-section .sessions-lead {
+        display: none;
+      }
+    }
     .mobile-focus-cta {
       display: none;
       margin: 14px 0 8px;
