@@ -11,3 +11,6 @@ render.env
 .env.staging
 backups/
 *.dump
+
+# ملاحظات/سجل محادثات محلي — لا يُرفَع
+Chat.md
