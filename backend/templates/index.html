@@ -3461,6 +3461,103 @@
     html[data-theme="dark"] .sessions-filters__summary {
       color: var(--charcoal);
     }
+    .mobile-focus-cta {
+      display: none;
+      margin: 14px 0 8px;
+      padding: 12px;
+      border-radius: 14px;
+      background: linear-gradient(135deg, rgba(90, 175, 142, 0.12), rgba(197, 160, 89, 0.12));
+      border: 1px solid rgba(90, 175, 142, 0.24);
+      gap: 10px;
+      align-items: center;
+      justify-content: center;
+    }
+    .mobile-focus-cta__label {
+      margin: 0;
+      font-size: 0.92rem;
+      color: var(--charcoal-muted);
+      font-weight: 700;
+      white-space: nowrap;
+    }
+    .mobile-focus-cta__actions {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+    .mobile-focus-cta__actions .btn {
+      min-width: 112px;
+    }
+    .mobile-secondary-details {
+      margin: 12px 0;
+      border: 1px solid rgba(90, 175, 142, 0.22);
+      border-radius: 12px;
+      background: var(--white);
+      overflow: clip;
+    }
+    .mobile-secondary-details > summary {
+      cursor: pointer;
+      list-style: none;
+      padding: 12px 14px;
+      font-weight: 800;
+      color: var(--charcoal);
+      background: linear-gradient(135deg, rgba(243, 248, 245, 0.95), rgba(248, 245, 236, 0.95));
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+    }
+    .mobile-secondary-details > summary::-webkit-details-marker {
+      display: none;
+    }
+    .mobile-secondary-details > summary::after {
+      content: "▼";
+      font-size: 0.8rem;
+      color: var(--gold-dark);
+      transition: transform 0.2s ease;
+    }
+    .mobile-secondary-details[open] > summary::after {
+      transform: rotate(180deg);
+    }
+    .mobile-secondary-details__body {
+      padding: 10px 12px 6px;
+    }
+    @media (max-width: 1024px) {
+      .mobile-focus-cta {
+        display: flex;
+      }
+      .mobile-secondary-collapsible {
+        margin-top: 10px;
+      }
+      .mobile-secondary-collapsible > .mobile-secondary-details {
+        display: block;
+      }
+      .mobile-secondary-collapsible > :not(.mobile-secondary-details) {
+        display: none !important;
+      }
+      #plans-section-details {
+        margin-top: 8px;
+      }
+      #plans-section-details:not([open]) .plans-shell {
+        display: none;
+      }
+    }
+    @media (min-width: 1025px) {
+      .mobile-secondary-details {
+        border: 0;
+        background: transparent;
+        margin: 0;
+      }
+      .mobile-secondary-details > summary {
+        display: none;
+      }
+      .mobile-secondary-details__body {
+        padding: 0;
+      }
+      .mobile-focus-cta {
+        display: none !important;
+      }
+    }
   </style>
 </head>
 <body>
@@ -3530,6 +3627,14 @@
       {% include "partials/index_hero_toolbar.html" %}
     </header>
 
+    <section class="mobile-focus-cta" aria-label="إجراءات سريعة للموبايل">
+      <p class="mobile-focus-cta__label">ابدأ بسرعة:</p>
+      <div class="mobile-focus-cta__actions">
+        <a class="btn primary" href="#sessions-section">احجز الآن</a>
+        <a class="btn ghost" href="#plans-section">خططي وأسعاري</a>
+      </div>
+    </section>
+
     {% include "partials/index_trust_bar.html" %}
 
     {% include "partials/index_content_highlights.html" %}
@@ -3541,7 +3646,14 @@
     </div>
 
 
-    {% include "partials/index_news_ticker.html" %}
+    <section class="mobile-secondary-collapsible" aria-label="الأخبار والتحديثات">
+      <details class="mobile-secondary-details">
+        <summary>أخبار وتحديثات المركز</summary>
+        <div class="mobile-secondary-details__body">
+          {% include "partials/index_news_ticker.html" %}
+        </div>
+      </details>
+    </section>
 
     {% if index_page.steps.show %}
     <div class="steps" aria-label="خطوات الدفع">
@@ -3554,37 +3666,44 @@
     <hr class="section-divider" aria-hidden="true" />
 
     {% if index_page.loyalty_block.show %}
-    <section id="loyalty-rewards-section" class="loyalty-program loyalty-program--compact-table" aria-label="برنامج المكافآت والولاء">
-      <h2 class="booking-block-heading booking-block-heading--flush-top">{{ index_page.loyalty_block.title }}</h2>
-      <p class="loyalty-program__lead">
-        {{ index_page.loyalty_block.lead | safe }}
-      </p>
-      <details class="loyalty-program__details" id="loyalty-table-details">
-        <summary class="loyalty-program__summary">
-          <span class="loyalty-program__summary-text">جدول المستويات والمكافآت</span>
-          <span class="loyalty-program__summary-hint">عرض / إخفاء</span>
-        </summary>
-        <div class="loyalty-program__table-wrap">
-          <table>
-            <thead>
-              <tr>
-                <th scope="col">وسام</th>
-                <th scope="col">المستوى</th>
-                <th scope="col">عدد الجلسات المؤكدة</th>
-                <th scope="col">مكافآت ومزايا مقترحة</th>
-              </tr>
-            </thead>
-            <tbody>
-              {% for row in loyalty_program_rows %}
-              <tr class="{{ row.row_class }}">
-                <td class="loyalty-program__medal" role="img" aria-hidden="true">{{ row.medal }}</td>
-                <td class="loyalty-program__tier">{{ row.label }}</td>
-                <td class="loyalty-program__range">{{ row.range_label }}</td>
-                <td class="loyalty-program__reward">{{ row.reward }}</td>
-              </tr>
-              {% endfor %}
-            </tbody>
-          </table>
+    <section class="mobile-secondary-collapsible" aria-label="برنامج الولاء">
+      <details class="mobile-secondary-details">
+        <summary>برنامج الولاء والمكافآت</summary>
+        <div class="mobile-secondary-details__body">
+          <section id="loyalty-rewards-section" class="loyalty-program loyalty-program--compact-table" aria-label="برنامج المكافآت والولاء">
+            <h2 class="booking-block-heading booking-block-heading--flush-top">{{ index_page.loyalty_block.title }}</h2>
+            <p class="loyalty-program__lead">
+              {{ index_page.loyalty_block.lead | safe }}
+            </p>
+            <details class="loyalty-program__details" id="loyalty-table-details">
+              <summary class="loyalty-program__summary">
+                <span class="loyalty-program__summary-text">جدول المستويات والمكافآت</span>
+                <span class="loyalty-program__summary-hint">عرض / إخفاء</span>
+              </summary>
+              <div class="loyalty-program__table-wrap">
+                <table>
+                  <thead>
+                    <tr>
+                      <th scope="col">وسام</th>
+                      <th scope="col">المستوى</th>
+                      <th scope="col">عدد الجلسات المؤكدة</th>
+                      <th scope="col">مكافآت ومزايا مقترحة</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {% for row in loyalty_program_rows %}
+                    <tr class="{{ row.row_class }}">
+                      <td class="loyalty-program__medal" role="img" aria-hidden="true">{{ row.medal }}</td>
+                      <td class="loyalty-program__tier">{{ row.label }}</td>
+                      <td class="loyalty-program__range">{{ row.range_label }}</td>
+                      <td class="loyalty-program__reward">{{ row.reward }}</td>
+                    </tr>
+                    {% endfor %}
+                  </tbody>
+                </table>
+              </div>
+            </details>
+          </section>
         </div>
       </details>
     </section>
@@ -3598,7 +3717,14 @@
       {% include "partials/index_sessions_panel.html" %}
 
       {% if pinned_public_post or public_posts_teasers %}
-      {% include "partials/index_news_showcase.html" %}
+      <section class="mobile-secondary-collapsible" aria-label="تفاصيل أخبار المركز">
+        <details class="mobile-secondary-details">
+          <summary>تفاصيل الأخبار</summary>
+          <div class="mobile-secondary-details__body">
+            {% include "partials/index_news_showcase.html" %}
+          </div>
+        </details>
+      </section>
       {% endif %}
       </div>
 
@@ -3675,32 +3801,53 @@
         {% endif %}
 
         {% if index_page.testimonials.show %}
-        <section id="testimonials-section" class="card" aria-label="آراء العملاء">
-          <h2 class="booking-block-heading booking-block-heading--flush-top">آراء العملاء</h2>
-          <div class="testimonial reveal-on-scroll">{{ index_page.testimonials.t1 | safe }}</div>
-          <div class="testimonial reveal-on-scroll">{{ index_page.testimonials.t2 | safe }}</div>
-          <div class="testimonial reveal-on-scroll">{{ index_page.testimonials.t3 | safe }}</div>
+        <section class="mobile-secondary-collapsible" aria-label="آراء العملاء">
+          <details class="mobile-secondary-details">
+            <summary>آراء العملاء</summary>
+            <div class="mobile-secondary-details__body">
+              <section id="testimonials-section" class="card" aria-label="آراء العملاء">
+                <h2 class="booking-block-heading booking-block-heading--flush-top">آراء العملاء</h2>
+                <div class="testimonial reveal-on-scroll">{{ index_page.testimonials.t1 | safe }}</div>
+                <div class="testimonial reveal-on-scroll">{{ index_page.testimonials.t2 | safe }}</div>
+                <div class="testimonial reveal-on-scroll">{{ index_page.testimonials.t3 | safe }}</div>
+              </section>
+            </div>
+          </details>
         </section>
         {% endif %}
 
         {% if index_page.faq_section.show %}
-        <section id="faq-section" class="card" aria-label="الأسئلة الشائعة">
-          <h2 class="booking-block-heading booking-block-heading--flush-top">{{ index_page.faq_section.heading }}</h2>
-          {% for faq in faq_items %}
-            <div class="faq-item reveal-on-scroll"><b>{{ faq.question }}</b><br/><span class="small">{{ faq.answer }}</span></div>
-          {% else %}
-            <div class="faq-item reveal-on-scroll"><span class="small">لا توجد أسئلة شائعة متاحة حاليًا.</span></div>
-          {% endfor %}
+        <section class="mobile-secondary-collapsible" aria-label="الأسئلة الشائعة">
+          <details class="mobile-secondary-details">
+            <summary>{{ index_page.faq_section.heading }}</summary>
+            <div class="mobile-secondary-details__body">
+              <section id="faq-section" class="card" aria-label="الأسئلة الشائعة">
+                <h2 class="booking-block-heading booking-block-heading--flush-top">{{ index_page.faq_section.heading }}</h2>
+                {% for faq in faq_items %}
+                  <div class="faq-item reveal-on-scroll"><b>{{ faq.question }}</b><br/><span class="small">{{ faq.answer }}</span></div>
+                {% else %}
+                  <div class="faq-item reveal-on-scroll"><span class="small">لا توجد أسئلة شائعة متاحة حاليًا.</span></div>
+                {% endfor %}
+              </section>
+            </div>
+          </details>
         </section>
         {% endif %}
       </aside>
     </main>
 
     {% if index_page.refund.show %}
-    <section id="refund-policy" class="index-refund-policy card" aria-labelledby="refund-policy-title">
-      <h2 id="refund-policy-title" class="booking-block-heading booking-block-heading--flush-top">{{ index_page.refund.title }}</h2>
-      <p>{{ index_refund_p1_html | safe }}</p>
-      <p>{{ index_page.refund.p2 }}</p>
+    <section class="mobile-secondary-collapsible" aria-label="سياسة الاسترجاع">
+      <details class="mobile-secondary-details">
+        <summary>{{ index_page.refund.title }}</summary>
+        <div class="mobile-secondary-details__body">
+          <section id="refund-policy" class="index-refund-policy card" aria-labelledby="refund-policy-title">
+            <h2 id="refund-policy-title" class="booking-block-heading booking-block-heading--flush-top">{{ index_page.refund.title }}</h2>
+            <p>{{ index_refund_p1_html | safe }}</p>
+            <p>{{ index_page.refund.p2 }}</p>
+          </section>
+        </div>
+      </details>
     </section>
     {% endif %}
 
