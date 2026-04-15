@@ -1433,6 +1433,15 @@
       grid-area: aside;
       min-width: 0;
     }
+    .grid-two--with-wide-row {
+      grid-template-areas:
+        "main aside"
+        "full full";
+    }
+    .grid-two--with-wide-row > .grid-two__full {
+      grid-area: full;
+      min-width: 0;
+    }
     .grid-two__main {
       display: flex;
       flex-direction: column;
@@ -3461,7 +3470,106 @@
     html[data-theme="dark"] .sessions-filters__summary {
       color: var(--charcoal);
     }
+    /* سطح المكتب: أخبار + أسئلة شائعة (صف كامل) + سياسة استرداد — متماسك مع باقي الصفحة */
+    @media (min-width: 1025px) {
+      .index-news-strip {
+        max-width: min(1120px, 100%);
+        margin: 0 auto 18px;
+        padding: 0 10px;
+      }
+      .index-news-strip .mobile-secondary-details {
+        margin: 0;
+        border-radius: 16px;
+        border: 1px solid rgba(197, 160, 89, 0.24);
+        background: linear-gradient(180deg, rgba(255, 255, 255, 0.98) 0%, rgba(243, 248, 245, 0.95) 100%);
+        box-shadow: 0 10px 32px rgba(45, 52, 54, 0.07);
+        overflow: hidden;
+      }
+      .index-news-strip .mobile-secondary-details__body {
+        padding: 14px 18px 16px;
+      }
+      .index-news-showcase-wrap .mobile-secondary-details {
+        margin: 0;
+        border-radius: 16px;
+        border: 1px solid rgba(90, 175, 142, 0.22);
+        background: var(--white);
+        box-shadow: 0 8px 28px rgba(45, 52, 54, 0.06);
+      }
+      .index-news-showcase-wrap .mobile-secondary-details__body {
+        padding: 16px 18px 18px;
+      }
+      .index-desktop-faq {
+        margin-top: 4px;
+      }
+      .index-desktop-faq .mobile-secondary-details {
+        margin: 0;
+        border-radius: 18px;
+        border: 1px solid rgba(197, 160, 89, 0.26);
+        background: linear-gradient(165deg, #ffffff 0%, rgba(248, 250, 249, 0.98) 45%, rgba(252, 249, 242, 0.96) 100%);
+        box-shadow: 0 14px 42px rgba(45, 52, 54, 0.08);
+      }
+      .index-desktop-faq .mobile-secondary-details__body {
+        padding: 22px 26px 26px;
+      }
+      .index-desktop-faq #faq-section.card {
+        border: 0;
+        box-shadow: none;
+        margin: 0;
+        padding: 0;
+        background: transparent;
+      }
+      .index-desktop-faq .faq-item {
+        border-radius: 12px;
+        margin-bottom: 10px;
+        padding: 14px 16px;
+        background: rgba(255, 255, 255, 0.72);
+        border: 1px solid rgba(170, 240, 209, 0.45);
+      }
+      .index-refund-outer {
+        max-width: min(1120px, 100%);
+        margin: 28px auto 12px;
+        padding: 0 10px;
+      }
+      .index-refund-block .mobile-secondary-details {
+        margin: 0;
+        border-radius: 18px;
+        border: 1px solid rgba(90, 175, 142, 0.28);
+        background: linear-gradient(180deg, #ffffff 0%, rgba(240, 253, 250, 0.5) 100%);
+        box-shadow: 0 12px 38px rgba(45, 52, 54, 0.07);
+      }
+      .index-refund-block .mobile-secondary-details__body {
+        padding: 22px 26px 26px;
+      }
+      .index-refund-block .index-refund-policy.card {
+        border: 0;
+        box-shadow: none;
+        margin: 0;
+        padding: 0;
+        background: transparent;
+      }
+      .index-refund-block .index-refund-policy p {
+        line-height: 1.75;
+      }
+    }
+    html[data-theme="dark"] .index-news-strip .mobile-secondary-details,
+    html[data-theme="dark"] .index-news-showcase-wrap .mobile-secondary-details,
+    html[data-theme="dark"] .index-desktop-faq .mobile-secondary-details,
+    html[data-theme="dark"] .index-refund-block .mobile-secondary-details {
+      background: linear-gradient(165deg, rgba(26, 32, 40, 0.98) 0%, rgba(18, 32, 28, 0.55) 100%);
+      border-color: rgba(212, 184, 120, 0.28);
+      box-shadow: 0 16px 44px rgba(0, 0, 0, 0.35);
+    }
+    html[data-theme="dark"] .index-desktop-faq .faq-item {
+      background: rgba(15, 23, 42, 0.45);
+      border-color: rgba(90, 175, 142, 0.35);
+    }
+    @media (max-width: 1024px) {
+      .grid-two__full.index-desktop-faq-slot {
+        order: 8;
+      }
+    }
     /* Session cards — نفس التصميم المضغوط (جوال + لوحي + سطح مكتب / لابتوب) */
+    @media (max-width: 1024px) {
       #sessions-section.sessions-panel {
         padding: 12px 8px;
       }
@@ -3605,6 +3713,7 @@
       .session-card__footer > .book-btn {
         width: 100%;
       }
+    }
 
     @media (min-width: 1025px) {
       #sessions-section.sessions-panel {
@@ -4056,7 +4165,8 @@
     </div>
 
 
-    <section class="mobile-secondary-collapsible" aria-label="الأخبار والتحديثات">
+    <div class="index-news-strip">
+    <section class="mobile-secondary-collapsible index-news-strip__inner" aria-label="الأخبار والتحديثات">
       <details class="mobile-secondary-details">
         <summary>أخبار وتحديثات المركز</summary>
         <div class="mobile-secondary-details__body">
@@ -4064,6 +4174,7 @@
         </div>
       </details>
     </section>
+    </div>
 
     {% if index_page.steps.show %}
     <div class="steps" aria-label="خطوات الدفع">
@@ -4122,12 +4233,12 @@
     {% include "partials/index_flash_messages.html" %}
     <div id="plan-batch-success-host" class="plan-batch-success-host" hidden></div>
 
-    <main id="main-content" class="grid-two">
+    <main id="main-content" class="grid-two{% if index_page.faq_section.show %} grid-two--with-wide-row{% endif %}">
       <div class="grid-two__main">
       {% include "partials/index_sessions_panel.html" %}
 
       {% if pinned_public_post or public_posts_teasers %}
-      <section class="mobile-secondary-collapsible" aria-label="تفاصيل أخبار المركز">
+      <section class="mobile-secondary-collapsible index-news-showcase-wrap" aria-label="تفاصيل أخبار المركز">
         <details class="mobile-secondary-details">
           <summary>تفاصيل الأخبار</summary>
           <div class="mobile-secondary-details__body">
@@ -4231,8 +4342,11 @@
         </section>
         {% endif %}
 
-        {% if index_page.faq_section.show %}
-        <section class="mobile-secondary-collapsible" aria-label="الأسئلة الشائعة">
+      </aside>
+
+      {% if index_page.faq_section.show %}
+      <div class="grid-two__full index-desktop-faq-slot">
+        <section class="mobile-secondary-collapsible index-desktop-faq" aria-label="الأسئلة الشائعة">
           <details class="mobile-secondary-details">
             <summary>{{ index_page.faq_section.heading }}</summary>
             <div class="mobile-secondary-details__body">
@@ -4247,12 +4361,13 @@
             </div>
           </details>
         </section>
-        {% endif %}
-      </aside>
+      </div>
+      {% endif %}
     </main>
 
     {% if index_page.refund.show %}
-    <section class="mobile-secondary-collapsible" aria-label="سياسة الاسترجاع">
+    <div class="index-refund-outer">
+    <section class="mobile-secondary-collapsible index-refund-block" aria-label="سياسة الاسترجاع">
       <details class="mobile-secondary-details">
         <summary>{{ index_page.refund.title }}</summary>
         <div class="mobile-secondary-details__body">
@@ -4264,6 +4379,7 @@
         </div>
       </details>
     </section>
+    </div>
     {% endif %}
 
     <div class="sticky-booking" id="sticky-booking" aria-live="polite">
@@ -5473,6 +5589,24 @@
     })();
   </script>
   {% endif %}
+  <script>
+    (function () {
+      function syncMobileSecondaryDetails() {
+        var wide =
+          typeof window.matchMedia === "function" &&
+          window.matchMedia("(min-width: 1025px)").matches;
+        document.querySelectorAll("details.mobile-secondary-details").forEach(function (el) {
+          if (wide) el.open = true;
+        });
+      }
+      if (document.readyState === "loading") {
+        document.addEventListener("DOMContentLoaded", syncMobileSecondaryDetails);
+      } else {
+        syncMobileSecondaryDetails();
+      }
+      window.addEventListener("resize", syncMobileSecondaryDetails);
+    })();
+  </script>
   {% include '_force_english_digits.html' %}
 </body>
 </html>
