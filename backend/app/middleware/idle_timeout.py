@@ -38,6 +38,9 @@ def _skip_path(path: str) -> bool:
         return True
     if path.startswith("/payments/webhook"):
         return True
+    # Avoid redirect loops: idle middleware may redirect to logout routes.
+    if path in {"/public/logout", "/admin/logout"}:
+        return True
     if path in {"/favicon.ico", "/openapi.json", "/docs", "/redoc", "/sw.js"}:
         return True
     if path.startswith("/docs") or path.startswith("/redoc"):
