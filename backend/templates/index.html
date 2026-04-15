@@ -3461,8 +3461,7 @@
     html[data-theme="dark"] .sessions-filters__summary {
       color: var(--charcoal);
     }
-    /* Version 3: compact list-row session cards for phone/tablet */
-    @media (max-width: 1024px) {
+    /* Session cards — نفس التصميم المضغوط (جوال + لوحي + سطح مكتب / لابتوب) */
       #sessions-section.sessions-panel {
         padding: 12px 8px;
       }
@@ -3606,7 +3605,37 @@
       .session-card__footer > .book-btn {
         width: 100%;
       }
+
+    @media (min-width: 1025px) {
+      #sessions-section.sessions-panel {
+        padding: 14px 16px;
+      }
+      #sessions-section .sessions-lead {
+        -webkit-line-clamp: 2;
+        font-size: 0.88rem;
+        margin-bottom: 10px;
+      }
+      #sessions-section .session-card__bar {
+        font-size: 0.88rem !important;
+        padding: 8px 11px;
+      }
+      #sessions-section .session-card__body {
+        padding: 9px 11px;
+        gap: 7px 10px;
+      }
+      #sessions-section .session-card__when-main {
+        font-size: 0.82rem !important;
+      }
+      #sessions-section .session-card__price {
+        font-size: 1.05rem !important;
+      }
+      #sessions-section .session-card:hover,
+      html[dir="rtl"] #sessions-section .session-card:hover {
+        transform: translateY(-2px) !important;
+        box-shadow: 0 8px 22px rgba(15, 23, 42, 0.11) !important;
+      }
     }
+
     @media (max-width: 720px) {
       .sessions-cards {
         grid-template-columns: 1fr !important;
@@ -3760,6 +3789,38 @@
       font-size: 0.8rem;
       border-radius: 10px;
       padding: 7px 10px;
+    }
+    /* عمود واحد في الشريط الجانبي على PC/لابتوب — نفس وضوح بطاقات الجوال دون ضغط ثلاثة أعمدة */
+    @media (min-width: 981px) {
+      aside #plans-section .plans-cards {
+        grid-template-columns: 1fr;
+        gap: 12px;
+      }
+      aside #plans-section .plan-card {
+        padding: 13px 14px 15px;
+      }
+      aside #plans-section .plan-head h3 {
+        font-size: 1rem;
+      }
+      aside #plans-section .plan-meta > div {
+        font-size: 0.82rem;
+        padding: 8px 9px;
+      }
+      aside #plans-section .plan-meta .k {
+        font-size: 0.62rem;
+      }
+      aside #plans-section .plan-card .sub-btn {
+        min-height: 40px;
+        font-size: 0.84rem;
+        padding: 8px 12px;
+      }
+      aside #plans-section .plan-recommended-pill {
+        font-size: 0.66rem;
+        padding: 4px 9px;
+      }
+      aside #plans-section .best-note--recommended {
+        font-size: 0.72rem;
+      }
     }
     @media (max-width: 1024px) {
       #plans-section .plans-shell {
