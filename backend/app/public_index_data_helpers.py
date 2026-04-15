@@ -104,6 +104,7 @@ def build_public_index_template_context(
     index_hero_app_name: str,
     session_id: str | None = None,
 ) -> dict:
+    from .public_plan_helpers import recommended_plan_id_by_daily_price
     from .public_subscription_helpers import empty_public_subscription_context
 
     sub_ctx = subscription_ctx if subscription_ctx is not None else empty_public_subscription_context(center.id)
@@ -117,6 +118,7 @@ def build_public_index_template_context(
         "index_refund_p1_html": index_refund_p1_html,
         "sessions": rows,
         "plans": plan_rows,
+        "recommended_plan_id": recommended_plan_id_by_daily_price(plan_rows),
         "payment": payment,
         "msg": msg,
         "public_user": public_user,
