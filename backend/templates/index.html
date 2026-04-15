@@ -3633,146 +3633,121 @@
       background: rgba(15, 23, 42, 0.28);
       border-color: rgba(90, 175, 142, 0.3);
     }
-    /* Version 4: ultra-compact cards for mobile/tablet (feature-flagged) */
+    /* Subscription comparison redesign */
+    #plans-section .plans-shell {
+      border-radius: 18px;
+      padding: 16px;
+      background: linear-gradient(180deg, rgba(255, 255, 255, 0.98) 0%, rgba(243, 248, 245, 0.95) 100%);
+      border: 1px solid rgba(197, 160, 89, 0.3);
+    }
+    #plans-section .plans-cards {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 12px;
+      align-items: stretch;
+    }
+    #plans-section .plan-card {
+      border-radius: 16px;
+      padding: 12px 12px 14px;
+      box-shadow: 0 8px 24px rgba(15, 23, 42, 0.08);
+      border: 1px solid rgba(45, 52, 54, 0.12);
+      background: linear-gradient(180deg, #ffffff 0%, #fbfdfc 100%);
+    }
+    #plans-section .plan-head {
+      margin-bottom: 8px;
+      gap: 6px;
+      align-items: center;
+    }
+    #plans-section .plan-head h3 {
+      font-size: 0.95rem;
+      line-height: 1.25;
+    }
+    #plans-section .plan-badge {
+      font-size: 0.68rem;
+      padding: 3px 8px;
+      gap: 4px;
+    }
+    #plans-section .plan-badge svg {
+      width: 12px;
+      height: 12px;
+    }
+    #plans-section .plan-meta {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 6px;
+      margin-bottom: 8px;
+    }
+    #plans-section .plan-meta > div {
+      padding: 7px 8px;
+      border-radius: 10px;
+      text-align: center;
+      font-size: 0.78rem;
+      line-height: 1.25;
+    }
+    #plans-section .plan-meta .k {
+      font-size: 0.6rem;
+      margin-bottom: 2px;
+      letter-spacing: 0.02em;
+    }
+    #plans-section .plan-meta > div:nth-child(2) {
+      background: linear-gradient(135deg, rgba(197, 160, 89, 0.2), rgba(197, 160, 89, 0.08));
+      border-color: rgba(197, 160, 89, 0.42);
+      font-weight: 900;
+    }
+    #plans-section .best-note {
+      margin-top: 4px;
+      font-size: 0.72rem;
+    }
+    #plans-section .plan-card .sub-btn {
+      min-height: 38px;
+      font-size: 0.8rem;
+      border-radius: 10px;
+      padding: 7px 10px;
+    }
     @media (max-width: 1024px) {
-      body.compact-v4-enabled .sessions-cards {
-        gap: 6px;
+      #plans-section .plans-shell {
+        padding: 10px;
+        border-radius: 14px;
       }
-      body.compact-v4-enabled .session-card {
-        border-radius: 9px;
-      }
-      body.compact-v4-enabled .session-card__bar {
-        padding: 6px 8px;
-        font-size: 0.78rem !important;
-      }
-      body.compact-v4-enabled .session-card__bar-title {
-        overflow: hidden;
-        text-overflow: ellipsis;
-        white-space: nowrap;
-      }
-      body.compact-v4-enabled .session-card__plan-badge {
-        margin-inline-start: auto;
-      }
-      body.compact-v4-enabled .session-card__body {
-        grid-template-columns: minmax(60px, auto) 1fr;
-        gap: 4px 7px;
-        padding: 7px 8px;
-      }
-      body.compact-v4-enabled .session-card__price {
-        font-size: 0.92rem !important;
-      }
-      body.compact-v4-enabled .session-card__price span {
-        font-size: 0.62rem !important;
-      }
-      body.compact-v4-enabled .session-card__when {
-        padding: 4px 6px;
-      }
-      body.compact-v4-enabled .session-card__when-label {
-        display: none;
-      }
-      body.compact-v4-enabled .session-card__when-main {
-        font-size: 0.72rem !important;
-        line-height: 1.18;
-      }
-      body.compact-v4-enabled .session-card__when-relative {
-        display: none !important;
-      }
-      body.compact-v4-enabled .session-card__details-toggle,
-      body.compact-v4-enabled .session-card__info,
-      body.compact-v4-enabled .session-card.is-expanded .session-card__info,
-      body.compact-v4-enabled .session-card__row {
-        display: none !important;
-      }
-      body.compact-v4-enabled .session-card__footer {
-        padding: 0 8px 7px;
-        gap: 5px;
-      }
-      body.compact-v4-enabled #sessions-section .book-btn.book-btn-lg,
-      body.compact-v4-enabled #sessions-section .sub-btn.book-btn-lg,
-      body.compact-v4-enabled .plan-slot-book-form__btn,
-      body.compact-v4-enabled .plan-slot-cancel-form__btn {
-        min-height: 32px;
-        font-size: 0.7rem;
-        padding: 5px 7px;
-      }
-      body.compact-v4-enabled .session-card__plan-pick-row {
-        margin-top: 0;
-      }
-      body.compact-v4-enabled .session-card__plan-pick-label {
-        font-size: 0.66rem;
-      }
-      body.compact-v4-enabled #plans-section .plans-shell {
-        padding: 8px;
-        border-radius: 12px;
-      }
-      body.compact-v4-enabled #plans-section .plans-cards {
+      #plans-section .plans-cards {
         gap: 8px;
       }
-      body.compact-v4-enabled #plans-section .plan-card {
-        padding: 8px 8px 9px;
-        border-radius: 10px;
-        box-shadow: 0 1px 8px rgba(15, 23, 42, 0.08);
+      #plans-section .plan-card {
+        border-radius: 12px;
+        padding: 9px 9px 10px;
+        box-shadow: 0 2px 12px rgba(15, 23, 42, 0.08);
       }
-      body.compact-v4-enabled #plans-section .plan-head {
-        margin-bottom: 6px;
-        gap: 6px;
-      }
-      body.compact-v4-enabled #plans-section .plan-head h3 {
+      #plans-section .plan-head h3 {
         font-size: 0.84rem;
-        line-height: 1.2;
-        display: -webkit-box;
-        -webkit-line-clamp: 1;
-        -webkit-box-orient: vertical;
-        overflow: hidden;
       }
-      body.compact-v4-enabled #plans-section .plan-badge {
-        font-size: 0.6rem;
+      #plans-section .plan-badge {
+        font-size: 0.62rem;
         padding: 2px 6px;
-        white-space: nowrap;
       }
-      body.compact-v4-enabled #plans-section .plan-badge svg {
+      #plans-section .plan-badge svg {
         display: none;
       }
-      body.compact-v4-enabled #plans-section .plan-meta {
-        grid-template-columns: repeat(3, minmax(0, 1fr));
-        gap: 4px;
-        margin-bottom: 6px;
-      }
-      body.compact-v4-enabled #plans-section .plan-meta > div {
-        padding: 5px 6px;
-        border-radius: 8px;
-        font-size: 0.68rem;
-        text-align: center;
-      }
-      body.compact-v4-enabled #plans-section .plan-meta .k {
-        font-size: 0.54rem;
-        margin-bottom: 2px;
-      }
-      body.compact-v4-enabled #plans-section .best-note {
-        margin-top: 2px;
-        font-size: 0.62rem;
-      }
-      body.compact-v4-enabled #plans-section .plan-card__actions {
-        padding-top: 6px;
-      }
-      body.compact-v4-enabled #plans-section .plan-card .sub-btn {
-        min-height: 34px;
+      #plans-section .plan-meta > div {
         font-size: 0.72rem;
-        padding: 5px 7px;
-        border-radius: 9px;
+        padding: 6px;
+      }
+      #plans-section .plan-meta .k {
+        font-size: 0.56rem;
+      }
+      #plans-section .plan-card .sub-btn {
+        min-height: 34px;
+        font-size: 0.74rem;
+        padding: 6px 8px;
       }
     }
-    @media (max-width: 520px) {
-      body.compact-v4-enabled .session-card__body {
+    @media (max-width: 720px) {
+      #plans-section .plans-cards {
         grid-template-columns: 1fr;
       }
-      body.compact-v4-enabled .session-card__when {
-        margin-top: 0;
+      #plans-section .plan-meta {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
       }
-      body.compact-v4-enabled #sessions-section .sessions-lead {
-        display: none;
-      }
-      body.compact-v4-enabled #plans-section .plan-meta {
+    }
+    @media (max-width: 460px) {
+      #plans-section .plan-meta {
         grid-template-columns: repeat(2, minmax(0, 1fr));
       }
     }
@@ -3881,33 +3856,6 @@
       var h = new Date().getHours();
       var cls = h < 12 ? "time-morning" : h < 17 ? "time-afternoon" : h < 20 ? "time-evening" : "time-night";
       document.body.classList.add(cls);
-      var densityKey = "maestro_mobile_density_mode";
-      var defaultDensity = "ultra";
-      var queryDensity = null;
-      try {
-        queryDensity = new URLSearchParams(window.location.search).get("density");
-      } catch (_) {}
-      if (queryDensity === "classic" || queryDensity === "ultra") {
-        try { localStorage.setItem(densityKey, queryDensity); } catch (_) {}
-      }
-      var densityMode = defaultDensity;
-      try {
-        var storedDensity = localStorage.getItem(densityKey);
-        if (storedDensity === "classic" || storedDensity === "ultra") {
-          densityMode = storedDensity;
-        }
-      } catch (_) {}
-      if (densityMode === "ultra") {
-        document.body.classList.add("compact-v4-enabled");
-      }
-      window.MaestroMobileDensity = {
-        get: function () { return densityMode; },
-        set: function (mode) {
-          if (mode !== "classic" && mode !== "ultra") return false;
-          try { localStorage.setItem(densityKey, mode); } catch (_) {}
-          return true;
-        }
-      };
     })();
   </script>
   <a class="skip-link" href="#main-content">تخطي إلى المحتوى</a>
