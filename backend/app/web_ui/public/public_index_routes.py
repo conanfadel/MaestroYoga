@@ -5,6 +5,7 @@ from __future__ import annotations
 from urllib.parse import urlencode
 
 from fastapi import APIRouter
+from sqlalchemy import func
 
 from .. import impl_state as _s
 
@@ -50,7 +51,11 @@ def register_public_index_routes(router: APIRouter) -> None:
 
         public_user = _s._current_public_user(request, db)
         center = _s.resolve_public_center_or_404(db, center_id)
-    
+        if public_user and _s.ensure_public_client_row_if_missing(
+            db, center_id=int(center.id), public_user=public_user
+        ):
+            db.commit()
+
         if center.name == _s.DEMO_CENTER_NAME:
             _s.ensure_demo_news_posts(db, center.id)
     
@@ -88,7 +93,7 @@ def register_public_index_routes(router: APIRouter) -> None:
                     db.query(_s.models.Client)
                     .filter(
                         _s.models.Client.center_id == center.id,
-                        _s.models.Client.email == email,
+                        func.lower(func.trim(_s.models.Client.email)) == email,
                     )
                     .first()
                 )

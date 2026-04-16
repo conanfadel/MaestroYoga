@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from fastapi import APIRouter
+from sqlalchemy import func
 
 from .. import impl_state as _s
 
@@ -23,6 +24,10 @@ def register_public_auth_account_profile_routes(router: APIRouter) -> None:
             db=db,
         )
         center_loyalty = db.get(_s.models.Center, center_id_loyalty)
+        if center_loyalty and _s.ensure_public_client_row_if_missing(
+            db, center_id=int(center_id_loyalty), public_user=user
+        ):
+            db.commit()
         loyalty_ctx = _s.build_public_loyalty_context(db, center_id_loyalty, user, center=center_loyalty)
         plan_labels = _s.default_plan_labels()
         subscription_ctx = _s.build_public_active_subscription_context(
@@ -33,7 +38,7 @@ def register_public_auth_account_profile_routes(router: APIRouter) -> None:
             db.query(_s.models.Client)
             .filter(
                 _s.models.Client.center_id == center_id_loyalty,
-                _s.models.Client.email == email_l,
+                func.lower(func.trim(_s.models.Client.email)) == email_l,
             )
             .first()
         )

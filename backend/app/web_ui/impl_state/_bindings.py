@@ -106,7 +106,7 @@ from ...public_cart_helpers import (
     process_mock_single_booking_checkout,
 )
 from ...public_center_helpers import get_center_or_404, get_seeded_center_or_404, resolve_public_center_or_404
-from ...public_client_helpers import get_or_sync_public_client
+from ...public_client_helpers import ensure_public_client_row_if_missing, get_or_sync_public_client
 from ...public_content_version import compute_public_center_content_version
 from ...public_feedback_helpers import (
     feedback_send_result_message,

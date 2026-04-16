@@ -7,6 +7,20 @@ from sqlalchemy import func
 from sqlalchemy.orm import Session
 
 from ... import models
+
+
+def _public_user_has_client_at_center_exists(db: Session, center_id: int):
+    """EXISTS مرتبط: عميل في المركز بنفس بريد المستخدم (بعد trim وبدون حساسية لحالة الأحرف)."""
+    email_pub = func.lower(func.trim(models.PublicUser.email))
+    email_cli = func.lower(func.trim(models.Client.email))
+    return (
+        db.query(models.Client.id)
+        .filter(
+            models.Client.center_id == center_id,
+            email_cli == email_pub,
+        )
+        .exists()
+    )
 from ...booking_utils import ACTIVE_BOOKING_STATUSES
 from ...client_numbering import ensure_client_subscription_number, next_client_subscription_number
 from ...public_auth_helpers import queue_verify_email_for_user
@@ -16,14 +30,7 @@ from ._constants import GA4_MEASUREMENT_ID
 
 
 def _public_users_query_for_center(db: Session, center_id: int):
-    return db.query(models.PublicUser).filter(
-        db.query(models.Client.id)
-        .filter(
-            models.Client.center_id == center_id,
-            func.lower(models.Client.email) == func.lower(models.PublicUser.email),
-        )
-        .exists()
-    )
+    return db.query(models.PublicUser).filter(_public_user_has_client_at_center_exists(db, center_id))
 
 
 def _ensure_client_for_public_register(db: Session, user: models.PublicUser, next_url: str) -> None:

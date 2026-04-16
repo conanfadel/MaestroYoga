@@ -145,6 +145,14 @@ def _url_with_params(path: str, **params: str) -> str:
     return f"{path}?{urlencode(clean)}"
 
 
+def _default_public_center_id_str() -> str:
+    """مركز افتراضي للروابط بدون center_id (تسجيل، عميل، …). يُضبط عبر PUBLIC_DEFAULT_CENTER_ID."""
+    raw = os.getenv("PUBLIC_DEFAULT_CENTER_ID", "").strip()
+    if raw.isdigit():
+        return str(int(raw))
+    return "1"
+
+
 def public_center_id_str_from_next(
     next_url: str | None,
     fallback: str = PUBLIC_INDEX_DEFAULT_PATH,
@@ -158,7 +166,7 @@ def public_center_id_str_from_next(
             return str(int(qs["center_id"][0]))
         except (ValueError, IndexError):
             pass
-    return "1"
+    return _default_public_center_id_str()
 
 
 def public_index_url_from_next(

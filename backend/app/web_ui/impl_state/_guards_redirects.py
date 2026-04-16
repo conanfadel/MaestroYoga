@@ -7,7 +7,7 @@ from urllib.parse import urlencode
 
 from fastapi import HTTPException, Request
 from fastapi.responses import RedirectResponse
-from sqlalchemy import func, or_
+from sqlalchemy import or_
 from sqlalchemy.orm import Session
 
 from ... import models
@@ -23,6 +23,7 @@ from ._constants import (
     ALLOWED_ADMIN_RETURN_SECTIONS,
     PUBLIC_COOKIE_NAME,
 )
+from ._public_users_ops import _public_user_has_client_at_center_exists
 
 
 def _current_public_user(request: Request, db: Session) -> models.PublicUser | None:
@@ -158,12 +159,7 @@ def _get_public_user_or_redirect(
         db.query(models.PublicUser)
         .filter(
             models.PublicUser.id == public_user_id,
-            db.query(models.Client.id)
-            .filter(
-                models.Client.center_id == center_id,
-                func.lower(models.Client.email) == func.lower(models.PublicUser.email),
-            )
-            .exists(),
+            _public_user_has_client_at_center_exists(db, center_id),
         )
         .first()
     )
