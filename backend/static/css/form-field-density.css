@@ -104,3 +104,78 @@ form.plan-details-form--horizontal:not(.plan-details-form--admin-stack) .plan-de
 .public-user-menu__row-text .k {
   white-space: nowrap;
 }
+
+/* ========= لوحة التحكم — تكدّس وتداخل عام ========= */
+main.admin-main .stat .k {
+  display: block;
+  max-width: 100%;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+main.admin-main .stat .v {
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+main.admin-main .revenue-7d-label {
+  display: block;
+  max-width: 100%;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+main.admin-main .admin-insight {
+  min-width: 0;
+  max-width: 100%;
+}
+main.admin-main .filters:not(.filters--public-users-row) {
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 172px), 1fr));
+  gap: 12px 14px;
+}
+main.admin-main .staff-perm-item__label,
+main.admin-main .staff-perm-group__legend {
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+main.admin-main .staff-perm-shell__title,
+main.admin-main .staff-perm-shell__subtitle {
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+main.admin-main .plans-head__row {
+  gap: 10px 12px;
+}
+main.admin-main .plans-head__row .admin-booking-block-heading {
+  min-width: 0;
+}
+
+/* ========= الفهرس — عناوين طويلة وشريط أدوات ========= */
+.session-card__bar .session-card__bar-title {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  overflow-wrap: anywhere;
+}
+.post-teaser__title {
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  overflow-wrap: anywhere;
+}
+.index-news-card__title {
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+.hero-toolbar__group,
+.hero-toolbar__actions-cluster {
+  min-width: 0;
+}
+#plans-section .plan-meta > div {
+  min-width: 0;
+}
+#plans-section .plan-meta .v {
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
