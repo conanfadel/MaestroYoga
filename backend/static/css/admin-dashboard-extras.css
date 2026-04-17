@@ -940,8 +940,15 @@ body.report-insights .print-only-note {
   margin: 0 0 10px;
   opacity: 0.92;
 }
+/* لا يمتدّ السطر على كامل العرض فيُضخّم زر (!) داخل flex الحقل */
 .admin-discount-block .admin-discount-legend-row {
-  flex: 1 1 100%;
+  flex: 0 1 auto;
+  align-self: flex-start;
+}
+.admin-discount-block > legend.admin-discount-legend-row {
+  width: max-content;
+  max-width: 100%;
+  box-sizing: border-box;
 }
 .admin-discount-block .admin-discount-hint-panel[hidden] {
   display: none !important;

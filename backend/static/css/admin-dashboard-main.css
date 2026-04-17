@@ -1161,10 +1161,23 @@
     }
     .plan-card .plan-details-form input,
     .plan-card .plan-details-form select { margin: 0; }
-    .plan-card .plan-details-form button {
+    /* لا تُطبَّق على أزرار type="button" مثل شرح الخصم (!) */
+    .plan-card .plan-details-form button[type="submit"] {
       grid-column: 1 / -1;
       width: 100%;
       margin-top: 0;
+    }
+    .plan-card .plan-details-form .admin-help-exclaim {
+      width: 26px;
+      height: 26px;
+      min-width: 26px;
+      min-height: 26px;
+      max-width: 26px;
+      max-height: 26px;
+      grid-column: auto;
+      flex: 0 0 auto;
+      margin-top: 0;
+      padding: 0;
     }
     .plan-card .plan-delete-form button {
       margin-top: 0;
@@ -1489,19 +1502,29 @@
     }
     .admin-discount-legend-row {
       display: flex;
-      flex-wrap: wrap;
+      flex-wrap: nowrap;
       align-items: center;
-      gap: 8px;
+      gap: 6px;
       width: 100%;
+      max-width: 100%;
       padding: 0;
       margin: 0 0 6px;
       font-weight: 800;
       font-size: 0.95rem;
     }
+    .admin-discount-legend-row > span:first-of-type {
+      flex: 0 1 auto;
+      min-width: 0;
+    }
     .admin-help-exclaim--inline {
-      width: 28px;
-      height: 28px;
-      font-size: 0.9rem;
+      width: 26px;
+      height: 26px;
+      min-width: 26px;
+      min-height: 26px;
+      max-width: 26px;
+      max-height: 26px;
+      font-size: 0.85rem;
+      flex-shrink: 0;
     }
     .admin-discount-hint-panel {
       margin: 0 0 10px;
