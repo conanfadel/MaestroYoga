@@ -1,0 +1,133 @@
+/* Maestro — Tabler RTL shell (CDN @tabler/core؛ رخصة MIT) */
+
+body.maestro-tabler {
+  --gold: #c5a059;
+  --mint: #aaf0d1;
+}
+
+/* شريط التبويبات الأفقي: مرئي على الشاشات الصغيرة فقط */
+@media (min-width: 992px) {
+  body.maestro-tabler #section-tabs-sticky {
+    display: none !important;
+  }
+}
+
+body.maestro-tabler .admin-main .container-xl {
+  max-width: min(1280px, 87.5vw);
+  margin-inline: auto;
+}
+
+@media (max-width: 720px) {
+  body.maestro-tabler .admin-main .container-xl {
+    max-width: 100%;
+  }
+}
+
+body.maestro-tabler .admin-main .card {
+  display: block;
+}
+
+/* شريط علوي: أدوات Maestro الحالية (.top) */
+body.maestro-tabler #maestro-top-navbar .maestro-header-toolbar {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+body.maestro-tabler #maestro-top-navbar .maestro-header-toolbar .top {
+  margin-bottom: 0;
+  width: 100%;
+  border-radius: 14px;
+}
+
+/* الشريط الجانبي — هوية المركز (زيتوني + فحمي) */
+body.maestro-tabler .maestro-sidebar.navbar-vertical {
+  background: #1a1d21;
+  border-inline-start: 1px solid color-mix(in srgb, var(--gold) 45%, transparent);
+}
+
+body.maestro-tabler .maestro-sidebar a.navbar-brand {
+  padding: 0.75rem 0.5rem;
+  margin: 0;
+  background: linear-gradient(180deg, #454030 0%, #3a3a2e 40%, #2f2e26 100%);
+  border-bottom: 1px solid rgba(197, 160, 89, 0.35);
+  color: rgba(255, 255, 255, 0.95);
+  font-family: "Tajawal", system-ui, sans-serif;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+body.maestro-tabler .maestro-sidebar .maestro-sidebar-logo {
+  max-height: 2.25rem;
+  width: auto;
+  border-radius: 8px;
+}
+
+body.maestro-tabler .maestro-sidebar .navbar-collapse .navbar-nav {
+  padding-top: 0.35rem;
+}
+
+body.maestro-tabler .maestro-sidebar .nav-link {
+  font-family: "Tajawal", system-ui, sans-serif;
+  color: rgba(255, 255, 255, 0.9);
+  border-radius: 10px;
+}
+
+body.maestro-tabler .maestro-sidebar .nav-link:hover {
+  color: #fff;
+  background: color-mix(in srgb, var(--mint) 18%, rgba(255, 255, 255, 0.06));
+}
+
+body.maestro-tabler .maestro-sidebar .section-tab.active {
+  font-weight: 700;
+  color: #fff !important;
+  background: color-mix(in srgb, var(--gold) 32%, rgba(255, 255, 255, 0.1)) !important;
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--gold) 55%, transparent);
+}
+
+body.maestro-tabler .maestro-sidebar .nav-link-icon .bi {
+  font-size: 1.1rem;
+  line-height: 1;
+  color: color-mix(in srgb, var(--mint) 70%, #fff);
+}
+
+body.maestro-tabler .maestro-sidebar .nav-link-title {
+  flex: 1 1 auto;
+  min-width: 0;
+  white-space: normal;
+}
+
+body.maestro-tabler .maestro-sidebar .nav-item.maestro-nav-cluster-label .nav-link {
+  pointer-events: none;
+  cursor: default;
+  font-size: 0.68rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.55) !important;
+  padding-block: 0.5rem 0.15rem;
+  background: transparent !important;
+}
+
+body.maestro-tabler .page-header {
+  box-shadow: 0 1px 0 rgba(0, 0, 0, 0.04);
+}
+
+body.maestro-tabler .footer.maestro-admin-footer {
+  border-top: 1px solid color-mix(in srgb, var(--gold) 22%, var(--tblr-border-color, #dee2e6));
+}
+
+html[data-bs-theme="dark"] body.maestro-tabler .maestro-sidebar.navbar-vertical {
+  background: #12151a;
+}
+
+html[data-bs-theme="dark"] body.maestro-tabler .maestro-sidebar a.navbar-brand {
+  background: linear-gradient(180deg, #3a3628 0%, #2e2c22 100%);
+}
+
+html[data-bs-theme="dark"] body.maestro-tabler .page-header {
+  border-color: rgba(255, 255, 255, 0.08) !important;
+}
+
+html[data-bs-theme="dark"] body.maestro-tabler .footer.maestro-admin-footer {
+  border-top-color: rgba(197, 160, 89, 0.28);
+}

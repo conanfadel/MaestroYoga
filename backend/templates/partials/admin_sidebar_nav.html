@@ -1,23 +1,32 @@
 {% import "partials/admin_nav_macros.html" as admin_nav %}
-<aside class="app-sidebar maestro-sidebar shadow" data-bs-theme="dark" aria-label="التنقل بين أقسام لوحة الإدارة">
-  <div class="sidebar-brand">
-    <a href="/admin" class="brand-link">
+<aside
+  class="navbar navbar-vertical navbar-expand-lg navbar-dark maestro-sidebar"
+  id="maestro-sidebar"
+  data-bs-theme="dark"
+  aria-label="التنقل بين أقسام لوحة الإدارة"
+>
+  <div class="container-fluid flex-lg-column px-lg-0">
+    <button
+      class="navbar-toggler me-2 d-lg-none"
+      type="button"
+      data-bs-toggle="collapse"
+      data-bs-target="#maestro-sidebar-menu"
+      aria-controls="maestro-sidebar-menu"
+      aria-expanded="false"
+      aria-label="فتح وإغلاق القائمة الجانبية"
+    >
+      <span class="navbar-toggler-icon"></span>
+    </button>
+    <a href="/admin" class="navbar-brand navbar-brand-autodark w-100 m-0 px-lg-3 py-lg-2 text-center text-lg-start d-inline-flex align-items-center justify-content-center justify-content-lg-start gap-2">
       {% if center and center.logo_url %}
-      <img src="{{ center.logo_url }}" alt="" class="brand-image opacity-75 shadow maestro-sidebar-logo" width="36" height="36" decoding="async" />
+      <img src="{{ center.logo_url }}" alt="" class="maestro-sidebar-logo" width="36" height="36" decoding="async" />
       {% endif %}
-      <span class="brand-text fw-semibold">{{ center.name if center else 'Maestro Yoga' }}</span>
+      <span>{{ center.name if center else 'Maestro Yoga' }}</span>
     </a>
-  </div>
-  <div class="sidebar-wrapper">
-    <nav class="mt-2">
-      <ul
-        class="nav sidebar-menu flex-column"
-        role="navigation"
-        aria-label="أقسام لوحة الإدارة"
-        id="maestro-sidebar-nav"
-      >
+    <div class="collapse navbar-collapse flex-lg-column align-items-stretch w-100" id="maestro-sidebar-menu">
+      <ul class="navbar-nav flex-column w-100 px-lg-2 pb-lg-3" id="maestro-sidebar-nav" role="navigation" aria-label="أقسام لوحة الإدارة">
         {{ admin_nav.admin_nav_clusters('sidebar') }}
       </ul>
-    </nav>
+    </div>
   </div>
 </aside>
