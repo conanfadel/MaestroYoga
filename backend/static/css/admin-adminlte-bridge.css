@@ -46,19 +46,112 @@ body.maestro-adminlte .admin-main .card {
   }
 }
 
-/* Sidebar: خط عربي متناسق */
-body.maestro-adminlte .maestro-sidebar .nav-link p {
-  font-family: "Tajawal", system-ui, sans-serif;
+/* Sidebar — ألوان ثيم Maestro (ذهبي + نعناعي) وهوية المركز */
+body.maestro-adminlte .maestro-sidebar {
+  --maestro-sidebar-fg: rgba(255, 255, 255, 0.92);
+  --maestro-sidebar-muted: rgba(255, 255, 255, 0.7);
+  --maestro-sidebar-hover: color-mix(in srgb, var(--mint) 22%, rgba(255, 255, 255, 0.06));
+  --maestro-sidebar-active: color-mix(in srgb, var(--gold) 38%, rgba(20, 24, 32, 0.92));
+  --maestro-sidebar-border: color-mix(in srgb, var(--gold) 48%, transparent);
+  background: linear-gradient(
+    195deg,
+    color-mix(in srgb, var(--gold) 24%, #161b24) 0%,
+    #10141c 45%,
+    #0a0d12 100%
+  );
+  border-inline-end: 1px solid var(--maestro-sidebar-border);
+  color: var(--maestro-sidebar-fg);
+}
+
+@supports not (color: color-mix(in srgb, red, blue)) {
+  body.maestro-adminlte .maestro-sidebar {
+    background: linear-gradient(195deg, #252018 0%, #12161c 55%, #0a0d12 100%);
+    border-inline-end: 1px solid rgba(197, 160, 89, 0.45);
+    --maestro-sidebar-hover: rgba(170, 240, 209, 0.12);
+    --maestro-sidebar-active: rgba(197, 160, 89, 0.28);
+  }
+}
+
+body.maestro-adminlte .maestro-sidebar .sidebar-brand {
+  border-bottom: 1px solid var(--maestro-sidebar-border);
+  background: linear-gradient(
+    90deg,
+    color-mix(in srgb, var(--gold) 35%, #141820) 0%,
+    color-mix(in srgb, var(--mint-mid) 12%, #141820) 100%
+  );
+}
+
+body.maestro-adminlte .maestro-sidebar .brand-link {
+  gap: 0.5rem;
+}
+
+body.maestro-adminlte .maestro-sidebar .maestro-sidebar-logo {
+  max-height: 2.25rem;
+  width: auto;
+  object-fit: contain;
+  border-radius: 8px;
 }
 
 body.maestro-adminlte .maestro-sidebar .brand-text {
   font-family: "Tajawal", system-ui, sans-serif;
+  color: var(--maestro-sidebar-fg);
+}
+
+body.maestro-adminlte .maestro-sidebar .nav-link {
+  color: var(--maestro-sidebar-fg);
+}
+
+body.maestro-adminlte .maestro-sidebar .nav-link p {
+  font-family: "Tajawal", system-ui, sans-serif;
+}
+
+body.maestro-adminlte .maestro-sidebar .nav-link:hover {
+  background: var(--maestro-sidebar-hover);
+  color: #fff;
+}
+
+body.maestro-adminlte .maestro-sidebar .nav-treeview > .nav-item > .nav-link {
+  color: var(--maestro-sidebar-muted);
+}
+
+body.maestro-adminlte .maestro-sidebar .nav-treeview > .nav-item > .nav-link:hover {
+  color: #fff;
 }
 
 body.maestro-adminlte .maestro-sidebar .section-tab.active {
   font-weight: 700;
+  background: var(--maestro-sidebar-active) !important;
+  color: #fff !important;
+  border-radius: 10px;
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--gold) 55%, transparent);
+}
+
+body.maestro-adminlte .maestro-sidebar .nav-icon {
+  color: color-mix(in srgb, var(--mint) 75%, #fff);
+}
+
+body.maestro-adminlte .maestro-sidebar .nav-arrow {
+  color: color-mix(in srgb, var(--gold) 70%, #fff);
+}
+
+body.maestro-adminlte .app-footer {
+  border-top: 1px solid color-mix(in srgb, var(--gold) 22%, var(--bs-border-color, #dee2e6));
+  background: var(--bs-body-bg, #fff);
 }
 
 html[data-theme="dark"] body.maestro-adminlte .app-content-header {
   border-color: rgba(255, 255, 255, 0.08) !important;
+}
+
+html[data-theme="dark"] body.maestro-adminlte .maestro-sidebar {
+  background: linear-gradient(
+    195deg,
+    color-mix(in srgb, var(--gold) 18%, #0f1218) 0%,
+    #0a0c10 50%,
+    #060708 100%
+  );
+}
+
+html[data-theme="dark"] body.maestro-adminlte .app-footer {
+  border-top-color: rgba(197, 160, 89, 0.28);
 }
