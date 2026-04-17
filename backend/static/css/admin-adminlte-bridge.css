@@ -1,0 +1,45 @@
+/* Maestro admin shell on top of AdminLTE v4 (RTL). Vendor: /static/vendor/adminlte/ — MIT, https://github.com/ColorlibHQ/AdminLTE */
+
+body.maestro-adminlte.layout-fixed.sidebar-expand-lg {
+  padding: 0;
+  margin: 0;
+}
+
+body.maestro-adminlte .app-wrapper {
+  grid-template-areas:
+    "lte-app-header"
+    "lte-app-main";
+  grid-template-columns: 1fr;
+  grid-template-rows: auto 1fr;
+}
+
+body.maestro-adminlte .app-header .container-fluid {
+  display: block;
+  max-width: 100%;
+  padding-inline: clamp(10px, 2vw, 20px);
+}
+
+body.maestro-adminlte .app-header .top {
+  margin-bottom: 0;
+  width: 100%;
+}
+
+body.maestro-adminlte .app-main .app-content {
+  padding-inline: max(8px, env(safe-area-inset-left, 0px), env(safe-area-inset-right, 0px));
+  padding-block: 0 0.75rem;
+}
+
+body.maestro-adminlte .admin-main .container {
+  max-width: min(1280px, 87.5vw);
+  margin-inline: auto;
+}
+
+@media (max-width: 720px) {
+  body.maestro-adminlte .admin-main .container {
+    max-width: 100%;
+  }
+}
+
+body.maestro-adminlte .admin-main .card {
+  display: block;
+}
