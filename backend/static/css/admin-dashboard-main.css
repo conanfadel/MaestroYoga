@@ -1308,12 +1308,6 @@
     .plan-card--admin .plan-details-form__cell--admin-price {
       min-width: 168px;
     }
-    .plan-card--admin .plan-details-form__lbl--admin-price-line {
-      white-space: nowrap;
-    }
-    .plan-card--admin .plan-details-form__cell--admin-sessions .plan-details-form__lbl--admin-tight {
-      font-size: 0.72rem;
-    }
     .plan-card--admin .plan-details-form__lbl--admin-tight {
       margin: 0;
       padding: 0;

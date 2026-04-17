@@ -1,0 +1,96 @@
+/**
+ * تسميات سطر واحد + كثافة حقول (لوحة التحكم + الفهرس)
+ * يمنع تفاف تسميات الشبكات الضيقة ويوحّد مظهر الحقول الحساسة للعرض.
+ */
+
+/* —— لوحة: إنشاء خطة —— */
+form.plan-details-form--horizontal:not(.plan-details-form--admin-stack) .plan-details-form__grid2 {
+  grid-template-columns: minmax(148px, 1fr) minmax(196px, 1.3fr);
+  gap: 10px 14px;
+}
+form.plan-details-form--horizontal:not(.plan-details-form--admin-stack) .plan-details-form__grid2 .plan-details-form__lbl {
+  white-space: nowrap;
+  font-size: 0.86rem;
+  font-weight: 700;
+}
+form.plan-details-form--horizontal:not(.plan-details-form--admin-stack) .plan-details-form__cell--full .plan-details-form__lbl {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+}
+
+/* —— لوحة: صف تعديل الخطة (نوع | سعر | جلسات | خصم) —— */
+.plan-card--admin .plan-details-form__split--admin-unified .plan-details-form__lbl--admin-tight,
+.plan-card--admin .plan-details-form__split--admin-unified .plan-details-form__lbl--admin-price-line {
+  white-space: nowrap;
+  font-size: 0.78rem;
+}
+
+/* —— لوحة: ملخص الخطة —— */
+.plan-meta--admin .plan-meta-item .k {
+  white-space: nowrap;
+}
+
+/* —— لوحة: تسميات كتلة الخصم والجدولة —— */
+.admin-discount-block .admin-discount-mode-field > label {
+  white-space: nowrap;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.admin-discount-block .js-discount-schedule-wrap > label[for^="schedule-type"] {
+  white-space: nowrap;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.admin-discount-schedule__title {
+  white-space: nowrap;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.admin-discount-block .js-discount-panel-percent:not([hidden]) label,
+.admin-discount-block .js-discount-panel-fixed:not([hidden]) label {
+  white-space: nowrap;
+}
+
+/* —— فهرس: فلاتر الجلسات —— */
+.sessions-filters .field label {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+}
+
+/* —— فهرس: بطاقات الجلسات والخطط —— */
+.session-card__when-label {
+  white-space: nowrap;
+}
+.plan-batch-toolbar__label {
+  white-space: nowrap;
+}
+.plan-meta .k,
+#plans-section .plan-meta .k {
+  white-space: nowrap;
+}
+.plan-promo-extras__label {
+  white-space: nowrap;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* —— فهرس: نافذة الملاحظات —— */
+.feedback-modal__field label {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+}
+
+/* —— فهرس: قائمة المستخدم —— */
+.public-user-menu__row-text .k {
+  white-space: nowrap;
+}
