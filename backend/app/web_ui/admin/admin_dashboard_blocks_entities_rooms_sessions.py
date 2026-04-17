@@ -124,6 +124,8 @@ def load_paginated_session_rows(
     session_rows: list[dict[str, Any]] = []
     for s in sessions:
         room = rooms_by_id.get(s.room_id)
+        list_p = float(getattr(s, "list_price", None) if getattr(s, "list_price", None) is not None else s.price_drop_in)
+        eff_p = float(s.price_drop_in)
         session_rows.append(
             {
                 "id": s.id,
@@ -135,6 +137,10 @@ def load_paginated_session_rows(
                 "starts_at_display": _s._fmt_dt(s.starts_at),
                 "duration_minutes": s.duration_minutes,
                 "price_drop_in": s.price_drop_in,
+                "list_price": list_p,
+                "has_promo": list_p > eff_p + 1e-6,
+                "discount_mode": getattr(s, "discount_mode", None) or "none",
+                "discount_percent": getattr(s, "discount_percent", None),
                 "room_name": room.name if room else "-",
                 "room_id": s.room_id,
                 "spots_available": spots_by_session_page.get(int(s.id), 0),
@@ -153,18 +159,31 @@ def load_paginated_session_rows(
 
 
 def plan_rows_from_plans(plans: Sequence[Any]) -> list[dict[str, Any]]:
-    return [
-        {
-            "id": p.id,
-            "name": p.name,
-            "plan_type": p.plan_type,
-            "plan_type_label": _PLAN_TYPE_LABELS.get(p.plan_type, p.plan_type),
-            "price": p.price,
-            "session_limit": p.session_limit,
-            "is_active": p.is_active,
-        }
-        for p in plans
-    ]
+    rows: list[dict[str, Any]] = []
+    for p in plans:
+        list_p = float(getattr(p, "list_price", None) if getattr(p, "list_price", None) is not None else p.price)
+        eff_p = float(p.price)
+        rows.append(
+            {
+                "id": p.id,
+                "name": p.name,
+                "plan_type": p.plan_type,
+                "plan_type_label": _PLAN_TYPE_LABELS.get(p.plan_type, p.plan_type),
+                "price": p.price,
+                "list_price": list_p,
+                "has_promo": list_p > eff_p + 1e-6,
+                "discount_mode": getattr(p, "discount_mode", None) or "none",
+                "discount_percent": getattr(p, "discount_percent", None),
+                "discount_schedule_type": getattr(p, "discount_schedule_type", None) or "always",
+                "discount_valid_from": getattr(p, "discount_valid_from", None),
+                "discount_valid_until": getattr(p, "discount_valid_until", None),
+                "discount_hour_start": getattr(p, "discount_hour_start", None),
+                "discount_hour_end": getattr(p, "discount_hour_end", None),
+                "session_limit": p.session_limit,
+                "is_active": p.is_active,
+            }
+        )
+    return rows
 
 
 def faq_rows_from_faqs(faqs: Sequence[Any]) -> list[dict[str, Any]]:

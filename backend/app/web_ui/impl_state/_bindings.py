@@ -21,7 +21,7 @@ from sqlalchemy import and_, case, desc, func, or_, text
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
-from ... import models, schemas
+from ... import discount_pricing, models, schemas
 from ...admin_export_helpers import (
     admin_user_for_export_permission,
     build_bookings_csv_content,

@@ -81,6 +81,6 @@ def register_public_subscribe_routes(router: APIRouter) -> None:
             center_id=center_id,
             client_id=client.id,
             plan_id=plan.id,
-            amount=float(plan.price),
+            amount=float(_s.discount_pricing.plan_public_checkout_amount(plan)),
         )
         return _s.redirect_public_index_with_params(center_id=center_id, msg="subscribed_mock")

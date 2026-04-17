@@ -1,4 +1,5 @@
 from datetime import datetime
+from typing import Optional
 
 from pydantic import BaseModel, ConfigDict
 
@@ -30,5 +31,13 @@ class YogaSessionCreate(BaseModel):
 class YogaSessionOut(YogaSessionCreate):
     id: int
     center_id: int
+    list_price: Optional[float] = None
+    discount_mode: str = "none"
+    discount_percent: Optional[float] = None
+    discount_schedule_type: str = "always"
+    discount_valid_from: Optional[datetime] = None
+    discount_valid_until: Optional[datetime] = None
+    discount_hour_start: Optional[int] = None
+    discount_hour_end: Optional[int] = None
 
     model_config = ConfigDict(from_attributes=True)

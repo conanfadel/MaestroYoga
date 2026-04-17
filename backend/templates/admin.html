@@ -17,6 +17,7 @@
 </head>
 <body>
   {% from "partials/report_hub_icons.html" import svg_calendar, svg_chart, svg_users, svg_package, svg_pulse, svg_cash, svg_download, svg_shield %}
+  {% from "partials/admin_discount_fields.html" import admin_discount_fields %}
   <a class="admin-skip-link" href="#main-content">تخطي إلى المحتوى الرئيسي</a>
   <main id="main-content" class="admin-main" tabindex="-1">
   <div class="container">
@@ -485,8 +486,9 @@
           <input name="starts_at" type="datetime-local" required />
           <label>المدة (دقيقة)</label>
           <input name="duration_minutes" type="text" inputmode="numeric" autocomplete="off" lang="en" dir="ltr" pattern="[1-9][0-9]*" maxlength="4" value="60" required />
-          <label>السعر (دخول لمرة واحدة)</label>
-          <input name="price_drop_in" type="text" inputmode="decimal" autocomplete="off" lang="en" dir="ltr" pattern="[0-9]+(\.[0-9]{1,2})?" maxlength="12" value="60" required />
+          <label>السعر الأساسي (دخول لمرة واحدة)</label>
+          <input class="js-list-price-base" name="list_price" type="text" inputmode="decimal" autocomplete="off" lang="en" dir="ltr" pattern="[0-9]+(\.[0-9]{1,2})?" maxlength="12" value="60" required />
+          {{ admin_discount_fields('sess-new') }}
           <button type="submit">نشر الجلسة</button>
         </form>
       </div>
@@ -503,8 +505,9 @@
             <option value="monthly">شهري</option>
             <option value="yearly">سنوي</option>
           </select>
-          <label>السعر (SAR)</label>
-          <input name="price" type="text" inputmode="decimal" autocomplete="off" lang="en" dir="ltr" pattern="[0-9]+(\.[0-9]{1,2})?" maxlength="12" required />
+          <label>السعر الأساسي (SAR)</label>
+          <input class="js-list-price-base" name="list_price" type="text" inputmode="decimal" autocomplete="off" lang="en" dir="ltr" pattern="[0-9]+(\.[0-9]{1,2})?" maxlength="12" required />
+          {{ admin_discount_fields('plan-new') }}
           <label>حد الجلسات (اختياري)</label>
           <input name="session_limit" type="text" inputmode="numeric" autocomplete="off" lang="en" dir="ltr" pattern="^(|[1-9][0-9]*)$" maxlength="6" placeholder="اتركه فارغًا لعدد غير محدود" />
           <button type="submit">حفظ الخطة</button>
@@ -640,7 +643,14 @@
             </div>
             <div class="plan-meta-item">
               <span class="k">السعر</span>
-              <span class="v">{{ p.price }} SAR</span>
+              <span class="v">
+                {% if p.has_promo %}
+                <span class="admin-price-list" style="text-decoration:line-through;color:#b71c1c;">{{ p.list_price }}</span>
+                <span class="admin-price-now">{{ p.price }} SAR</span>
+                {% else %}
+                {{ p.price }} SAR
+                {% endif %}
+              </span>
             </div>
             <div class="plan-meta-item">
               <span class="k">حد الجلسات</span>
@@ -661,7 +671,16 @@
               <option value="monthly" {{ 'selected' if p.plan_type == 'monthly' else '' }}>شهري</option>
               <option value="yearly" {{ 'selected' if p.plan_type == 'yearly' else '' }}>سنوي</option>
             </select>
-            <input name="price" type="text" inputmode="decimal" autocomplete="off" lang="en" dir="ltr" pattern="[0-9]+(\.[0-9]{1,2})?" maxlength="12" value="{{ p.price }}" required />
+            <label class="plan-details-form__lbl">السعر الأساسي (SAR)</label>
+            <input class="js-list-price-base" name="list_price" type="text" inputmode="decimal" autocomplete="off" lang="en" dir="ltr" pattern="[0-9]+(\.[0-9]{1,2})?" maxlength="12" value="{{ p.list_price }}" required />
+            {% set pct_val = '' if p.discount_percent is none else (p.discount_percent|string) %}
+            {% set red_val = (p.price|string) if p.discount_mode == 'fixed' else '' %}
+            {% set vf = p.discount_valid_from.strftime('%Y-%m-%dT%H:%M') if p.discount_valid_from else '' %}
+            {% set vu = p.discount_valid_until.strftime('%Y-%m-%dT%H:%M') if p.discount_valid_until else '' %}
+            {% set hs = '' if p.discount_hour_start is none else (p.discount_hour_start|string) %}
+            {% set he = '' if p.discount_hour_end is none else (p.discount_hour_end|string) %}
+            {% set stype = p.discount_schedule_type if p.discount_schedule_type else 'always' %}
+            {{ admin_discount_fields('plan-' ~ p.id, discount_mode_value=p.discount_mode, discount_percent_value=pct_val, reduced_price_value=red_val, schedule_type_value=stype, valid_from_value=vf, valid_until_value=vu, hour_start_value=hs, hour_end_value=he) }}
             <input
               name="session_limit"
               type="text"
@@ -1686,7 +1705,14 @@
               <td>{{ s.room_name }}</td>
               <td>{{ s.starts_at_display }}</td>
               <td>{{ s.duration_minutes }} د</td>
-              <td>{{ s.price_drop_in }} SAR</td>
+              <td>
+                {% if s.has_promo %}
+                <span class="admin-price-list" style="text-decoration:line-through;color:#b71c1c;">{{ s.list_price }}</span>
+                <span class="admin-price-now">{{ s.price_drop_in }} SAR</span>
+                {% else %}
+                {{ s.price_drop_in }} SAR
+                {% endif %}
+              </td>
               <td><span class="badge">{{ s.spots_available }} / {{ s.capacity }}</span></td>
               <td>
                 {% if s.is_past and perm_sessions_manage %}
@@ -3149,6 +3175,84 @@
           }
         });
       }
+    })();
+  </script>
+  <script>
+    (function () {
+      function parseMoney(v) {
+        if (v == null) return NaN;
+        var s = String(v).trim().replace(",", ".");
+        if (!s) return NaN;
+        var n = parseFloat(s);
+        return Number.isFinite(n) ? n : NaN;
+      }
+      function fmt2(n) {
+        if (!Number.isFinite(n)) return "";
+        return (Math.round(n * 100) / 100).toFixed(2);
+      }
+      function syncSchedule(wrap) {
+        if (!wrap) return;
+        var modeEl = wrap.querySelector(".js-discount-mode");
+        var schedWrap = wrap.querySelector(".js-discount-schedule-wrap");
+        var schedType = wrap.querySelector(".js-schedule-type");
+        var datePanel = wrap.querySelector(".js-schedule-date-panel");
+        var hoursPanel = wrap.querySelector(".js-schedule-hours-panel");
+        var mode = modeEl ? modeEl.value : "none";
+        if (schedWrap) schedWrap.hidden = mode === "none";
+        var st = schedType ? schedType.value : "always";
+        if (datePanel) datePanel.hidden = mode === "none" || st !== "date_range";
+        if (hoursPanel) hoursPanel.hidden = mode === "none" || st !== "daily_hours";
+      }
+      function syncBlock(wrap) {
+        if (!wrap) return;
+        var modeEl = wrap.querySelector(".js-discount-mode");
+        var pctPanel = wrap.querySelector(".js-discount-panel-percent");
+        var fixPanel = wrap.querySelector(".js-discount-panel-fixed");
+        var form = wrap.closest("form");
+        var baseEl = form ? form.querySelector(".js-list-price-base") : null;
+        var pctIn = wrap.querySelector("[name='discount_percent']");
+        var out = wrap.querySelector(".js-discount-computed");
+        var mode = modeEl ? modeEl.value : "none";
+        var base = baseEl ? parseMoney(baseEl.value) : NaN;
+        if (pctPanel) pctPanel.hidden = mode !== "percent";
+        if (fixPanel) fixPanel.hidden = mode !== "fixed";
+        if (mode === "percent" && out && Number.isFinite(base)) {
+          var p = pctIn ? parseMoney(pctIn.value) : NaN;
+          if (Number.isFinite(p) && p >= 0 && p <= 100) {
+            out.value = fmt2(base * (1 - p / 100));
+          } else {
+            out.value = "";
+          }
+        } else if (out) {
+          out.value = "";
+        }
+        syncSchedule(wrap);
+      }
+      function bind(wrap) {
+        var modeEl = wrap.querySelector(".js-discount-mode");
+        var form = wrap.closest("form");
+        var baseEl = form ? form.querySelector(".js-list-price-base") : null;
+        var schedType = wrap.querySelector(".js-schedule-type");
+        if (modeEl) {
+          modeEl.addEventListener("change", function () { syncBlock(wrap); });
+          modeEl.addEventListener("input", function () { syncBlock(wrap); });
+        }
+        if (schedType) {
+          schedType.addEventListener("change", function () { syncBlock(wrap); });
+          schedType.addEventListener("input", function () { syncBlock(wrap); });
+        }
+        if (baseEl) {
+          baseEl.addEventListener("input", function () { syncBlock(wrap); });
+          baseEl.addEventListener("change", function () { syncBlock(wrap); });
+        }
+        var pctIn = wrap.querySelector("[name='discount_percent']");
+        if (pctIn) {
+          pctIn.addEventListener("input", function () { syncBlock(wrap); });
+          pctIn.addEventListener("change", function () { syncBlock(wrap); });
+        }
+        syncBlock(wrap);
+      }
+      document.querySelectorAll(".js-admin-discount-block").forEach(bind);
     })();
   </script>
   {% include '_force_english_digits.html' %}

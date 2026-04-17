@@ -73,6 +73,24 @@ def migrate_schema() -> None:
         training_batch_cols = {c["name"] for c in insp.get_columns("training_assignment_batches")}
         needs_training_assignment_batches_session_id = "session_id" not in training_batch_cols
 
+    needs_yoga_sessions_list_price = False
+    if insp.has_table("yoga_sessions"):
+        yoga_session_cols = {c["name"] for c in insp.get_columns("yoga_sessions")}
+        needs_yoga_sessions_list_price = "list_price" not in yoga_session_cols
+    needs_subscription_plans_list_price = False
+    if insp.has_table("subscription_plans"):
+        subscription_plan_cols = {c["name"] for c in insp.get_columns("subscription_plans")}
+        needs_subscription_plans_list_price = "list_price" not in subscription_plan_cols
+
+    needs_yoga_sessions_discount_schedule = False
+    if insp.has_table("yoga_sessions"):
+        _ysc_sched = {c["name"] for c in insp.get_columns("yoga_sessions")}
+        needs_yoga_sessions_discount_schedule = "discount_schedule_type" not in _ysc_sched
+    needs_subscription_plans_discount_schedule = False
+    if insp.has_table("subscription_plans"):
+        _spc_sched = {c["name"] for c in insp.get_columns("subscription_plans")}
+        needs_subscription_plans_discount_schedule = "discount_schedule_type" not in _spc_sched
+
     needs_public_user_phone = False
     needs_public_user_is_deleted = False
     needs_public_user_deleted_at = False
@@ -165,6 +183,10 @@ def migrate_schema() -> None:
         and not needs_client_medical_profiles_table
         and not needs_client_medical_history_entries_table
         and not needs_training_assignment_batches_session_id
+        and not needs_yoga_sessions_list_price
+        and not needs_subscription_plans_list_price
+        and not needs_yoga_sessions_discount_schedule
+        and not needs_subscription_plans_discount_schedule
     ):
         with engine.begin() as conn:
             if has_client_subscription_number:
@@ -253,6 +275,60 @@ def migrate_schema() -> None:
             conn.execute(text("ALTER TABLE clients ADD COLUMN subscription_number INTEGER"))
         if needs_training_assignment_batches_session_id:
             conn.execute(text("ALTER TABLE training_assignment_batches ADD COLUMN session_id INTEGER"))
+        if needs_yoga_sessions_list_price:
+            flt = "DOUBLE PRECISION" if dialect == "postgresql" else "REAL"
+            conn.execute(text(f"ALTER TABLE yoga_sessions ADD COLUMN list_price {flt}"))
+            if dialect == "postgresql":
+                conn.execute(
+                    text("ALTER TABLE yoga_sessions ADD COLUMN discount_mode VARCHAR(16) NOT NULL DEFAULT 'none'")
+                )
+            else:
+                conn.execute(text("ALTER TABLE yoga_sessions ADD COLUMN discount_mode VARCHAR(16) DEFAULT 'none'"))
+            conn.execute(text(f"ALTER TABLE yoga_sessions ADD COLUMN discount_percent {flt}"))
+            conn.execute(text("UPDATE yoga_sessions SET list_price = price_drop_in WHERE list_price IS NULL"))
+            conn.execute(text("UPDATE yoga_sessions SET discount_mode = 'none' WHERE discount_mode IS NULL"))
+            conn.execute(text("UPDATE yoga_sessions SET discount_percent = NULL"))
+        if needs_subscription_plans_list_price:
+            flt = "DOUBLE PRECISION" if dialect == "postgresql" else "REAL"
+            conn.execute(text(f"ALTER TABLE subscription_plans ADD COLUMN list_price {flt}"))
+            if dialect == "postgresql":
+                conn.execute(
+                    text("ALTER TABLE subscription_plans ADD COLUMN discount_mode VARCHAR(16) NOT NULL DEFAULT 'none'")
+                )
+            else:
+                conn.execute(text("ALTER TABLE subscription_plans ADD COLUMN discount_mode VARCHAR(16) DEFAULT 'none'"))
+            conn.execute(text(f"ALTER TABLE subscription_plans ADD COLUMN discount_percent {flt}"))
+            conn.execute(text("UPDATE subscription_plans SET list_price = price WHERE list_price IS NULL"))
+            conn.execute(text("UPDATE subscription_plans SET discount_mode = 'none' WHERE discount_mode IS NULL"))
+            conn.execute(text("UPDATE subscription_plans SET discount_percent = NULL"))
+        if needs_yoga_sessions_discount_schedule:
+            dt = "TIMESTAMP" if dialect == "postgresql" else "DATETIME"
+            if dialect == "postgresql":
+                conn.execute(
+                    text("ALTER TABLE yoga_sessions ADD COLUMN discount_schedule_type VARCHAR(24) NOT NULL DEFAULT 'always'")
+                )
+            else:
+                conn.execute(text("ALTER TABLE yoga_sessions ADD COLUMN discount_schedule_type VARCHAR(24) DEFAULT 'always'"))
+            conn.execute(text(f"ALTER TABLE yoga_sessions ADD COLUMN discount_valid_from {dt}"))
+            conn.execute(text(f"ALTER TABLE yoga_sessions ADD COLUMN discount_valid_until {dt}"))
+            conn.execute(text("ALTER TABLE yoga_sessions ADD COLUMN discount_hour_start INTEGER"))
+            conn.execute(text("ALTER TABLE yoga_sessions ADD COLUMN discount_hour_end INTEGER"))
+            conn.execute(text("UPDATE yoga_sessions SET discount_schedule_type = 'always' WHERE discount_schedule_type IS NULL"))
+        if needs_subscription_plans_discount_schedule:
+            dt = "TIMESTAMP" if dialect == "postgresql" else "DATETIME"
+            if dialect == "postgresql":
+                conn.execute(
+                    text(
+                        "ALTER TABLE subscription_plans ADD COLUMN discount_schedule_type VARCHAR(24) NOT NULL DEFAULT 'always'"
+                    )
+                )
+            else:
+                conn.execute(text("ALTER TABLE subscription_plans ADD COLUMN discount_schedule_type VARCHAR(24) DEFAULT 'always'"))
+            conn.execute(text(f"ALTER TABLE subscription_plans ADD COLUMN discount_valid_from {dt}"))
+            conn.execute(text(f"ALTER TABLE subscription_plans ADD COLUMN discount_valid_until {dt}"))
+            conn.execute(text("ALTER TABLE subscription_plans ADD COLUMN discount_hour_start INTEGER"))
+            conn.execute(text("ALTER TABLE subscription_plans ADD COLUMN discount_hour_end INTEGER"))
+            conn.execute(text("UPDATE subscription_plans SET discount_schedule_type = 'always' WHERE discount_schedule_type IS NULL"))
         if has_client_subscription_number or needs_client_subscription_number:
             _backfill_client_subscription_numbers(conn)
         if needs_training_exercises_table:

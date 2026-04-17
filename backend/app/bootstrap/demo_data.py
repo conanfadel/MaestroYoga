@@ -38,6 +38,8 @@ def ensure_demo_data(db: Session) -> models.Center:
                     name="اشتراك أسبوعي",
                     plan_type="weekly",
                     price=99.0,
+                    list_price=99.0,
+                    discount_mode="none",
                     session_limit=4,
                 ),
                 models.SubscriptionPlan(
@@ -45,6 +47,8 @@ def ensure_demo_data(db: Session) -> models.Center:
                     name="اشتراك شهري",
                     plan_type="monthly",
                     price=299.0,
+                    list_price=299.0,
+                    discount_mode="none",
                     session_limit=12,
                 ),
                 models.SubscriptionPlan(
@@ -52,6 +56,8 @@ def ensure_demo_data(db: Session) -> models.Center:
                     name="اشتراك سنوي",
                     plan_type="yearly",
                     price=2990.0,
+                    list_price=2990.0,
+                    discount_mode="none",
                     session_limit=180,
                 ),
                 models.SubscriptionPlan(
@@ -59,6 +65,8 @@ def ensure_demo_data(db: Session) -> models.Center:
                     name="اشتراك أسبوعي — مكثف",
                     plan_type="weekly",
                     price=149.0,
+                    list_price=149.0,
+                    discount_mode="none",
                     session_limit=8,
                 ),
                 models.SubscriptionPlan(
@@ -66,6 +74,8 @@ def ensure_demo_data(db: Session) -> models.Center:
                     name="اشتراك شهري — بلس",
                     plan_type="monthly",
                     price=399.0,
+                    list_price=399.0,
+                    discount_mode="none",
                     session_limit=20,
                 ),
                 models.SubscriptionPlan(
@@ -73,6 +83,8 @@ def ensure_demo_data(db: Session) -> models.Center:
                     name="خطة تجربة قصيرة",
                     plan_type="weekly",
                     price=49.0,
+                    list_price=49.0,
+                    discount_mode="none",
                     session_limit=2,
                 ),
                 models.SubscriptionPlan(
@@ -80,6 +92,8 @@ def ensure_demo_data(db: Session) -> models.Center:
                     name="اشتراك سنوي — ذهبي",
                     plan_type="yearly",
                     price=3990.0,
+                    list_price=3990.0,
+                    discount_mode="none",
                     session_limit=250,
                 ),
                 models.SubscriptionPlan(
@@ -87,6 +101,8 @@ def ensure_demo_data(db: Session) -> models.Center:
                     name="اشتراك شهري — مرن",
                     plan_type="monthly",
                     price=349.0,
+                    list_price=349.0,
+                    discount_mode="none",
                     session_limit=None,
                 ),
             ]
@@ -104,6 +120,8 @@ def ensure_demo_data(db: Session) -> models.Center:
                     starts_at=base,
                     duration_minutes=60,
                     price_drop_in=60.0,
+                    list_price=60.0,
+                    discount_mode="none",
                 ),
                 models.YogaSession(
                     center_id=center.id,
@@ -114,6 +132,8 @@ def ensure_demo_data(db: Session) -> models.Center:
                     starts_at=base + timedelta(hours=2),
                     duration_minutes=75,
                     price_drop_in=80.0,
+                    list_price=80.0,
+                    discount_mode="none",
                 ),
                 models.YogaSession(
                     center_id=center.id,
@@ -124,6 +144,8 @@ def ensure_demo_data(db: Session) -> models.Center:
                     starts_at=base + timedelta(hours=5),
                     duration_minutes=60,
                     price_drop_in=55.0,
+                    list_price=55.0,
+                    discount_mode="none",
                 ),
                 models.YogaSession(
                     center_id=center.id,
@@ -134,6 +156,8 @@ def ensure_demo_data(db: Session) -> models.Center:
                     starts_at=base + timedelta(hours=8),
                     duration_minutes=60,
                     price_drop_in=70.0,
+                    list_price=70.0,
+                    discount_mode="none",
                 ),
                 models.YogaSession(
                     center_id=center.id,
@@ -144,6 +168,8 @@ def ensure_demo_data(db: Session) -> models.Center:
                     starts_at=base + timedelta(days=1, hours=7),
                     duration_minutes=45,
                     price_drop_in=65.0,
+                    list_price=65.0,
+                    discount_mode="none",
                 ),
                 models.YogaSession(
                     center_id=center.id,
@@ -154,6 +180,8 @@ def ensure_demo_data(db: Session) -> models.Center:
                     starts_at=base + timedelta(days=1, hours=10),
                     duration_minutes=60,
                     price_drop_in=50.0,
+                    list_price=50.0,
+                    discount_mode="none",
                 ),
                 models.YogaSession(
                     center_id=center.id,
@@ -164,6 +192,8 @@ def ensure_demo_data(db: Session) -> models.Center:
                     starts_at=base + timedelta(days=1, hours=18),
                     duration_minutes=50,
                     price_drop_in=75.0,
+                    list_price=75.0,
+                    discount_mode="none",
                 ),
                 models.YogaSession(
                     center_id=center.id,
@@ -174,6 +204,8 @@ def ensure_demo_data(db: Session) -> models.Center:
                     starts_at=base + timedelta(days=2, hours=16),
                     duration_minutes=45,
                     price_drop_in=40.0,
+                    list_price=40.0,
+                    discount_mode="none",
                 ),
                 models.YogaSession(
                     center_id=center.id,
@@ -184,6 +216,8 @@ def ensure_demo_data(db: Session) -> models.Center:
                     starts_at=base + timedelta(days=2, hours=20),
                     duration_minutes=60,
                     price_drop_in=60.0,
+                    list_price=60.0,
+                    discount_mode="none",
                 ),
                 models.YogaSession(
                     center_id=center.id,
@@ -194,6 +228,8 @@ def ensure_demo_data(db: Session) -> models.Center:
                     starts_at=base + timedelta(days=3, hours=10),
                     duration_minutes=90,
                     price_drop_in=85.0,
+                    list_price=85.0,
+                    discount_mode="none",
                 ),
                 models.YogaSession(
                     center_id=center.id,
@@ -204,6 +240,8 @@ def ensure_demo_data(db: Session) -> models.Center:
                     starts_at=base + timedelta(days=3, hours=17),
                     duration_minutes=55,
                     price_drop_in=72.0,
+                    list_price=72.0,
+                    discount_mode="none",
                 ),
             ]
         )
@@ -224,6 +262,8 @@ def ensure_demo_data(db: Session) -> models.Center:
                 name="اشتراك أسبوعي",
                 plan_type="weekly",
                 price=99.0,
+                list_price=99.0,
+                discount_mode="none",
                 session_limit=4,
             )
         )
@@ -234,6 +274,8 @@ def ensure_demo_data(db: Session) -> models.Center:
                 name="اشتراك شهري",
                 plan_type="monthly",
                 price=299.0,
+                list_price=299.0,
+                discount_mode="none",
                 session_limit=12,
             )
         )
@@ -244,6 +286,8 @@ def ensure_demo_data(db: Session) -> models.Center:
                 name="اشتراك سنوي",
                 plan_type="yearly",
                 price=2990.0,
+                list_price=2990.0,
+                discount_mode="none",
                 session_limit=180,
             )
         )

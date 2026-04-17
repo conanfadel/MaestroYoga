@@ -75,7 +75,12 @@ def expire_stale_pending_payments(db: Session, *, older_than_minutes: int) -> in
         if not sub:
             continue
         plan = db.get(models.SubscriptionPlan, sub.plan_id)
-        if not plan or abs(float(plan.price) - float(pay.amount)) > 0.05:
+        if not plan:
+            continue
+        from ..discount_pricing import plan_public_checkout_amount
+
+        expected = plan_public_checkout_amount(plan, now=pay.created_at) if pay.created_at else plan_public_checkout_amount(plan)
+        if abs(float(expected) - float(pay.amount)) > 0.05:
             continue
         if sub.start_date and pay.created_at:
             delta = abs((sub.start_date - pay.created_at).total_seconds())

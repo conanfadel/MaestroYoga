@@ -42,7 +42,16 @@
                   {% endif %}
                 </header>
                 <div class="session-card__body">
+                  {% if s.has_promo %}
+                  <div class="session-card__price-stack" aria-label="السعر">
+                    <div class="session-card__list-price session-card__list-price--strike">{{ s.list_price }}<span>ر.س</span></div>
+                    <div class="session-card__price">{{ s.price_drop_in }}<span>ر.س</span></div>
+                    <div class="session-card__promo-label">{{ s.promo_label }}</div>
+                    {% if s.promo_schedule %}<div class="session-card__promo-schedule">{{ s.promo_schedule }}</div>{% endif %}
+                  </div>
+                  {% else %}
                   <div class="session-card__price">{{ s.price_drop_in }}<span>ر.س</span></div>
+                  {% endif %}
                   <div class="session-card__when">
                     <span class="session-card__when-label">اليوم والموعد</span>
                     <span class="session-card__when-main">{{ s.starts_at_display }}</span>

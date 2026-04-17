@@ -108,6 +108,8 @@ ADMIN_MSG_PLAN_DETAILS_UPDATED = "plan_details_updated"
 ADMIN_MSG_PLAN_DETAILS_INVALID = "plan_details_invalid"
 ADMIN_MSG_SESSION_CREATED = "session_created"
 ADMIN_MSG_SESSION_DELETED = "session_deleted"
+ADMIN_MSG_SESSION_PRICING_INVALID = "session_pricing_invalid"
+ADMIN_MSG_PLAN_PRICING_INVALID = "plan_pricing_invalid"
 ADMIN_MSG_FAQ_CREATED = "faq_created"
 ADMIN_MSG_FAQ_UPDATED = "faq_updated"
 ADMIN_MSG_FAQ_DELETED = "faq_deleted"
@@ -188,6 +190,14 @@ ADMIN_FLASH_MESSAGES: dict[str, tuple[str, str]] = {
     ADMIN_MSG_PLAN_DETAILS_INVALID: ("بيانات الخطة غير صالحة. تحقق من النوع/السعر/حد الجلسات.", "warn"),
     ADMIN_MSG_SESSION_CREATED: ("تمت إضافة الجلسة بنجاح.", "info"),
     ADMIN_MSG_SESSION_DELETED: ("تم حذف الجلسة بنجاح.", "info"),
+    ADMIN_MSG_SESSION_PRICING_INVALID: (
+        "بيانات السعر أو الخصم/التخفيض غير صالحة. تحقق من السعر الأساسي، أو أن نسبة الخصم بين 0 و100، أو أن السعر المخفض لا يتجاوز الأساسي.",
+        "warn",
+    ),
+    ADMIN_MSG_PLAN_PRICING_INVALID: (
+        "بيانات السعر أو الخصم/التخفيض للخطة غير صالحة. تحقق من الحقول كما في الجلسات.",
+        "warn",
+    ),
     ADMIN_MSG_IP_BLOCKED: ("تم حظر الـ IP مؤقتًا.", "warn"),
     ADMIN_MSG_IP_UNBLOCKED: ("تم فك حظر الـ IP.", "info"),
     ADMIN_MSG_IP_UNBLOCK_NOT_FOUND: ("تعذر العثور على الـ IP لفك الحظر.", "warn"),

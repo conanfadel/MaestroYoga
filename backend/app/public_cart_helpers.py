@@ -2,6 +2,7 @@ import json
 import logging
 
 from .checkout_status_urls import build_checkout_status_url
+from .discount_pricing import session_public_checkout_amount
 from .public_session_visibility import (
     yoga_session_accepts_new_public_booking,
     yoga_session_still_on_public_schedule,
@@ -97,7 +98,7 @@ def build_cart_booking_bundle(
             center_id=center_id,
             client_id=client_id,
             booking_id=booking.id,
-            amount=float(yoga_session.price_drop_in),
+            amount=float(session_public_checkout_amount(yoga_session, now=utcnow_fn())),
             currency="SAR",
             payment_method="public_cart_checkout",
             status="pending",
@@ -125,7 +126,7 @@ def process_hosted_cart_checkout(
 ) -> tuple[str | None, str | None]:
     line_specs = [
         (
-            float(yoga_session.price_drop_in),
+            float(session_public_checkout_amount(yoga_session)),
             f"حجز جلسة — {yoga_session.title}"[:120],
             f"{center_name} · {fmt_dt_fn(yoga_session.starts_at)} · {yoga_session.duration_minutes} دقيقة"[:500],
         )
@@ -193,7 +194,7 @@ def process_mock_cart_checkout(
     center_id: int,
     client_id: int,
 ) -> str:
-    total = sum(float(yoga_session.price_drop_in) for _, _, yoga_session in bundle)
+    total = sum(float(session_public_checkout_amount(yoga_session)) for _, _, yoga_session in bundle)
     provider_result = provider.charge(
         amount=total,
         currency="SAR",

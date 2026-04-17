@@ -1738,6 +1738,95 @@
       color: var(--gold-dark);
       margin-inline-start: 4px;
     }
+    .session-card__price-stack {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      align-items: flex-start;
+    }
+    .session-card__list-price {
+      font-size: 1.12rem;
+      font-weight: 700;
+      color: rgba(45, 52, 54, 0.72);
+      line-height: 1.2;
+    }
+    .session-card__list-price span {
+      font-size: 0.82rem;
+      font-weight: 600;
+      color: rgba(45, 52, 54, 0.55);
+      margin-inline-start: 4px;
+    }
+    .session-card__list-price--strike {
+      text-decoration: line-through;
+      text-decoration-color: #c62828;
+      text-decoration-thickness: 2px;
+    }
+    .session-card__promo-label {
+      font-size: 0.82rem;
+      font-weight: 700;
+      color: var(--gold-dark);
+      letter-spacing: 0.01em;
+    }
+    .session-card__promo-schedule {
+      font-size: 0.74rem;
+      font-weight: 600;
+      color: rgba(45, 52, 54, 0.78);
+      line-height: 1.35;
+      max-width: 100%;
+    }
+    html[data-theme="dark"] .session-card__promo-schedule {
+      color: rgba(255, 255, 255, 0.78);
+    }
+    #offers-section.offers-section {
+      margin-bottom: 18px;
+      border: 1px solid rgba(197, 160, 89, 0.38);
+      box-shadow: 0 10px 28px rgba(45, 52, 54, 0.06);
+    }
+    .offers-section__lead {
+      margin-top: 0;
+    }
+    .offers-section__sub {
+      margin-top: 16px;
+      margin-bottom: 8px;
+    }
+    .offers-section__to-full {
+      font-size: 0.72rem;
+      font-weight: 700;
+      white-space: nowrap;
+      color: #0f766e;
+      text-decoration: none;
+    }
+    .offers-section__to-full:hover {
+      text-decoration: underline;
+    }
+    .offers-section__plans {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+    .plan-card--offer {
+      flex: 1 1 220px;
+      min-width: 200px;
+    }
+    .plan-meta--offer {
+      margin-bottom: 10px;
+    }
+    .plan-promo-schedule {
+      display: block;
+      font-size: 0.62rem;
+      font-weight: 700;
+      margin-top: 4px;
+      color: rgba(45, 52, 54, 0.75);
+    }
+    html[data-theme="dark"] .plan-promo-schedule {
+      color: rgba(255, 255, 255, 0.72);
+    }
+    html[data-theme="dark"] .session-card__list-price {
+      color: rgba(255, 255, 255, 0.72);
+    }
+    html[data-theme="dark"] .session-card__list-price span {
+      color: rgba(255, 255, 255, 0.55);
+    }
     .session-card__when {
       position: relative;
       text-align: center;
@@ -4012,6 +4101,42 @@
       margin-bottom: 2px;
       letter-spacing: 0.02em;
     }
+    #plans-section .plan-price-stack {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      align-items: center;
+      font-weight: 800;
+      line-height: 1.25;
+    }
+    #plans-section .plan-list-price--strike {
+      text-decoration: line-through;
+      text-decoration-color: #c62828;
+      text-decoration-thickness: 2px;
+      font-size: 0.72rem;
+      font-weight: 700;
+      color: rgba(45, 52, 54, 0.58);
+    }
+    #plans-section .plan-sale-price {
+      font-size: 0.88rem;
+    }
+    #plans-section .plan-currency {
+      font-size: 0.62rem;
+      font-weight: 700;
+      margin-inline-start: 2px;
+      opacity: 0.9;
+    }
+    #plans-section .plan-promo-label {
+      font-size: 0.62rem;
+      font-weight: 800;
+      color: #b45309;
+    }
+    html[data-theme="dark"] #plans-section .plan-list-price--strike {
+      color: rgba(255, 255, 255, 0.55);
+    }
+    html[data-theme="dark"] #plans-section .plan-promo-label {
+      color: #fbbf24;
+    }
     #plans-section .plan-meta > div:nth-child(2) {
       background: linear-gradient(135deg, rgba(197, 160, 89, 0.2), rgba(197, 160, 89, 0.08));
       border-color: rgba(197, 160, 89, 0.42);
@@ -4376,6 +4501,7 @@
 
     <main id="main-content" class="grid-two{% if index_page.faq_section.show %} grid-two--with-wide-row{% endif %}">
       <div class="grid-two__main">
+      {% include "partials/index_offers_section.html" %}
       {% include "partials/index_sessions_panel.html" %}
 
       {% if pinned_public_post or public_posts_teasers %}
@@ -4437,7 +4563,19 @@
 
                   <div class="plan-meta">
                     <div><span class="k">المدة</span>{{ plan.duration_days }} يوم</div>
-                    <div><span class="k">السعر</span>{{ plan.price }} SAR</div>
+                    <div>
+                      <span class="k">السعر</span>
+                      {% if plan.has_promo %}
+                      <span class="plan-price-stack">
+                        <span class="plan-list-price plan-list-price--strike">{{ plan.list_price }}<span class="plan-currency">ر.س</span></span>
+                        <span class="plan-sale-price">{{ plan.price }}<span class="plan-currency">ر.س</span></span>
+                        <span class="plan-promo-label">{{ plan.promo_label }}</span>
+                        {% if plan.promo_schedule %}<span class="plan-promo-schedule">{{ plan.promo_schedule }}</span>{% endif %}
+                      </span>
+                      {% else %}
+                      {{ plan.price }} SAR
+                      {% endif %}
+                    </div>
                     <div><span class="k">حد الجلسات</span>{{ plan.session_limit if plan.session_limit else 'غير محدود' }}</div>
                   </div>
 
@@ -4542,6 +4680,9 @@
     </div>
 
     <nav class="mobile-quick-nav" id="mobile-quick-nav" aria-label="تنقّل سريع — جلسات وخطط وسلة">
+      {% if offer_sessions or offer_plans %}
+      <a class="mobile-quick-nav__link" href="#offers-section">عروض</a>
+      {% endif %}
       <a class="mobile-quick-nav__link" href="#sessions-section">جلسات</a>
       <a class="mobile-quick-nav__link mobile-quick-nav__link--plans" href="#plans-section">خطط</a>
       <button type="button" class="mobile-quick-nav__cart" id="mobile-quick-open-cart" aria-controls="cart-drawer" aria-expanded="false" aria-label="فتح سلة المشتريات">

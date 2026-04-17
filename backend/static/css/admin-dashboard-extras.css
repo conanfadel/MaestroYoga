@@ -921,6 +921,51 @@ body.report-insights .print-only-note {
   display: none;
 }
 
+.admin-discount-block {
+  margin: 14px 0 10px;
+  padding: 12px 14px;
+  border-radius: 12px;
+  border: 1px solid rgba(197, 160, 89, 0.28);
+  background: rgba(255, 255, 255, 0.55);
+}
+.admin-discount-block__legend {
+  font-weight: 700;
+  padding: 0 6px;
+}
+.admin-discount-block__hint {
+  margin: 0 0 10px;
+  opacity: 0.92;
+}
+.admin-discount-block .js-discount-panel-percent,
+.admin-discount-block .js-discount-panel-fixed {
+  margin-top: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.admin-discount-block .js-discount-computed {
+  opacity: 0.95;
+  font-weight: 600;
+}
+.admin-discount-schedule {
+  margin-top: 12px;
+  padding-top: 10px;
+  border-top: 1px dashed rgba(197, 160, 89, 0.35);
+}
+.admin-discount-schedule__title {
+  margin: 0 0 6px;
+  font-size: 0.95rem;
+}
+.plan-details-form__lbl {
+  display: block;
+  margin-top: 8px;
+  font-weight: 600;
+}
+html[data-theme="dark"] .admin-discount-block {
+  background: rgba(20, 24, 31, 0.55);
+  border-color: rgba(197, 160, 89, 0.35);
+}
+
 @media print {
   .no-print {
     display: none !important;

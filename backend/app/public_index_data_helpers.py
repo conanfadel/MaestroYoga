@@ -111,6 +111,8 @@ def build_public_index_template_context(
     index_next_path = public_index_next_path(
         int(center.id), payment=payment, msg=msg, session_id=session_id
     )
+    offer_sessions = [r for r in rows if r.get("in_active_offer")]
+    offer_plans = [p for p in plan_rows if p.get("in_active_offer")]
     return {
         "center": center,
         "center_id": center.id,
@@ -118,6 +120,8 @@ def build_public_index_template_context(
         "index_refund_p1_html": index_refund_p1_html,
         "sessions": rows,
         "plans": plan_rows,
+        "offer_sessions": offer_sessions,
+        "offer_plans": offer_plans,
         "recommended_plan_id": recommended_plan_id_by_daily_price(plan_rows),
         "payment": payment,
         "msg": msg,

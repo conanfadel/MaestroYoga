@@ -13,6 +13,14 @@ class SubscriptionPlan(Base):
     name = Column(String, nullable=False)
     plan_type = Column(String, nullable=False)  # monthly | yearly
     price = Column(Float, nullable=False)
+    list_price = Column(Float, nullable=True)
+    discount_mode = Column(String(16), nullable=False, default="none")
+    discount_percent = Column(Float, nullable=True)
+    discount_schedule_type = Column(String(24), nullable=False, default="always")
+    discount_valid_from = Column(DateTime, nullable=True)
+    discount_valid_until = Column(DateTime, nullable=True)
+    discount_hour_start = Column(Integer, nullable=True)
+    discount_hour_end = Column(Integer, nullable=True)
     session_limit = Column(Integer, nullable=True)
     is_active = Column(Boolean, default=True)
 

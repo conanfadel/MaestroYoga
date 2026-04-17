@@ -78,7 +78,7 @@ def register_public_commerce_book_routes(router: APIRouter) -> None:
         if payment_cfg_msg or provider is None:
             return _s.redirect_public_index_with_params(center_id=center_id, msg=payment_cfg_msg or "payment_provider_config")
 
-        amount = float(yoga_session.price_drop_in)
+        amount = float(_s.discount_pricing.session_public_checkout_amount(yoga_session))
         booking, payment_row, booking_error = _s.create_pending_single_booking_payment(
             db=db,
             models_module=_s.models,

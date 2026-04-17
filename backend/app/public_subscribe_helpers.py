@@ -4,6 +4,7 @@ from datetime import timedelta
 from fastapi import HTTPException
 
 from .checkout_status_urls import build_checkout_status_url
+from .discount_pricing import plan_public_checkout_amount
 
 logger = logging.getLogger(__name__)
 
@@ -34,7 +35,7 @@ def create_pending_subscription_payment(
         center_id=center_id,
         client_id=client_id,
         booking_id=None,
-        amount=float(plan.price),
+        amount=float(plan_public_checkout_amount(plan)),
         currency="SAR",
         payment_method=f"subscription_{plan.plan_type}",
         status="pending",
@@ -79,7 +80,7 @@ def process_hosted_subscription_checkout(
     try:
         sub_payment_ids = [int(payment_row.id)]
         provider_result = provider.create_checkout_session(
-            amount=float(plan.price),
+            amount=float(plan_public_checkout_amount(plan)),
             currency="sar",
             metadata={
                 "payment_id": str(payment_row.id),
