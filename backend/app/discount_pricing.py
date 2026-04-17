@@ -3,10 +3,10 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from datetime import datetime
+from datetime import datetime, timedelta, timezone
 from typing import Any, Literal
 
-from .time_utils import utc_naive_to_ksa
+from .time_utils import KSA_TZ, utc_naive_to_ksa
 
 DiscountMode = Literal["none", "percent", "fixed"]
 ScheduleType = Literal["always", "date_range", "daily_hours"]
@@ -350,3 +350,38 @@ def public_in_active_offer(obj: Any, *, now: datetime | None = None) -> bool:
     if not public_show_promo_ui(obj):
         return False
     return is_discount_schedule_active(now, obj)
+
+
+def promo_active_window_end_utc_naive(obj: Any, *, now: datetime | None = None) -> datetime | None:
+    """نهاية النافذة الحالية للعرض بتوقيت UTC (بدون tz) — للعداد التنازلي على الفهرس."""
+    from .time_utils import utcnow_naive
+
+    now = now or utcnow_naive()
+    if not public_show_promo_ui(obj):
+        return None
+    if not is_discount_schedule_active(now, obj):
+        return None
+    st = normalize_schedule_type(getattr(obj, "discount_schedule_type", None))
+    if st == "always":
+        return None
+    if st == "date_range":
+        return getattr(obj, "discount_valid_until", None)
+    if st != "daily_hours":
+        return None
+    dur = getattr(obj, "discount_duration_hours", None)
+    now_utc = now.replace(tzinfo=timezone.utc)
+    ksa_now = now_utc.astimezone(KSA_TZ)
+    mid = ksa_now.replace(hour=0, minute=0, second=0, microsecond=0)
+    if dur is not None and int(dur) > 0:
+        end_ksa = mid + timedelta(hours=float(int(dur)))
+    else:
+        he = getattr(obj, "discount_hour_end", None)
+        hs = getattr(obj, "discount_hour_start", None)
+        if he is None or hs is None:
+            return None
+        a, b = int(hs), int(he)
+        if a < b:
+            end_ksa = mid + timedelta(hours=b + 1)
+        else:
+            return None
+    return end_ksa.astimezone(timezone.utc).replace(tzinfo=None)

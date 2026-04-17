@@ -12,8 +12,20 @@
   duration_hours_value=''
 ) %}
 <fieldset class="admin-discount-block js-admin-discount-block" data-discount-suffix="{{ suffix }}">
-  <legend class="admin-discount-block__legend">خصم وتخفيض</legend>
-  <p class="small admin-discount-block__hint">اختر «بدون» لعرض السعر الأساسي فقط، أو «خصم» لنسبة من الأساس، أو «تخفيض» لتحديد سعر نهائي أقل من الأساس.</p>
+  <legend class="admin-discount-legend-row">
+    <span>خصم وتخفيض</span>
+    <button
+      type="button"
+      class="admin-help-exclaim admin-help-exclaim--inline js-discount-hint-toggle"
+      aria-expanded="false"
+      aria-controls="discount-hint-{{ suffix }}"
+      title="اختر «بدون» لعرض السعر الأساسي فقط، أو «خصم» لنسبة من الأساس، أو «تخفيض» لتحديد سعر نهائي أقل من الأساس. عند تفعيل الخصم أو التخفيض: يحدد «وقت العرض» متى يُطبَّق السعر المخفّض على الصفحة العامة والدفع؛ النافذة اليومية = أول N ساعة من منتصف ليل السعودية (UTC+3)."
+    >!</button>
+  </legend>
+  <div id="discount-hint-{{ suffix }}" class="admin-discount-hint-panel" hidden>
+    <p class="small" style="margin:0 0 8px;line-height:1.55;">اختر «بدون» لعرض السعر الأساسي فقط، أو «خصم» لنسبة من الأساس، أو «تخفيض» لتحديد سعر نهائي أقل من الأساس.</p>
+    <p class="small" style="margin:0;line-height:1.55;">يحدد «وقت العرض» متى يُطبَّق السعر المخفّض على الصفحة العامة والدفع. النافذة اليومية = أول N ساعة من منتصف ليل السعودية (UTC+3).</p>
+  </div>
   <label for="discount-mode-{{ suffix }}">نوع العرض</label>
   <select id="discount-mode-{{ suffix }}" name="discount_mode" class="js-discount-mode" autocomplete="off">
     <option value="none" {{ 'selected' if discount_mode_value == 'none' else '' }}>بدون</option>
@@ -32,8 +44,7 @@
   </div>
 
   <div class="js-discount-schedule-wrap admin-discount-schedule" hidden>
-    <p class="admin-discount-block__legend admin-discount-schedule__title">وقت العرض (للجمهور)</p>
-    <p class="small admin-discount-block__hint">يحدد متى يُطبَّق السعر المخفض على الصفحة العامة والدفع. النافذة اليومية = أول N ساعة من منتصف ليل السعودية (UTC+3).</p>
+    <p class="admin-discount-schedule__title">وقت العرض (للجمهور)</p>
     <label for="schedule-type-{{ suffix }}">أسلوب تحديد الفترة</label>
     <select id="schedule-type-{{ suffix }}" name="discount_schedule_type" class="js-schedule-type">
       <option value="always" {{ 'selected' if schedule_type_value == 'always' else '' }}>دائمًا طالما الجلسة/الخطة منشورة</option>

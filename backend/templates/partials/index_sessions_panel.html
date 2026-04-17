@@ -48,6 +48,7 @@
                     <div class="session-card__price">{{ s.display_sale_price }}<span>ر.س</span></div>
                     <div class="session-card__promo-label">{{ s.promo_label }}</div>
                     {% if s.promo_schedule %}<div class="session-card__promo-schedule">{{ s.promo_schedule }}</div>{% endif %}
+                    {% if s.promo_countdown_end_iso %}<div class="session-card__promo-countdown js-promo-countdown" data-promo-ends-at="{{ s.promo_countdown_end_iso }}" dir="rtl" lang="ar" aria-live="polite"></div>{% endif %}
                   </div>
                   {% else %}
                   <div class="session-card__price">{{ s.price_drop_in }}<span>ر.س</span></div>

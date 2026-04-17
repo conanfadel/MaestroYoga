@@ -2,6 +2,7 @@ from datetime import timedelta
 
 from . import models
 from .discount_pricing import (
+    promo_active_window_end_utc_naive,
     public_in_active_offer,
     public_promo_label,
     public_promo_schedule_caption,
@@ -63,6 +64,7 @@ def build_public_session_rows(
             duration_hours=int(dh) if dh is not None else None,
         )
         in_active_offer = public_in_active_offer(s, now=now)
+        end_at = promo_active_window_end_utc_naive(s, now=now)
         rows.append(
             {
                 "id": s.id,
@@ -82,6 +84,7 @@ def build_public_session_rows(
                 "promo_label": promo_label,
                 "promo_schedule": promo_schedule,
                 "in_active_offer": in_active_offer,
+                "promo_countdown_end_iso": (end_at.isoformat() + "Z") if end_at else None,
                 "room_name": room.name if room else "-",
                 "spots_available": spots_by_session.get(int(s.id), 0),
                 "allows_public_booking": yoga_session_accepts_new_public_booking(s, now=now),

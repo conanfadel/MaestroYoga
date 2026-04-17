@@ -1179,29 +1179,51 @@
       text-align: center;
     }
 
-    /* لوحة التحكم — خطط الاشتراك: عمود واحد ووضوح */
+    /* لوحة التحكم — خطط الاشتراك: بطاقة أفقية ووضوح */
     .plans-cards--admin-stack {
       display: flex;
       flex-direction: column;
       gap: 18px;
-      max-width: 720px;
+      max-width: 100%;
     }
     .plan-card--admin {
       display: flex;
-      flex-direction: column;
-      gap: 12px;
+      flex-direction: row;
+      flex-wrap: wrap;
+      align-items: flex-start;
+      gap: 14px 20px;
       overflow: visible;
     }
+    .plan-card--admin .plan-card-top--admin {
+      flex: 0 0 min(200px, 100%);
+      min-width: 0;
+    }
     .plan-meta--admin {
-      grid-template-columns: 1fr;
+      flex: 1 1 240px;
+      min-width: 0;
+      grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
       gap: 10px;
+    }
+    .plan-name-form--admin {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      align-items: stretch;
+      margin-bottom: 0;
+      flex: 1 1 200px;
+      min-width: min(100%, 200px);
+    }
+    .plan-name-form--admin button {
+      width: 100%;
     }
     .plan-details-form--admin-stack {
       display: flex;
       flex-direction: column;
       align-items: stretch;
       gap: 10px;
-      width: 100%;
+      flex: 2 1 320px;
+      min-width: min(100%, 280px);
+      max-width: 100%;
       margin-bottom: 0;
     }
     .plan-card--admin .plan-details-form--admin-stack input,
@@ -1214,19 +1236,26 @@
       width: 100%;
       margin-top: 4px;
     }
-    .plan-name-form--admin {
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-      align-items: stretch;
-      margin-bottom: 0;
-    }
-    .plan-name-form--admin button {
-      width: 100%;
+    .plan-delete-form--admin {
+      flex: 0 0 auto;
+      margin-inline-start: auto;
+      align-self: center;
     }
     .plan-delete-form--admin button {
-      width: 100%;
-      max-width: 280px;
+      width: auto;
+      min-width: 120px;
+    }
+    @media (max-width: 900px) {
+      .plan-card--admin {
+        flex-direction: column;
+      }
+      .plan-delete-form--admin {
+        margin-inline-start: 0;
+        align-self: stretch;
+      }
+      .plan-delete-form--admin button {
+        width: 100%;
+      }
     }
     .plans-head__row {
       display: flex;
@@ -1260,6 +1289,29 @@
     }
     .plan-card--admin .admin-discount-block {
       width: 100%;
+    }
+    .admin-discount-legend-row {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 8px;
+      width: 100%;
+      padding: 0;
+      margin: 0 0 6px;
+      font-weight: 800;
+      font-size: 0.95rem;
+    }
+    .admin-help-exclaim--inline {
+      width: 28px;
+      height: 28px;
+      font-size: 0.9rem;
+    }
+    .admin-discount-hint-panel {
+      margin: 0 0 10px;
+      padding: 10px 12px;
+      border-radius: 10px;
+      border: 1px solid rgba(197, 160, 89, 0.35);
+      background: rgba(197, 160, 89, 0.08);
     }
     table.plans-table th { background: var(--charcoal); color: #f8fafc; }
     @media (max-width: 1200px) {

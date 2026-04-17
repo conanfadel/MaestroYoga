@@ -3269,6 +3269,19 @@
   </script>
   <script>
     (function () {
+      document.querySelectorAll(".js-discount-hint-toggle").forEach(function (btn) {
+        btn.addEventListener("click", function () {
+          var id = btn.getAttribute("aria-controls");
+          var panel = id ? document.getElementById(id) : null;
+          if (!panel) return;
+          panel.hidden = !panel.hidden;
+          btn.setAttribute("aria-expanded", panel.hidden ? "false" : "true");
+        });
+      });
+    })();
+  </script>
+  <script>
+    (function () {
       function parseMoney(v) {
         if (v == null) return NaN;
         var s = String(v).trim().replace(",", ".");

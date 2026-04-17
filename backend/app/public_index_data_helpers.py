@@ -111,8 +111,8 @@ def build_public_index_template_context(
     index_next_path = public_index_next_path(
         int(center.id), payment=payment, msg=msg, session_id=session_id
     )
-    offer_sessions = [r for r in rows if r.get("in_active_offer")]
-    offer_plans = [p for p in plan_rows if p.get("in_active_offer")]
+    offer_sessions = [r for r in rows if r.get("has_promo")]
+    offer_plans = [p for p in plan_rows if p.get("has_promo")]
     return {
         "center": center,
         "center_id": center.id,

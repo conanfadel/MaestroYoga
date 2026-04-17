@@ -1,5 +1,6 @@
 from .discount_pricing import (
     plan_public_checkout_amount,
+    promo_active_window_end_utc_naive,
     public_in_active_offer,
     public_promo_label,
     public_promo_schedule_caption,
@@ -51,6 +52,7 @@ def build_public_plan_rows(plans: list, *, plan_labels: dict[str, str]) -> list[
             duration_hours=int(dh) if dh is not None else None,
         )
         in_active_offer = public_in_active_offer(p, now=now)
+        end_at = promo_active_window_end_utc_naive(p, now=now)
         rows.append(
             {
                 "id": p.id,
@@ -65,6 +67,7 @@ def build_public_plan_rows(plans: list, *, plan_labels: dict[str, str]) -> list[
                 "promo_label": promo_label,
                 "promo_schedule": promo_schedule,
                 "in_active_offer": in_active_offer,
+                "promo_countdown_end_iso": (end_at.isoformat() + "Z") if end_at else None,
                 "session_limit": p.session_limit,
             }
         )

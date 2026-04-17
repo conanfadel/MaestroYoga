@@ -1821,6 +1821,21 @@
     html[data-theme="dark"] .plan-promo-schedule {
       color: rgba(255, 255, 255, 0.72);
     }
+    .plan-promo-countdown,
+    .session-card__promo-countdown {
+      display: block;
+      margin-top: 6px;
+      font-size: 0.78rem;
+      font-weight: 800;
+      font-variant-numeric: tabular-nums;
+      letter-spacing: 0.02em;
+      color: #0f766e;
+      direction: rtl;
+    }
+    html[data-theme="dark"] .plan-promo-countdown,
+    html[data-theme="dark"] .session-card__promo-countdown {
+      color: #5eead4;
+    }
     html[data-theme="dark"] .session-card__list-price {
       color: rgba(255, 255, 255, 0.72);
     }
@@ -4571,6 +4586,7 @@
                         <span class="plan-sale-price">{{ plan.display_sale_price }}<span class="plan-currency">ر.س</span></span>
                         <span class="plan-promo-label">{{ plan.promo_label }}</span>
                         {% if plan.promo_schedule %}<span class="plan-promo-schedule">{{ plan.promo_schedule }}</span>{% endif %}
+                        {% if plan.promo_countdown_end_iso %}<span class="plan-promo-countdown js-promo-countdown" data-promo-ends-at="{{ plan.promo_countdown_end_iso }}" dir="rtl" lang="ar" aria-live="polite"></span>{% endif %}
                       </span>
                       {% else %}
                       {{ plan.price }} SAR
@@ -5206,6 +5222,34 @@
         }
         syncPlansState();
         plansDetails.addEventListener("toggle", syncPlansState);
+      })();
+
+      (function setupPromoCountdowns() {
+        var nodes = document.querySelectorAll(".js-promo-countdown");
+        if (!nodes.length) return;
+        function pad2(n) {
+          return n < 10 ? "0" + n : String(n);
+        }
+        function formatRemaining(ms) {
+          if (ms <= 0) return "انتهت نافذة العرض الحالية";
+          var s = Math.floor(ms / 1000);
+          var h = Math.floor(s / 3600);
+          var m = Math.floor((s % 3600) / 60);
+          var sec = s % 60;
+          return "متبقٍ للعرض: " + h + ":" + pad2(m) + ":" + pad2(sec);
+        }
+        function tick() {
+          var now = Date.now();
+          nodes.forEach(function (el) {
+            var iso = el.getAttribute("data-promo-ends-at");
+            if (!iso) return;
+            var end = Date.parse(iso);
+            if (!Number.isFinite(end)) return;
+            el.textContent = formatRemaining(end - now);
+          });
+        }
+        tick();
+        setInterval(tick, 1000);
       })();
 
       document.querySelectorAll(".js-add-session").forEach(function (btn) {
