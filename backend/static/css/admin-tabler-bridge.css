@@ -3,6 +3,24 @@
 body.maestro-tabler {
   --gold: #c5a059;
   --mint: #aaf0d1;
+  /* دمج هوية المركز مع ألوان Tabler */
+  --tblr-primary: #c5a059;
+  --tblr-primary-rgb: 197, 160, 89;
+  font-family: "Tajawal", system-ui, sans-serif;
+}
+
+body.maestro-tabler .page {
+  min-height: 100vh;
+  min-height: 100dvh;
+}
+
+body.maestro-tabler .page-wrapper {
+  min-width: 0;
+}
+
+body.maestro-tabler .page-body {
+  flex: 1 1 auto;
+  min-width: 0;
 }
 
 /* شريط التبويبات الأفقي: مرئي على الشاشات الصغيرة فقط */
@@ -27,7 +45,18 @@ body.maestro-tabler .admin-main .card {
   display: block;
 }
 
-/* شريط علوي: أدوات Maestro الحالية (.top) */
+/* تخطي للمحتوى — موضع منطقي في RTL */
+body.maestro-tabler .admin-skip-link:focus {
+  right: auto;
+  left: auto;
+  inset-inline-end: 12px;
+}
+
+/* شريط علوي */
+body.maestro-tabler #maestro-top-navbar {
+  min-height: 3.25rem;
+}
+
 body.maestro-tabler #maestro-top-navbar .maestro-header-toolbar {
   flex: 1 1 auto;
   min-width: 0;
@@ -39,15 +68,22 @@ body.maestro-tabler #maestro-top-navbar .maestro-header-toolbar .top {
   border-radius: 14px;
 }
 
-/* الشريط الجانبي — هوية المركز (زيتوني + فحمي) */
+/* الشريط الجانبي — هوية المركز */
 body.maestro-tabler .maestro-sidebar.navbar-vertical {
   background: #1a1d21;
-  border-inline-start: 1px solid color-mix(in srgb, var(--gold) 45%, transparent);
+  min-height: 100vh;
+  min-height: 100dvh;
+  border-inline-end: 1px solid color-mix(in srgb, var(--gold) 42%, transparent);
+}
+
+body.maestro-tabler .maestro-sidebar .container-fluid {
+  min-height: 100%;
 }
 
 body.maestro-tabler .maestro-sidebar a.navbar-brand {
-  padding: 0.75rem 0.5rem;
+  padding: 0.75rem 0.75rem;
   margin: 0;
+  flex-shrink: 0;
   background: linear-gradient(180deg, #454030 0%, #3a3a2e 40%, #2f2e26 100%);
   border-bottom: 1px solid rgba(197, 160, 89, 0.35);
   color: rgba(255, 255, 255, 0.95);
@@ -56,10 +92,33 @@ body.maestro-tabler .maestro-sidebar a.navbar-brand {
   text-decoration: none;
 }
 
+body.maestro-tabler .maestro-sidebar .navbar-toggler {
+  border-color: rgba(255, 255, 255, 0.22);
+  padding: 0.35rem 0.45rem;
+}
+
 body.maestro-tabler .maestro-sidebar .maestro-sidebar-logo {
   max-height: 2.25rem;
   width: auto;
   border-radius: 8px;
+}
+
+/* على الشاشات الكبيرة: منطقة القابلة للتمرير تحت الشعار */
+@media (min-width: 992px) {
+  body.maestro-tabler .maestro-sidebar .container-fluid {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    min-height: 100vh;
+    min-height: 100dvh;
+  }
+
+  body.maestro-tabler .maestro-sidebar .maestro-sidebar-scroll {
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+  }
 }
 
 body.maestro-tabler .maestro-sidebar .navbar-collapse .navbar-nav {
@@ -70,6 +129,7 @@ body.maestro-tabler .maestro-sidebar .nav-link {
   font-family: "Tajawal", system-ui, sans-serif;
   color: rgba(255, 255, 255, 0.9);
   border-radius: 10px;
+  gap: 0.5rem;
 }
 
 body.maestro-tabler .maestro-sidebar .nav-link:hover {
@@ -94,6 +154,7 @@ body.maestro-tabler .maestro-sidebar .nav-link-title {
   flex: 1 1 auto;
   min-width: 0;
   white-space: normal;
+  line-height: 1.35;
 }
 
 body.maestro-tabler .maestro-sidebar .nav-item.maestro-nav-cluster-label .nav-link {
@@ -104,16 +165,45 @@ body.maestro-tabler .maestro-sidebar .nav-item.maestro-nav-cluster-label .nav-li
   letter-spacing: 0.04em;
   text-transform: uppercase;
   color: rgba(255, 255, 255, 0.55) !important;
-  padding-block: 0.5rem 0.15rem;
+  padding-block: 0.65rem 0.2rem;
   background: transparent !important;
 }
 
+body.maestro-tabler .maestro-sidebar .nav-item.maestro-nav-cluster-label:first-of-type .nav-link {
+  padding-top: 0.35rem;
+}
+
 body.maestro-tabler .page-header {
-  box-shadow: 0 1px 0 rgba(0, 0, 0, 0.04);
+  box-shadow: 0 1px 0 rgba(0, 0, 0, 0.05);
+}
+
+body.maestro-tabler .page-header .page-title {
+  font-family: "Tajawal", system-ui, sans-serif;
+  font-weight: 700;
 }
 
 body.maestro-tabler .footer.maestro-admin-footer {
   border-top: 1px solid color-mix(in srgb, var(--gold) 22%, var(--tblr-border-color, #dee2e6));
+  margin-top: auto;
+}
+
+@supports not (color: color-mix(in srgb, red, blue)) {
+  body.maestro-tabler .maestro-sidebar.navbar-vertical {
+    border-inline-end: 1px solid rgba(197, 160, 89, 0.38);
+  }
+
+  body.maestro-tabler .maestro-sidebar .nav-link:hover {
+    background: rgba(170, 240, 209, 0.1);
+  }
+
+  body.maestro-tabler .maestro-sidebar .section-tab.active {
+    background: rgba(197, 160, 89, 0.22) !important;
+    box-shadow: inset 0 0 0 1px rgba(197, 160, 89, 0.45);
+  }
+
+  body.maestro-tabler .footer.maestro-admin-footer {
+    border-top: 1px solid rgba(197, 160, 89, 0.25);
+  }
 }
 
 html[data-bs-theme="dark"] body.maestro-tabler .maestro-sidebar.navbar-vertical {

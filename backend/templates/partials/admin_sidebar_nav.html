@@ -7,7 +7,7 @@
 >
   <div class="container-fluid flex-lg-column px-lg-0">
     <button
-      class="navbar-toggler me-2 d-lg-none"
+      class="navbar-toggler d-lg-none ms-1 ms-lg-0 flex-shrink-0"
       type="button"
       data-bs-toggle="collapse"
       data-bs-target="#maestro-sidebar-menu"
@@ -23,7 +23,7 @@
       {% endif %}
       <span>{{ center.name if center else 'Maestro Yoga' }}</span>
     </a>
-    <div class="collapse navbar-collapse flex-lg-column align-items-stretch w-100" id="maestro-sidebar-menu">
+    <div class="collapse navbar-collapse flex-lg-column align-items-stretch w-100 maestro-sidebar-scroll" id="maestro-sidebar-menu">
       <ul class="navbar-nav flex-column w-100 px-lg-2 pb-lg-3" id="maestro-sidebar-nav" role="navigation" aria-label="أقسام لوحة الإدارة">
         {{ admin_nav.admin_nav_clusters('sidebar') }}
       </ul>

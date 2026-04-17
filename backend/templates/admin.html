@@ -24,8 +24,8 @@
   <div class="page">
     {% include "partials/admin_sidebar_nav.html" %}
     <div class="page-wrapper">
-      <header class="navbar navbar-expand-md d-print-none border-bottom bg-body" id="maestro-top-navbar" aria-label="شريط أدوات لوحة الإدارة">
-        <div class="container-fluid d-flex align-items-stretch flex-wrap gap-2 py-2">
+      <header class="navbar navbar-expand-md d-print-none border-bottom bg-body shadow-sm align-items-center" id="maestro-top-navbar" aria-label="شريط أدوات لوحة الإدارة">
+        <div class="container-fluid d-flex align-items-center flex-wrap gap-2 py-2">
           <button
             class="navbar-toggler d-lg-none border-0 px-2"
             type="button"
@@ -42,9 +42,9 @@
           </div>
         </div>
       </header>
-      <div class="page-header border-bottom bg-body d-print-none">
+      <div class="page-header border-bottom bg-body-tertiary d-print-none">
         <div class="container-fluid py-3">
-          <h2 class="page-title mb-0">لوحة الإدارة</h2>
+          <h2 class="page-title mb-0 text-body">لوحة الإدارة</h2>
           <div class="text-secondary small mt-1">إدارة الجلسات، الحجوزات، المحتوى، والأمان — {{ center.name if center else 'Maestro Yoga' }}</div>
         </div>
       </div>
