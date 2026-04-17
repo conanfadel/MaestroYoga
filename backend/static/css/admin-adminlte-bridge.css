@@ -48,6 +48,20 @@ body.maestro-adminlte .admin-main .card {
 
 /* Sidebar — ألوان ثيم Maestro (ذهبي + نعناعي) وهوية المركز */
 body.maestro-adminlte .maestro-sidebar {
+  /* يتجاوز ألوان AdminLTE الافتراضية (#343 على خلفية داكنة = غير مقروء) */
+  --lte-sidebar-color: rgba(255, 255, 255, 0.92);
+  --lte-sidebar-hover-color: #fff;
+  --lte-sidebar-hover-bg: color-mix(in srgb, var(--mint) 18%, rgba(255, 255, 255, 0.06));
+  --lte-sidebar-active-color: #fff;
+  --lte-sidebar-menu-active-bg: color-mix(in srgb, var(--gold) 32%, rgba(255, 255, 255, 0.08));
+  --lte-sidebar-menu-active-color: #fff;
+  --lte-sidebar-submenu-bg: transparent;
+  --lte-sidebar-submenu-color: rgba(255, 255, 255, 0.78);
+  --lte-sidebar-submenu-hover-color: #fff;
+  --lte-sidebar-submenu-hover-bg: color-mix(in srgb, var(--mint) 14%, rgba(255, 255, 255, 0.06));
+  --lte-sidebar-submenu-active-color: #fff;
+  --lte-sidebar-submenu-active-bg: color-mix(in srgb, var(--gold) 28%, rgba(255, 255, 255, 0.1));
+  --lte-sidebar-header-color: rgba(255, 255, 255, 0.65);
   --maestro-sidebar-fg: rgba(255, 255, 255, 0.92);
   --maestro-sidebar-muted: rgba(255, 255, 255, 0.7);
   --maestro-sidebar-hover: color-mix(in srgb, var(--mint) 22%, rgba(255, 255, 255, 0.06));
@@ -98,11 +112,35 @@ body.maestro-adminlte .maestro-sidebar .brand-text {
 }
 
 body.maestro-adminlte .maestro-sidebar .nav-link {
-  color: var(--maestro-sidebar-fg);
+  color: var(--lte-sidebar-color);
 }
 
 body.maestro-adminlte .maestro-sidebar .nav-link p {
   font-family: "Tajawal", system-ui, sans-serif;
+}
+
+/* AdminLTE يخفي .nav-treeview حتى menu-open — نعرض كل الأقسام دائمًا (لوحة إدارية، ليس قائمة مطوية) */
+body.maestro-adminlte .maestro-sidebar .sidebar-menu .nav-treeview {
+  display: block !important;
+}
+
+/* منع قصّ النص داخل flex (overflow:hidden من AdminLTE يُفْرِغ السطر أحيانًا) */
+body.maestro-adminlte .maestro-sidebar .sidebar-wrapper .nav-link {
+  align-items: center;
+  gap: 0.35rem;
+}
+
+body.maestro-adminlte .maestro-sidebar .sidebar-wrapper .nav-link p {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: visible;
+  white-space: normal;
+  text-overflow: unset;
+}
+
+body.maestro-adminlte .maestro-sidebar .sidebar-wrapper .nav-icon.bi {
+  font-size: 1.05rem;
+  line-height: 1;
 }
 
 body.maestro-adminlte .maestro-sidebar .nav-link:hover {
@@ -111,7 +149,7 @@ body.maestro-adminlte .maestro-sidebar .nav-link:hover {
 }
 
 body.maestro-adminlte .maestro-sidebar .nav-treeview > .nav-item > .nav-link {
-  color: var(--maestro-sidebar-muted);
+  color: var(--lte-sidebar-submenu-color);
 }
 
 body.maestro-adminlte .maestro-sidebar .nav-treeview > .nav-item > .nav-link:hover {
