@@ -1293,7 +1293,7 @@
         minmax(0, 0.76fr)
         minmax(184px, 1.82fr)
         minmax(108px, 0.56fr)
-        minmax(0, 0.92fr);
+        minmax(200px, 1fr);
       column-gap: clamp(12px, 2vw, 22px);
       row-gap: 10px;
       align-items: start;
@@ -1354,6 +1354,9 @@
     .plan-card--admin .plan-details-form__split--admin-unified .admin-discount-legend-row {
       font-size: 0.82rem;
       margin-bottom: 4px;
+      white-space: nowrap;
+      width: auto;
+      max-width: none;
     }
     .plan-card--admin .plan-details-form__split--admin-unified .admin-discount-mode-field {
       max-width: 100%;
@@ -1523,20 +1526,21 @@
       width: 100%;
     }
     .admin-discount-legend-row {
-      display: flex;
+      display: inline-flex;
       flex-wrap: nowrap;
       align-items: center;
       gap: 6px;
-      width: 100%;
-      max-width: 100%;
+      width: auto;
+      max-width: none;
       padding: 0;
       margin: 0 0 6px;
       font-weight: 800;
       font-size: 0.95rem;
+      white-space: nowrap;
     }
-    .admin-discount-legend-row > span:first-of-type {
-      flex: 0 1 auto;
-      min-width: 0;
+    .admin-discount-legend-title {
+      flex: 0 0 auto;
+      white-space: nowrap;
     }
     .admin-help-exclaim--inline {
       width: 26px;

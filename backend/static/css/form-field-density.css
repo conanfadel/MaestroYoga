@@ -35,6 +35,13 @@ form.plan-details-form--horizontal:not(.plan-details-form--admin-stack) .plan-de
   white-space: nowrap;
 }
 
+/* —— لوحة: عنوان «خصم وتخفيض» + (!) — سطر واحد في كل نماذج الخصم —— */
+.admin-discount-legend-row,
+.admin-discount-legend-title,
+.admin-discount-block > legend.admin-discount-legend-row {
+  white-space: nowrap;
+}
+
 /* —— لوحة: تسميات كتلة الخصم والجدولة —— */
 .admin-discount-block .admin-discount-mode-field > label {
   white-space: nowrap;

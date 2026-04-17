@@ -947,8 +947,12 @@ body.report-insights .print-only-note {
 }
 .admin-discount-block > legend.admin-discount-legend-row {
   width: max-content;
-  max-width: 100%;
+  max-width: none;
   box-sizing: border-box;
+  white-space: nowrap;
+}
+.admin-discount-legend-title {
+  white-space: nowrap;
 }
 .admin-discount-block .admin-discount-hint-panel[hidden] {
   display: none !important;
