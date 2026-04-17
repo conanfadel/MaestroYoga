@@ -73,8 +73,13 @@ body.maestro-tabler .maestro-sidebar.navbar-vertical {
   border-inline-end: 1px solid color-mix(in srgb, var(--gold) 42%, transparent);
 }
 
-body.maestro-tabler .maestro-sidebar .container-fluid {
-  min-height: 100%;
+body.maestro-tabler .maestro-sidebar > .container-fluid {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  flex: 1 1 auto;
+  min-height: 0;
+  min-width: 0;
 }
 
 body.maestro-tabler .maestro-sidebar a.navbar-brand {
@@ -100,30 +105,20 @@ body.maestro-tabler .maestro-sidebar .maestro-sidebar-logo {
   border-radius: 8px;
 }
 
-/* منع إخفاء القائمة: collapse بدون .show يكون display:none — نفرض العرض على lg+ */
-@media (min-width: 992px) {
-  body.maestro-tabler .maestro-sidebar #maestro-sidebar-menu.navbar-collapse {
-    display: flex !important;
-    flex-direction: column !important;
-    height: auto !important;
-    max-height: none !important;
-    visibility: visible !important;
-    opacity: 1 !important;
-  }
+/* عند الفتح فقط (.show) — لا نكسر إخفاء القائمة على الجوال */
+body.maestro-tabler .maestro-sidebar #maestro-sidebar-menu.navbar-collapse.show {
+  display: flex !important;
+  flex-direction: column !important;
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
 
-  body.maestro-tabler .maestro-sidebar .container-fluid {
-    display: flex;
-    flex-direction: column;
-    align-items: stretch;
+@media (min-width: 992px) {
+  body.maestro-tabler .maestro-sidebar > .container-fluid {
     min-height: 100vh;
     min-height: 100dvh;
-  }
-
-  body.maestro-tabler .maestro-sidebar .maestro-sidebar-scroll {
-    flex: 1 1 auto;
-    min-height: 8rem;
-    overflow-y: auto;
-    overscroll-behavior: contain;
   }
 }
 
