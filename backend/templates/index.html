@@ -1758,8 +1758,8 @@
     }
     .session-card__list-price--strike {
       text-decoration: line-through;
-      text-decoration-color: #c62828;
-      text-decoration-thickness: 2px;
+      text-decoration-color: rgba(198, 40, 40, 0.4);
+      text-decoration-thickness: 1.5px;
     }
     .session-card__promo-label {
       font-size: 0.82rem;
@@ -1799,17 +1799,83 @@
     .offers-section__to-full:hover {
       text-decoration: underline;
     }
-    .offers-section__plans {
+    .offers-section__marquee {
+      overflow: hidden;
+      width: 100%;
+      margin-top: 4px;
+      position: relative;
+      mask-image: linear-gradient(to right, transparent 0%, #000 4%, #000 96%, transparent 100%);
+      -webkit-mask-image: linear-gradient(to right, transparent 0%, #000 4%, #000 96%, transparent 100%);
+    }
+    .offers-section__marquee-track {
       display: flex;
-      flex-wrap: wrap;
+      flex-direction: row;
+      flex-wrap: nowrap;
+      align-items: stretch;
       gap: 12px;
+      width: max-content;
+      direction: ltr;
+      animation: offers-section-marquee 52s linear infinite;
+    }
+    .offers-section__marquee:hover .offers-section__marquee-track {
+      animation-play-state: paused;
+    }
+    @keyframes offers-section-marquee {
+      0% { transform: translate3d(0, 0, 0); }
+      100% { transform: translate3d(-50%, 0, 0); }
+    }
+    .plan-card--marquee-item,
+    .session-card--marquee-item {
+      flex: 0 0 auto;
+      width: min(288px, 88vw);
+      max-width: 320px;
+      box-sizing: border-box;
     }
     .plan-card--offer {
-      flex: 1 1 220px;
-      min-width: 200px;
+      min-height: 0;
     }
     .plan-meta--offer {
       margin-bottom: 10px;
+    }
+    #offers-section .plan-list-price--strike {
+      text-decoration: line-through;
+      text-decoration-color: rgba(198, 40, 40, 0.38);
+      text-decoration-thickness: 1.5px;
+      text-underline-offset: 2px;
+      font-weight: 800;
+      color: rgba(45, 52, 54, 0.72);
+    }
+    #offers-section .plan-list-price--strike .plan-currency {
+      color: rgba(45, 52, 54, 0.52);
+      font-weight: 700;
+    }
+    html[data-theme="dark"] #offers-section .plan-list-price--strike {
+      color: rgba(255, 255, 255, 0.72);
+      text-decoration-color: rgba(248, 113, 113, 0.45);
+    }
+    html[data-theme="dark"] #offers-section .plan-list-price--strike .plan-currency {
+      color: rgba(255, 255, 255, 0.55);
+    }
+    #offers-section .session-card__list-price--strike {
+      text-decoration-color: rgba(198, 40, 40, 0.38);
+      text-decoration-thickness: 1.5px;
+      color: rgba(45, 52, 54, 0.72);
+    }
+    html[data-theme="dark"] #offers-section .session-card__list-price--strike {
+      text-decoration-color: rgba(248, 113, 113, 0.45);
+      color: rgba(255, 255, 255, 0.72);
+    }
+    @media (prefers-reduced-motion: reduce) {
+      .offers-section__marquee-track {
+        animation: none;
+        flex-wrap: wrap;
+        width: 100%;
+        max-width: 100%;
+      }
+      .offers-section__marquee {
+        mask-image: none;
+        -webkit-mask-image: none;
+      }
     }
     .plan-promo-schedule {
       display: block;
@@ -4202,11 +4268,12 @@
     }
     #plans-section .plan-list-price--strike {
       text-decoration: line-through;
-      text-decoration-color: #c62828;
-      text-decoration-thickness: 2px;
+      text-decoration-color: rgba(198, 40, 40, 0.38);
+      text-decoration-thickness: 1.5px;
+      text-underline-offset: 2px;
       font-size: 0.72rem;
       font-weight: 700;
-      color: rgba(45, 52, 54, 0.58);
+      color: rgba(45, 52, 54, 0.68);
     }
     #plans-section .plan-sale-price {
       font-size: 0.88rem;

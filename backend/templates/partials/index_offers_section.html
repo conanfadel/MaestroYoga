@@ -4,10 +4,12 @@
 
   {% if offer_sessions %}
   <h3 class="booking-block-heading booking-block-heading--compact offers-section__sub">جلسات على عرض</h3>
-  <div class="sessions-cards offers-section__cards" id="offers-session-cards">
+  <div class="offers-section__marquee offers-section__marquee--sessions" id="offers-session-marquee">
+    <div class="offers-section__marquee-track">
+    {% for _repeat in [0, 1] %}
     {% for s in offer_sessions %}
     <article
-      class="session-card session-row session-card--offer reveal-on-scroll"
+      class="session-card session-row session-card--offer session-card--marquee-item reveal-on-scroll"
       data-session-id="{{ s.id }}"
       data-title="{{ s.title }} {{ s.trainer_name }}"
       data-level="{{ s.level_label }}"
@@ -58,14 +60,17 @@
       </div>
     </article>
     {% endfor %}
+    {% endfor %}
+    </div>
   </div>
   {% endif %}
 
   {% if offer_plans %}
-  <h3 class="booking-block-heading booking-block-heading--compact offers-section__sub">خطط على عرض</h3>
-  <div class="offers-section__plans">
+  <div class="offers-section__marquee offers-section__marquee--plans" id="offers-plans-marquee">
+    <div class="offers-section__marquee-track">
+    {% for _repeat in [0, 1] %}
     {% for plan in offer_plans %}
-    <article class="plan-card plan-card--offer plan-{{ plan.plan_type }} reveal-on-scroll">
+    <article class="plan-card plan-card--offer plan-card--marquee-item plan-{{ plan.plan_type }} reveal-on-scroll">
       <div class="plan-head">
         <h3 class="booking-block-heading booking-block-heading--compact">{{ plan.name }}</h3>
         <span class="plan-badge {{ plan.plan_type }}">{{ plan.plan_type_label }}</span>
@@ -100,6 +105,8 @@
       </div>
     </article>
     {% endfor %}
+    {% endfor %}
+    </div>
   </div>
   {% endif %}
 
