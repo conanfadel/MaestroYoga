@@ -1815,14 +1815,15 @@
       gap: 12px;
       width: max-content;
       direction: ltr;
-      animation: offers-section-marquee 52s linear infinite;
+      animation: offers-section-marquee-ltr 52s linear infinite;
     }
     .offers-section__marquee:hover .offers-section__marquee-track {
       animation-play-state: paused;
     }
-    @keyframes offers-section-marquee {
-      0% { transform: translate3d(0, 0, 0); }
-      100% { transform: translate3d(-50%, 0, 0); }
+    /* حركة من اليسار إلى اليمين (المسار يتحرك نحو +X) */
+    @keyframes offers-section-marquee-ltr {
+      0% { transform: translate3d(-50%, 0, 0); }
+      100% { transform: translate3d(0, 0, 0); }
     }
     .plan-card--marquee-item,
     .session-card--marquee-item {
