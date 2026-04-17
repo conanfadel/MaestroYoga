@@ -65,12 +65,10 @@ body.maestro-tabler #maestro-top-navbar .maestro-header-toolbar .top {
   border-radius: 14px;
 }
 
-/* الشريط الجانبي */
+/* الشريط الجانبي: تخطيط فقط — ألوان Tabler الافتراضية (navbar-dark / الثيم العام) */
 body.maestro-tabler .maestro-sidebar.navbar-vertical {
-  background: #1a1d21;
   min-height: 100vh;
   min-height: 100dvh;
-  border-inline-end: 1px solid color-mix(in srgb, var(--gold) 42%, transparent);
 }
 
 body.maestro-tabler .maestro-sidebar > .container-fluid {
@@ -82,30 +80,12 @@ body.maestro-tabler .maestro-sidebar > .container-fluid {
   min-width: 0;
 }
 
-body.maestro-tabler .maestro-sidebar a.navbar-brand {
-  padding: 0.75rem 0.75rem;
-  margin: 0;
-  flex-shrink: 0;
-  background: linear-gradient(180deg, #454030 0%, #3a3a2e 40%, #2f2e26 100%);
-  border-bottom: 1px solid rgba(197, 160, 89, 0.35);
-  color: rgba(255, 255, 255, 0.95);
-  font-family: "Tajawal", system-ui, sans-serif;
-  font-weight: 700;
-  text-decoration: none;
-}
-
-body.maestro-tabler .maestro-sidebar .navbar-toggler {
-  border-color: rgba(255, 255, 255, 0.22);
-  padding: 0.35rem 0.45rem;
-}
-
 body.maestro-tabler .maestro-sidebar .maestro-sidebar-logo {
   max-height: 2.25rem;
   width: auto;
   border-radius: 8px;
 }
 
-/* عند الفتح فقط (.show) — لا نكسر إخفاء القائمة على الجوال */
 body.maestro-tabler .maestro-sidebar #maestro-sidebar-menu.navbar-collapse.show {
   display: flex !important;
   flex-direction: column !important;
@@ -126,34 +106,9 @@ body.maestro-tabler .maestro-sidebar .navbar-collapse .navbar-nav {
   padding-top: 0.35rem;
 }
 
-body.maestro-tabler .maestro-sidebar .navbar-nav .nav-item {
-  visibility: visible;
-  opacity: 1;
-}
-
 body.maestro-tabler .maestro-sidebar .nav-link {
   font-family: "Tajawal", system-ui, sans-serif;
-  color: rgba(255, 255, 255, 0.92) !important;
-  border-radius: 10px;
   gap: 0.5rem;
-}
-
-body.maestro-tabler .maestro-sidebar .nav-link:hover {
-  color: #fff !important;
-  background: color-mix(in srgb, var(--mint) 18%, rgba(255, 255, 255, 0.06));
-}
-
-body.maestro-tabler .maestro-sidebar .section-tab.active {
-  font-weight: 700;
-  color: #fff !important;
-  background: color-mix(in srgb, var(--gold) 32%, rgba(255, 255, 255, 0.1)) !important;
-  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--gold) 55%, transparent);
-}
-
-body.maestro-tabler .maestro-sidebar .nav-link-icon .bi {
-  font-size: 1.1rem;
-  line-height: 1;
-  color: color-mix(in srgb, var(--mint) 70%, #fff);
 }
 
 body.maestro-tabler .maestro-sidebar .nav-link-title {
@@ -170,9 +125,7 @@ body.maestro-tabler .maestro-sidebar .nav-item.maestro-nav-cluster-label .nav-li
   font-weight: 800;
   letter-spacing: 0.04em;
   text-transform: uppercase;
-  color: rgba(255, 255, 255, 0.55) !important;
   padding-block: 0.65rem 0.2rem;
-  background: transparent !important;
 }
 
 body.maestro-tabler .maestro-sidebar .nav-item.maestro-nav-cluster-label:first-of-type .nav-link {
@@ -194,30 +147,9 @@ body.maestro-tabler .footer.maestro-admin-footer {
 }
 
 @supports not (color: color-mix(in srgb, red, blue)) {
-  body.maestro-tabler .maestro-sidebar.navbar-vertical {
-    border-inline-end: 1px solid rgba(197, 160, 89, 0.38);
-  }
-
-  body.maestro-tabler .maestro-sidebar .nav-link:hover {
-    background: rgba(170, 240, 209, 0.1);
-  }
-
-  body.maestro-tabler .maestro-sidebar .section-tab.active {
-    background: rgba(197, 160, 89, 0.22) !important;
-    box-shadow: inset 0 0 0 1px rgba(197, 160, 89, 0.45);
-  }
-
   body.maestro-tabler .footer.maestro-admin-footer {
     border-top: 1px solid rgba(197, 160, 89, 0.25);
   }
-}
-
-html[data-bs-theme="dark"] body.maestro-tabler .maestro-sidebar.navbar-vertical {
-  background: #12151a;
-}
-
-html[data-bs-theme="dark"] body.maestro-tabler .maestro-sidebar a.navbar-brand {
-  background: linear-gradient(180deg, #3a3628 0%, #2e2c22 100%);
 }
 
 html[data-bs-theme="dark"] body.maestro-tabler .page-header {
