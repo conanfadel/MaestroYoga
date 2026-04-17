@@ -1236,6 +1236,17 @@
       width: 100%;
       margin-top: 4px;
     }
+    .plan-details-form.plan-details-form--admin-stack.plan-details-form--horizontal {
+      flex-direction: row;
+      flex-wrap: wrap;
+      align-items: flex-start;
+    }
+    .plan-card--admin .plan-details-form--horizontal > fieldset.admin-discount-block {
+      width: auto;
+      flex: 2 1 min(100%, 440px);
+      min-width: min(100%, 220px);
+      max-width: 100%;
+    }
     .plan-delete-form--admin {
       flex: 0 0 auto;
       margin-inline-start: auto;

@@ -26,12 +26,14 @@
     <p class="small" style="margin:0 0 8px;line-height:1.55;">اختر «بدون» لعرض السعر الأساسي فقط، أو «خصم» لنسبة من الأساس، أو «تخفيض» لتحديد سعر نهائي أقل من الأساس.</p>
     <p class="small" style="margin:0;line-height:1.55;">يحدد «وقت العرض» متى يُطبَّق السعر المخفّض على الصفحة العامة والدفع. النافذة اليومية = أول N ساعة من منتصف ليل السعودية (UTC+3).</p>
   </div>
-  <label for="discount-mode-{{ suffix }}">نوع العرض</label>
-  <select id="discount-mode-{{ suffix }}" name="discount_mode" class="js-discount-mode" autocomplete="off">
-    <option value="none" {{ 'selected' if discount_mode_value == 'none' else '' }}>بدون</option>
-    <option value="percent" {{ 'selected' if discount_mode_value == 'percent' else '' }}>خصم (نسبة مئوية)</option>
-    <option value="fixed" {{ 'selected' if discount_mode_value == 'fixed' else '' }}>تخفيض (سعر نهائي)</option>
-  </select>
+  <div class="admin-discount-mode-field">
+    <label for="discount-mode-{{ suffix }}">نوع العرض</label>
+    <select id="discount-mode-{{ suffix }}" name="discount_mode" class="js-discount-mode" autocomplete="off">
+      <option value="none" {{ 'selected' if discount_mode_value == 'none' else '' }}>بدون</option>
+      <option value="percent" {{ 'selected' if discount_mode_value == 'percent' else '' }}>خصم (نسبة مئوية)</option>
+      <option value="fixed" {{ 'selected' if discount_mode_value == 'fixed' else '' }}>تخفيض (سعر نهائي)</option>
+    </select>
+  </div>
   <div class="js-discount-panel-percent" hidden>
     <label for="discount-pct-{{ suffix }}">نسبة الخصم %</label>
     <input id="discount-pct-{{ suffix }}" name="discount_percent" type="text" inputmode="decimal" autocomplete="off" lang="en" dir="ltr" pattern="^(|[0-9]+(\.[0-9]+)?)$" maxlength="8" value="{{ discount_percent_value }}" />

@@ -927,6 +927,10 @@ body.report-insights .print-only-note {
   border-radius: 12px;
   border: 1px solid rgba(197, 160, 89, 0.28);
   background: rgba(255, 255, 255, 0.55);
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 10px 16px;
 }
 .admin-discount-block__legend {
   font-weight: 700;
@@ -936,16 +940,59 @@ body.report-insights .print-only-note {
   margin: 0 0 10px;
   opacity: 0.92;
 }
-.admin-discount-block .js-discount-panel-percent,
-.admin-discount-block .js-discount-panel-fixed {
-  margin-top: 10px;
+.admin-discount-block .admin-discount-legend-row {
+  flex: 1 1 100%;
+}
+.admin-discount-block .admin-discount-hint-panel[hidden] {
+  display: none !important;
+}
+.admin-discount-block .admin-discount-hint-panel:not([hidden]) {
+  flex: 1 1 100%;
+}
+.admin-discount-mode-field {
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 4px;
+  flex: 1 1 200px;
+  min-width: min(100%, 180px);
+  max-width: 320px;
+}
+.admin-discount-block .js-discount-panel-percent[hidden],
+.admin-discount-block .js-discount-panel-fixed[hidden],
+.admin-discount-block .js-discount-schedule-wrap[hidden],
+.admin-discount-block .js-schedule-date-panel[hidden],
+.admin-discount-block .js-schedule-hours-panel[hidden] {
+  display: none !important;
+}
+.admin-discount-block .js-discount-panel-percent:not([hidden]),
+.admin-discount-block .js-discount-panel-fixed:not([hidden]) {
+  margin-top: 0;
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 10px 18px;
+  flex: 1 1 100%;
+}
+.admin-discount-block .js-discount-panel-percent:not([hidden]) label,
+.admin-discount-block .js-discount-panel-fixed:not([hidden]) label {
+  flex: 0 0 auto;
+  align-self: center;
+  margin: 0;
+}
+.admin-discount-block .js-discount-panel-percent:not([hidden]) input,
+.admin-discount-block .js-discount-panel-fixed:not([hidden]) input {
+  flex: 1 1 120px;
+  min-width: 96px;
+  max-width: 220px;
 }
 .admin-discount-block .js-discount-computed {
   opacity: 0.95;
   font-weight: 600;
+}
+.admin-discount-block .js-discount-schedule-wrap:not([hidden]) {
+  flex: 1 1 100%;
+  width: 100%;
 }
 .admin-discount-schedule {
   margin-top: 12px;
@@ -960,6 +1007,41 @@ body.report-insights .print-only-note {
   display: block;
   margin-top: 8px;
   font-weight: 600;
+}
+form.plan-details-form--horizontal {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  gap: 12px 16px;
+  align-items: flex-start;
+}
+form.plan-details-form--horizontal .plan-details-form__grid2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px 14px;
+  flex: 1 1 280px;
+  min-width: min(100%, 240px);
+}
+form.plan-details-form--horizontal .plan-details-form__cell {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+form.plan-details-form--horizontal .plan-details-form__cell--full {
+  flex: 1 1 100%;
+}
+form.plan-details-form--horizontal .plan-details-form__cell--full .plan-details-form__lbl {
+  margin-top: 0;
+}
+form.plan-details-form--horizontal .plan-details-form__submit-full {
+  flex: 1 1 100%;
+  width: 100%;
+}
+form.plan-details-form--horizontal > fieldset.admin-discount-block {
+  flex: 2 1 min(100%, 480px);
+  min-width: min(100%, 220px);
+  max-width: 100%;
 }
 html[data-theme="dark"] .admin-discount-block {
   background: rgba(20, 24, 31, 0.55);

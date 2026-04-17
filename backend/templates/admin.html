@@ -496,21 +496,31 @@
       {% if perm_plans %}
       <div class="card">
         <h2 class="admin-booking-block-heading">إضافة خطة اشتراك</h2>
-        <form method="post" action="/admin/plans" data-preserve-scroll="1">
-          <label>اسم الخطة</label>
-          <input name="name" required placeholder="مثال: باقة التوازن" />
-          <label>نوع الخطة</label>
-          <select name="plan_type" required>
-            <option value="weekly">أسبوعي</option>
-            <option value="monthly">شهري</option>
-            <option value="yearly">سنوي</option>
-          </select>
-          <label>السعر الأساسي (SAR)</label>
-          <input class="js-list-price-base" name="list_price" type="text" inputmode="decimal" autocomplete="off" lang="en" dir="ltr" pattern="[0-9]+(\.[0-9]{1,2})?" maxlength="12" required />
+          <form method="post" action="/admin/plans" class="plan-details-form--horizontal" data-preserve-scroll="1">
+          <div class="plan-details-form__cell plan-details-form__cell--full">
+            <label class="plan-details-form__lbl">اسم الخطة</label>
+            <input name="name" required placeholder="مثال: باقة التوازن" />
+          </div>
+          <div class="plan-details-form__grid2">
+            <div class="plan-details-form__cell">
+              <label class="plan-details-form__lbl">نوع الخطة</label>
+              <select name="plan_type" required>
+                <option value="weekly">أسبوعي</option>
+                <option value="monthly">شهري</option>
+                <option value="yearly">سنوي</option>
+              </select>
+            </div>
+            <div class="plan-details-form__cell">
+              <label class="plan-details-form__lbl">السعر الأساسي (SAR)</label>
+              <input class="js-list-price-base" name="list_price" type="text" inputmode="decimal" autocomplete="off" lang="en" dir="ltr" pattern="[0-9]+(\.[0-9]{1,2})?" maxlength="12" required />
+            </div>
+          </div>
           {{ admin_discount_fields('plan-new') }}
-          <label>حد الجلسات (اختياري)</label>
-          <input name="session_limit" type="text" inputmode="numeric" autocomplete="off" lang="en" dir="ltr" pattern="^(|[1-9][0-9]*)$" maxlength="6" placeholder="اتركه فارغًا لعدد غير محدود" />
-          <button type="submit">حفظ الخطة</button>
+          <div class="plan-details-form__cell plan-details-form__cell--full">
+            <label class="plan-details-form__lbl" for="plan-new-session-limit">عدد الجلسات</label>
+            <input id="plan-new-session-limit" name="session_limit" type="text" inputmode="numeric" autocomplete="off" lang="en" dir="ltr" pattern="^(|[1-9][0-9]*)$" maxlength="6" placeholder="اتركه فارغًا لغير محدود" />
+          </div>
+          <button type="submit" class="plan-details-form__submit-full">حفظ الخطة</button>
         </form>
       </div>
       {% endif %}
@@ -673,16 +683,22 @@
             <button type="submit">تعديل الاسم</button>
           </form>
 
-          <form method="post" action="/admin/plans/update-details" class="plan-details-form plan-details-form--admin-stack" data-preserve-scroll="1">
+          <form method="post" action="/admin/plans/update-details" class="plan-details-form plan-details-form--admin-stack plan-details-form--horizontal" data-preserve-scroll="1">
             <input type="hidden" name="plan_id" value="{{ p.id }}" />
-            <label class="plan-details-form__lbl">نوع الخطة</label>
-            <select name="plan_type">
-              <option value="weekly" {{ 'selected' if p.plan_type == 'weekly' else '' }}>أسبوعي</option>
-              <option value="monthly" {{ 'selected' if p.plan_type == 'monthly' else '' }}>شهري</option>
-              <option value="yearly" {{ 'selected' if p.plan_type == 'yearly' else '' }}>سنوي</option>
-            </select>
-            <label class="plan-details-form__lbl">السعر الأساسي (SAR)</label>
-            <input class="js-list-price-base" name="list_price" type="text" inputmode="decimal" autocomplete="off" lang="en" dir="ltr" pattern="[0-9]+(\.[0-9]{1,2})?" maxlength="12" value="{{ p.list_price }}" required />
+            <div class="plan-details-form__grid2">
+              <div class="plan-details-form__cell">
+                <label class="plan-details-form__lbl">نوع الخطة</label>
+                <select name="plan_type">
+                  <option value="weekly" {{ 'selected' if p.plan_type == 'weekly' else '' }}>أسبوعي</option>
+                  <option value="monthly" {{ 'selected' if p.plan_type == 'monthly' else '' }}>شهري</option>
+                  <option value="yearly" {{ 'selected' if p.plan_type == 'yearly' else '' }}>سنوي</option>
+                </select>
+              </div>
+              <div class="plan-details-form__cell">
+                <label class="plan-details-form__lbl">السعر الأساسي (SAR)</label>
+                <input class="js-list-price-base" name="list_price" type="text" inputmode="decimal" autocomplete="off" lang="en" dir="ltr" pattern="[0-9]+(\.[0-9]{1,2})?" maxlength="12" value="{{ p.list_price }}" required />
+              </div>
+            </div>
             {% set pct_val = '' if p.discount_percent is none else (p.discount_percent|string) %}
             {% set red_val = (p.price|string) if p.discount_mode == 'fixed' else '' %}
             {% set vf = p.discount_valid_from.strftime('%Y-%m-%dT%H:%M') if p.discount_valid_from else '' %}
@@ -692,20 +708,23 @@
             {% set dh = '' if p.discount_duration_hours is none else (p.discount_duration_hours|string) %}
             {% set stype = p.discount_schedule_type if p.discount_schedule_type else 'always' %}
             {{ admin_discount_fields('plan-' ~ p.id, discount_mode_value=p.discount_mode, discount_percent_value=pct_val, reduced_price_value=red_val, schedule_type_value=stype, valid_from_value=vf, valid_until_value=vu, hour_start_value=hs, hour_end_value=he, duration_hours_value=dh) }}
-            <label class="plan-details-form__lbl">حد الجلسات (اتركه فارغًا لغير محدود)</label>
-            <input
-              name="session_limit"
-              type="text"
-              inputmode="numeric"
-              autocomplete="off"
-              lang="en"
-              dir="ltr"
-              pattern="^(|[1-9][0-9]*)$"
-              maxlength="6"
-              value="{{ p.session_limit if p.session_limit else '' }}"
-              placeholder="غير محدود"
-            />
-            <button type="submit">تعديل التفاصيل</button>
+            <div class="plan-details-form__cell plan-details-form__cell--full">
+              <label class="plan-details-form__lbl" for="plan-session-limit-{{ p.id }}">عدد الجلسات</label>
+              <input
+                id="plan-session-limit-{{ p.id }}"
+                name="session_limit"
+                type="text"
+                inputmode="numeric"
+                autocomplete="off"
+                lang="en"
+                dir="ltr"
+                pattern="^(|[1-9][0-9]*)$"
+                maxlength="6"
+                value="{{ p.session_limit if p.session_limit else '' }}"
+                placeholder="اتركه فارغًا لغير محدود"
+              />
+            </div>
+            <button type="submit" class="plan-details-form__submit-full">تعديل التفاصيل</button>
           </form>
 
           <form method="post" action="/admin/plans/delete" class="plan-delete-form plan-delete-form--admin" data-preserve-scroll="1" onsubmit="return confirm('حذف خطة الاشتراك؟');">
