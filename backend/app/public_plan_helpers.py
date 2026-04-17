@@ -4,6 +4,7 @@ from .discount_pricing import (
     public_promo_label,
     public_promo_schedule_caption,
     public_show_promo_ui,
+    resolve_display_list_price,
 )
 from .web_shared import _plan_duration_days
 
@@ -22,21 +23,16 @@ def build_public_plan_rows(plans: list, *, plan_labels: dict[str, str]) -> list[
     now = utcnow_naive()
     rows: list[dict] = []
     for p in plans:
-        list_p = float(getattr(p, "list_price", None) if getattr(p, "list_price", None) is not None else p.price)
+        list_p = resolve_display_list_price(p)
+        db_sale = float(p.price)
         checkout = plan_public_checkout_amount(p, now=now)
         mode = getattr(p, "discount_mode", None) or "none"
         pct = getattr(p, "discount_percent", None)
         if pct is not None:
             pct = float(pct)
-        has_promo = public_show_promo_ui(
-            p,
-            list_price=list_p,
-            checkout=checkout,
-            discount_mode=mode,
-            now=now,
-        )
+        has_promo = public_show_promo_ui(p)
         promo_label = (
-            public_promo_label(discount_mode=mode, discount_percent=pct, list_price=list_p, effective=checkout)
+            public_promo_label(discount_mode=mode, discount_percent=pct, list_price=list_p, effective=db_sale)
             if has_promo
             else ""
         )
@@ -45,20 +41,16 @@ def build_public_plan_rows(plans: list, *, plan_labels: dict[str, str]) -> list[
         vu = getattr(p, "discount_valid_until", None)
         hs = getattr(p, "discount_hour_start", None)
         he = getattr(p, "discount_hour_end", None)
+        dh = getattr(p, "discount_duration_hours", None)
         promo_schedule = public_promo_schedule_caption(
             schedule_type=st,
             valid_from=vf,
             valid_until=vu,
             hour_start=hs,
             hour_end=he,
+            duration_hours=int(dh) if dh is not None else None,
         )
-        in_active_offer = public_in_active_offer(
-            p,
-            list_price=list_p,
-            checkout=checkout,
-            discount_mode=mode,
-            now=now,
-        )
+        in_active_offer = public_in_active_offer(p, now=now)
         rows.append(
             {
                 "id": p.id,
@@ -67,6 +59,7 @@ def build_public_plan_rows(plans: list, *, plan_labels: dict[str, str]) -> list[
                 "plan_type_label": plan_labels.get(p.plan_type, p.plan_type),
                 "duration_days": _plan_duration_days(p.plan_type),
                 "price": checkout,
+                "display_sale_price": db_sale,
                 "list_price": list_p,
                 "has_promo": has_promo,
                 "promo_label": promo_label,

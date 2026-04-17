@@ -21,6 +21,7 @@ class SubscriptionPlan(Base):
     discount_valid_until = Column(DateTime, nullable=True)
     discount_hour_start = Column(Integer, nullable=True)
     discount_hour_end = Column(Integer, nullable=True)
+    discount_duration_hours = Column(Integer, nullable=True)
     session_limit = Column(Integer, nullable=True)
     is_active = Column(Boolean, default=True)
 

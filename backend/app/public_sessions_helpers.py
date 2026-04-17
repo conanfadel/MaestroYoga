@@ -6,6 +6,7 @@ from .discount_pricing import (
     public_promo_label,
     public_promo_schedule_caption,
     public_show_promo_ui,
+    resolve_display_list_price,
     session_public_checkout_amount,
 )
 from .public_session_visibility import yoga_session_accepts_new_public_booking
@@ -34,21 +35,16 @@ def build_public_session_rows(
         starts = s.starts_at
         dur = int(s.duration_minutes or 0)
         ends = (starts + timedelta(minutes=dur)) if starts else None
-        list_p = float(getattr(s, "list_price", None) if getattr(s, "list_price", None) is not None else s.price_drop_in)
+        list_p = resolve_display_list_price(s)
+        db_sale = float(s.price_drop_in)
         checkout = session_public_checkout_amount(s, now=now)
         mode = getattr(s, "discount_mode", None) or "none"
         pct = getattr(s, "discount_percent", None)
         if pct is not None:
             pct = float(pct)
-        has_promo = public_show_promo_ui(
-            s,
-            list_price=list_p,
-            checkout=checkout,
-            discount_mode=mode,
-            now=now,
-        )
+        has_promo = public_show_promo_ui(s)
         promo_label = (
-            public_promo_label(discount_mode=mode, discount_percent=pct, list_price=list_p, effective=checkout)
+            public_promo_label(discount_mode=mode, discount_percent=pct, list_price=list_p, effective=db_sale)
             if has_promo
             else ""
         )
@@ -57,20 +53,16 @@ def build_public_session_rows(
         vu = getattr(s, "discount_valid_until", None)
         hs = getattr(s, "discount_hour_start", None)
         he = getattr(s, "discount_hour_end", None)
+        dh = getattr(s, "discount_duration_hours", None)
         promo_schedule = public_promo_schedule_caption(
             schedule_type=st,
             valid_from=vf,
             valid_until=vu,
             hour_start=hs,
             hour_end=he,
+            duration_hours=int(dh) if dh is not None else None,
         )
-        in_active_offer = public_in_active_offer(
-            s,
-            list_price=list_p,
-            checkout=checkout,
-            discount_mode=mode,
-            now=now,
-        )
+        in_active_offer = public_in_active_offer(s, now=now)
         rows.append(
             {
                 "id": s.id,
@@ -84,6 +76,7 @@ def build_public_session_rows(
                 "ends_at_iso": ends.isoformat() if ends else "",
                 "duration_minutes": s.duration_minutes,
                 "price_drop_in": checkout,
+                "display_sale_price": db_sale,
                 "list_price": list_p,
                 "has_promo": has_promo,
                 "promo_label": promo_label,

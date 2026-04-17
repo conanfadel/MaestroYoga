@@ -8,7 +8,8 @@
   valid_from_value='',
   valid_until_value='',
   hour_start_value='',
-  hour_end_value=''
+  hour_end_value='',
+  duration_hours_value=''
 ) %}
 <fieldset class="admin-discount-block js-admin-discount-block" data-discount-suffix="{{ suffix }}">
   <legend class="admin-discount-block__legend">خصم وتخفيض</legend>
@@ -32,7 +33,7 @@
 
   <div class="js-discount-schedule-wrap admin-discount-schedule" hidden>
     <p class="admin-discount-block__legend admin-discount-schedule__title">وقت العرض (للجمهور)</p>
-    <p class="small admin-discount-block__hint">يحدد متى يُطبَّق السعر المخفض على الصفحة العامة والدفع. التوقيت اليومي يُحسب بتوقيت السعودية (UTC+3).</p>
+    <p class="small admin-discount-block__hint">يحدد متى يُطبَّق السعر المخفض على الصفحة العامة والدفع. النافذة اليومية = أول N ساعة من منتصف ليل السعودية (UTC+3).</p>
     <label for="schedule-type-{{ suffix }}">أسلوب تحديد الفترة</label>
     <select id="schedule-type-{{ suffix }}" name="discount_schedule_type" class="js-schedule-type">
       <option value="always" {{ 'selected' if schedule_type_value == 'always' else '' }}>دائمًا طالما الجلسة/الخطة منشورة</option>
@@ -46,10 +47,10 @@
       <input id="valid-until-{{ suffix }}" name="discount_valid_until" type="datetime-local" autocomplete="off" lang="en" dir="ltr" value="{{ valid_until_value }}" />
     </div>
     <div class="js-schedule-hours-panel" hidden>
-      <label for="hour-start-{{ suffix }}">من الساعة (0–23)</label>
-      <input id="hour-start-{{ suffix }}" name="discount_hour_start" type="text" inputmode="numeric" autocomplete="off" lang="en" dir="ltr" pattern="^(|[0-9]|1[0-9]|2[0-3])$" maxlength="2" value="{{ hour_start_value }}" />
-      <label for="hour-end-{{ suffix }}">إلى الساعة (0–23)</label>
-      <input id="hour-end-{{ suffix }}" name="discount_hour_end" type="text" inputmode="numeric" autocomplete="off" lang="en" dir="ltr" pattern="^(|[0-9]|1[0-9]|2[0-3])$" maxlength="2" value="{{ hour_end_value }}" />
+      <label for="duration-hours-{{ suffix }}">عدد الساعات من منتصف ليل السعودية (1–168)</label>
+      <input id="duration-hours-{{ suffix }}" name="discount_duration_hours" type="text" inputmode="numeric" autocomplete="off" lang="en" dir="ltr" pattern="^(|[1-9][0-9]*)$" maxlength="3" value="{{ duration_hours_value }}" placeholder="مثال: 2 أو 24" />
+      <input type="hidden" name="discount_hour_start" value="{{ hour_start_value }}" />
+      <input type="hidden" name="discount_hour_end" value="{{ hour_end_value }}" />
     </div>
   </div>
 </fieldset>

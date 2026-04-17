@@ -25,6 +25,7 @@ class SubscriptionPlanOut(BaseModel):
     discount_valid_until: Optional[datetime] = None
     discount_hour_start: Optional[int] = None
     discount_hour_end: Optional[int] = None
+    discount_duration_hours: Optional[int] = None
     session_limit: Optional[int] = None
     is_active: bool
 

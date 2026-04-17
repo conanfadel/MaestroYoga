@@ -4568,7 +4568,7 @@
                       {% if plan.has_promo %}
                       <span class="plan-price-stack">
                         <span class="plan-list-price plan-list-price--strike">{{ plan.list_price }}<span class="plan-currency">ر.س</span></span>
-                        <span class="plan-sale-price">{{ plan.price }}<span class="plan-currency">ر.س</span></span>
+                        <span class="plan-sale-price">{{ plan.display_sale_price }}<span class="plan-currency">ر.س</span></span>
                         <span class="plan-promo-label">{{ plan.promo_label }}</span>
                         {% if plan.promo_schedule %}<span class="plan-promo-schedule">{{ plan.promo_schedule }}</span>{% endif %}
                       </span>

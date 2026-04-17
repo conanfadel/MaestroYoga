@@ -91,6 +91,15 @@ def migrate_schema() -> None:
         _spc_sched = {c["name"] for c in insp.get_columns("subscription_plans")}
         needs_subscription_plans_discount_schedule = "discount_schedule_type" not in _spc_sched
 
+    needs_yoga_sessions_discount_duration_hours = False
+    if insp.has_table("yoga_sessions"):
+        _ysc_dur = {c["name"] for c in insp.get_columns("yoga_sessions")}
+        needs_yoga_sessions_discount_duration_hours = "discount_duration_hours" not in _ysc_dur
+    needs_subscription_plans_discount_duration_hours = False
+    if insp.has_table("subscription_plans"):
+        _spc_dur = {c["name"] for c in insp.get_columns("subscription_plans")}
+        needs_subscription_plans_discount_duration_hours = "discount_duration_hours" not in _spc_dur
+
     needs_public_user_phone = False
     needs_public_user_is_deleted = False
     needs_public_user_deleted_at = False
@@ -187,6 +196,8 @@ def migrate_schema() -> None:
         and not needs_subscription_plans_list_price
         and not needs_yoga_sessions_discount_schedule
         and not needs_subscription_plans_discount_schedule
+        and not needs_yoga_sessions_discount_duration_hours
+        and not needs_subscription_plans_discount_duration_hours
     ):
         with engine.begin() as conn:
             if has_client_subscription_number:
@@ -329,6 +340,10 @@ def migrate_schema() -> None:
             conn.execute(text("ALTER TABLE subscription_plans ADD COLUMN discount_hour_start INTEGER"))
             conn.execute(text("ALTER TABLE subscription_plans ADD COLUMN discount_hour_end INTEGER"))
             conn.execute(text("UPDATE subscription_plans SET discount_schedule_type = 'always' WHERE discount_schedule_type IS NULL"))
+        if needs_yoga_sessions_discount_duration_hours:
+            conn.execute(text("ALTER TABLE yoga_sessions ADD COLUMN discount_duration_hours INTEGER"))
+        if needs_subscription_plans_discount_duration_hours:
+            conn.execute(text("ALTER TABLE subscription_plans ADD COLUMN discount_duration_hours INTEGER"))
         if has_client_subscription_number or needs_client_subscription_number:
             _backfill_client_subscription_numbers(conn)
         if needs_training_exercises_table:

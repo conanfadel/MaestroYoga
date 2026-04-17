@@ -7,6 +7,7 @@ from dataclasses import dataclass
 from typing import Any
 
 from .. import impl_state as _s
+from ...discount_pricing import public_show_promo_ui, resolve_display_list_price
 from .admin_dashboard_blocks_pagination import normalize_admin_list_page
 
 _SESSION_LEVEL_LABELS = {
@@ -124,8 +125,7 @@ def load_paginated_session_rows(
     session_rows: list[dict[str, Any]] = []
     for s in sessions:
         room = rooms_by_id.get(s.room_id)
-        list_p = float(getattr(s, "list_price", None) if getattr(s, "list_price", None) is not None else s.price_drop_in)
-        eff_p = float(s.price_drop_in)
+        list_p = resolve_display_list_price(s)
         session_rows.append(
             {
                 "id": s.id,
@@ -138,7 +138,7 @@ def load_paginated_session_rows(
                 "duration_minutes": s.duration_minutes,
                 "price_drop_in": s.price_drop_in,
                 "list_price": list_p,
-                "has_promo": list_p > eff_p + 1e-6,
+                "has_promo": public_show_promo_ui(s),
                 "discount_mode": getattr(s, "discount_mode", None) or "none",
                 "discount_percent": getattr(s, "discount_percent", None),
                 "room_name": room.name if room else "-",
@@ -161,8 +161,7 @@ def load_paginated_session_rows(
 def plan_rows_from_plans(plans: Sequence[Any]) -> list[dict[str, Any]]:
     rows: list[dict[str, Any]] = []
     for p in plans:
-        list_p = float(getattr(p, "list_price", None) if getattr(p, "list_price", None) is not None else p.price)
-        eff_p = float(p.price)
+        list_p = resolve_display_list_price(p)
         rows.append(
             {
                 "id": p.id,
@@ -171,7 +170,7 @@ def plan_rows_from_plans(plans: Sequence[Any]) -> list[dict[str, Any]]:
                 "plan_type_label": _PLAN_TYPE_LABELS.get(p.plan_type, p.plan_type),
                 "price": p.price,
                 "list_price": list_p,
-                "has_promo": list_p > eff_p + 1e-6,
+                "has_promo": public_show_promo_ui(p),
                 "discount_mode": getattr(p, "discount_mode", None) or "none",
                 "discount_percent": getattr(p, "discount_percent", None),
                 "discount_schedule_type": getattr(p, "discount_schedule_type", None) or "always",
@@ -179,6 +178,7 @@ def plan_rows_from_plans(plans: Sequence[Any]) -> list[dict[str, Any]]:
                 "discount_valid_until": getattr(p, "discount_valid_until", None),
                 "discount_hour_start": getattr(p, "discount_hour_start", None),
                 "discount_hour_end": getattr(p, "discount_hour_end", None),
+                "discount_duration_hours": getattr(p, "discount_duration_hours", None),
                 "session_limit": p.session_limit,
                 "is_active": p.is_active,
             }

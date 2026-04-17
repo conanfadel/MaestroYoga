@@ -38,6 +38,7 @@ class YogaSession(Base):
     discount_valid_until = Column(DateTime, nullable=True)
     discount_hour_start = Column(Integer, nullable=True)
     discount_hour_end = Column(Integer, nullable=True)
+    discount_duration_hours = Column(Integer, nullable=True)
 
     center = relationship("Center", back_populates="sessions")
     room = relationship("Room", back_populates="sessions")

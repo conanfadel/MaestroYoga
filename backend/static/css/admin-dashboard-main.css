@@ -1178,6 +1178,89 @@
       background: var(--white);
       text-align: center;
     }
+
+    /* لوحة التحكم — خطط الاشتراك: عمود واحد ووضوح */
+    .plans-cards--admin-stack {
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+      max-width: 720px;
+    }
+    .plan-card--admin {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      overflow: visible;
+    }
+    .plan-meta--admin {
+      grid-template-columns: 1fr;
+      gap: 10px;
+    }
+    .plan-details-form--admin-stack {
+      display: flex;
+      flex-direction: column;
+      align-items: stretch;
+      gap: 10px;
+      width: 100%;
+      margin-bottom: 0;
+    }
+    .plan-card--admin .plan-details-form--admin-stack input,
+    .plan-card--admin .plan-details-form--admin-stack select {
+      width: 100%;
+      max-width: none;
+      box-sizing: border-box;
+    }
+    .plan-card--admin .plan-details-form--admin-stack button[type="submit"] {
+      width: 100%;
+      margin-top: 4px;
+    }
+    .plan-name-form--admin {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      align-items: stretch;
+      margin-bottom: 0;
+    }
+    .plan-name-form--admin button {
+      width: 100%;
+    }
+    .plan-delete-form--admin button {
+      width: 100%;
+      max-width: 280px;
+    }
+    .plans-head__row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+    .admin-help-exclaim {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      border: 2px solid var(--gold);
+      background: var(--white);
+      color: var(--gold-dark);
+      font-weight: 900;
+      cursor: help;
+      line-height: 1;
+      padding: 0;
+      flex-shrink: 0;
+      font-size: 1rem;
+    }
+    .admin-help-exclaim:hover,
+    .admin-help-exclaim:focus-visible {
+      outline: none;
+      box-shadow: 0 0 0 3px rgba(197, 160, 89, 0.35);
+    }
+    .plans-head__sub {
+      margin: 4px 0 0;
+      line-height: 1.55;
+      color: var(--charcoal-muted);
+    }
+    .plan-card--admin .admin-discount-block {
+      width: 100%;
+    }
     table.plans-table th { background: var(--charcoal); color: #f8fafc; }
     @media (max-width: 1200px) {
       .plan-card .plan-details-form { grid-template-columns: 1fr; }

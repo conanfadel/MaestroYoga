@@ -1,4 +1,3 @@
-{% if offer_sessions or offer_plans %}
 <section id="offers-section" class="card offers-section" aria-label="عروضنا">
   <h2 class="booking-block-heading booking-block-heading--flush-top">عروضنا</h2>
   <p class="sessions-lead offers-section__lead">جلسات وخطط تشمل خصمًا أو تخفيضًا ضمن أوقات العرض الحالية.</p>
@@ -26,7 +25,7 @@
         {% if s.has_promo %}
         <div class="session-card__price-stack" aria-label="السعر">
           <div class="session-card__list-price session-card__list-price--strike">{{ s.list_price }}<span>ر.س</span></div>
-          <div class="session-card__price">{{ s.price_drop_in }}<span>ر.س</span></div>
+          <div class="session-card__price">{{ s.display_sale_price }}<span>ر.س</span></div>
           <div class="session-card__promo-label">{{ s.promo_label }}</div>
           {% if s.promo_schedule %}<div class="session-card__promo-schedule">{{ s.promo_schedule }}</div>{% endif %}
         </div>
@@ -76,7 +75,7 @@
           {% if plan.has_promo %}
           <span class="plan-price-stack">
             <span class="plan-list-price plan-list-price--strike">{{ plan.list_price }}<span class="plan-currency">ر.س</span></span>
-            <span class="plan-sale-price">{{ plan.price }}<span class="plan-currency">ر.س</span></span>
+            <span class="plan-sale-price">{{ plan.display_sale_price }}<span class="plan-currency">ر.س</span></span>
             <span class="plan-promo-label">{{ plan.promo_label }}</span>
             {% if plan.promo_schedule %}<span class="plan-promo-schedule">{{ plan.promo_schedule }}</span>{% endif %}
           </span>
@@ -101,5 +100,8 @@
     {% endfor %}
   </div>
   {% endif %}
+
+  {% if not offer_sessions and not offer_plans %}
+  <p class="small offers-section__empty" style="margin:0;">لا توجد عروض ضمن نافذة التوقيت الحالية. راجع قسم الجلسات أو الخطط لمعرفة الأسعار المعتادة.</p>
+  {% endif %}
 </section>
-{% endif %}

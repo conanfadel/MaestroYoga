@@ -21,6 +21,7 @@ def register_admin_org_plans_routes(router: APIRouter) -> None:
         discount_valid_until: str = _s.Form(default=""),
         discount_hour_start: str = _s.Form(default=""),
         discount_hour_end: str = _s.Form(default=""),
+        discount_duration_hours: str = _s.Form(default=""),
         session_limit: str = _s.Form(default=""),
         scroll_y: str = _s.Form(default=""),
         return_section: str = _s.Form(""),
@@ -45,6 +46,7 @@ def register_admin_org_plans_routes(router: APIRouter) -> None:
             valid_until_raw=discount_valid_until,
             hour_start_raw=discount_hour_start,
             hour_end_raw=discount_hour_end,
+            duration_hours_raw=discount_duration_hours,
         )
         if serr or not sch:
             return _s._admin_redirect(_s.ADMIN_MSG_PLAN_PRICING_INVALID, scroll_y, return_section)
@@ -69,6 +71,7 @@ def register_admin_org_plans_routes(router: APIRouter) -> None:
             discount_valid_until=sch.valid_until,
             discount_hour_start=sch.hour_start,
             discount_hour_end=sch.hour_end,
+            discount_duration_hours=sch.duration_hours,
             session_limit=parsed_session_limit,
             is_active=True,
         )
@@ -109,6 +112,7 @@ def register_admin_org_plans_routes(router: APIRouter) -> None:
         discount_valid_until: str = _s.Form(default=""),
         discount_hour_start: str = _s.Form(default=""),
         discount_hour_end: str = _s.Form(default=""),
+        discount_duration_hours: str = _s.Form(default=""),
         session_limit: str = _s.Form(default=""),
         scroll_y: str = _s.Form(default=""),
         return_section: str = _s.Form(""),
@@ -139,6 +143,7 @@ def register_admin_org_plans_routes(router: APIRouter) -> None:
             valid_until_raw=discount_valid_until,
             hour_start_raw=discount_hour_start,
             hour_end_raw=discount_hour_end,
+            duration_hours_raw=discount_duration_hours,
         )
         if serr or not sch:
             return _s._admin_redirect(_s.ADMIN_MSG_PLAN_PRICING_INVALID, scroll_y, return_section)
@@ -162,6 +167,7 @@ def register_admin_org_plans_routes(router: APIRouter) -> None:
         plan.discount_valid_until = sch.valid_until
         plan.discount_hour_start = sch.hour_start
         plan.discount_hour_end = sch.hour_end
+        plan.discount_duration_hours = sch.duration_hours
         plan.session_limit = parsed_session_limit
         db.commit()
         return _s._admin_redirect(_s.ADMIN_MSG_PLAN_DETAILS_UPDATED, scroll_y, return_section)

@@ -41,6 +41,7 @@ class ParsedDiscountSchedule:
     valid_until: datetime | None
     hour_start: int | None
     hour_end: int | None
+    duration_hours: int | None = None
 
 
 def _parse_float_loose(raw: str | None, *, field_label: str) -> tuple[float | None, str | None]:
@@ -122,7 +123,7 @@ def parse_admin_discount_pricing(
     if red < 0:
         return None, "السعر المخفض لا يمكن أن يكون سالبًا"
     if red > float(lp) + 1e-9:
-        return None, "السعر المخفض لا يجوز أن يتجاوز السعر الأساسي"
+        return None, f"السعر المخفض ({float(red):.2f} ر.س) لا يجوز أن يتجاوز السعر الأساسي ({float(lp):.2f} ر.س)."
     return (
         ParsedDiscountPrice(
             list_price=float(lp),
@@ -142,14 +143,15 @@ def parse_admin_discount_schedule(
     valid_until_raw: str | None,
     hour_start_raw: str | None,
     hour_end_raw: str | None,
+    duration_hours_raw: str | None = None,
 ) -> tuple[ParsedDiscountSchedule | None, str | None]:
     """Parse discount validity; when discount_mode is none, returns always with nulls."""
     if normalize_discount_mode(discount_mode) == "none":
-        return ParsedDiscountSchedule("always", None, None, None, None), None
+        return ParsedDiscountSchedule("always", None, None, None, None, None), None
 
     st = normalize_schedule_type(schedule_type_raw)
     if st == "always":
-        return ParsedDiscountSchedule("always", None, None, None, None), None
+        return ParsedDiscountSchedule("always", None, None, None, None, None), None
 
     if st == "date_range":
         vf = _parse_datetime_loose(valid_from_raw)
@@ -158,9 +160,17 @@ def parse_admin_discount_schedule(
             return None, "أدخل تاريخ ووقت البداية والنهاية للعرض"
         if vu < vf:
             return None, "تاريخ نهاية العرض يجب أن يكون بعد البداية"
-        return ParsedDiscountSchedule("date_range", vf, vu, None, None), None
+        return ParsedDiscountSchedule("date_range", vf, vu, None, None, None), None
 
-    # daily_hours — ساعات اليوم بتوقيت السعودية
+    # daily_hours — أول N ساعة من منتصف ليل السعودية (أو نافذة 0–23 للبيانات القديمة)
+    dur_s = (duration_hours_raw or "").strip()
+    if dur_s:
+        n, derr = _parse_duration_hours(dur_s)
+        if derr:
+            return None, derr
+        if n is None:
+            return None, "أدخل عدد الساعات للنافذة اليومية"
+        return ParsedDiscountSchedule("daily_hours", None, None, None, None, duration_hours=int(n)), None
     hs, herr = _parse_int_hour(hour_start_raw, "بداية النافذة")
     if herr:
         return None, herr
@@ -168,8 +178,8 @@ def parse_admin_discount_schedule(
     if herr2:
         return None, herr2
     if hs is None or he is None:
-        return None, "أدخل ساعة البداية والنهاية (0–23)"
-    return ParsedDiscountSchedule("daily_hours", None, None, hs, he), None
+        return None, "أدخل عدد الساعات للنافذة اليومية (مثال: 2 أو 24)، أو ساعة البداية والنهاية (0–23) للبيانات القديمة"
+    return ParsedDiscountSchedule("daily_hours", None, None, hs, he, None), None
 
 
 def _parse_int_hour(raw: str | None, label: str) -> tuple[int | None, str | None]:
@@ -185,37 +195,64 @@ def _parse_int_hour(raw: str | None, label: str) -> tuple[int | None, str | None
     return n, None
 
 
-def _numeric_promo(list_price: float | None, effective: float) -> bool:
-    lp = float(list_price) if list_price is not None else float(effective)
-    return lp > float(effective) + 1e-6
+def _parse_duration_hours(raw: str) -> tuple[int | None, str | None]:
+    s = (raw or "").strip().replace(",", ".")
+    if not s:
+        return None, None
+    try:
+        n = int(float(s))
+    except ValueError:
+        return None, "عدد الساعات غير صالح"
+    if n < 1 or n > 168:
+        return None, "عدد الساعات يجب أن يكون بين 1 و 168"
+    return n, None
 
 
-def _schedule_fields(obj: Any) -> tuple[str, datetime | None, datetime | None, int | None, int | None]:
-    st = getattr(obj, "discount_schedule_type", None) or "always"
-    vf = getattr(obj, "discount_valid_from", None)
-    vu = getattr(obj, "discount_valid_until", None)
-    hs = getattr(obj, "discount_hour_start", None)
-    he = getattr(obj, "discount_hour_end", None)
-    return str(st), vf, vu, hs, he
+def _ksa_hours_since_midnight(now_naive: datetime) -> float:
+    k = utc_naive_to_ksa(now_naive)
+    midnight = k.replace(hour=0, minute=0, second=0, microsecond=0)
+    return (k - midnight).total_seconds() / 3600.0
 
 
-def is_discount_schedule_active(
-    now: datetime,
-    *,
-    schedule_type: str | None,
-    valid_from: datetime | None,
-    valid_until: datetime | None,
-    hour_start: int | None,
-    hour_end: int | None,
-) -> bool:
-    st = normalize_schedule_type(schedule_type)
+def _stored_effective_price(obj: Any) -> float:
+    if hasattr(obj, "price_drop_in"):
+        return float(obj.price_drop_in)
+    return float(getattr(obj, "price", 0.0))
+
+
+def resolve_display_list_price(obj: Any) -> float:
+    """السعر الأساسي للعرض (من العمود أو مُستنتج من نسبة الخصم)."""
+    eff = _stored_effective_price(obj)
+    lp_raw = getattr(obj, "list_price", None)
+    if lp_raw is not None:
+        return float(lp_raw)
+    mode = normalize_discount_mode(getattr(obj, "discount_mode", None))
+    if mode == "percent":
+        pct = getattr(obj, "discount_percent", None)
+        if pct is not None:
+            p = float(pct)
+            if 0 < p < 100:
+                return round(eff / (1.0 - p / 100.0), 2)
+    return eff
+
+
+def is_discount_schedule_active(now: datetime, obj: Any) -> bool:
+    st = normalize_schedule_type(getattr(obj, "discount_schedule_type", None))
     if st == "always":
         return True
     if st == "date_range":
-        if valid_from is None or valid_until is None:
+        vf = getattr(obj, "discount_valid_from", None)
+        vu = getattr(obj, "discount_valid_until", None)
+        if vf is None or vu is None:
             return True
-        return valid_from <= now <= valid_until
+        return vf <= now <= vu
     if st == "daily_hours":
+        dur = getattr(obj, "discount_duration_hours", None)
+        if dur is not None and int(dur) > 0:
+            h = _ksa_hours_since_midnight(now)
+            return 0.0 <= h < float(int(dur))
+        hour_start = getattr(obj, "discount_hour_start", None)
+        hour_end = getattr(obj, "discount_hour_end", None)
         if hour_start is None or hour_end is None:
             return True
         h = utc_naive_to_ksa(now).hour
@@ -232,28 +269,28 @@ def session_public_checkout_amount(session: Any, *, now: datetime | None = None)
     from .time_utils import utcnow_naive
 
     now = now or utcnow_naive()
-    list_p = getattr(session, "list_price", None)
     eff = float(session.price_drop_in)
-    if not _numeric_promo(list_p, eff):
+    list_p = resolve_display_list_price(session)
+    if not (list_p > eff + 1e-6):
         return eff
-    st, vf, vu, hs, he = _schedule_fields(session)
-    if is_discount_schedule_active(now, schedule_type=st, valid_from=vf, valid_until=vu, hour_start=hs, hour_end=he):
+    if is_discount_schedule_active(now, session):
         return eff
-    return float(list_p) if list_p is not None else eff
+    lp_stored = getattr(session, "list_price", None)
+    return float(lp_stored) if lp_stored is not None else list_p
 
 
 def plan_public_checkout_amount(plan: Any, *, now: datetime | None = None) -> float:
     from .time_utils import utcnow_naive
 
     now = now or utcnow_naive()
-    list_p = getattr(plan, "list_price", None)
     eff = float(plan.price)
-    if not _numeric_promo(list_p, eff):
+    list_p = resolve_display_list_price(plan)
+    if not (list_p > eff + 1e-6):
         return eff
-    st, vf, vu, hs, he = _schedule_fields(plan)
-    if is_discount_schedule_active(now, schedule_type=st, valid_from=vf, valid_until=vu, hour_start=hs, hour_end=he):
+    if is_discount_schedule_active(now, plan):
         return eff
-    return float(list_p) if list_p is not None else eff
+    lp_stored = getattr(plan, "list_price", None)
+    return float(lp_stored) if lp_stored is not None else list_p
 
 
 def public_promo_label(*, discount_mode: str | None, discount_percent: float | None, list_price: float, effective: float) -> str:
@@ -278,6 +315,7 @@ def public_promo_schedule_caption(
     valid_until: datetime | None,
     hour_start: int | None,
     hour_end: int | None,
+    duration_hours: int | None = None,
 ) -> str:
     """Arabic line describing when the discount applies (for the public index)."""
     st = normalize_schedule_type(schedule_type)
@@ -287,31 +325,28 @@ def public_promo_schedule_caption(
         a = utc_naive_to_ksa(valid_from).strftime("%Y-%m-%d %H:%M")
         b = utc_naive_to_ksa(valid_until).strftime("%Y-%m-%d %H:%M")
         return f"فترة العرض: من {a} إلى {b} (بتوقيت السعودية)"
-    if st == "daily_hours" and hour_start is not None and hour_end is not None:
-        return f"يوميًا من الساعة {hour_start}:00 إلى {hour_end}:00 (بتوقيت السعودية)"
+    if st == "daily_hours":
+        if duration_hours is not None and int(duration_hours) > 0:
+            return f"اليوم: أول {int(duration_hours)} ساعة من منتصف ليل السعودية (بتوقيت السعودية)"
+        if hour_start is not None and hour_end is not None:
+            return f"يوميًا من الساعة {hour_start}:00 إلى {hour_end}:00 (بتوقيت السعودية)"
     return ""
 
 
-def public_show_promo_ui(
-    obj: Any,
-    *,
-    list_price: float,
-    checkout: float,
-    discount_mode: str | None,
-    now: datetime | None = None,
-) -> bool:
-    """Whether to show strikethrough + promo labels (schedule must be active)."""
+def public_show_promo_ui(obj: Any) -> bool:
+    """عرض السعر المشطوب والوسوم: يوجد خصم مُعرَّف (قبل تطبيق نافذة الجدولة على السداد)."""
+    if normalize_discount_mode(getattr(obj, "discount_mode", None)) == "none":
+        return False
+    eff = _stored_effective_price(obj)
+    lp = resolve_display_list_price(obj)
+    return lp > eff + 1e-6
+
+
+def public_in_active_offer(obj: Any, *, now: datetime | None = None) -> bool:
+    """ظهور في «عروضنا»: خصم مُعرَّف والنافذة الزمنية للعرض نشطة حاليًا."""
     from .time_utils import utcnow_naive
 
     now = now or utcnow_naive()
-    if normalize_discount_mode(discount_mode) == "none":
+    if not public_show_promo_ui(obj):
         return False
-    if list_price <= checkout + 1e-6:
-        return False
-    st, vf, vu, hs, he = _schedule_fields(obj)
-    return is_discount_schedule_active(now, schedule_type=st, valid_from=vf, valid_until=vu, hour_start=hs, hour_end=he)
-
-
-def public_in_active_offer(obj: Any, *, list_price: float, checkout: float, discount_mode: str | None, now: datetime | None = None) -> bool:
-    """Shown in «عروضنا»: numeric discount/reduction and schedule window active."""
-    return public_show_promo_ui(obj, list_price=list_price, checkout=checkout, discount_mode=discount_mode, now=now)
+    return is_discount_schedule_active(now, obj)

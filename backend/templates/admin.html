@@ -600,15 +600,23 @@
     <section id="section-plans" class="accordion">
       <div class="accordion-body">
     <div class="card" style="margin-top:0;">
-      <div class="plans-shell">
-      <div class="plans-head">
-        <h2 class="admin-booking-block-heading admin-booking-block-heading--flush-top" style="margin:0;">خطط الاشتراكات الحالية</h2>
-        <span class="plans-note">تنسيق متكامل لعرض وتعديل كل عناصر الخطة بوضوح.</span>
+      <div class="plans-shell plans-shell--admin-plans">
+      <div class="plans-head plans-head--admin">
+        <div class="plans-head__row">
+          <h2 class="admin-booking-block-heading admin-booking-block-heading--flush-top" style="margin:0;">خطط الاشتراكات الحالية</h2>
+          <button
+            type="button"
+            class="admin-help-exclaim"
+            title="كل خطة في بطاقة مستقلة: الاسم، ثم السعر وحد الجلسات، ثم نموذج تعديل الاسم، ثم نموذج التفاصيل (النوع، السعر الأساسي، الخصم، حد الجلسات). السعر المخفض يجب ألا يتجاوز السعر الأساسي. زر «تعديل التفاصيل» يحفظ كل الحقول في النموذج نفسه."
+            aria-label="شرح تنسيق قسم الخطط"
+          >!</button>
+        </div>
+        <p class="plans-head__sub small" hidden>كل خطة في بطاقة مستقلة: الاسم، ثم السعر وحد الجلسات، ثم نموذج تعديل الاسم، ثم نموذج التفاصيل (النوع، السعر الأساسي، الخصم، حد الجلسات). السعر المخفض يجب ألا يتجاوز السعر الأساسي. زر «تعديل التفاصيل» يحفظ كل الحقول في النموذج نفسه.</p>
       </div>
-      <div class="plans-cards">
+      <div class="plans-cards plans-cards--admin-stack">
         {% for p in plans %}
-        <article class="plan-card plan-{{ p.plan_type }}">
-          <div class="plan-card-top">
+        <article class="plan-card plan-card--admin plan-{{ p.plan_type }}">
+          <div class="plan-card-top plan-card-top--admin">
             <div>
               <div class="plan-card-id">#{{ p.id }}</div>
               <h3>{{ p.name }}</h3>
@@ -616,7 +624,7 @@
             <span class="badge">{{ 'نشطة' if p.is_active else 'موقفة' }}</span>
           </div>
 
-          <div class="plan-meta">
+          <div class="plan-meta plan-meta--admin">
             <div class="plan-meta-item">
               <span class="k">النوع</span>
               <span class="v">
@@ -658,14 +666,16 @@
             </div>
           </div>
 
-          <form method="post" action="/admin/plans/update-name" class="plan-name-form" data-preserve-scroll="1">
+          <form method="post" action="/admin/plans/update-name" class="plan-name-form plan-name-form--admin" data-preserve-scroll="1">
             <input type="hidden" name="plan_id" value="{{ p.id }}" />
+            <label class="plan-details-form__lbl">اسم الخطة</label>
             <input name="name" value="{{ p.name }}" required />
-            <button type="submit">تعديل</button>
+            <button type="submit">تعديل الاسم</button>
           </form>
 
-          <form method="post" action="/admin/plans/update-details" class="plan-details-form" data-preserve-scroll="1">
+          <form method="post" action="/admin/plans/update-details" class="plan-details-form plan-details-form--admin-stack" data-preserve-scroll="1">
             <input type="hidden" name="plan_id" value="{{ p.id }}" />
+            <label class="plan-details-form__lbl">نوع الخطة</label>
             <select name="plan_type">
               <option value="weekly" {{ 'selected' if p.plan_type == 'weekly' else '' }}>أسبوعي</option>
               <option value="monthly" {{ 'selected' if p.plan_type == 'monthly' else '' }}>شهري</option>
@@ -679,8 +689,10 @@
             {% set vu = p.discount_valid_until.strftime('%Y-%m-%dT%H:%M') if p.discount_valid_until else '' %}
             {% set hs = '' if p.discount_hour_start is none else (p.discount_hour_start|string) %}
             {% set he = '' if p.discount_hour_end is none else (p.discount_hour_end|string) %}
+            {% set dh = '' if p.discount_duration_hours is none else (p.discount_duration_hours|string) %}
             {% set stype = p.discount_schedule_type if p.discount_schedule_type else 'always' %}
-            {{ admin_discount_fields('plan-' ~ p.id, discount_mode_value=p.discount_mode, discount_percent_value=pct_val, reduced_price_value=red_val, schedule_type_value=stype, valid_from_value=vf, valid_until_value=vu, hour_start_value=hs, hour_end_value=he) }}
+            {{ admin_discount_fields('plan-' ~ p.id, discount_mode_value=p.discount_mode, discount_percent_value=pct_val, reduced_price_value=red_val, schedule_type_value=stype, valid_from_value=vf, valid_until_value=vu, hour_start_value=hs, hour_end_value=he, duration_hours_value=dh) }}
+            <label class="plan-details-form__lbl">حد الجلسات (اتركه فارغًا لغير محدود)</label>
             <input
               name="session_limit"
               type="text"
@@ -696,9 +708,9 @@
             <button type="submit">تعديل التفاصيل</button>
           </form>
 
-          <form method="post" action="/admin/plans/delete" class="plan-delete-form" data-preserve-scroll="1" onsubmit="return confirm('حذف خطة الاشتراك؟');">
+          <form method="post" action="/admin/plans/delete" class="plan-delete-form plan-delete-form--admin" data-preserve-scroll="1" onsubmit="return confirm('حذف خطة الاشتراك؟');">
             <input type="hidden" name="plan_id" value="{{ p.id }}" />
-            <button type="submit" class="danger">حذف</button>
+            <button type="submit" class="danger">حذف الخطة</button>
           </form>
         </article>
         {% else %}
@@ -3253,6 +3265,43 @@
         syncBlock(wrap);
       }
       document.querySelectorAll(".js-admin-discount-block").forEach(bind);
+    })();
+  </script>
+  <script>
+    (function () {
+      function parseMoney(v) {
+        if (v == null) return NaN;
+        var s = String(v).trim().replace(",", ".");
+        if (!s) return NaN;
+        var n = parseFloat(s);
+        return Number.isFinite(n) ? n : NaN;
+      }
+      document.querySelectorAll(".admin-help-exclaim").forEach(function (btn) {
+        btn.addEventListener("click", function () {
+          var p = btn.closest(".plans-head--admin");
+          var sub = p ? p.querySelector(".plans-head__sub") : null;
+          if (!sub) return;
+          var open = sub.getAttribute("hidden") == null;
+          if (open) sub.setAttribute("hidden", "hidden");
+          else sub.removeAttribute("hidden");
+        });
+      });
+      document.querySelectorAll("form.plan-details-form--admin-stack").forEach(function (form) {
+        form.addEventListener("submit", function (ev) {
+          var modeEl = form.querySelector("[name='discount_mode']");
+          var mode = modeEl ? modeEl.value : "none";
+          if (mode !== "fixed") return;
+          var baseEl = form.querySelector(".js-list-price-base");
+          var redEl = form.querySelector("[name='reduced_price']");
+          var base = baseEl ? parseMoney(baseEl.value) : NaN;
+          var red = redEl ? parseMoney(redEl.value) : NaN;
+          if (!Number.isFinite(base) || !Number.isFinite(red)) return;
+          if (red > base + 1e-6) {
+            ev.preventDefault();
+            alert("السعر المخفض (" + red.toFixed(2) + " ر.س) لا يجوز أن يتجاوز السعر الأساسي (" + base.toFixed(2) + " ر.س).");
+          }
+        });
+      });
     })();
   </script>
   {% include '_force_english_digits.html' %}

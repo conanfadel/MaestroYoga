@@ -39,5 +39,6 @@ class YogaSessionOut(YogaSessionCreate):
     discount_valid_until: Optional[datetime] = None
     discount_hour_start: Optional[int] = None
     discount_hour_end: Optional[int] = None
+    discount_duration_hours: Optional[int] = None
 
     model_config = ConfigDict(from_attributes=True)
