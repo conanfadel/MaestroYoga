@@ -67,19 +67,14 @@ body.maestro-adminlte .maestro-sidebar {
   --maestro-sidebar-hover: color-mix(in srgb, var(--mint) 22%, rgba(255, 255, 255, 0.06));
   --maestro-sidebar-active: color-mix(in srgb, var(--gold) 38%, rgba(20, 24, 32, 0.92));
   --maestro-sidebar-border: color-mix(in srgb, var(--gold) 48%, transparent);
-  background: linear-gradient(
-    195deg,
-    color-mix(in srgb, var(--gold) 24%, #161b24) 0%,
-    #10141c 45%,
-    #0a0d12 100%
-  );
+  /* ألوان قريبة من لقطة الهوية: زيتوني داكن للعلامة + فحمي للقائمة */
+  background: #1a1d21;
   border-inline-end: 1px solid var(--maestro-sidebar-border);
   color: var(--maestro-sidebar-fg);
 }
 
 @supports not (color: color-mix(in srgb, red, blue)) {
   body.maestro-adminlte .maestro-sidebar {
-    background: linear-gradient(195deg, #252018 0%, #12161c 55%, #0a0d12 100%);
     border-inline-end: 1px solid rgba(197, 160, 89, 0.45);
     --maestro-sidebar-hover: rgba(170, 240, 209, 0.12);
     --maestro-sidebar-active: rgba(197, 160, 89, 0.28);
@@ -87,12 +82,8 @@ body.maestro-adminlte .maestro-sidebar {
 }
 
 body.maestro-adminlte .maestro-sidebar .sidebar-brand {
-  border-bottom: 1px solid var(--maestro-sidebar-border);
-  background: linear-gradient(
-    90deg,
-    color-mix(in srgb, var(--gold) 35%, #141820) 0%,
-    color-mix(in srgb, var(--mint-mid) 12%, #141820) 100%
-  );
+  border-bottom: 1px solid rgba(197, 160, 89, 0.35);
+  background: linear-gradient(180deg, #454030 0%, #3a3a2e 40%, #2f2e26 100%);
 }
 
 body.maestro-adminlte .maestro-sidebar .brand-link {
@@ -119,9 +110,22 @@ body.maestro-adminlte .maestro-sidebar .nav-link p {
   font-family: "Tajawal", system-ui, sans-serif;
 }
 
-/* AdminLTE يخفي .nav-treeview حتى menu-open — نعرض كل الأقسام دائمًا (لوحة إدارية، ليس قائمة مطوية) */
-body.maestro-adminlte .maestro-sidebar .sidebar-menu .nav-treeview {
+/* AdminLTE يخفي .nav-treeview حتى menu-open — نفرض العرض مع فتح المجموعات في القالب */
+body.maestro-adminlte .maestro-sidebar .sidebar-menu .nav-treeview,
+body.maestro-adminlte .maestro-sidebar .sidebar-menu .menu-open > .nav-treeview {
   display: block !important;
+}
+
+body.maestro-adminlte .maestro-sidebar .sidebar-wrapper,
+body.maestro-adminlte .maestro-sidebar .sidebar-menu {
+  visibility: visible;
+  opacity: 1;
+}
+
+body.maestro-adminlte .maestro-sidebar .sidebar-menu > .nav-item > .nav-link {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--lte-sidebar-color) !important;
 }
 
 /* منع قصّ النص داخل flex (overflow:hidden من AdminLTE يُفْرِغ السطر أحيانًا) */
@@ -139,8 +143,13 @@ body.maestro-adminlte .maestro-sidebar .sidebar-wrapper .nav-link p {
 }
 
 body.maestro-adminlte .maestro-sidebar .sidebar-wrapper .nav-icon.bi {
-  font-size: 1.05rem;
+  font-size: 1.1rem;
   line-height: 1;
+}
+
+body.maestro-adminlte .maestro-sidebar .nav-icon.bi::before,
+body.maestro-adminlte .maestro-sidebar .nav-arrow.bi::before {
+  font-family: "bootstrap-icons" !important;
 }
 
 body.maestro-adminlte .maestro-sidebar .nav-link:hover {
@@ -182,12 +191,11 @@ html[data-theme="dark"] body.maestro-adminlte .app-content-header {
 }
 
 html[data-theme="dark"] body.maestro-adminlte .maestro-sidebar {
-  background: linear-gradient(
-    195deg,
-    color-mix(in srgb, var(--gold) 18%, #0f1218) 0%,
-    #0a0c10 50%,
-    #060708 100%
-  );
+  background: #12151a;
+}
+
+html[data-theme="dark"] body.maestro-adminlte .maestro-sidebar .sidebar-brand {
+  background: linear-gradient(180deg, #3a3628 0%, #2e2c22 100%);
 }
 
 html[data-theme="dark"] body.maestro-adminlte .app-footer {

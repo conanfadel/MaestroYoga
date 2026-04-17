@@ -13,7 +13,6 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/overlayscrollbars@2.11.0/styles/overlayscrollbars.min.css" crossorigin="anonymous" />
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css" crossorigin="anonymous" />
   <link rel="stylesheet" href="/static/vendor/adminlte/adminlte.rtl.min.css" />
   <link rel="stylesheet" href="/static/css/admin-dashboard.css" />
@@ -3441,23 +3440,9 @@
       });
     })();
   </script>
-  <script src="https://cdn.jsdelivr.net/npm/overlayscrollbars@2.11.0/browser/overlayscrollbars.browser.es6.min.js" crossorigin="anonymous"></script>
   <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.8/dist/umd/popper.min.js" crossorigin="anonymous"></script>
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/js/bootstrap.min.js" crossorigin="anonymous"></script>
   <script src="/static/vendor/adminlte/adminlte.min.js"></script>
-  <script>
-    (function () {
-      document.addEventListener("DOMContentLoaded", function () {
-        var wrap = document.querySelector(".maestro-sidebar .sidebar-wrapper");
-        var OS = typeof OverlayScrollbarsGlobal !== "undefined" ? OverlayScrollbarsGlobal.OverlayScrollbars : undefined;
-        if (wrap && OS && window.innerWidth > 992) {
-          OS(wrap, {
-            scrollbars: { theme: "os-theme-light", autoHide: "leave", clickScroll: true },
-          });
-        }
-      });
-    })();
-  </script>
   {% include '_force_english_digits.html' %}
   {% include '_mobile_landscape_hint.html' %}
 </body>

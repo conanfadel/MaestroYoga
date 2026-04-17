@@ -113,7 +113,7 @@
 
   {% elif style == 'sidebar' %}
   {% if not use_trainer_layout and perm_site_cluster %}
-  <li class="nav-item">
+  <li class="nav-item menu-open">
     <a href="#" class="nav-link">
       <i class="nav-icon bi bi-globe2"></i>
       <p>الموقع والمحتوى<i class="nav-arrow bi bi-chevron-right"></i></p>
@@ -143,7 +143,7 @@
   </li>
   {% endif %}
   {% if not use_trainer_layout and perm_ops_cluster %}
-  <li class="nav-item">
+  <li class="nav-item menu-open">
     <a href="#" class="nav-link">
       <i class="nav-icon bi bi-calendar3"></i>
       <p>التشغيل والمواعيد<i class="nav-arrow bi bi-chevron-right"></i></p>
@@ -167,7 +167,7 @@
   </li>
   {% endif %}
   {% if not use_trainer_layout and perm_clients_cluster %}
-  <li class="nav-item">
+  <li class="nav-item menu-open">
     <a href="#" class="nav-link">
       <i class="nav-icon bi bi-people"></i>
       <p>العملاء والولاء<i class="nav-arrow bi bi-chevron-right"></i></p>
@@ -192,7 +192,7 @@
   </li>
   {% endif %}
   {% if not use_trainer_layout and perm_reports_hub %}
-  <li class="nav-item">
+  <li class="nav-item menu-open">
     <a href="#" class="nav-link">
       <i class="nav-icon bi bi-graph-up-arrow"></i>
       <p>التقارير<i class="nav-arrow bi bi-chevron-right"></i></p>
@@ -205,7 +205,7 @@
   </li>
   {% endif %}
   {% if use_trainer_layout %}
-  <li class="nav-item">
+  <li class="nav-item menu-open">
     <a href="#" class="nav-link">
       <i class="nav-icon bi bi-activity"></i>
       <p>الجلسات والغرف<i class="nav-arrow bi bi-chevron-right"></i></p>
@@ -221,7 +221,7 @@
   </li>
   {% endif %}
   {% if show_security_section %}
-  <li class="nav-item">
+  <li class="nav-item menu-open">
     <a href="#" class="nav-link">
       <i class="nav-icon bi bi-shield-lock"></i>
       <p>الأمان والمخاطر<i class="nav-arrow bi bi-chevron-right"></i></p>
