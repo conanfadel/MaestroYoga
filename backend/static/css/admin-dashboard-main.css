@@ -1290,13 +1290,15 @@
     .plan-details-form__split--admin-unified {
       display: grid;
       grid-template-columns:
-        minmax(0, 0.78fr)
-        minmax(178px, 1.78fr)
-        minmax(0, 0.52fr)
-        minmax(min(100%, 168px), 0.82fr);
-      gap: 8px 10px;
+        minmax(0, 0.76fr)
+        minmax(184px, 1.82fr)
+        minmax(108px, 0.56fr)
+        minmax(0, 0.92fr);
+      column-gap: clamp(12px, 2vw, 22px);
+      row-gap: 10px;
       align-items: start;
       width: 100%;
+      isolation: isolate;
     }
     .plan-card--admin .plan-details-form__cell--admin {
       display: flex;
@@ -1338,10 +1340,13 @@
     .plan-details-form__col--discount {
       min-width: 0;
       align-self: stretch;
+      max-width: 100%;
     }
     .plan-card--admin .plan-details-form__col--discount .admin-discount-block {
       width: 100%;
+      max-width: 100%;
       margin: 0;
+      min-width: 0;
       min-height: calc(44px + 5px + 2.5em);
       box-sizing: border-box;
       align-items: flex-start;
@@ -1351,9 +1356,9 @@
       margin-bottom: 4px;
     }
     .plan-card--admin .plan-details-form__split--admin-unified .admin-discount-mode-field {
-      max-width: none;
-      flex: 1 1 160px;
-      min-width: min(100%, 140px);
+      max-width: 100%;
+      flex: 1 1 auto;
+      min-width: 0;
     }
     .plan-card--admin .plan-details-form__split--admin-unified .admin-discount-mode-field label {
       margin: 0 0 5px;
@@ -1374,12 +1379,22 @@
       border-radius: 10px;
       box-sizing: border-box;
     }
+    .plan-card--admin .plan-details-form__split--admin-unified .admin-help-exclaim--inline {
+      width: 24px;
+      height: 24px;
+      min-width: 24px;
+      min-height: 24px;
+      max-width: 24px;
+      max-height: 24px;
+      font-size: 0.78rem;
+    }
     .plan-card--admin .plan-details-form--horizontal > fieldset.admin-discount-block,
     .plan-card--admin .plan-details-form__col--discount > fieldset.admin-discount-block {
-      width: auto;
-      flex: 1 1 auto;
-      min-width: min(100%, 200px);
+      width: 100%;
       max-width: 100%;
+      min-width: 0;
+      flex: 1 1 auto;
+      box-sizing: border-box;
     }
     .plan-admin-actions-bar {
       display: flex;

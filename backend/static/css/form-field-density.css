@@ -26,6 +26,9 @@ form.plan-details-form--horizontal:not(.plan-details-form--admin-stack) .plan-de
   white-space: nowrap;
   font-size: 0.78rem;
 }
+.plan-card--admin .plan-details-form__cell--admin-sessions {
+  min-width: min(118px, 28vw);
+}
 
 /* —— لوحة: ملخص الخطة —— */
 .plan-meta--admin .plan-meta-item .k {
