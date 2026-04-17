@@ -3197,25 +3197,6 @@
               !!document.querySelector(".maestro-sidebar .section-tab.active")
           );
         }
-        syncMaestroSidebarMenus();
-      }
-
-      function syncMaestroSidebarMenus() {
-        var root = document.querySelector(".maestro-sidebar");
-        if (!root) return;
-        root.querySelectorAll("li.nav-item.menu-open").forEach(function (li) {
-          li.classList.remove("menu-open");
-        });
-        var actives = root.querySelectorAll(".section-tab.active");
-        actives.forEach(function (link) {
-          var el = link;
-          while (el && el !== root) {
-            if (el.matches && el.matches("li.nav-item")) {
-              el.classList.add("menu-open");
-            }
-            el = el.parentElement;
-          }
-        });
       }
 
       function activateAdminSection(targetId, options) {

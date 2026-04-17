@@ -110,16 +110,29 @@ body.maestro-adminlte .maestro-sidebar .nav-link p {
   font-family: "Tajawal", system-ui, sans-serif;
 }
 
-/* AdminLTE يخفي .nav-treeview حتى menu-open — نفرض العرض مع فتح المجموعات في القالب */
-body.maestro-adminlte .maestro-sidebar .sidebar-menu .nav-treeview,
-body.maestro-adminlte .maestro-sidebar .sidebar-menu .menu-open > .nav-treeview {
-  display: block !important;
-}
-
 body.maestro-adminlte .maestro-sidebar .sidebar-wrapper,
 body.maestro-adminlte .maestro-sidebar .sidebar-menu {
   visibility: visible;
   opacity: 1;
+}
+
+/* عناوين المجموعات — قائمة مسطّحة بدون treeview */
+body.maestro-adminlte .maestro-sidebar .sidebar-menu > li.nav-header.maestro-sidebar-cluster {
+  display: block;
+  margin-top: 0.65rem;
+  margin-bottom: 0.15rem;
+  padding: 0.4rem 0.65rem 0.2rem;
+  font-size: 0.68rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--lte-sidebar-header-color);
+  white-space: normal;
+  line-height: 1.35;
+}
+
+body.maestro-adminlte .maestro-sidebar .sidebar-menu > li.nav-header.maestro-sidebar-cluster:first-child {
+  margin-top: 0;
 }
 
 body.maestro-adminlte .maestro-sidebar .sidebar-menu > .nav-item > .nav-link {
@@ -157,11 +170,11 @@ body.maestro-adminlte .maestro-sidebar .nav-link:hover {
   color: #fff;
 }
 
-body.maestro-adminlte .maestro-sidebar .nav-treeview > .nav-item > .nav-link {
+body.maestro-adminlte .maestro-sidebar .sidebar-menu > .nav-item > .nav-link.section-tab--subitem {
   color: var(--lte-sidebar-submenu-color);
 }
 
-body.maestro-adminlte .maestro-sidebar .nav-treeview > .nav-item > .nav-link:hover {
+body.maestro-adminlte .maestro-sidebar .sidebar-menu > .nav-item > .nav-link.section-tab--subitem:hover {
   color: #fff;
 }
 
