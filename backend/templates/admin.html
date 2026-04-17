@@ -694,7 +694,7 @@
           >
             <input type="hidden" name="plan_id" value="{{ p.id }}" />
             <div class="plan-details-form__split plan-details-form__split--admin-unified">
-              <div class="plan-details-form__cell plan-details-form__cell--admin">
+              <div class="plan-details-form__cell plan-details-form__cell--admin plan-details-form__cell--admin-type">
                 <label class="plan-details-form__lbl plan-details-form__lbl--admin-tight" for="plan-type-{{ p.id }}">نوع الخطة</label>
                 <select id="plan-type-{{ p.id }}" name="plan_type" class="plan-admin-control">
                   <option value="weekly" {{ 'selected' if p.plan_type == 'weekly' else '' }}>أسبوعي</option>

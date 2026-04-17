@@ -1289,12 +1289,13 @@
     /* نوع أضيق — سعر بمساحة أوسع (تسمية بسطر واحد) — جلسات وخصم أخف وتميل لليسار/النهاية */
     .plan-details-form__split--admin-unified {
       display: grid;
+      /* العمود الأول لا يُسمَح بـ minmax(0,…) لأنه يضغط «نوع الخطة» فوق عمود السعر */
       grid-template-columns:
-        minmax(0, 0.76fr)
-        minmax(184px, 1.82fr)
-        minmax(108px, 0.56fr)
-        minmax(200px, 1fr);
-      column-gap: clamp(12px, 2vw, 22px);
+        minmax(124px, 0.88fr)
+        minmax(188px, 1.72fr)
+        minmax(108px, 0.54fr)
+        minmax(200px, 0.96fr);
+      column-gap: clamp(16px, 2.4vw, 28px);
       row-gap: 10px;
       align-items: start;
       width: 100%;
@@ -1307,6 +1308,9 @@
       min-width: 0;
       align-self: stretch;
     }
+    .plan-card--admin .plan-details-form__cell--admin-type {
+      min-width: 7.75rem;
+    }
     .plan-card--admin .plan-details-form__cell--admin-price {
       min-width: 168px;
     }
@@ -1315,10 +1319,9 @@
       padding: 0;
       font-size: 0.76rem;
       font-weight: 700;
-      line-height: 1.25;
-      min-height: 2.5em;
-      display: flex;
-      align-items: flex-end;
+      line-height: 1.3;
+      min-height: 2.35em;
+      display: block;
       color: var(--charcoal-muted);
     }
     .plan-card--admin .plan-admin-control {
