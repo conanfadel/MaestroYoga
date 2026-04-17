@@ -693,38 +693,48 @@
             data-preserve-scroll="1"
           >
             <input type="hidden" name="plan_id" value="{{ p.id }}" />
-            <div class="plan-details-form__split">
-              <div class="plan-details-form__col plan-details-form__col--fields">
-                <div class="plan-details-form__grid2">
-                  <div class="plan-details-form__cell">
-                    <label class="plan-details-form__lbl">نوع الخطة</label>
-                    <select name="plan_type">
-                      <option value="weekly" {{ 'selected' if p.plan_type == 'weekly' else '' }}>أسبوعي</option>
-                      <option value="monthly" {{ 'selected' if p.plan_type == 'monthly' else '' }}>شهري</option>
-                      <option value="yearly" {{ 'selected' if p.plan_type == 'yearly' else '' }}>سنوي</option>
-                    </select>
-                  </div>
-                  <div class="plan-details-form__cell">
-                    <label class="plan-details-form__lbl">السعر الأساسي (SAR)</label>
-                    <input class="js-list-price-base" name="list_price" type="text" inputmode="decimal" autocomplete="off" lang="en" dir="ltr" pattern="[0-9]+(\.[0-9]{1,2})?" maxlength="12" value="{{ p.list_price }}" required />
-                  </div>
-                </div>
-                <div class="plan-details-form__cell plan-details-form__cell--full">
-                  <label class="plan-details-form__lbl" for="plan-session-limit-{{ p.id }}">عدد الجلسات</label>
-                  <input
-                    id="plan-session-limit-{{ p.id }}"
-                    name="session_limit"
-                    type="text"
-                    inputmode="numeric"
-                    autocomplete="off"
-                    lang="en"
-                    dir="ltr"
-                    pattern="^(|[1-9][0-9]*)$"
-                    maxlength="6"
-                    value="{{ p.session_limit if p.session_limit else '' }}"
-                    placeholder="اتركه فارغًا لغير محدود"
-                  />
-                </div>
+            <div class="plan-details-form__split plan-details-form__split--admin-unified">
+              <div class="plan-details-form__cell plan-details-form__cell--admin">
+                <label class="plan-details-form__lbl plan-details-form__lbl--admin-tight" for="plan-type-{{ p.id }}">نوع الخطة</label>
+                <select id="plan-type-{{ p.id }}" name="plan_type" class="plan-admin-control">
+                  <option value="weekly" {{ 'selected' if p.plan_type == 'weekly' else '' }}>أسبوعي</option>
+                  <option value="monthly" {{ 'selected' if p.plan_type == 'monthly' else '' }}>شهري</option>
+                  <option value="yearly" {{ 'selected' if p.plan_type == 'yearly' else '' }}>سنوي</option>
+                </select>
+              </div>
+              <div class="plan-details-form__cell plan-details-form__cell--admin">
+                <label class="plan-details-form__lbl plan-details-form__lbl--admin-tight" for="plan-list-price-{{ p.id }}">السعر الأساسي (SAR)</label>
+                <input
+                  id="plan-list-price-{{ p.id }}"
+                  class="js-list-price-base plan-admin-control"
+                  name="list_price"
+                  type="text"
+                  inputmode="decimal"
+                  autocomplete="off"
+                  lang="en"
+                  dir="ltr"
+                  pattern="[0-9]+(\.[0-9]{1,2})?"
+                  maxlength="12"
+                  value="{{ p.list_price }}"
+                  required
+                />
+              </div>
+              <div class="plan-details-form__cell plan-details-form__cell--admin">
+                <label class="plan-details-form__lbl plan-details-form__lbl--admin-tight" for="plan-session-limit-{{ p.id }}">عدد الجلسات</label>
+                <input
+                  id="plan-session-limit-{{ p.id }}"
+                  class="plan-admin-control"
+                  name="session_limit"
+                  type="text"
+                  inputmode="numeric"
+                  autocomplete="off"
+                  lang="en"
+                  dir="ltr"
+                  pattern="^(|[1-9][0-9]*)$"
+                  maxlength="6"
+                  value="{{ p.session_limit if p.session_limit else '' }}"
+                  placeholder="فارغ = غير محدود"
+                />
               </div>
               <div class="plan-details-form__col plan-details-form__col--discount">
                 {% set pct_val = '' if p.discount_percent is none else (p.discount_percent|string) %}
