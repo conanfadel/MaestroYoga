@@ -1286,11 +1286,15 @@
       flex-wrap: nowrap;
       align-items: stretch;
     }
-    /* صف واحد: نوع الخطة | السعر | الجلسات | الخصم — خلايا متساوية المحاذاة */
+    /* نوع أضيق — سعر بمساحة أوسع (تسمية بسطر واحد) — جلسات وخصم أخف وتميل لليسار/النهاية */
     .plan-details-form__split--admin-unified {
       display: grid;
-      grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1fr) minmax(min(100%, 240px), 1.45fr);
-      gap: 10px 12px;
+      grid-template-columns:
+        minmax(0, 0.78fr)
+        minmax(178px, 1.78fr)
+        minmax(0, 0.52fr)
+        minmax(min(100%, 168px), 0.82fr);
+      gap: 8px 10px;
       align-items: start;
       width: 100%;
     }
@@ -1300,6 +1304,15 @@
       gap: 5px;
       min-width: 0;
       align-self: stretch;
+    }
+    .plan-card--admin .plan-details-form__cell--admin-price {
+      min-width: 168px;
+    }
+    .plan-card--admin .plan-details-form__lbl--admin-price-line {
+      white-space: nowrap;
+    }
+    .plan-card--admin .plan-details-form__cell--admin-sessions .plan-details-form__lbl--admin-tight {
+      font-size: 0.72rem;
     }
     .plan-card--admin .plan-details-form__lbl--admin-tight {
       margin: 0;

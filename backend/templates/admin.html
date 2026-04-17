@@ -702,8 +702,8 @@
                   <option value="yearly" {{ 'selected' if p.plan_type == 'yearly' else '' }}>سنوي</option>
                 </select>
               </div>
-              <div class="plan-details-form__cell plan-details-form__cell--admin">
-                <label class="plan-details-form__lbl plan-details-form__lbl--admin-tight" for="plan-list-price-{{ p.id }}">السعر الأساسي (SAR)</label>
+              <div class="plan-details-form__cell plan-details-form__cell--admin plan-details-form__cell--admin-price">
+                <label class="plan-details-form__lbl plan-details-form__lbl--admin-tight plan-details-form__lbl--admin-price-line" for="plan-list-price-{{ p.id }}">السعر الأساسي (SAR)</label>
                 <input
                   id="plan-list-price-{{ p.id }}"
                   class="js-list-price-base plan-admin-control"
@@ -719,7 +719,7 @@
                   required
                 />
               </div>
-              <div class="plan-details-form__cell plan-details-form__cell--admin">
+              <div class="plan-details-form__cell plan-details-form__cell--admin plan-details-form__cell--admin-sessions">
                 <label class="plan-details-form__lbl plan-details-form__lbl--admin-tight" for="plan-session-limit-{{ p.id }}">عدد الجلسات</label>
                 <input
                   id="plan-session-limit-{{ p.id }}"
