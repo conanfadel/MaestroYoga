@@ -1,27 +1,22 @@
-/* Maestro admin shell on top of AdminLTE v4 (RTL). Vendor: /static/vendor/adminlte/ — MIT, https://github.com/ColorlibHQ/AdminLTE */
+/* Maestro — AdminLTE v4 RTL shell (MIT vendor: /static/vendor/adminlte/) */
 
 body.maestro-adminlte.layout-fixed.sidebar-expand-lg {
   padding: 0;
   margin: 0;
 }
 
-body.maestro-adminlte .app-wrapper {
-  grid-template-areas:
-    "lte-app-header"
-    "lte-app-main";
-  grid-template-columns: 1fr;
-  grid-template-rows: auto 1fr;
-}
-
 body.maestro-adminlte .app-header .container-fluid {
-  display: block;
   max-width: 100%;
-  padding-inline: clamp(10px, 2vw, 20px);
 }
 
-body.maestro-adminlte .app-header .top {
+body.maestro-adminlte .maestro-header-toolbar .top {
   margin-bottom: 0;
   width: 100%;
+  border-radius: 14px;
+}
+
+body.maestro-adminlte .app-content-header {
+  box-shadow: 0 1px 0 rgba(0, 0, 0, 0.04);
 }
 
 body.maestro-adminlte .app-main .app-content {
@@ -42,4 +37,28 @@ body.maestro-adminlte .admin-main .container {
 
 body.maestro-adminlte .admin-main .card {
   display: block;
+}
+
+/* شريط التبويبات الأفقي: مرئي على الشاشات الصغيرة فقط (التنقل الأساسي من الشريط الجانبي على md+) */
+@media (min-width: 992px) {
+  body.maestro-adminlte #section-tabs-sticky {
+    display: none !important;
+  }
+}
+
+/* Sidebar: خط عربي متناسق */
+body.maestro-adminlte .maestro-sidebar .nav-link p {
+  font-family: "Tajawal", system-ui, sans-serif;
+}
+
+body.maestro-adminlte .maestro-sidebar .brand-text {
+  font-family: "Tajawal", system-ui, sans-serif;
+}
+
+body.maestro-adminlte .maestro-sidebar .section-tab.active {
+  font-weight: 700;
+}
+
+html[data-theme="dark"] body.maestro-adminlte .app-content-header {
+  border-color: rgba(255, 255, 255, 0.08) !important;
 }

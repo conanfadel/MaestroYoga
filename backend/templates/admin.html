@@ -18,17 +18,33 @@
   <link rel="stylesheet" href="/static/vendor/adminlte/adminlte.rtl.min.css" />
   <link rel="stylesheet" href="/static/css/admin-dashboard.css" />
 </head>
-<body class="maestro-adminlte layout-fixed sidebar-expand-lg bg-body-tertiary">
+<body class="maestro-adminlte layout-fixed sidebar-expand-lg bg-body-tertiary fixed-header">
   {% from "partials/report_hub_icons.html" import svg_calendar, svg_chart, svg_users, svg_package, svg_pulse, svg_cash, svg_download, svg_shield %}
   {% from "partials/admin_discount_fields.html" import admin_discount_fields %}
   <a class="admin-skip-link" href="#main-content">تخطي إلى المحتوى الرئيسي</a>
   <div class="app-wrapper">
-    <nav class="app-header navbar navbar-expand-md bg-body border-bottom" aria-label="شريط أدوات لوحة الإدارة">
-      <div class="container-fluid py-2">
-        {% include "partials/admin_top_bar.html" %}
+    <nav class="app-header navbar navbar-expand-md bg-body border-bottom shadow-sm" aria-label="شريط أدوات لوحة الإدارة">
+      <div class="container-fluid d-flex align-items-stretch py-2 gap-2 flex-wrap">
+        <ul class="navbar-nav d-flex flex-row align-items-center flex-shrink-0">
+          <li class="nav-item">
+            <a class="nav-link py-2 px-2" data-lte-toggle="sidebar" href="#" role="button" aria-label="فتح وإغلاق القائمة الجانبية">
+              <i class="bi bi-list fs-4" aria-hidden="true"></i>
+            </a>
+          </li>
+        </ul>
+        <div class="maestro-header-toolbar flex-grow-1 min-w-0 d-flex align-items-center">
+          {% include "partials/admin_top_bar.html" %}
+        </div>
       </div>
     </nav>
+    {% include "partials/admin_sidebar_nav.html" %}
     <div class="app-main">
+      <div class="app-content-header border-bottom bg-body">
+        <div class="container-fluid py-3">
+          <h2 class="h4 mb-0 fw-semibold text-body">لوحة الإدارة</h2>
+          <p class="text-secondary small mb-0 mt-1">إدارة الجلسات، الحجوزات، المحتوى، والأمان — {{ center.name if center else 'Maestro Yoga' }}</p>
+        </div>
+      </div>
       <div class="app-content">
         <main id="main-content" class="admin-main" tabindex="-1">
         <div class="container">
@@ -2467,7 +2483,7 @@
       <ul>
         <li><kbd>؟</kbd> (أو <kbd>Shift</kbd> + <kbd>/</kbd> على لوحة إنجليزية) — فتح/إغلاق نافذة الاختصارات عندما لا يكون التركيز في حقل نص.</li>
         <li><kbd>Esc</kbd> — إغلاق القوائم المنسدلة للتبويبات.</li>
-        <li>استخدم شريط التبويبات أعلى الصفحة للانتقال السريع بين الأقسام؛ الرابط يُحدّث التجزئة <code>#section-…</code> للمشاركة.</li>
+        <li>على الشاشات العريضة: التنقل من <strong>القائمة الجانبية</strong>؛ على الجوال: <strong>شريط التبويبات</strong> أسفل الملخص. الرابط يُحدّث التجزئة <code>#section-…</code> للمشاركة.</li>
       </ul>
       <button type="button" class="admin-help-dialog__close" id="admin-help-close">إغلاق</button>
     </div>
@@ -3168,9 +3184,29 @@
           navTabs.classList.toggle(
             "section-tabs--has-active",
             !!document.querySelector("#section-tabs .section-tab.active") ||
-              !!document.querySelector("#section-tabs .section-tab-cluster.section-tab-cluster--active")
+              !!document.querySelector("#section-tabs .section-tab-cluster.section-tab-cluster--active") ||
+              !!document.querySelector(".maestro-sidebar .section-tab.active")
           );
         }
+        syncMaestroSidebarMenus();
+      }
+
+      function syncMaestroSidebarMenus() {
+        var root = document.querySelector(".maestro-sidebar");
+        if (!root) return;
+        root.querySelectorAll("li.nav-item.menu-open").forEach(function (li) {
+          li.classList.remove("menu-open");
+        });
+        var actives = root.querySelectorAll(".section-tab.active");
+        actives.forEach(function (link) {
+          var el = link;
+          while (el && el !== root) {
+            if (el.matches && el.matches("li.nav-item")) {
+              el.classList.add("menu-open");
+            }
+            el = el.parentElement;
+          }
+        });
       }
 
       function activateAdminSection(targetId, options) {
@@ -3399,6 +3435,19 @@
   <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.8/dist/umd/popper.min.js" crossorigin="anonymous"></script>
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/js/bootstrap.min.js" crossorigin="anonymous"></script>
   <script src="/static/vendor/adminlte/adminlte.min.js"></script>
+  <script>
+    (function () {
+      document.addEventListener("DOMContentLoaded", function () {
+        var wrap = document.querySelector(".maestro-sidebar .sidebar-wrapper");
+        var OS = typeof OverlayScrollbarsGlobal !== "undefined" ? OverlayScrollbarsGlobal.OverlayScrollbars : undefined;
+        if (wrap && OS && window.innerWidth > 992) {
+          OS(wrap, {
+            scrollbars: { theme: "os-theme-light", autoHide: "leave", clickScroll: true },
+          });
+        }
+      });
+    })();
+  </script>
   {% include '_force_english_digits.html' %}
   {% include '_mobile_landscape_hint.html' %}
 </body>
