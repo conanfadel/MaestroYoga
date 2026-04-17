@@ -1,0 +1,151 @@
+/**
+ * Maestro Yoga — طبقة «لوحة تحكم» حديثة (2026)
+ * مستوى tokens (نصف قطر، ظل، حدود) بروح أنظمة مفتوحة المصدر مثل:
+ *   https://github.com/shadcn-ui/ui  ·  https://github.com/tabler/tabler  ·  https://mui.com/
+ * التنفيذ هنا CSS خفيف فقط (لا npm) — يُحمَّل بعد admin-dashboard-main.
+ */
+
+:root {
+  --admin-radius-sm: 10px;
+  --admin-radius-md: 14px;
+  --admin-radius-lg: 20px;
+  --admin-radius-xl: 24px;
+  --admin-shadow-sm: 0 1px 2px rgba(15, 23, 42, 0.05);
+  --admin-shadow-md: 0 8px 24px rgba(15, 23, 42, 0.07), 0 2px 8px rgba(15, 23, 42, 0.04);
+  --admin-shadow-lg: 0 20px 50px rgba(15, 23, 42, 0.1), 0 6px 18px rgba(15, 23, 42, 0.05);
+  --admin-border: rgba(15, 23, 42, 0.08);
+  --admin-border-strong: rgba(197, 160, 89, 0.32);
+}
+
+html:not([data-theme="dark"]) {
+  --page-bg: #f4f6f8;
+  --content-max: min(1320px, 92vw);
+}
+
+body {
+  font-feature-settings: "kern" 1, "liga" 1;
+  background:
+    radial-gradient(120% 80% at 100% 0%, rgba(170, 240, 209, 0.22) 0%, transparent 55%),
+    radial-gradient(90% 60% at 0% 100%, rgba(197, 160, 89, 0.08) 0%, transparent 50%),
+    var(--page-bg);
+}
+
+.top {
+  border-radius: var(--admin-radius-xl);
+  border: 1px solid var(--admin-border-strong);
+  box-shadow: var(--admin-shadow-md);
+  backdrop-filter: saturate(140%) blur(10px);
+}
+
+.card,
+.stat,
+.revenue-7d-wrap,
+.ops-card,
+.security-block,
+.morning-brief-strip {
+  border-radius: var(--admin-radius-lg) !important;
+  border: 1px solid var(--admin-border) !important;
+  box-shadow: var(--admin-shadow-sm) !important;
+  transition: box-shadow 0.2s ease, border-color 0.2s ease, transform 0.2s ease;
+}
+
+.card:hover,
+.stat:hover {
+  box-shadow: var(--admin-shadow-md) !important;
+}
+
+.accordion {
+  border-radius: var(--admin-radius-lg) !important;
+  border: 1px solid var(--admin-border) !important;
+  box-shadow: var(--admin-shadow-sm) !important;
+}
+
+.section-tabs-sticky .section-tabs {
+  border-radius: var(--admin-radius-md) !important;
+  border: 1px solid var(--admin-border) !important;
+  box-shadow: var(--admin-shadow-sm) !important;
+}
+
+.section-tab {
+  border-radius: 999px !important;
+  transition: background 0.18s ease, color 0.18s ease, box-shadow 0.18s ease;
+}
+
+.section-tab.active {
+  box-shadow: 0 4px 14px rgba(197, 160, 89, 0.28);
+}
+
+button {
+  border-radius: var(--admin-radius-md);
+  transition: transform 0.15s ease, box-shadow 0.2s ease, border-color 0.2s ease, background 0.2s ease;
+}
+
+button:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(125, 211, 174, 0.45), 0 4px 14px rgba(197, 160, 89, 0.15);
+}
+
+input,
+select,
+textarea {
+  border-radius: var(--admin-radius-md) !important;
+  transition: border-color 0.18s ease, box-shadow 0.18s ease;
+}
+
+.table-fluid table {
+  border-radius: var(--admin-radius-md);
+  box-shadow: var(--admin-shadow-sm);
+}
+
+th {
+  letter-spacing: 0.02em;
+}
+
+main.admin-main {
+  gap: 26px;
+}
+
+.admin-booking-block-heading {
+  letter-spacing: -0.02em;
+}
+
+.plan-card--admin {
+  border-radius: var(--admin-radius-lg);
+  border: 1px solid var(--admin-border);
+  box-shadow: var(--admin-shadow-sm);
+}
+
+/* —— وضع داكن متناسق مع الطبقة الجديدة —— */
+html[data-theme="dark"] {
+  --admin-border: rgba(148, 163, 184, 0.12);
+  --admin-border-strong: rgba(197, 160, 89, 0.35);
+  --admin-shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.35);
+  --admin-shadow-md: 0 12px 36px rgba(0, 0, 0, 0.45), 0 4px 12px rgba(0, 0, 0, 0.3);
+  --admin-shadow-lg: 0 24px 64px rgba(0, 0, 0, 0.55);
+  --content-max: min(1320px, 92vw);
+}
+
+html[data-theme="dark"] body {
+  background:
+    radial-gradient(100% 70% at 100% 0%, rgba(45, 212, 191, 0.08) 0%, transparent 52%),
+    radial-gradient(80% 50% at 0% 100%, rgba(197, 160, 89, 0.06) 0%, transparent 45%),
+    #0f1218;
+}
+
+html[data-theme="dark"] .top,
+html[data-theme="dark"] .card,
+html[data-theme="dark"] .stat,
+html[data-theme="dark"] .revenue-7d-wrap,
+html[data-theme="dark"] .ops-card,
+html[data-theme="dark"] .accordion,
+html[data-theme="dark"] .section-tabs-sticky .section-tabs,
+html[data-theme="dark"] .security-block,
+html[data-theme="dark"] .morning-brief-strip {
+  border-color: var(--admin-border) !important;
+  box-shadow: var(--admin-shadow-md) !important;
+}
+
+html[data-theme="dark"] .plan-card--admin {
+  border-color: var(--admin-border-strong);
+  box-shadow: var(--admin-shadow-sm);
+}
