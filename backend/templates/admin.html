@@ -21,8 +21,9 @@
   {% from "partials/report_hub_icons.html" import svg_calendar, svg_chart, svg_users, svg_package, svg_pulse, svg_cash, svg_download, svg_shield %}
   {% from "partials/admin_discount_fields.html" import admin_discount_fields %}
   <a class="admin-skip-link" href="#main-content">تخطي إلى المحتوى الرئيسي</a>
+  {# Tabler: الشريط الجانبي يجب أن يسبق div.page مباشرة (~.page) حتى يُطبَّق العرض والهوامش #}
+  {% include "partials/admin_sidebar_nav.html" %}
   <div class="page">
-    {% include "partials/admin_sidebar_nav.html" %}
     <div class="page-wrapper">
       <header class="navbar navbar-expand-md d-print-none border-bottom bg-body shadow-sm align-items-center" id="maestro-top-navbar" aria-label="شريط أدوات لوحة الإدارة">
         <div class="container-fluid d-flex align-items-center flex-wrap gap-2 py-2">

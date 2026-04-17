@@ -3,7 +3,6 @@
 body.maestro-tabler {
   --gold: #c5a059;
   --mint: #aaf0d1;
-  /* دمج هوية المركز مع ألوان Tabler */
   --tblr-primary: #c5a059;
   --tblr-primary-rgb: 197, 160, 89;
   font-family: "Tajawal", system-ui, sans-serif;
@@ -45,14 +44,12 @@ body.maestro-tabler .admin-main .card {
   display: block;
 }
 
-/* تخطي للمحتوى — موضع منطقي في RTL */
 body.maestro-tabler .admin-skip-link:focus {
   right: auto;
   left: auto;
   inset-inline-end: 12px;
 }
 
-/* شريط علوي */
 body.maestro-tabler #maestro-top-navbar {
   min-height: 3.25rem;
 }
@@ -68,7 +65,7 @@ body.maestro-tabler #maestro-top-navbar .maestro-header-toolbar .top {
   border-radius: 14px;
 }
 
-/* الشريط الجانبي — هوية المركز */
+/* الشريط الجانبي */
 body.maestro-tabler .maestro-sidebar.navbar-vertical {
   background: #1a1d21;
   min-height: 100vh;
@@ -103,8 +100,17 @@ body.maestro-tabler .maestro-sidebar .maestro-sidebar-logo {
   border-radius: 8px;
 }
 
-/* على الشاشات الكبيرة: منطقة القابلة للتمرير تحت الشعار */
+/* منع إخفاء القائمة: collapse بدون .show يكون display:none — نفرض العرض على lg+ */
 @media (min-width: 992px) {
+  body.maestro-tabler .maestro-sidebar #maestro-sidebar-menu.navbar-collapse {
+    display: flex !important;
+    flex-direction: column !important;
+    height: auto !important;
+    max-height: none !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+  }
+
   body.maestro-tabler .maestro-sidebar .container-fluid {
     display: flex;
     flex-direction: column;
@@ -115,7 +121,7 @@ body.maestro-tabler .maestro-sidebar .maestro-sidebar-logo {
 
   body.maestro-tabler .maestro-sidebar .maestro-sidebar-scroll {
     flex: 1 1 auto;
-    min-height: 0;
+    min-height: 8rem;
     overflow-y: auto;
     overscroll-behavior: contain;
   }
@@ -125,15 +131,20 @@ body.maestro-tabler .maestro-sidebar .navbar-collapse .navbar-nav {
   padding-top: 0.35rem;
 }
 
+body.maestro-tabler .maestro-sidebar .navbar-nav .nav-item {
+  visibility: visible;
+  opacity: 1;
+}
+
 body.maestro-tabler .maestro-sidebar .nav-link {
   font-family: "Tajawal", system-ui, sans-serif;
-  color: rgba(255, 255, 255, 0.9);
+  color: rgba(255, 255, 255, 0.92) !important;
   border-radius: 10px;
   gap: 0.5rem;
 }
 
 body.maestro-tabler .maestro-sidebar .nav-link:hover {
-  color: #fff;
+  color: #fff !important;
   background: color-mix(in srgb, var(--mint) 18%, rgba(255, 255, 255, 0.06));
 }
 
