@@ -1,0 +1,30 @@
+{# Full-width promo row for session cards. Expects `s`. #}
+{% if s.promo_range_from and s.promo_range_to %}
+<div class="session-card__promo-extras session-card__promo-extras--row" dir="rtl" lang="ar">
+  <span class="session-card__promo-extras-label">فترة العرض:</span>
+  <span>من {{ s.promo_range_from }}</span>
+  <span>إلى {{ s.promo_range_to }}</span>
+  <span class="session-card__promo-extras-tz">(بتوقيت السعودية)</span>
+  {% if s.promo_countdown_end_iso %}
+  <span class="session-card__promo-countdown js-promo-countdown session-card__promo-extras-countdown" data-promo-ends-at="{{ s.promo_countdown_end_iso }}" dir="rtl" lang="ar" aria-live="polite"></span>
+  {% endif %}
+</div>
+{% elif s.promo_schedule %}
+<div class="session-card__promo-extras session-card__promo-extras--row" dir="rtl" lang="ar">
+  <span class="session-card__promo-schedule session-card__promo-schedule--full">{{ s.promo_schedule }}</span>
+  {% if s.promo_countdown_end_iso %}
+  <span class="session-card__promo-countdown js-promo-countdown session-card__promo-extras-countdown" data-promo-ends-at="{{ s.promo_countdown_end_iso }}" dir="rtl" lang="ar" aria-live="polite"></span>
+  {% endif %}
+</div>
+{% elif s.promo_duration_hours %}
+<div class="session-card__promo-extras session-card__promo-extras--row session-card__promo-extras--hours" dir="rtl" lang="ar">
+  <span class="plan-promo-hours-badge">{{ s.promo_duration_hours }} ساعة</span>
+  {% if s.promo_countdown_end_iso %}
+  <span class="session-card__promo-countdown js-promo-countdown session-card__promo-extras-countdown" data-promo-ends-at="{{ s.promo_countdown_end_iso }}" dir="rtl" lang="ar" aria-live="polite"></span>
+  {% endif %}
+</div>
+{% elif s.promo_countdown_end_iso %}
+<div class="session-card__promo-extras session-card__promo-extras--row" dir="rtl" lang="ar">
+  <span class="session-card__promo-countdown js-promo-countdown" data-promo-ends-at="{{ s.promo_countdown_end_iso }}" dir="rtl" lang="ar" aria-live="polite"></span>
+</div>
+{% endif %}

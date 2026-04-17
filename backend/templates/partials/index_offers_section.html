@@ -27,9 +27,8 @@
           <div class="session-card__list-price session-card__list-price--strike">{{ s.list_price }}<span>ر.س</span></div>
           <div class="session-card__price">{{ s.display_sale_price }}<span>ر.س</span></div>
           <div class="session-card__promo-label">{{ s.promo_label }}</div>
-          {% if s.promo_schedule %}<div class="session-card__promo-schedule">{{ s.promo_schedule }}</div>{% endif %}
-          {% if s.promo_countdown_end_iso %}<div class="session-card__promo-countdown js-promo-countdown" data-promo-ends-at="{{ s.promo_countdown_end_iso }}" dir="rtl" lang="ar" aria-live="polite"></div>{% endif %}
         </div>
+        {% include "partials/session_promo_extras.html" %}
         {% else %}
         <div class="session-card__price">{{ s.price_drop_in }}<span>ر.س</span></div>
         {% endif %}
@@ -78,14 +77,15 @@
             <span class="plan-list-price plan-list-price--strike">{{ plan.list_price }}<span class="plan-currency">ر.س</span></span>
             <span class="plan-sale-price">{{ plan.display_sale_price }}<span class="plan-currency">ر.س</span></span>
             <span class="plan-promo-label">{{ plan.promo_label }}</span>
-            {% if plan.promo_schedule %}<span class="plan-promo-schedule">{{ plan.promo_schedule }}</span>{% endif %}
-            {% if plan.promo_countdown_end_iso %}<span class="plan-promo-countdown js-promo-countdown" data-promo-ends-at="{{ plan.promo_countdown_end_iso }}" dir="rtl" lang="ar" aria-live="polite"></span>{% endif %}
           </span>
           {% else %}
           {{ plan.price }} ر.س
           {% endif %}
         </div>
       </div>
+      {% if plan.has_promo %}
+      {% include "partials/plan_promo_extras.html" %}
+      {% endif %}
       <div class="plan-card__actions">
         <button
           type="button"

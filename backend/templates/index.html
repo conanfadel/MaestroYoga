@@ -1821,10 +1821,54 @@
     html[data-theme="dark"] .plan-promo-schedule {
       color: rgba(255, 255, 255, 0.72);
     }
+    .plan-promo-extras {
+      width: 100%;
+      box-sizing: border-box;
+    }
+    .plan-promo-extras--row {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: center;
+      gap: 6px 12px;
+      margin-top: 8px;
+      padding: 8px 10px;
+      border-radius: 10px;
+      background: rgba(15, 118, 110, 0.06);
+      border: 1px solid rgba(15, 118, 110, 0.2);
+      font-size: 0.72rem;
+      font-weight: 700;
+      line-height: 1.35;
+      text-align: center;
+    }
+    .plan-promo-extras__label {
+      font-weight: 800;
+      color: var(--charcoal);
+    }
+    .plan-promo-extras__tz,
+    .plan-promo-extras__sep {
+      color: rgba(45, 52, 54, 0.82);
+    }
+    .plan-promo-hours-badge {
+      font-weight: 900;
+      font-size: 0.8rem;
+      color: #0f766e;
+      font-variant-numeric: tabular-nums;
+    }
+    .plan-promo-extras__countdown {
+      margin-top: 0 !important;
+    }
+    #plans-section .plan-promo-extras--row {
+      margin-top: 6px;
+    }
+    .plan-promo-schedule--full-width {
+      display: inline;
+      white-space: normal;
+    }
     .plan-promo-countdown,
     .session-card__promo-countdown {
-      display: block;
-      margin-top: 6px;
+      display: inline-block;
+      margin-top: 0;
       font-size: 0.78rem;
       font-weight: 800;
       font-variant-numeric: tabular-nums;
@@ -1835,6 +1879,38 @@
     html[data-theme="dark"] .plan-promo-countdown,
     html[data-theme="dark"] .session-card__promo-countdown {
       color: #5eead4;
+    }
+    html[data-theme="dark"] .plan-promo-extras--row {
+      background: rgba(13, 148, 136, 0.12);
+      border-color: rgba(94, 234, 212, 0.28);
+    }
+    .session-card__promo-extras--row {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: center;
+      gap: 6px 10px;
+      margin-top: 8px;
+      padding: 6px 8px;
+      border-radius: 10px;
+      background: rgba(15, 118, 110, 0.06);
+      border: 1px solid rgba(15, 118, 110, 0.18);
+      font-size: 0.72rem;
+      font-weight: 700;
+      line-height: 1.35;
+    }
+    .session-card__promo-extras-label {
+      font-weight: 800;
+    }
+    .session-card__promo-extras-tz {
+      opacity: 0.85;
+    }
+    .session-card__promo-schedule--full {
+      text-align: center;
+    }
+    .offers-section .plan-promo-extras--row {
+      margin-top: 6px;
+      font-size: 0.68rem;
     }
     html[data-theme="dark"] .session-card__list-price {
       color: rgba(255, 255, 255, 0.72);
@@ -4585,8 +4661,6 @@
                         <span class="plan-list-price plan-list-price--strike">{{ plan.list_price }}<span class="plan-currency">ر.س</span></span>
                         <span class="plan-sale-price">{{ plan.display_sale_price }}<span class="plan-currency">ر.س</span></span>
                         <span class="plan-promo-label">{{ plan.promo_label }}</span>
-                        {% if plan.promo_schedule %}<span class="plan-promo-schedule">{{ plan.promo_schedule }}</span>{% endif %}
-                        {% if plan.promo_countdown_end_iso %}<span class="plan-promo-countdown js-promo-countdown" data-promo-ends-at="{{ plan.promo_countdown_end_iso }}" dir="rtl" lang="ar" aria-live="polite"></span>{% endif %}
                       </span>
                       {% else %}
                       {{ plan.price }} SAR
@@ -4594,6 +4668,9 @@
                     </div>
                     <div><span class="k">حد الجلسات</span>{{ plan.session_limit if plan.session_limit else 'غير محدود' }}</div>
                   </div>
+                  {% if plan.has_promo %}
+                  {% include "partials/plan_promo_extras.html" %}
+                  {% endif %}
 
                   {% if recommended_plan_id is not none and plan.id == recommended_plan_id %}
                   <p class="best-note best-note--recommended" role="status">أقل تكلفة يومية بين الخطط المعروضة (السعر ÷ أيام الاشتراك).</p>

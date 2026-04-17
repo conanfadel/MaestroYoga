@@ -2,6 +2,7 @@ from datetime import timedelta
 
 from . import models
 from .discount_pricing import (
+    normalize_schedule_type,
     promo_active_window_end_utc_naive,
     public_in_active_offer,
     public_promo_label,
@@ -11,7 +12,7 @@ from .discount_pricing import (
     session_public_checkout_amount,
 )
 from .public_session_visibility import yoga_session_accepts_new_public_booking
-from .time_utils import utcnow_naive
+from .time_utils import utc_naive_to_ksa, utcnow_naive
 from .web_shared import _fmt_dt_weekday_ar
 
 
@@ -63,6 +64,17 @@ def build_public_session_rows(
             hour_end=he,
             duration_hours=int(dh) if dh is not None else None,
         )
+        stn = normalize_schedule_type(st)
+        promo_range_from: str | None = None
+        promo_range_to: str | None = None
+        promo_duration_hours: int | None = None
+        if stn == "date_range" and vf is not None and vu is not None:
+            promo_range_from = utc_naive_to_ksa(vf).strftime("%Y-%m-%d %H:%M")
+            promo_range_to = utc_naive_to_ksa(vu).strftime("%Y-%m-%d %H:%M")
+            promo_schedule = ""
+        elif stn == "daily_hours" and dh is not None and int(dh) > 0:
+            promo_duration_hours = int(dh)
+            promo_schedule = ""
         in_active_offer = public_in_active_offer(s, now=now)
         end_at = promo_active_window_end_utc_naive(s, now=now)
         rows.append(
@@ -83,6 +95,9 @@ def build_public_session_rows(
                 "has_promo": has_promo,
                 "promo_label": promo_label,
                 "promo_schedule": promo_schedule,
+                "promo_range_from": promo_range_from,
+                "promo_range_to": promo_range_to,
+                "promo_duration_hours": promo_duration_hours,
                 "in_active_offer": in_active_offer,
                 "promo_countdown_end_iso": (end_at.isoformat() + "Z") if end_at else None,
                 "room_name": room.name if room else "-",

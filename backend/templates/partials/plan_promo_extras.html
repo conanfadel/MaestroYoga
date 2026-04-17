@@ -1,0 +1,30 @@
+{# Full-width row under plan-meta: date range (horizontal), legacy schedule text, or hourly badge + countdown. Expects `plan`. #}
+{% if plan.promo_range_from and plan.promo_range_to %}
+<div class="plan-promo-extras plan-promo-extras--row" dir="rtl" lang="ar">
+  <span class="plan-promo-extras__label">فترة العرض:</span>
+  <span class="plan-promo-extras__sep">من {{ plan.promo_range_from }}</span>
+  <span class="plan-promo-extras__sep">إلى {{ plan.promo_range_to }}</span>
+  <span class="plan-promo-extras__tz">(بتوقيت السعودية)</span>
+  {% if plan.promo_countdown_end_iso %}
+  <span class="plan-promo-countdown js-promo-countdown plan-promo-extras__countdown" data-promo-ends-at="{{ plan.promo_countdown_end_iso }}" dir="rtl" lang="ar" aria-live="polite"></span>
+  {% endif %}
+</div>
+{% elif plan.promo_schedule %}
+<div class="plan-promo-extras plan-promo-extras--row" dir="rtl" lang="ar">
+  <span class="plan-promo-schedule plan-promo-schedule--full-width">{{ plan.promo_schedule }}</span>
+  {% if plan.promo_countdown_end_iso %}
+  <span class="plan-promo-countdown js-promo-countdown plan-promo-extras__countdown" data-promo-ends-at="{{ plan.promo_countdown_end_iso }}" dir="rtl" lang="ar" aria-live="polite"></span>
+  {% endif %}
+</div>
+{% elif plan.promo_duration_hours %}
+<div class="plan-promo-extras plan-promo-extras--row plan-promo-extras--hours" dir="rtl" lang="ar">
+  <span class="plan-promo-hours-badge">{{ plan.promo_duration_hours }} ساعة</span>
+  {% if plan.promo_countdown_end_iso %}
+  <span class="plan-promo-countdown js-promo-countdown plan-promo-extras__countdown" data-promo-ends-at="{{ plan.promo_countdown_end_iso }}" dir="rtl" lang="ar" aria-live="polite"></span>
+  {% endif %}
+</div>
+{% elif plan.promo_countdown_end_iso %}
+<div class="plan-promo-extras plan-promo-extras--row" dir="rtl" lang="ar">
+  <span class="plan-promo-countdown js-promo-countdown" data-promo-ends-at="{{ plan.promo_countdown_end_iso }}" dir="rtl" lang="ar" aria-live="polite"></span>
+</div>
+{% endif %}
