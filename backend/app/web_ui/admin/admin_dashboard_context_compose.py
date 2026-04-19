@@ -16,6 +16,7 @@ from .admin_dashboard_context_load import AdminDashboardQueryState
 from .admin_paths import (
     ADMIN_PATH_DASHBOARD,
     ADMIN_PATH_SETTINGS,
+    ADMIN_PATH_TRAINING,
     ADMIN_PATH_USERS,
     admin_section_paths_for_template,
 )
@@ -311,5 +312,6 @@ def finalize_admin_dashboard_template_context(
             or _s.user_has_permission(user, "dashboard.financial")
         ),
         "admin_list_path": admin_list_path,
+        "admin_page_is_training": admin_list_path == ADMIN_PATH_TRAINING,
         "admin_section_paths": admin_section_paths_for_template(),
     }

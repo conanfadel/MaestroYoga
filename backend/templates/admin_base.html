@@ -362,6 +362,7 @@
         });
       }
 
+      {% if admin_page_is_training %}
       (function initTrainingMuscleClickMap() {
         var mapRoot = document.querySelector("#section-training-management");
         if (!mapRoot) return;
@@ -589,6 +590,7 @@
         });
         syncPresetField();
       })();
+      {% endif %}
 
       const faqSearchInput = document.getElementById("faq-search-input");
       const faqTbody = document.getElementById("faq-tbody");
