@@ -1,7 +1,7 @@
-/* Maestro — تكامل قالب Mazer (Bootstrap 5) + RTL — إصلاح التداخل والسطر الواحد */
+/* Maestro — تكامل قالب Mazer (Bootstrap 5) + RTL — الإصلاح الجذري للمحاذاة والمسافات */
 
 body.maestro-mazer {
-  --maestro-mazer-sidebar-width: 300px;
+  --maestro-mazer-sidebar-width: 320px;
   --sidebar-bg: #ffffff;
   --sidebar-hover-bg: rgba(170, 240, 209, 0.15);
   --sidebar-active-bg: linear-gradient(90deg, rgba(197, 160, 89, 0.1) 0%, rgba(197, 160, 89, 0.02) 100%);
@@ -68,52 +68,45 @@ body.maestro-mazer .maestro-mazer-sidebar .logo a {
   white-space: nowrap;
 }
 
-body.maestro-mazer .maestro-mazer-sidebar .sidebar-menu {
+body.maestro-mazer .sidebar-menu {
   padding: 1rem 0.8rem !important;
 }
 
-body.maestro-mazer #admin-mazer-sidebar-menu .sidebar-item {
+body.maestro-mazer #sidebar .sidebar-menu .sidebar-item {
   margin-bottom: 0.25rem;
 }
 
-/* ---------------------------------------------------
-   إصلاح جذري للقائمة الرئيسية (الأيقونة + النص + السهم)
------------------------------------------------------- */
+/* =========================================================
+   الإصلاح الجذري للأقسام الرئيسية (إلغاء تشوهات قالب Mazer)
+   ========================================================= */
 body.maestro-mazer #sidebar .sidebar-menu .sidebar-item > .sidebar-link {
     display: flex !important;
-    flex-direction: row !important;
     align-items: center !important;
-    justify-content: flex-start !important;
-    flex-wrap: nowrap !important;
-    padding: 0.8rem 1rem !important;
-    font-size: 0.95rem !important;
-    font-weight: 700 !important;
-    color: var(--sidebar-text);
+    padding: 0.8rem 1.2rem !important;
+    position: relative !important;
+    border-radius: 12px;
     background: transparent;
     border: none;
-    border-radius: 12px;
+    text-decoration: none !important;
     transition: all 0.25s ease;
-    position: relative !important;
-    gap: 12px !important;
 }
 
 body.maestro-mazer #sidebar .sidebar-menu .sidebar-item > .sidebar-link:hover {
     background: var(--sidebar-hover-bg);
-    color: var(--sidebar-icon);
     transform: translateX(-4px);
 }
 
-/* إصلاح الأيقونة: حجم ثابت، توسيط، لا تتأثر بالنص */
+/* 1. الأيقونة: تثبيت الحجم لمنع الانضغاط */
 body.maestro-mazer #sidebar .sidebar-menu .sidebar-item > .sidebar-link > i {
-    flex: 0 0 auto !important;
-    width: 26px !important;
-    height: 26px !important;
     display: flex !important;
     align-items: center !important;
     justify-content: center !important;
     font-size: 1.35rem !important;
     color: var(--sidebar-icon);
     margin: 0 !important;
+    width: 28px !important;
+    height: 28px !important;
+    flex-shrink: 0 !important;
     transition: transform 0.3s ease;
 }
 
@@ -121,36 +114,36 @@ body.maestro-mazer #sidebar .sidebar-menu .sidebar-item > .sidebar-link:hover > 
     transform: scale(1.1);
 }
 
-/* إصلاح النص: إجبار على سطر واحد، قص الزيادة، ومسافة أمان للسهم */
+/* 2. النص: إبطال إزاحة Mazer الخاطئة (margin-left) وضبط سطر واحد */
 body.maestro-mazer #sidebar .sidebar-menu .sidebar-item > .sidebar-link > span {
-    flex: 1 1 auto !important;
-    white-space: nowrap !important;
-    overflow: hidden !important;
-    text-overflow: ellipsis !important;
-    text-align: start !important;
-    margin: 0 !important;
-    padding-inline-end: 18px !important; /* مساحة للسهم */
-    line-height: 1.5 !important;
+    margin-left: 0 !important; /* إلغاء ضغط Mazer للنص */
+    margin-right: 12px !important; /* المسافة الصحيحة بين الأيقونة والنص بالعربي */
+    font-size: 0.95rem !important;
+    font-weight: 700 !important;
+    color: var(--sidebar-text);
+    white-space: nowrap !important; /* إجبار النص على البقاء في سطر واحد */
+    flex-grow: 1 !important;
+    text-align: right !important;
 }
 
-/* إصلاح السهم (Chevron): تثبيته مطلقاً في نهاية الزر */
+/* 3. السهم (Chevron): نقله من اليمين (فوق الأيقونة) إلى أقصى اليسار */
 body.maestro-mazer #sidebar .sidebar-menu .sidebar-item.has-sub > .sidebar-link::after {
     position: absolute !important;
+    right: auto !important; /* إلغاء مكان Mazer الخاطئ */
+    left: 1.2rem !important; /* التثبيت الصحيح في اليسار */
     top: 50% !important;
-    inset-inline-end: 1rem !important;
     transform: translateY(-50%) !important;
     margin: 0 !important;
     display: block !important;
 }
 
-/* ---------------------------------------------------
-   القائمة الفرعية (Submenu) 
------------------------------------------------------- */
+/* =========================================================
+   الإصلاح الجذري للقائمة الفرعية (Submenu)
+   ========================================================= */
 body.maestro-mazer #sidebar .sidebar-menu .submenu {
   list-style: none;
-  padding-block: 0.25rem 0.5rem !important;
-  padding-inline-start: 3.2rem !important; /* محاذاة مع النص الرئيسي */
-  padding-inline-end: 0.8rem !important;
+  padding-left: 0 !important; /* إبطال الإزاحة الإنجليزية */
+  padding-right: 3.2rem !important; /* محاذاة دقيقة تحت النص الرئيسي */
   margin-top: 0 !important;
   margin-bottom: 0.5rem !important;
   background: transparent;
@@ -159,11 +152,9 @@ body.maestro-mazer #sidebar .sidebar-menu .submenu {
 body.maestro-mazer #sidebar .sidebar-menu a.section-tab.section-tab--subitem,
 body.maestro-mazer #sidebar .sidebar-menu .submenu-link.section-tab {
   display: flex !important;
-  flex-direction: row !important;
   align-items: center !important;
-  justify-content: flex-start !important;
   width: 100%;
-  padding: 0.6rem 0.75rem !important;
+  padding: 0.6rem 0.5rem !important;
   margin: 0.15rem 0 !important;
   font-size: 0.88rem !important;
   font-weight: 500 !important;
@@ -174,21 +165,21 @@ body.maestro-mazer #sidebar .sidebar-menu .submenu-link.section-tab {
   box-shadow: none !important;
   position: relative;
   transition: all 0.25s ease;
-  white-space: nowrap !important;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  white-space: nowrap !important; /* سطر واحد دائماً */
 }
 
+/* النقطة (Dot) بجانب الروابط الفرعية */
 body.maestro-mazer #sidebar .sidebar-menu a.section-tab.section-tab--subitem::before,
 body.maestro-mazer #sidebar .sidebar-menu .submenu-link.section-tab::before {
   content: "";
   display: inline-block;
-  flex-shrink: 0;
   width: 6px;
   height: 6px;
   border-radius: 50%;
   background-color: rgba(154, 123, 60, 0.4);
-  margin-inline-end: 10px;
+  margin-left: 10px !important; /* المسافة يجب أن تكون يسار النقطة لتبعد النص */
+  margin-right: 0 !important;
+  flex-shrink: 0;
   transition: all 0.25s ease;
 }
 
