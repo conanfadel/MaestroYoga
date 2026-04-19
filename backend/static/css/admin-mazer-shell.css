@@ -1,7 +1,7 @@
-/* Maestro — تكامل قالب Mazer (Bootstrap 5) + RTL — محسّن (V2) */
+/* Maestro — تكامل قالب Mazer (Bootstrap 5) + RTL — إصلاح التداخل والسطر الواحد */
 
 body.maestro-mazer {
-  --maestro-mazer-sidebar-width: 320px;
+  --maestro-mazer-sidebar-width: 300px;
   --sidebar-bg: #ffffff;
   --sidebar-hover-bg: rgba(170, 240, 209, 0.15);
   --sidebar-active-bg: linear-gradient(90deg, rgba(197, 160, 89, 0.1) 0%, rgba(197, 160, 89, 0.02) 100%);
@@ -55,7 +55,7 @@ html[dir="rtl"] #sidebar.inactive ~ #main { margin-right: 0 !important; }
 
 /* رأس الشريط الجانبي (اللوجو) */
 body.maestro-mazer .maestro-mazer-sidebar__header {
-  padding: 1.5rem 1.5rem 1rem !important;
+  padding: 1.5rem 1.2rem 1rem !important;
   border-bottom: 1px solid var(--sidebar-border);
 }
 
@@ -65,9 +65,9 @@ body.maestro-mazer .maestro-mazer-sidebar .logo a {
   font-weight: 700;
   color: var(--sidebar-text);
   letter-spacing: 0.02em;
+  white-space: nowrap;
 }
 
-/* القائمة الرئيسية */
 body.maestro-mazer .maestro-mazer-sidebar .sidebar-menu {
   padding: 1rem 0.8rem !important;
 }
@@ -76,59 +76,94 @@ body.maestro-mazer #admin-mazer-sidebar-menu .sidebar-item {
   margin-bottom: 0.25rem;
 }
 
-/* روابط الأقسام الرئيسية (تصميم أنيق وبدون حدود صندوقية) */
-body.maestro-mazer #admin-mazer-sidebar-menu .sidebar-item.has-sub > .sidebar-link {
-  display: flex !important;
-  align-items: center;
-  gap: 12px;
-  padding: 0.75rem 1rem !important;
-  font-size: 0.95rem !important;
-  font-weight: 700 !important;
-  color: var(--sidebar-text);
-  background: transparent;
-  border: none;
-  border-radius: 12px;
-  transition: all 0.25s ease;
-  position: relative;
-  overflow: hidden;
+/* ---------------------------------------------------
+   إصلاح جذري للقائمة الرئيسية (الأيقونة + النص + السهم)
+------------------------------------------------------ */
+body.maestro-mazer #sidebar .sidebar-menu .sidebar-item > .sidebar-link {
+    display: flex !important;
+    flex-direction: row !important;
+    align-items: center !important;
+    justify-content: flex-start !important;
+    flex-wrap: nowrap !important;
+    padding: 0.8rem 1rem !important;
+    font-size: 0.95rem !important;
+    font-weight: 700 !important;
+    color: var(--sidebar-text);
+    background: transparent;
+    border: none;
+    border-radius: 12px;
+    transition: all 0.25s ease;
+    position: relative !important;
+    gap: 12px !important;
 }
 
-body.maestro-mazer #admin-mazer-sidebar-menu .sidebar-item.has-sub > .sidebar-link:hover {
-  background: var(--sidebar-hover-bg);
-  color: var(--sidebar-icon);
-  transform: translateX(-4px); /* حركة خفيفة لليسار عند التأشير في العربي */
+body.maestro-mazer #sidebar .sidebar-menu .sidebar-item > .sidebar-link:hover {
+    background: var(--sidebar-hover-bg);
+    color: var(--sidebar-icon);
+    transform: translateX(-4px);
 }
 
-/* الأيقونات في الشريط الجانبي */
-body.maestro-mazer #admin-mazer-sidebar-menu .sidebar-item.has-sub > .sidebar-link i {
-  display: flex !important;
-  align-items: center;
-  justify-content: center;
-  font-size: 1.25rem !important;
-  color: var(--sidebar-icon);
-  transition: transform 0.3s ease;
+/* إصلاح الأيقونة: حجم ثابت، توسيط، لا تتأثر بالنص */
+body.maestro-mazer #sidebar .sidebar-menu .sidebar-item > .sidebar-link > i {
+    flex: 0 0 auto !important;
+    width: 26px !important;
+    height: 26px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    font-size: 1.35rem !important;
+    color: var(--sidebar-icon);
+    margin: 0 !important;
+    transition: transform 0.3s ease;
 }
 
-body.maestro-mazer #admin-mazer-sidebar-menu .sidebar-item.has-sub > .sidebar-link:hover i {
-  transform: scale(1.1);
+body.maestro-mazer #sidebar .sidebar-menu .sidebar-item > .sidebar-link:hover > i {
+    transform: scale(1.1);
 }
 
-/* القائمة الفرعية (Submenu) - أكثر نعومة */
-body.maestro-mazer #admin-mazer-sidebar-menu .submenu {
+/* إصلاح النص: إجبار على سطر واحد، قص الزيادة، ومسافة أمان للسهم */
+body.maestro-mazer #sidebar .sidebar-menu .sidebar-item > .sidebar-link > span {
+    flex: 1 1 auto !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    text-align: start !important;
+    margin: 0 !important;
+    padding-inline-end: 18px !important; /* مساحة للسهم */
+    line-height: 1.5 !important;
+}
+
+/* إصلاح السهم (Chevron): تثبيته مطلقاً في نهاية الزر */
+body.maestro-mazer #sidebar .sidebar-menu .sidebar-item.has-sub > .sidebar-link::after {
+    position: absolute !important;
+    top: 50% !important;
+    inset-inline-end: 1rem !important;
+    transform: translateY(-50%) !important;
+    margin: 0 !important;
+    display: block !important;
+}
+
+/* ---------------------------------------------------
+   القائمة الفرعية (Submenu) 
+------------------------------------------------------ */
+body.maestro-mazer #sidebar .sidebar-menu .submenu {
   list-style: none;
-  padding: 0.25rem 0.5rem 0.5rem 2.5rem !important; /* مسافة بادئة للأيقونة */
+  padding-block: 0.25rem 0.5rem !important;
+  padding-inline-start: 3.2rem !important; /* محاذاة مع النص الرئيسي */
+  padding-inline-end: 0.8rem !important;
   margin-top: 0 !important;
   margin-bottom: 0.5rem !important;
   background: transparent;
 }
 
-/* الروابط الفرعية داخل الأقسام */
-body.maestro-mazer #admin-mazer-sidebar-menu a.section-tab.section-tab--subitem,
-body.maestro-mazer #admin-mazer-sidebar-menu .submenu-link.section-tab {
+body.maestro-mazer #sidebar .sidebar-menu a.section-tab.section-tab--subitem,
+body.maestro-mazer #sidebar .sidebar-menu .submenu-link.section-tab {
   display: flex !important;
-  align-items: center;
+  flex-direction: row !important;
+  align-items: center !important;
+  justify-content: flex-start !important;
   width: 100%;
-  padding: 0.6rem 1rem !important;
+  padding: 0.6rem 0.75rem !important;
   margin: 0.15rem 0 !important;
   font-size: 0.88rem !important;
   font-weight: 500 !important;
@@ -139,13 +174,16 @@ body.maestro-mazer #admin-mazer-sidebar-menu .submenu-link.section-tab {
   box-shadow: none !important;
   position: relative;
   transition: all 0.25s ease;
+  white-space: nowrap !important;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
-/* النقطة (Dot) بجانب الروابط الفرعية */
-body.maestro-mazer #admin-mazer-sidebar-menu a.section-tab.section-tab--subitem::before,
-body.maestro-mazer #admin-mazer-sidebar-menu .submenu-link.section-tab::before {
+body.maestro-mazer #sidebar .sidebar-menu a.section-tab.section-tab--subitem::before,
+body.maestro-mazer #sidebar .sidebar-menu .submenu-link.section-tab::before {
   content: "";
   display: inline-block;
+  flex-shrink: 0;
   width: 6px;
   height: 6px;
   border-radius: 50%;
@@ -154,22 +192,21 @@ body.maestro-mazer #admin-mazer-sidebar-menu .submenu-link.section-tab::before {
   transition: all 0.25s ease;
 }
 
-body.maestro-mazer #admin-mazer-sidebar-menu a.section-tab.section-tab--subitem:hover,
-body.maestro-mazer #admin-mazer-sidebar-menu .submenu-link.section-tab:hover {
+body.maestro-mazer #sidebar .sidebar-menu a.section-tab.section-tab--subitem:hover,
+body.maestro-mazer #sidebar .sidebar-menu .submenu-link.section-tab:hover {
   background: var(--sidebar-hover-bg) !important;
   color: var(--sidebar-icon) !important;
   transform: translateX(-4px);
 }
 
-body.maestro-mazer #admin-mazer-sidebar-menu a.section-tab.section-tab--subitem:hover::before,
-body.maestro-mazer #admin-mazer-sidebar-menu .submenu-link.section-tab:hover::before {
+body.maestro-mazer #sidebar .sidebar-menu a.section-tab.section-tab--subitem:hover::before,
+body.maestro-mazer #sidebar .sidebar-menu .submenu-link.section-tab:hover::before {
   background-color: var(--sidebar-icon);
   transform: scale(1.5);
 }
 
-/* الرابط الفرعي النشط (Active) */
-body.maestro-mazer #admin-mazer-sidebar-menu a.section-tab.section-tab--subitem.active,
-body.maestro-mazer #admin-mazer-sidebar-menu .submenu-link.section-tab.active {
+body.maestro-mazer #sidebar .sidebar-menu a.section-tab.section-tab--subitem.active,
+body.maestro-mazer #sidebar .sidebar-menu .submenu-link.section-tab.active {
   background: var(--sidebar-active-bg) !important;
   color: var(--sidebar-icon) !important;
   font-weight: 800 !important;
@@ -177,8 +214,8 @@ body.maestro-mazer #admin-mazer-sidebar-menu .submenu-link.section-tab.active {
   border-radius: 0 8px 8px 0 !important;
 }
 
-body.maestro-mazer #admin-mazer-sidebar-menu a.section-tab.section-tab--subitem.active::before,
-body.maestro-mazer #admin-mazer-sidebar-menu .submenu-link.section-tab.active::before {
+body.maestro-mazer #sidebar .sidebar-menu a.section-tab.section-tab--subitem.active::before,
+body.maestro-mazer #sidebar .sidebar-menu .submenu-link.section-tab.active::before {
   background-color: var(--sidebar-icon);
   box-shadow: 0 0 8px rgba(197, 160, 89, 0.6);
 }
