@@ -58,17 +58,71 @@ html[dir="rtl"] #sidebar.inactive ~ #main {
   }
 }
 
-/* عناوين المجموعات + عناصر القائمة: سطر واحد (أحجام أصغر عند الحاجة) */
+/* ——— شريط Maestro الجانبي (مظهر فقط؛ لا يغيّر منطق Mazer) ——— */
+body.maestro-mazer .maestro-mazer-sidebar {
+  font-family: "Tajawal", system-ui, sans-serif;
+}
+
+body.maestro-mazer .maestro-mazer-sidebar__header {
+  padding-bottom: 0.75rem !important;
+  margin-bottom: 0.35rem;
+  border-bottom: 1px solid rgba(15, 23, 42, 0.08);
+}
+
+html[data-theme="dark"] body.maestro-mazer .maestro-mazer-sidebar__header,
+html[data-bs-theme="dark"] body.maestro-mazer .maestro-mazer-sidebar__header {
+  border-bottom-color: rgba(255, 255, 255, 0.08);
+}
+
+body.maestro-mazer .maestro-mazer-sidebar .logo a {
+  font-size: 0.9rem;
+  letter-spacing: 0.01em;
+}
+
+body.maestro-mazer .maestro-mazer-sidebar .sidebar-menu {
+  padding-top: 0.25rem;
+}
+
+body.maestro-mazer #admin-mazer-sidebar-menu .sidebar-item {
+  margin-bottom: 0.35rem;
+}
+
+/* عنوان المجموعة (سطر واحد) */
 body.maestro-mazer #admin-mazer-sidebar-menu .sidebar-item.has-sub > .sidebar-link {
   display: flex !important;
   align-items: center;
-  gap: 0.45rem;
-  font-size: 0.78rem !important;
+  gap: 0.5rem;
+  margin-bottom: 0.15rem;
+  padding: 0.55rem 0.65rem !important;
+  font-size: 0.8rem !important;
   font-weight: 700 !important;
-  line-height: 1.15 !important;
+  line-height: 1.2 !important;
   white-space: nowrap !important;
   min-height: 0 !important;
-  padding-block: 0.45rem !important;
+  border-radius: 10px;
+  border: 1px solid rgba(197, 160, 89, 0.22);
+  background: rgba(170, 240, 209, 0.2);
+  color: #1e293b;
+  transition: background 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+html[data-theme="dark"] body.maestro-mazer #admin-mazer-sidebar-menu .sidebar-item.has-sub > .sidebar-link,
+html[data-bs-theme="dark"] body.maestro-mazer #admin-mazer-sidebar-menu .sidebar-item.has-sub > .sidebar-link {
+  color: rgba(255, 255, 255, 0.92);
+  background: rgba(255, 255, 255, 0.06);
+  border-color: rgba(197, 160, 89, 0.35);
+}
+
+body.maestro-mazer #admin-mazer-sidebar-menu .sidebar-item.has-sub > .sidebar-link:hover {
+  background: rgba(170, 240, 209, 0.35);
+  border-color: rgba(197, 160, 89, 0.45);
+  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.45) inset;
+}
+
+html[data-theme="dark"] body.maestro-mazer #admin-mazer-sidebar-menu .sidebar-item.has-sub > .sidebar-link:hover,
+html[data-bs-theme="dark"] body.maestro-mazer #admin-mazer-sidebar-menu .sidebar-item.has-sub > .sidebar-link:hover {
+  background: rgba(255, 255, 255, 0.1);
+  box-shadow: none;
 }
 
 body.maestro-mazer #admin-mazer-sidebar-menu .sidebar-item.has-sub > .sidebar-link span {
@@ -81,9 +135,27 @@ body.maestro-mazer #admin-mazer-sidebar-menu .sidebar-item.has-sub > .sidebar-li
 
 body.maestro-mazer #admin-mazer-sidebar-menu .sidebar-item.has-sub > .sidebar-link i {
   flex-shrink: 0;
+  opacity: 0.88;
+  font-size: 1.05rem;
 }
 
-/* روابط الأقسام (تُطبَّق عليها أصناف section-tab من لوحة التحكم) */
+/* قائمة فرعية: تباعد وهوية بصرية */
+body.maestro-mazer #admin-mazer-sidebar-menu .submenu {
+  list-style: none;
+  padding-inline: 0.2rem 0.35rem !important;
+  padding-block: 0.35rem 0.5rem !important;
+  margin-top: 0.1rem !important;
+  margin-bottom: 0.35rem !important;
+  border-radius: 12px;
+  background: rgba(15, 23, 42, 0.03);
+}
+
+html[data-theme="dark"] body.maestro-mazer #admin-mazer-sidebar-menu .submenu,
+html[data-bs-theme="dark"] body.maestro-mazer #admin-mazer-sidebar-menu .submenu {
+  background: rgba(0, 0, 0, 0.2);
+}
+
+/* روابط الأقسام: سطر واحد، شكل «قائمة» وليس حبة دواء عريضة */
 body.maestro-mazer #admin-mazer-sidebar-menu a.section-tab.section-tab--subitem,
 body.maestro-mazer #admin-mazer-sidebar-menu .submenu-link.section-tab {
   display: flex !important;
@@ -92,23 +164,68 @@ body.maestro-mazer #admin-mazer-sidebar-menu .submenu-link.section-tab {
   width: 100%;
   max-width: 100%;
   box-sizing: border-box;
+  margin: 0.12rem 0 !important;
+  padding: 0.48rem 0.55rem !important;
   font-weight: 600 !important;
-  font-size: 0.7rem !important;
-  line-height: 1.15 !important;
+  font-size: 0.78rem !important;
+  line-height: 1.2 !important;
   white-space: nowrap !important;
   min-height: 0 !important;
-  padding: 0.4rem 0.55rem !important;
+  border-radius: 8px !important;
+  border: 1px solid rgba(170, 240, 209, 0.55) !important;
+  background: rgba(255, 255, 255, 0.65) !important;
+  color: #1e293b !important;
+  box-shadow: none !important;
   overflow: hidden;
   text-overflow: ellipsis;
+  transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+}
+
+body.maestro-mazer #admin-mazer-sidebar-menu a.section-tab.section-tab--subitem:hover,
+body.maestro-mazer #admin-mazer-sidebar-menu .submenu-link.section-tab:hover {
+  border-color: rgba(197, 160, 89, 0.45) !important;
+  background: rgba(255, 255, 255, 0.92) !important;
+}
+
+html[data-theme="dark"] body.maestro-mazer #admin-mazer-sidebar-menu a.section-tab.section-tab--subitem,
+html[data-theme="dark"] body.maestro-mazer #admin-mazer-sidebar-menu .submenu-link.section-tab,
+html[data-bs-theme="dark"] body.maestro-mazer #admin-mazer-sidebar-menu a.section-tab.section-tab--subitem,
+html[data-bs-theme="dark"] body.maestro-mazer #admin-mazer-sidebar-menu .submenu-link.section-tab {
+  background: rgba(30, 41, 59, 0.55) !important;
+  color: rgba(248, 250, 252, 0.95) !important;
+  border-color: rgba(148, 163, 184, 0.35) !important;
+}
+
+html[data-theme="dark"] body.maestro-mazer #admin-mazer-sidebar-menu a.section-tab.section-tab--subitem:hover,
+html[data-theme="dark"] body.maestro-mazer #admin-mazer-sidebar-menu .submenu-link.section-tab:hover,
+html[data-bs-theme="dark"] body.maestro-mazer #admin-mazer-sidebar-menu a.section-tab.section-tab--subitem:hover,
+html[data-bs-theme="dark"] body.maestro-mazer #admin-mazer-sidebar-menu .submenu-link.section-tab:hover {
+  background: rgba(51, 65, 85, 0.75) !important;
+  border-color: rgba(197, 160, 89, 0.5) !important;
+}
+
+body.maestro-mazer #admin-mazer-sidebar-menu a.section-tab.section-tab--subitem.active,
+body.maestro-mazer #admin-mazer-sidebar-menu .submenu-link.section-tab.active {
+  border-color: rgba(197, 160, 89, 0.65) !important;
+  background: linear-gradient(135deg, #c5a059 0%, #d4b56e 100%) !important;
+  color: #141414 !important;
+  font-weight: 700 !important;
+}
+
+body.maestro-mazer #admin-mazer-sidebar-menu .sidebar-item.has-sub > .sidebar-link:focus-visible,
+body.maestro-mazer #admin-mazer-sidebar-menu a.section-tab.section-tab--subitem:focus-visible,
+body.maestro-mazer #admin-mazer-sidebar-menu .submenu-link.section-tab:focus-visible {
+  outline: 2px solid rgba(197, 160, 89, 0.75);
+  outline-offset: 2px;
 }
 
 @media (min-width: 1200px) {
   body.maestro-mazer #admin-mazer-sidebar-menu a.section-tab.section-tab--subitem,
   body.maestro-mazer #admin-mazer-sidebar-menu .submenu-link.section-tab {
-    font-size: 0.74rem !important;
+    font-size: 0.82rem !important;
   }
 
   body.maestro-mazer #admin-mazer-sidebar-menu .sidebar-item.has-sub > .sidebar-link {
-    font-size: 0.82rem !important;
+    font-size: 0.84rem !important;
   }
 }
