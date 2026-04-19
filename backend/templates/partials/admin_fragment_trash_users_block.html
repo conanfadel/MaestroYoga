@@ -35,16 +35,13 @@
           <span class="loyalty-tier loyalty-tier--{{ tu.loyalty_tier }}" title="جلسات مؤكدة في مركزك">{{ tu.loyalty_tier_label }} ({{ tu.loyalty_confirmed_count }})</span>
         </td>
         <td>
-          <div class="controls-wrap">
-            <form method="post" action="/admin/public-users/restore" data-preserve-scroll="1">
-              <input type="hidden" name="public_user_id" value="{{ tu.id }}" />
-              <button type="submit" class="soft">استعادة</button>
-            </form>
-            <form method="post" action="/admin/public-users/permanent-delete" data-preserve-scroll="1" onsubmit="return confirm('حذف هذا المستخدم نهائياً؟ لا يمكن التراجع.');">
-              <input type="hidden" name="public_user_id" value="{{ tu.id }}" />
-              <button type="submit" class="danger">حذف نهائي</button>
-            </form>
-          </div>
+          <button
+            type="button"
+            class="soft js-trash-user-drawer-open"
+            data-user-id="{{ tu.id }}"
+            data-user-name="{{ tu.full_name|e }}"
+            data-user-email="{{ tu.email|e }}"
+          >إجراءات</button>
         </td>
       </tr>
       {% else %}

@@ -95,30 +95,15 @@
                 <span class="loyalty-tier loyalty-tier--{{ pu.loyalty_tier }}" title="جلسات مؤكدة في مركزك">{{ pu.loyalty_tier_label }} ({{ pu.loyalty_confirmed_count }})</span>
               </td>
               <td>
-                <div class="controls-wrap">
-                  <form method="post" action="/admin/public-users/toggle-active" data-preserve-scroll="1">
-                    <input type="hidden" name="public_user_id" value="{{ pu.id }}" />
-                    <button type="submit" class="{{ 'danger' if pu.is_active else 'soft' }}">
-                      {{ 'تعطيل' if pu.is_active else 'تفعيل' }}
-                    </button>
-                  </form>
-                  <form method="post" action="/admin/public-users/toggle-verified" data-preserve-scroll="1">
-                    <input type="hidden" name="public_user_id" value="{{ pu.id }}" />
-                    <button type="submit" class="soft">
-                      {{ 'إلغاء التوثيق' if pu.email_verified else 'توثيق البريد' }}
-                    </button>
-                  </form>
-                  {% if not pu.email_verified %}
-                  <form method="post" action="/admin/public-users/resend-verification" data-preserve-scroll="1">
-                    <input type="hidden" name="public_user_id" value="{{ pu.id }}" />
-                    <button type="submit" class="warn">إعادة إرسال التحقق</button>
-                  </form>
-                  {% endif %}
-                  <form method="post" action="/admin/public-users/delete" data-preserve-scroll="1" onsubmit="return confirm('تحويل المستخدم إلى حذف Soft؟');">
-                    <input type="hidden" name="public_user_id" value="{{ pu.id }}" />
-                    <button type="submit" class="danger">حذف Soft</button>
-                  </form>
-                </div>
+                <button
+                  type="button"
+                  class="soft js-pub-user-drawer-open"
+                  data-user-id="{{ pu.id }}"
+                  data-active="{{ '1' if pu.is_active else '0' }}"
+                  data-verified="{{ '1' if pu.email_verified else '0' }}"
+                  data-user-name="{{ pu.full_name|e }}"
+                  data-user-email="{{ pu.email|e }}"
+                >إجراءات</button>
               </td>
             </tr>
             {% else %}
@@ -127,6 +112,7 @@
           </tbody>
         </table>
       </div>
+      {% include "partials/admin_public_user_actions_drawer.html" %}
       <div class="small" style="margin-top:8px;display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
         <span>الصفحة {{ public_user_pagination.page }} من {{ public_user_pagination.total_pages }} (إجمالي: {{ public_user_pagination.total }})</span>
         {% if public_user_pagination.has_prev %}
@@ -174,6 +160,7 @@
             </select>
             <button type="submit">تنفيذ جماعي</button>
           </form>
+          {% include "partials/admin_trash_user_actions_drawer.html" %}
           {% if trash_users_lazy_fragment_url %}
           <div
             id="trash-users-deferred"
@@ -226,16 +213,13 @@
                     <span class="loyalty-tier loyalty-tier--{{ tu.loyalty_tier }}" title="جلسات مؤكدة في مركزك">{{ tu.loyalty_tier_label }} ({{ tu.loyalty_confirmed_count }})</span>
                   </td>
                   <td>
-                    <div class="controls-wrap">
-                      <form method="post" action="/admin/public-users/restore" data-preserve-scroll="1">
-                        <input type="hidden" name="public_user_id" value="{{ tu.id }}" />
-                        <button type="submit" class="soft">استعادة</button>
-                      </form>
-                      <form method="post" action="/admin/public-users/permanent-delete" data-preserve-scroll="1" onsubmit="return confirm('حذف هذا المستخدم نهائياً؟ لا يمكن التراجع.');">
-                        <input type="hidden" name="public_user_id" value="{{ tu.id }}" />
-                        <button type="submit" class="danger">حذف نهائي</button>
-                      </form>
-                    </div>
+                    <button
+                      type="button"
+                      class="soft js-trash-user-drawer-open"
+                      data-user-id="{{ tu.id }}"
+                      data-user-name="{{ tu.full_name|e }}"
+                      data-user-email="{{ tu.email|e }}"
+                    >إجراءات</button>
                   </td>
                 </tr>
                 {% else %}

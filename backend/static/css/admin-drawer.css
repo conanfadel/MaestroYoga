@@ -66,3 +66,13 @@ html[data-theme="dark"] .admin-offcanvas-panel {
 html[data-theme="dark"] .admin-offcanvas-panel__title {
   color: #f8fafc;
 }
+
+.admin-offcanvas-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.admin-offcanvas-actions form {
+  margin: 0;
+}

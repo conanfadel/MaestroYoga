@@ -87,6 +87,96 @@ function initPlanDrawer() {
 
 initPlanDrawer();
 
+function initPublicUserDrawer() {
+  var backdrop = qs("#pub-user-drawer-backdrop");
+  var panel = qs("#pub-user-drawer-panel");
+  var closeBtn = qs("#pub-user-drawer-close");
+  var meta = qs("#pub-user-drawer-meta");
+  var title = qs("#pub-user-drawer-title");
+  if (!backdrop || !panel) return;
+
+  function setOpen(open) {
+    backdrop.classList.toggle("is-open", open);
+    panel.classList.toggle("is-open", open);
+    backdrop.setAttribute("aria-hidden", open ? "false" : "true");
+    panel.setAttribute("aria-hidden", open ? "false" : "true");
+  }
+
+  function fill(uid, active, verified, name, email) {
+    panel.querySelectorAll(".js-pub-drawer-user-id").forEach(function (inp) {
+      inp.value = String(uid);
+    });
+    if (title) title.textContent = name ? "إجراءات: " + name : "إجراءات المستخدم";
+    if (meta) meta.textContent = email ? "المعرف #" + uid + " · " + email : "المعرف #" + uid;
+
+    var btnA = qs("#pub-drawer-btn-toggle-active");
+    if (btnA) btnA.textContent = active === "1" ? "تعطيل الحساب" : "تفعيل الحساب";
+    var btnV = qs("#pub-drawer-btn-toggle-verified");
+    if (btnV) btnV.textContent = verified === "1" ? "إلغاء توثيق البريد" : "توثيق البريد";
+
+    var resendForm = qs("#pub-drawer-form-resend");
+    if (resendForm) resendForm.style.display = verified === "1" ? "none" : "block";
+  }
+
+  document.body.addEventListener("click", function (e) {
+    var btn = e.target && e.target.closest && e.target.closest(".js-pub-user-drawer-open");
+    if (!btn) return;
+    fill(
+      btn.getAttribute("data-user-id") || "",
+      btn.getAttribute("data-active") || "0",
+      btn.getAttribute("data-verified") || "0",
+      btn.getAttribute("data-user-name") || "",
+      btn.getAttribute("data-user-email") || "",
+    );
+    setOpen(true);
+  });
+
+  function close() {
+    setOpen(false);
+  }
+  if (closeBtn) closeBtn.addEventListener("click", close);
+  backdrop.addEventListener("click", close);
+}
+
+function initTrashUserDrawer() {
+  var backdrop = qs("#trash-user-drawer-backdrop");
+  var panel = qs("#trash-user-drawer-panel");
+  var closeBtn = qs("#trash-user-drawer-close");
+  var meta = qs("#trash-user-drawer-meta");
+  var title = qs("#trash-user-drawer-title");
+  if (!backdrop || !panel) return;
+
+  function setOpen(open) {
+    backdrop.classList.toggle("is-open", open);
+    panel.classList.toggle("is-open", open);
+    backdrop.setAttribute("aria-hidden", open ? "false" : "true");
+    panel.setAttribute("aria-hidden", open ? "false" : "true");
+  }
+
+  document.body.addEventListener("click", function (e) {
+    var btn = e.target && e.target.closest && e.target.closest(".js-trash-user-drawer-open");
+    if (!btn) return;
+    var uid = btn.getAttribute("data-user-id") || "";
+    var name = btn.getAttribute("data-user-name") || "";
+    var email = btn.getAttribute("data-user-email") || "";
+    panel.querySelectorAll(".js-trash-drawer-user-id").forEach(function (inp) {
+      inp.value = uid;
+    });
+    if (title) title.textContent = name ? "سلة المحذوفات: " + name : "إجراءات سلة المحذوفات";
+    if (meta) meta.textContent = email ? "#" + uid + " · " + email : "المعرف #" + uid;
+    setOpen(true);
+  });
+
+  function close() {
+    setOpen(false);
+  }
+  if (closeBtn) closeBtn.addEventListener("click", close);
+  backdrop.addEventListener("click", close);
+}
+
+initPublicUserDrawer();
+initTrashUserDrawer();
+
 document.body.addEventListener("htmx:afterSwap", function (e) {
   var t = e.detail && e.detail.target;
   if (t && t.id === "trash-users-deferred") {

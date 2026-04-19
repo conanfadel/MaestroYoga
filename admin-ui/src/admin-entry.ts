@@ -85,6 +85,96 @@ function initPlanDrawer(): void {
 
 initPlanDrawer();
 
+function initPublicUserDrawer(): void {
+  const backdrop = qs<HTMLElement>("#pub-user-drawer-backdrop");
+  const panel = qs<HTMLElement>("#pub-user-drawer-panel");
+  const closeBtn = qs<HTMLButtonElement>("#pub-user-drawer-close");
+  const meta = qs<HTMLElement>("#pub-user-drawer-meta");
+  const title = qs<HTMLElement>("#pub-user-drawer-title");
+  if (!backdrop || !panel) return;
+
+  function setOpen(open: boolean): void {
+    backdrop.classList.toggle("is-open", open);
+    panel.classList.toggle("is-open", open);
+    backdrop.setAttribute("aria-hidden", open ? "false" : "true");
+    panel.setAttribute("aria-hidden", open ? "false" : "true");
+  }
+
+  function fill(uid: string, active: string, verified: string, name: string, email: string): void {
+    panel.querySelectorAll<HTMLInputElement>(".js-pub-drawer-user-id").forEach((inp) => {
+      inp.value = String(uid);
+    });
+    if (title) title.textContent = name ? `إجراءات: ${name}` : "إجراءات المستخدم";
+    if (meta) meta.textContent = email ? `المعرف #${uid} · ${email}` : `المعرف #${uid}`;
+
+    const btnA = qs<HTMLButtonElement>("#pub-drawer-btn-toggle-active");
+    if (btnA) btnA.textContent = active === "1" ? "تعطيل الحساب" : "تفعيل الحساب";
+    const btnV = qs<HTMLButtonElement>("#pub-drawer-btn-toggle-verified");
+    if (btnV) btnV.textContent = verified === "1" ? "إلغاء توثيق البريد" : "توثيق البريد";
+
+    const resendForm = qs<HTMLElement>("#pub-drawer-form-resend");
+    if (resendForm) resendForm.style.display = verified === "1" ? "none" : "block";
+  }
+
+  document.body.addEventListener("click", (e) => {
+    const btn = (e.target as HTMLElement | null)?.closest?.(".js-pub-user-drawer-open");
+    if (!btn) return;
+    fill(
+      btn.getAttribute("data-user-id") || "",
+      btn.getAttribute("data-active") || "0",
+      btn.getAttribute("data-verified") || "0",
+      btn.getAttribute("data-user-name") || "",
+      btn.getAttribute("data-user-email") || "",
+    );
+    setOpen(true);
+  });
+
+  function close(): void {
+    setOpen(false);
+  }
+  closeBtn?.addEventListener("click", close);
+  backdrop.addEventListener("click", close);
+}
+
+function initTrashUserDrawer(): void {
+  const backdrop = qs<HTMLElement>("#trash-user-drawer-backdrop");
+  const panel = qs<HTMLElement>("#trash-user-drawer-panel");
+  const closeBtn = qs<HTMLButtonElement>("#trash-user-drawer-close");
+  const meta = qs<HTMLElement>("#trash-user-drawer-meta");
+  const title = qs<HTMLElement>("#trash-user-drawer-title");
+  if (!backdrop || !panel) return;
+
+  function setOpen(open: boolean): void {
+    backdrop.classList.toggle("is-open", open);
+    panel.classList.toggle("is-open", open);
+    backdrop.setAttribute("aria-hidden", open ? "false" : "true");
+    panel.setAttribute("aria-hidden", open ? "false" : "true");
+  }
+
+  document.body.addEventListener("click", (e) => {
+    const btn = (e.target as HTMLElement | null)?.closest?.(".js-trash-user-drawer-open");
+    if (!btn) return;
+    const uid = btn.getAttribute("data-user-id") || "";
+    const name = btn.getAttribute("data-user-name") || "";
+    const email = btn.getAttribute("data-user-email") || "";
+    panel.querySelectorAll<HTMLInputElement>(".js-trash-drawer-user-id").forEach((inp) => {
+      inp.value = uid;
+    });
+    if (title) title.textContent = name ? `سلة المحذوفات: ${name}` : "إجراءات سلة المحذوفات";
+    if (meta) meta.textContent = email ? `#${uid} · ${email}` : `المعرف #${uid}`;
+    setOpen(true);
+  });
+
+  function close(): void {
+    setOpen(false);
+  }
+  closeBtn?.addEventListener("click", close);
+  backdrop.addEventListener("click", close);
+}
+
+initPublicUserDrawer();
+initTrashUserDrawer();
+
 document.body.addEventListener("htmx:afterSwap", (e) => {
   const ev = e as CustomEvent<{ target?: HTMLElement }>;
   const t = ev.detail?.target;

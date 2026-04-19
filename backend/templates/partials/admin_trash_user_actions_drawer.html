@@ -1,0 +1,18 @@
+<div id="trash-user-drawer-backdrop" class="admin-offcanvas-backdrop" aria-hidden="true"></div>
+<div id="trash-user-drawer-panel" class="admin-offcanvas-panel" role="dialog" aria-modal="true" aria-labelledby="trash-user-drawer-title" aria-hidden="true">
+  <div class="admin-offcanvas-panel__head">
+    <h2 id="trash-user-drawer-title" class="admin-offcanvas-panel__title">إجراءات سلة المحذوفات</h2>
+    <button type="button" class="admin-offcanvas-close" id="trash-user-drawer-close" aria-label="إغلاق">إغلاق</button>
+  </div>
+  <p id="trash-user-drawer-meta" class="small" style="margin:0 0 14px;line-height:1.55;color:#475569;"></p>
+  <div class="admin-offcanvas-actions">
+    <form method="post" action="/admin/public-users/restore" data-preserve-scroll="1">
+      <input type="hidden" name="public_user_id" class="js-trash-drawer-user-id" value="" />
+      <button type="submit" class="plan-admin-btn plan-admin-btn--secondary" style="width:100%;">استعادة</button>
+    </form>
+    <form method="post" action="/admin/public-users/permanent-delete" data-preserve-scroll="1" onsubmit="return confirm('حذف هذا المستخدم نهائياً؟ لا يمكن التراجع.');">
+      <input type="hidden" name="public_user_id" class="js-trash-drawer-user-id" value="" />
+      <button type="submit" class="plan-admin-btn plan-admin-btn--danger" style="width:100%;">حذف نهائي</button>
+    </form>
+  </div>
+</div>
