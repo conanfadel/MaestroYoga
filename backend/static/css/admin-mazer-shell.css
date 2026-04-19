@@ -1,0 +1,64 @@
+/* Maestro — تكامل قالب Mazer (Bootstrap 5) + RTL
+ * الأصول من فرع docs المذكور في README الرسمي: https://github.com/zuramai/mazer */
+
+body.maestro-mazer {
+  padding: 0 !important;
+  margin: 0;
+  font-family: "Tajawal", system-ui, sans-serif !important;
+  background: transparent !important;
+}
+
+/* Mazer يضبط الشريط بـ left — نعكسه في RTL */
+html[dir="rtl"] #sidebar .sidebar-wrapper {
+  left: auto !important;
+  right: -300px !important;
+  transition: right 0.7s cubic-bezier(0.22, 1, 0.36, 1) !important;
+}
+
+html[dir="rtl"] #sidebar ~ #main {
+  margin-left: 0 !important;
+  margin-right: 0 !important;
+}
+
+@media screen and (min-width: 1200px) {
+  html[dir="rtl"] #sidebar .sidebar-wrapper {
+    right: 0 !important;
+    left: auto !important;
+  }
+
+  html[dir="rtl"] #sidebar ~ #main {
+    margin-left: 0 !important;
+    margin-right: 300px !important;
+  }
+}
+
+html[dir="rtl"] #sidebar.active .sidebar-wrapper {
+  right: 0 !important;
+  left: auto !important;
+}
+
+html[dir="rtl"] #sidebar.active ~ #main {
+  margin-left: 0 !important;
+  margin-right: 300px !important;
+}
+
+html[dir="rtl"] #sidebar.inactive .sidebar-wrapper {
+  right: -300px !important;
+  left: auto !important;
+}
+
+html[dir="rtl"] #sidebar.inactive ~ #main {
+  margin-right: 0 !important;
+}
+
+/* شريط التبويبات الأفقي: إخفاء على الشاشات العريضة عند وجود الشريط الجانبي */
+@media (min-width: 1200px) {
+  body.maestro-mazer #section-tabs-sticky {
+    display: none !important;
+  }
+}
+
+/* قائمة فرعية في الشريط: روابط الأقسام بنفس سلوك التبويبات */
+body.maestro-mazer #admin-mazer-sidebar-menu .submenu-link.section-tab {
+  font-weight: 600;
+}

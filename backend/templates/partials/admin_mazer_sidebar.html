@@ -1,0 +1,95 @@
+{# شريط جانبي Mazer — نفس منطق الصلاحيات مثل partials/admin_section_tabs.html #}
+<div class="sidebar-wrapper active">
+  <div class="sidebar-header position-relative">
+    <div class="d-flex justify-content-between align-items-center">
+      <div class="logo">
+        <a href="/admin" class="text-decoration-none text-body d-inline-flex align-items-center gap-2">
+          {% if center and center.logo_url %}
+          <img src="{{ center.logo_url }}" alt="" width="36" height="36" decoding="async" style="max-height:2rem;border-radius:8px;" />
+          {% endif %}
+          <span class="fw-bold text-truncate" style="max-width:11rem;">{{ center.name if center else 'Maestro Yoga' }}</span>
+        </a>
+      </div>
+      <div class="sidebar-toggler x">
+        <a href="#" class="sidebar-hide d-xl-none d-block"><i class="bi bi-x bi-middle"></i></a>
+      </div>
+    </div>
+  </div>
+  <div class="sidebar-menu">
+    <ul class="menu" id="admin-mazer-sidebar-menu" aria-label="أقسام لوحة الإدارة">
+      {% if not use_trainer_layout and perm_site_cluster %}
+      <li class="sidebar-item has-sub">
+        <a href="#" class="sidebar-link"><i class="bi bi-globe2"></i><span>الموقع والمحتوى</span></a>
+        <ul class="submenu">
+          <li class="submenu-item"><a href="#section-branding" class="submenu-link section-tab section-tab--subitem" data-target="section-branding" id="mazer-tab-section-branding">هوية المركز والغلاف</a></li>
+          <li class="submenu-item"><a href="#section-index-page" class="submenu-link section-tab section-tab--subitem" data-target="section-index-page" id="mazer-tab-section-index-page">محتوى صفحة الحجز</a></li>
+          <li class="submenu-item"><a href="#section-center-posts" class="submenu-link section-tab section-tab--subitem" data-target="section-center-posts" id="mazer-tab-section-center-posts">أخبار ومنشورات</a></li>
+          <li class="submenu-item"><a href="#section-faq" class="submenu-link section-tab section-tab--subitem" data-target="section-faq" id="mazer-tab-section-faq">الأسئلة الشائعة</a></li>
+          {% if show_staff_roles_handbook %}
+          <li class="submenu-item"><a href="#section-staff-invite" class="submenu-link section-tab section-tab--subitem" data-target="section-staff-invite" id="mazer-tab-section-staff-invite">إضافة عضو فريق</a></li>
+          <li class="submenu-item"><a href="#section-staff-roles" class="submenu-link section-tab section-tab--subitem" data-target="section-staff-roles" id="mazer-tab-section-staff-roles">مرجع الأدوار والصلاحيات</a></li>
+          {% endif %}
+        </ul>
+      </li>
+      {% endif %}
+      {% if not use_trainer_layout and perm_ops_cluster %}
+      <li class="sidebar-item has-sub">
+        <a href="#" class="sidebar-link"><i class="bi bi-calendar3"></i><span>التشغيل والمواعيد</span></a>
+        <ul class="submenu">
+          <li class="submenu-item"><a href="#section-rooms" class="submenu-link section-tab section-tab--subitem" data-target="section-rooms" id="mazer-tab-section-rooms">الغرف والسعة</a></li>
+          <li class="submenu-item"><a href="#section-sessions" class="submenu-link section-tab section-tab--subitem" data-target="section-sessions" id="mazer-tab-section-sessions">الجلسات والمدفوعات</a></li>
+          <li class="submenu-item"><a href="#section-plans" class="submenu-link section-tab section-tab--subitem" data-target="section-plans" id="mazer-tab-section-plans">خطط الاشتراك</a></li>
+          {% if perm_training_management %}
+          <li class="submenu-item"><a href="#section-training-management" class="submenu-link section-tab section-tab--subitem" data-target="section-training-management" id="mazer-tab-section-training-management">إدارة التدريبات</a></li>
+          {% endif %}
+        </ul>
+      </li>
+      {% endif %}
+      {% if not use_trainer_layout and perm_clients_cluster %}
+      <li class="sidebar-item has-sub">
+        <a href="#" class="sidebar-link"><i class="bi bi-people"></i><span>العملاء والولاء</span></a>
+        <ul class="submenu">
+          {% if perm_public_users %}
+          <li class="submenu-item"><a href="#section-public-users" class="submenu-link section-tab section-tab--subitem" data-target="section-public-users" id="mazer-tab-section-public-users">إدارة المستخدمين</a></li>
+          {% endif %}
+          {% if perm_loyalty %}
+          <li class="submenu-item"><a href="#section-loyalty" class="submenu-link section-tab section-tab--subitem" data-target="section-loyalty" id="mazer-tab-section-loyalty">برنامج الولاء</a></li>
+          {% endif %}
+          {% if perm_public_users %}
+          <li class="submenu-item"><a href="#section-public-users-trash" class="submenu-link section-tab section-tab--subitem" data-target="section-public-users-trash" id="mazer-tab-section-public-users-trash">سلة المحذوفات</a></li>
+          {% endif %}
+        </ul>
+      </li>
+      {% endif %}
+      {% if not use_trainer_layout and perm_reports_hub %}
+      <li class="sidebar-item has-sub">
+        <a href="#" class="sidebar-link"><i class="bi bi-graph-up-arrow"></i><span>التقارير</span></a>
+        <ul class="submenu">
+          <li class="submenu-item"><a href="#section-reports" class="submenu-link section-tab section-tab--subitem" data-target="section-reports" id="mazer-tab-section-reports">مركز التقارير والمقترحات</a></li>
+        </ul>
+      </li>
+      {% endif %}
+      {% if use_trainer_layout %}
+      <li class="sidebar-item has-sub">
+        <a href="#" class="sidebar-link"><i class="bi bi-lightning-charge"></i><span>الجلسات والغرف</span></a>
+        <ul class="submenu">
+          <li class="submenu-item"><a href="#section-rooms" class="submenu-link section-tab section-tab--subitem" data-target="section-rooms" id="mazer-tab-section-rooms-trainer">الغرف ونشر الجلسات</a></li>
+          <li class="submenu-item"><a href="#section-sessions" class="submenu-link section-tab section-tab--subitem" data-target="section-sessions" id="mazer-tab-section-sessions-trainer">الجلسات والمدفوعات</a></li>
+        </ul>
+      </li>
+      {% endif %}
+      {% if show_security_section %}
+      <li class="sidebar-item has-sub">
+        <a href="#" class="sidebar-link"><i class="bi bi-shield-lock"></i><span>الأمان والمخاطر</span></a>
+        <ul class="submenu">
+          <li class="submenu-item"><a href="#section-security" class="submenu-link section-tab section-tab--subitem section-tab--security-link" data-target="section-security" data-scroll-anchor="sec-security-overview" data-security-sub="overview" id="mazer-tab-sec-overview">نظرة عامة والمخاطر</a></li>
+          <li class="submenu-item"><a href="#section-security" class="submenu-link section-tab section-tab--subitem section-tab--security-link" data-target="section-security" data-scroll-anchor="sec-security-admin" data-security-sub="admin" id="mazer-tab-sec-admin">دخول لوحة الإدارة</a></li>
+          <li class="submenu-item"><a href="#section-security" class="submenu-link section-tab section-tab--subitem section-tab--security-link" data-target="section-security" data-scroll-anchor="sec-security-audit" data-security-sub="audit" id="mazer-tab-sec-audit">سجل التدقيق والفلترة</a></li>
+          <li class="submenu-item"><a href="#section-security" class="submenu-link section-tab section-tab--subitem section-tab--security-link" data-target="section-security" data-scroll-anchor="sec-security-blocked" data-security-sub="blocked" id="mazer-tab-sec-blocked">العناوين المحظورة</a></li>
+          <li class="submenu-item"><a href="#section-security" class="submenu-link section-tab section-tab--subitem section-tab--security-link" data-target="section-security" data-scroll-anchor="sec-security-history" data-security-sub="history" id="mazer-tab-sec-history">سجل الحظر والإلغاء</a></li>
+        </ul>
+      </li>
+      {% endif %}
+    </ul>
+  </div>
+</div>

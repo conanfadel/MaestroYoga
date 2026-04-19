@@ -10,48 +10,46 @@
   <link rel="manifest" href="/static/manifest.json" />
   <link rel="stylesheet" href="/static/css/mobile-enhancements.css" />
   <title>لوحة التحكم{% if center %} — {{ center.name }}{% else %} — Maestro Yoga{% endif %}</title>
+  <script>
+    (function () {
+      try {
+        var k = "maestro_admin_theme";
+        var m = localStorage.getItem(k);
+        if (m === "dark") {
+          document.documentElement.setAttribute("data-theme", "dark");
+          document.documentElement.setAttribute("data-bs-theme", "dark");
+          localStorage.setItem("theme", "dark");
+        } else {
+          document.documentElement.removeAttribute("data-theme");
+          document.documentElement.setAttribute("data-bs-theme", "light");
+          localStorage.setItem("theme", "light");
+        }
+      } catch (e) {}
+    })();
+  </script>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css" crossorigin="anonymous" />
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/core@1.4.0/dist/css/tabler.rtl.min.css" crossorigin="anonymous" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/zuramai/mazer@docs/demo/assets/compiled/css/app.css" crossorigin="anonymous" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/zuramai/mazer@docs/demo/assets/compiled/css/app-dark.css" crossorigin="anonymous" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" crossorigin="anonymous" />
   <link rel="stylesheet" href="/static/css/admin-dashboard.css" />
 </head>
-<body class="maestro-tabler">
+<body class="maestro-mazer">
   {% from "partials/report_hub_icons.html" import svg_calendar, svg_chart, svg_users, svg_package, svg_pulse, svg_cash, svg_download, svg_shield %}
   {% from "partials/admin_discount_fields.html" import admin_discount_fields %}
   <a class="admin-skip-link" href="#main-content">تخطي إلى المحتوى الرئيسي</a>
-  {# Tabler: الشريط الجانبي يجب أن يسبق div.page مباشرة (~.page) حتى يُطبَّق العرض والهوامش #}
-  {% include "partials/admin_sidebar_nav.html" %}
-  <div class="page">
-    <div class="page-wrapper">
-      <header class="navbar navbar-expand-md d-print-none border-bottom bg-body shadow-sm align-items-center" id="maestro-top-navbar" aria-label="شريط أدوات لوحة الإدارة">
-        <div class="container-fluid d-flex align-items-center flex-wrap gap-2 py-2">
-          <button
-            class="navbar-toggler d-lg-none border-0 px-2"
-            type="button"
-            data-bs-toggle="collapse"
-            data-bs-target="#maestro-sidebar-menu"
-            aria-controls="maestro-sidebar-menu"
-            aria-expanded="false"
-            aria-label="فتح وإغلاق القائمة الجانبية"
-          >
-            <span class="navbar-toggler-icon"></span>
-          </button>
-          <div class="maestro-header-toolbar flex-grow-1 min-w-0 d-flex align-items-center">
-            {% include "partials/admin_top_bar.html" %}
-          </div>
-        </div>
+  <div id="app">
+    <div id="sidebar">
+      {% include "partials/admin_mazer_sidebar.html" %}
+    </div>
+    <div id="main">
+      <header class="mb-3">
+        <a href="#" class="burger-btn d-block d-xl-none"><i class="bi bi-justify fs-3"></i></a>
       </header>
-      <div class="page-header border-bottom bg-body-tertiary d-print-none">
-        <div class="container-fluid py-3">
-          <h2 class="page-title mb-0 text-body">لوحة الإدارة</h2>
-          <div class="text-secondary small mt-1">إدارة الجلسات، الحجوزات، المحتوى، والأمان — {{ center.name if center else 'Maestro Yoga' }}</div>
-        </div>
-      </div>
-      <div class="page-body">
-        <main id="main-content" class="admin-main" tabindex="-1">
+      <main id="main-content" class="admin-main" tabindex="-1">
         <div class="container-xl">
+    {% include "partials/admin_top_bar.html" %}
 
     {% if admin_flash %}
       <div class="alert{{ ' warn' if admin_flash.level == 'warn' else '' }}">{{ admin_flash.text }}</div>
@@ -2476,14 +2474,13 @@
     {% endif %}
   </div>
   <p class="admin-footer-note" role="note">لأسباب أمنية قد تنتهي جلستك بعد فترة من عدم النشاط؛ أعد تسجيل الدخول عند الحاجة. لا تشارك رابط لوحة التحكم أو كلمة المرور. قد يحدّ الخادم تلقائياً من تكرار الطلبات الحساسة (مثل تسجيل الدخول) من نفس العنوان.</p>
-        </main>
-      </div>
-      <footer class="footer footer-transparent d-print-none maestro-admin-footer">
-        <div class="container-fluid d-flex flex-wrap align-items-center justify-content-between gap-2 py-2 small">
-          <span class="text-secondary">Maestro Yoga — لوحة الإدارة</span>
-          <span class="text-secondary">
+      </main>
+      <footer class="footer mt-3 py-2 border-top d-print-none maestro-admin-footer">
+        <div class="container-fluid d-flex flex-wrap align-items-center justify-content-between gap-2 small">
+          <span class="text-muted">Maestro Yoga — لوحة الإدارة</span>
+          <span class="text-muted">
             واجهة الإدارة تستخدم
-            <a href="https://tabler.io" class="text-decoration-none" rel="noopener noreferrer" target="_blank">Tabler</a>
+            <a href="https://github.com/zuramai/mazer" class="text-decoration-none" rel="noopener noreferrer" target="_blank">Mazer</a>
             (رخصة MIT).
           </span>
         </div>
@@ -2497,12 +2494,14 @@
       <ul>
         <li><kbd>؟</kbd> (أو <kbd>Shift</kbd> + <kbd>/</kbd> على لوحة إنجليزية) — فتح/إغلاق نافذة الاختصارات عندما لا يكون التركيز في حقل نص.</li>
         <li><kbd>Esc</kbd> — إغلاق القوائم المنسدلة للتبويبات.</li>
-        <li>على الشاشات العريضة: التنقل من <strong>القائمة الجانبية</strong> (Tabler RTL)؛ على الجوال: <strong>شريط التبويبات</strong> أسفل الملخص. الرابط يُحدّث التجزئة <code>#section-…</code> للمشاركة.</li>
+        <li>على الشاشات العريضة: التنقل من <strong>القائمة الجانبية</strong> (Mazer)؛ على الجوال: زر القائمة ثم الشريط الجانبي أو <strong>شريط التبويبات</strong> أسفل الملخص. الرابط يُحدّث التجزئة <code>#section-…</code> للمشاركة.</li>
       </ul>
       <button type="button" class="admin-help-dialog__close" id="admin-help-close">إغلاق</button>
     </div>
   </dialog>
 
+  <script src="https://cdn.jsdelivr.net/gh/zuramai/mazer@docs/demo/assets/extensions/perfect-scrollbar/perfect-scrollbar.min.js" crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/gh/zuramai/mazer@docs/demo/assets/compiled/js/app.js" crossorigin="anonymous"></script>
   <script>
     (function () {
       const STORAGE_KEY = "maestro_admin_scroll_y";
@@ -2521,11 +2520,17 @@
           if (mode === "dark") {
             root.setAttribute("data-theme", "dark");
             root.setAttribute("data-bs-theme", "dark");
+            try {
+              localStorage.setItem("theme", "dark");
+            } catch (e0) {}
             if (meta) meta.setAttribute("content", "#1a1f28");
             if (btn) btn.textContent = "وضع فاتح";
           } else {
             root.removeAttribute("data-theme");
             root.setAttribute("data-bs-theme", "light");
+            try {
+              localStorage.setItem("theme", "light");
+            } catch (e0b) {}
             if (meta) meta.setAttribute("content", "#c5a059");
             if (btn) btn.textContent = "وضع داكن";
           }
@@ -3199,7 +3204,7 @@
             "section-tabs--has-active",
             !!document.querySelector("#section-tabs .section-tab.active") ||
               !!document.querySelector("#section-tabs .section-tab-cluster.section-tab-cluster--active") ||
-              !!document.querySelector(".maestro-sidebar .section-tab.active")
+              !!document.querySelector("#admin-mazer-sidebar-menu .section-tab.active")
           );
         }
       }
@@ -3426,9 +3431,6 @@
       });
     })();
   </script>
-  <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.8/dist/umd/popper.min.js" crossorigin="anonymous"></script>
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/js/bootstrap.min.js" crossorigin="anonymous"></script>
-  <script src="https://cdn.jsdelivr.net/npm/@tabler/core@1.4.0/dist/js/tabler.min.js" crossorigin="anonymous"></script>
   {% include '_force_english_digits.html' %}
   {% include '_mobile_landscape_hint.html' %}
 </body>
