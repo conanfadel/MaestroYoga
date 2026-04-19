@@ -1,0 +1,1072 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, interactive-widget=resizes-content" />
+  <meta name="theme-color" content="#c5a059" id="meta-theme-color" />
+  <meta name="description" content="لوحة تحكم مسؤول المركز — جلسات، حجوزات، مدفوعات، محتوى صفحة الحجز، والأمان." />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <link rel="manifest" href="/static/manifest.json" />
+  <link rel="stylesheet" href="/static/css/mobile-enhancements.css" />
+  <title>لوحة التحكم{% if center %} — {{ center.name }}{% else %} — Maestro Yoga{% endif %}</title>
+  <script>
+    (function () {
+      try {
+        var k = "maestro_admin_theme";
+        var m = localStorage.getItem(k);
+        if (m === "dark") {
+          document.documentElement.setAttribute("data-theme", "dark");
+          document.documentElement.setAttribute("data-bs-theme", "dark");
+          localStorage.setItem("theme", "dark");
+        } else {
+          document.documentElement.removeAttribute("data-theme");
+          document.documentElement.setAttribute("data-bs-theme", "light");
+          localStorage.setItem("theme", "light");
+        }
+      } catch (e) {}
+    })();
+  </script>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/zuramai/mazer@docs/demo/assets/compiled/css/app.css" crossorigin="anonymous" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/zuramai/mazer@docs/demo/assets/compiled/css/app-dark.css" crossorigin="anonymous" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" crossorigin="anonymous" />
+  <link rel="stylesheet" href="/static/css/admin-dashboard.css" />
+</head>
+<body class="maestro-mazer">
+  {% from "partials/report_hub_icons.html" import svg_calendar, svg_chart, svg_users, svg_package, svg_pulse, svg_cash, svg_download, svg_shield %}
+  {% from "partials/admin_discount_fields.html" import admin_discount_fields %}
+  <a class="admin-skip-link" href="#main-content">تخطي إلى المحتوى الرئيسي</a>
+  <div id="app">
+    <div id="sidebar">
+      {% include "partials/admin_mazer_sidebar.html" %}
+    </div>
+    <div id="main">
+      <header class="mb-3">
+        <a href="#" class="burger-btn d-block d-xl-none"><i class="bi bi-justify fs-3"></i></a>
+      </header>
+      <main id="main-content" class="admin-main" tabindex="-1">
+        <div class="container-xl">
+    {% include "partials/admin_top_bar.html" %}
+
+    {% if admin_flash %}
+      <div class="alert{{ ' warn' if admin_flash.level == 'warn' else '' }}">{{ admin_flash.text }}</div>
+    {% endif %}
+
+    {% block admin_page_body %}{% endblock %}
+  </div>
+  <p class="admin-footer-note" role="note">لأسباب أمنية قد تنتهي جلستك بعد فترة من عدم النشاط؛ أعد تسجيل الدخول عند الحاجة. لا تشارك رابط لوحة التحكم أو كلمة المرور. قد يحدّ الخادم تلقائياً من تكرار الطلبات الحساسة (مثل تسجيل الدخول) من نفس العنوان.</p>
+      </main>
+      <footer class="footer mt-3 py-2 border-top d-print-none maestro-admin-footer">
+        <div class="container-fluid d-flex flex-wrap align-items-center justify-content-between gap-2 small">
+          <span class="text-muted">Maestro Yoga — لوحة الإدارة</span>
+          <span class="text-muted">
+            واجهة الإدارة تستخدم
+            <a href="https://github.com/zuramai/mazer" class="text-decoration-none" rel="noopener noreferrer" target="_blank">Mazer</a>
+            (رخصة MIT).
+          </span>
+        </div>
+      </footer>
+    </div>
+  </div>
+
+  <dialog class="admin-help-dialog" id="admin-help-dialog" aria-labelledby="admin-help-dialog-title">
+    <div class="admin-help-dialog__inner">
+      <h2 id="admin-help-dialog-title">اختصارات لوحة التحكم</h2>
+      <ul>
+        <li><kbd>؟</kbd> (أو <kbd>Shift</kbd> + <kbd>/</kbd> على لوحة إنجليزية) — فتح/إغلاق نافذة الاختصارات عندما لا يكون التركيز في حقل نص.</li>
+        <li><kbd>Esc</kbd> — إغلاق القوائم المنسدلة للتبويبات.</li>
+        <li>على الشاشات العريضة: التنقل من <strong>القائمة الجانبية</strong> (Mazer)؛ على الجوال: زر القائمة ثم الشريط الجانبي أو <strong>شريط التبويبات</strong> أسفل الملخص. الرابط يُحدّث التجزئة <code>#section-…</code> للمشاركة.</li>
+      </ul>
+      <button type="button" class="admin-help-dialog__close" id="admin-help-close">إغلاق</button>
+    </div>
+  </dialog>
+
+  <script src="https://cdn.jsdelivr.net/gh/zuramai/mazer@docs/demo/assets/extensions/perfect-scrollbar/perfect-scrollbar.min.js" crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/gh/zuramai/mazer@docs/demo/assets/compiled/js/app.js" crossorigin="anonymous"></script>
+  <script>
+    (function () {
+      var menu = document.getElementById("admin-mazer-sidebar-menu");
+      if (!menu) return;
+      menu.addEventListener("click", function (e) {
+        if (e.target.closest(".submenu a, .submenu .submenu-link, .submenu .section-tab")) return;
+        var link = e.target.closest(".sidebar-item.has-sub > a.sidebar-link");
+        if (!link) return;
+        var item = link.closest(".sidebar-item.has-sub");
+        if (!item) return;
+        window.setTimeout(function () {
+          var sub = item.querySelector(".submenu");
+          if (!sub || !sub.classList.contains("submenu-open")) return;
+          menu.querySelectorAll(".sidebar-item.has-sub").forEach(function (other) {
+            if (other === item) return;
+            var sm = other.querySelector(".submenu");
+            if (!sm) return;
+            sm.classList.remove("submenu-open");
+            sm.classList.add("submenu-closed");
+            other.classList.remove("active");
+          });
+        }, 0);
+      });
+    })();
+  </script>
+  <script>
+    (function () {
+      const STORAGE_KEY = "maestro_admin_scroll_y";
+      const ACCORDION_KEY = "maestro_admin_accordion_state";
+      const ACTIVE_SECTION_KEY = "maestro_admin_active_section";
+      const SCROLL_ANCHOR_KEY = "maestro_admin_scroll_anchor";
+      const SECURITY_SUB_KEY = "maestro_admin_security_sub";
+      const prefersReducedMotion = !!(window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches);
+
+      (function initAdminTheme() {
+        var THEME_KEY = "maestro_admin_theme";
+        var root = document.documentElement;
+        var btn = document.getElementById("admin-theme-toggle");
+        var meta = document.getElementById("meta-theme-color");
+        function applyTheme(mode) {
+          if (mode === "dark") {
+            root.setAttribute("data-theme", "dark");
+            root.setAttribute("data-bs-theme", "dark");
+            try {
+              localStorage.setItem("theme", "dark");
+            } catch (e0) {}
+            if (meta) meta.setAttribute("content", "#1a1f28");
+            if (btn) btn.textContent = "وضع فاتح";
+          } else {
+            root.removeAttribute("data-theme");
+            root.setAttribute("data-bs-theme", "light");
+            try {
+              localStorage.setItem("theme", "light");
+            } catch (e0b) {}
+            if (meta) meta.setAttribute("content", "#c5a059");
+            if (btn) btn.textContent = "وضع داكن";
+          }
+        }
+        try {
+          var saved = localStorage.getItem(THEME_KEY);
+          if (saved === "dark") applyTheme("dark");
+          else applyTheme("light");
+        } catch (e1) {
+          applyTheme("light");
+        }
+        if (btn) {
+          btn.addEventListener("click", function () {
+            var next = root.getAttribute("data-theme") === "dark" ? "light" : "dark";
+            try {
+              localStorage.setItem(THEME_KEY, next === "dark" ? "dark" : "light");
+            } catch (e2) {}
+            applyTheme(next === "dark" ? "dark" : "light");
+          });
+        }
+      })();
+
+      function adminIsTextInputContext(el) {
+        if (!el || !el.closest) return false;
+        var tag = el.tagName;
+        if (tag === "TEXTAREA" || tag === "SELECT") return true;
+        if (tag === "INPUT") {
+          var t = (el.type || "").toLowerCase();
+          if (t === "submit" || t === "button" || t === "checkbox" || t === "radio" || t === "file" || t === "hidden") return false;
+          return true;
+        }
+        return el.isContentEditable === true;
+      }
+
+      (function initAdminHelpDialog() {
+        var dlg = document.getElementById("admin-help-dialog");
+        var openBtn = document.getElementById("admin-help-open");
+        var closeBtn = document.getElementById("admin-help-close");
+        function openDlg() {
+          if (dlg && typeof dlg.showModal === "function") dlg.showModal();
+        }
+        function closeDlg() {
+          if (dlg) dlg.close();
+        }
+        if (openBtn) openBtn.addEventListener("click", openDlg);
+        if (closeBtn) closeBtn.addEventListener("click", closeDlg);
+        if (dlg) {
+          dlg.addEventListener("click", function (e) {
+            if (e.target === dlg) closeDlg();
+          });
+        }
+        document.addEventListener("keydown", function (e) {
+          var k = e.key;
+          if (k !== "?" && k !== "؟") return;
+          if (adminIsTextInputContext(e.target)) return;
+          e.preventDefault();
+          if (dlg && dlg.open) closeDlg();
+          else openDlg();
+        });
+      })();
+
+      (function initAdminTableCardLabels() {
+        document.querySelectorAll("table.table-card-rwd").forEach(function (table) {
+          var headerRow = table.querySelector("thead tr");
+          if (!headerRow) return;
+          var labels = Array.prototype.map.call(headerRow.querySelectorAll("th"), function (th) {
+            return (th.textContent || "").replace(/\s+/g, " ").trim();
+          });
+          table.querySelectorAll("tbody tr").forEach(function (tr) {
+            tr.querySelectorAll("td").forEach(function (td, i) {
+              if (td.hasAttribute("colspan")) {
+                td.removeAttribute("data-label");
+                return;
+              }
+              if (labels[i]) td.setAttribute("data-label", labels[i]);
+            });
+          });
+        });
+      })();
+
+      document.addEventListener(
+        "submit",
+        function (e) {
+          var form = e.target;
+          if (!form || form.tagName !== "FORM") return;
+          if ((form.method || "").toLowerCase() !== "post") return;
+          if (form.getAttribute("data-no-loading") === "1") return;
+          var submitter = e.submitter || null;
+          var buttons = form.querySelectorAll('button[type="submit"]');
+          buttons.forEach(function (b) {
+            if (b.disabled) return;
+            if (submitter && b === submitter) return;
+            b.disabled = true;
+            b.classList.add("is-loading");
+            if (!b.querySelector("svg") && (b.textContent || "").trim().length < 56) {
+              b.textContent = "جاري الإرسال…";
+            }
+          });
+          if (
+            submitter &&
+            submitter.tagName === "BUTTON" &&
+            (submitter.type || "").toLowerCase() === "submit" &&
+            form.id &&
+            submitter.getAttribute("form") === form.id
+          ) {
+            if (!submitter.disabled) {
+              submitter.disabled = true;
+              submitter.classList.add("is-loading");
+              if (!submitter.querySelector("svg") && (submitter.textContent || "").trim().length < 56) {
+                submitter.textContent = "جاري الإرسال…";
+              }
+            }
+          }
+        },
+        true
+      );
+
+      const forms = document.querySelectorAll("form[data-preserve-scroll='1']");
+      const preserveLinks = document.querySelectorAll("a[data-preserve-scroll-link='1']");
+      function closestAccordionId(el) {
+        if (!el || !el.closest) return "";
+        const section = el.closest(".accordion[id]");
+        return section ? section.id : "";
+      }
+      forms.forEach(function (form) {
+        let scrollInput = form.querySelector("input[name='scroll_y']");
+        if (!scrollInput) {
+          scrollInput = document.createElement("input");
+          scrollInput.type = "hidden";
+          scrollInput.name = "scroll_y";
+          form.appendChild(scrollInput);
+        }
+        let returnSectionInput = form.querySelector("input[name='return_section']");
+        if (!returnSectionInput) {
+          returnSectionInput = document.createElement("input");
+          returnSectionInput.type = "hidden";
+          returnSectionInput.name = "return_section";
+          form.appendChild(returnSectionInput);
+        }
+        form.addEventListener("submit", function () {
+          const y = String(window.scrollY || 0);
+          scrollInput.value = y;
+          sessionStorage.setItem(STORAGE_KEY, y);
+          const sectionId = closestAccordionId(form);
+          if (sectionId) {
+            sessionStorage.setItem(ACTIVE_SECTION_KEY, sectionId);
+            returnSectionInput.value = sectionId;
+          } else {
+            returnSectionInput.value = sessionStorage.getItem(ACTIVE_SECTION_KEY) || "";
+          }
+        });
+      });
+      preserveLinks.forEach(function (link) {
+        link.addEventListener("click", function () {
+          sessionStorage.setItem(STORAGE_KEY, String(window.scrollY || 0));
+          const sectionId = closestAccordionId(link);
+          if (sectionId) {
+            sessionStorage.setItem(ACTIVE_SECTION_KEY, sectionId);
+          }
+        });
+      });
+
+      const centerPostForm = document.getElementById("center-post-save-form");
+      if (centerPostForm) {
+        centerPostForm.addEventListener("submit", function () {
+          const ids = Array.from(centerPostForm.querySelectorAll(".js-rm-gallery:checked")).map(function (c) {
+            return c.value;
+          });
+          const h = document.getElementById("center-post-remove-ids");
+          if (h) h.value = ids.join(",");
+        });
+      }
+
+      const params = new URLSearchParams(window.location.search);
+      const fromQuery = params.get("scroll_y");
+      const savedY = fromQuery || sessionStorage.getItem(STORAGE_KEY);
+      if (savedY !== null && savedY !== "") {
+        const targetY = parseInt(savedY, 10) || 0;
+        history.scrollRestoration = "manual";
+        requestAnimationFrame(function () {
+          window.scrollTo(0, targetY);
+          requestAnimationFrame(function () { window.scrollTo(0, targetY); });
+        });
+        sessionStorage.removeItem(STORAGE_KEY);
+      }
+
+      const selectAll = document.getElementById("rooms-select-all");
+      if (selectAll) {
+        const checkboxes = Array.from(document.querySelectorAll(".room-select-checkbox"));
+        selectAll.addEventListener("change", function () {
+          checkboxes.forEach(function (cb) { cb.checked = selectAll.checked; });
+        });
+      }
+
+      const usersSelectAll = document.getElementById("public-users-select-all");
+      if (usersSelectAll) {
+        const userCheckboxes = Array.from(document.querySelectorAll(".public-user-select-checkbox"));
+        usersSelectAll.addEventListener("change", function () {
+          userCheckboxes.forEach(function (cb) { cb.checked = usersSelectAll.checked; });
+        });
+      }
+
+      const trashSelectAll = document.getElementById("trash-users-select-all");
+      if (trashSelectAll) {
+        const trashBoxes = Array.from(document.querySelectorAll(".trash-user-select-checkbox"));
+        trashSelectAll.addEventListener("change", function () {
+          trashBoxes.forEach(function (cb) { cb.checked = trashSelectAll.checked; });
+        });
+      }
+
+      const trashBulkForm = document.getElementById("trash-users-bulk-form");
+      if (trashBulkForm) {
+        trashBulkForm.addEventListener("submit", function (e) {
+          var sel = trashBulkForm.querySelector('select[name="action"]');
+          if (sel && sel.value === "permanent_delete") {
+            if (!window.confirm("حذف المحددين نهائياً من قاعدة البيانات؟ لا يمكن التراجع عن هذا الإجراء.")) {
+              e.preventDefault();
+            }
+          }
+        });
+      }
+
+      (function initTrainingMuscleClickMap() {
+        var mapRoot = document.querySelector("#section-training-management");
+        if (!mapRoot) return;
+        var genderToggles = mapRoot.querySelectorAll("[data-map-gender-toggle]");
+        var sideToggles = mapRoot.querySelectorAll("[data-map-side-toggle]");
+        var svgEl = mapRoot.querySelector("[data-bh-svg]");
+        var musclesGrid = mapRoot.querySelector("[data-bh-muscles-grid]");
+        var stateLabel = mapRoot.querySelector("[data-map-state-label]");
+        var currentGender = "female";
+        var currentSide = "front";
+        var selectedMuscle = "{{ training_selected_muscle }}";
+        var dataStore = {};
+        var viewBoxes = {
+          male_front: "0 0 724 1448",
+          male_back: "724 0 724 1448",
+          female_front: "-50 -40 734 1538",
+          female_back: "756 0 774 1448"
+        };
+        function canonicalMuscle(slug) {
+          var s = (slug || "").toLowerCase();
+          if (s.indexOf("neck") !== -1 || s.indexOf("head") !== -1) return "neck";
+          if (s.indexOf("deltoid") !== -1 || s.indexOf("shoulder") !== -1 || s.indexOf("trapezius") !== -1) return "shoulders";
+          if (s.indexOf("chest") !== -1) return "chest";
+          if (s.indexOf("abs") !== -1 || s.indexOf("oblique") !== -1 || s.indexOf("core") !== -1) return "core";
+          if (s.indexOf("biceps") !== -1 || s.indexOf("triceps") !== -1 || s.indexOf("forearm") !== -1 || s.indexOf("hands") !== -1) return "arms";
+          if (s.indexOf("back") !== -1) return "back";
+          if (s.indexOf("glute") !== -1 || s.indexOf("hip") !== -1) return "glutes";
+          if (s.indexOf("hamstring") !== -1) return "hamstrings";
+          if (s.indexOf("quad") !== -1 || s.indexOf("adductor") !== -1) return "quads";
+          if (s.indexOf("calves") !== -1 || s.indexOf("tibialis") !== -1 || s.indexOf("ankle") !== -1 || s.indexOf("feet") !== -1) return "calves";
+          return s || "core";
+        }
+        function parseAssetText(raw) {
+          var src = raw.replace(/^import[^\n]*\n/gm, "");
+          src = src.replace(/export const\s+\w+\s*:\s*BodyPart\[\]\s*=\s*/m, "");
+          src = src.trim();
+          if (src[src.length - 1] === ";") src = src.slice(0, -1);
+          return Function("\"use strict\"; return (" + src + ");")();
+        }
+        function loadAsset(url) {
+          return fetch(url, { cache: "no-store" }).then(function (res) {
+            if (!res.ok) throw new Error("Asset fetch failed: " + url);
+            return res.text();
+          }).then(parseAssetText);
+        }
+        function goWithMuscle(key) {
+          var url = new URL(window.location.href);
+          url.searchParams.set("training_muscle", key);
+          url.searchParams.set("training_body_gender", currentGender);
+          url.searchParams.set("training_body_side", currentSide);
+          if (!url.searchParams.get("training_tab")) {
+            url.searchParams.set("training_tab", "{{ training_tab }}");
+          }
+          if (!url.hash) url.hash = "section-training-management";
+          sessionStorage.setItem(STORAGE_KEY, String(window.scrollY || 0));
+          sessionStorage.setItem(ACTIVE_SECTION_KEY, "section-training-management");
+          window.location.href = url.toString();
+        }
+        function renderButtons(parts) {
+          if (!musclesGrid) return;
+          musclesGrid.innerHTML = "";
+          parts.forEach(function (part) {
+            var b = document.createElement("button");
+            b.type = "button";
+            b.textContent = part.slug;
+            b.style.border = "1px solid rgba(59,130,246,0.35)";
+            b.style.background = canonicalMuscle(part.slug) === selectedMuscle ? "#ecfdf5" : "#eff6ff";
+            b.style.color = canonicalMuscle(part.slug) === selectedMuscle ? "#065f46" : "#1d4ed8";
+            b.style.borderRadius = "8px";
+            b.style.padding = "6px 8px";
+            b.style.fontWeight = "700";
+            b.style.cursor = "pointer";
+            b.addEventListener("click", function () {
+              goWithMuscle(canonicalMuscle(part.slug));
+            });
+            musclesGrid.appendChild(b);
+          });
+        }
+        function renderBody(parts, key) {
+          if (!svgEl) return;
+          svgEl.setAttribute("viewBox", viewBoxes[key] || "0 0 724 1448");
+          svgEl.innerHTML = "";
+          var g = document.createElementNS("http://www.w3.org/2000/svg", "g");
+          parts.forEach(function (part) {
+            (part.pathArray || []).forEach(function (d) {
+              var p = document.createElementNS("http://www.w3.org/2000/svg", "path");
+              p.setAttribute("d", d);
+              p.style.fill = canonicalMuscle(part.slug) === selectedMuscle ? "#0f766e" : "#93c5fd";
+              p.style.stroke = canonicalMuscle(part.slug) === selectedMuscle ? "#065f46" : "#3b82f6";
+              p.style.strokeWidth = "1.2";
+              p.style.cursor = "pointer";
+              p.addEventListener("mouseenter", function () {
+                if (canonicalMuscle(part.slug) !== selectedMuscle) p.style.fill = "#60a5fa";
+              });
+              p.addEventListener("mouseleave", function () {
+                if (canonicalMuscle(part.slug) !== selectedMuscle) p.style.fill = "#93c5fd";
+              });
+              p.addEventListener("click", function () {
+                goWithMuscle(canonicalMuscle(part.slug));
+              });
+              g.appendChild(p);
+            });
+          });
+          svgEl.appendChild(g);
+          renderButtons(parts);
+        }
+        function setMapState(gender, side) {
+          currentGender = gender === "male" ? "male" : "female";
+          currentSide = side === "back" ? "back" : "front";
+          genderToggles.forEach(function (btn) {
+            var active = btn.getAttribute("data-map-gender-toggle") === currentGender;
+            btn.setAttribute("aria-pressed", active ? "true" : "false");
+            btn.style.background = active ? "#ecfdf5" : "#fff";
+          });
+          sideToggles.forEach(function (btn) {
+            var active = btn.getAttribute("data-map-side-toggle") === currentSide;
+            btn.setAttribute("aria-pressed", active ? "true" : "false");
+            btn.style.background = active ? "#eff6ff" : "#fff";
+          });
+          if (stateLabel) {
+            stateLabel.textContent = (currentGender === "male" ? "ذكر" : "أنثى") + " - " + (currentSide === "back" ? "خلفي" : "أمامي");
+          }
+          var key = currentGender + "_" + currentSide;
+          if (dataStore[key]) renderBody(dataStore[key], key);
+        }
+        genderToggles.forEach(function (btn) {
+          btn.addEventListener("click", function () {
+            var gender = btn.getAttribute("data-map-gender-toggle");
+            if (!gender) return;
+            setMapState(gender, currentSide);
+            var gUrl = new URL(window.location.href);
+            gUrl.searchParams.set("training_body_gender", currentGender);
+            gUrl.searchParams.set("training_body_side", currentSide);
+            history.replaceState(null, "", gUrl.toString());
+          });
+        });
+        sideToggles.forEach(function (btn) {
+          btn.addEventListener("click", function () {
+            var side = btn.getAttribute("data-map-side-toggle");
+            if (!side) return;
+            setMapState(currentGender, side);
+            var sUrl = new URL(window.location.href);
+            sUrl.searchParams.set("training_body_gender", currentGender);
+            sUrl.searchParams.set("training_body_side", currentSide);
+            history.replaceState(null, "", sUrl.toString());
+          });
+        });
+        Promise.all([
+          loadAsset("/static/vendor/react-native-body-highlighter/assets/bodyFront.ts"),
+          loadAsset("/static/vendor/react-native-body-highlighter/assets/bodyBack.ts"),
+          loadAsset("/static/vendor/react-native-body-highlighter/assets/bodyFemaleFront.ts"),
+          loadAsset("/static/vendor/react-native-body-highlighter/assets/bodyFemaleBack.ts")
+        ]).then(function (allData) {
+          dataStore.male_front = allData[0];
+          dataStore.male_back = allData[1];
+          dataStore.female_front = allData[2];
+          dataStore.female_back = allData[3];
+          var initialParams = new URL(window.location.href).searchParams;
+          setMapState(initialParams.get("training_body_gender") || "female", initialParams.get("training_body_side") || "front");
+        }).catch(function (err) {
+          console.error(err);
+          if (stateLabel) stateLabel.textContent = "فشل تحميل نموذج Body Highlighter";
+        });
+      })();
+
+      (function initTrainingAssignmentPresets() {
+        var form = document.getElementById("assignment-form");
+        if (!form) return;
+        var hidden = document.getElementById("exercise-presets-json");
+        if (!hidden) return;
+        var INTENSITY_PRESETS = {
+          easy: { sets: 2, reps: "8-10" },
+          medium: { sets: 3, reps: "10-12" },
+          hard: { sets: 4, reps: "12-15" }
+        };
+        function updateExerciseBox(checkbox) {
+          var exId = checkbox.value;
+          var box = form.querySelector('.exercise-intensity-box[data-exercise-id="' + exId + '"]');
+          if (!box) return;
+          box.style.display = checkbox.checked ? "" : "none";
+        }
+        function syncPresetField() {
+          var payload = {};
+          form.querySelectorAll('input[name="selected_exercise_ids"]').forEach(function (cb) {
+            if (!cb.checked) return;
+            var exId = cb.value;
+            var intensitySel = form.querySelector('.js-intensity-select[data-exercise-id="' + exId + '"]');
+            var setsInput = form.querySelector('.js-sets-input[data-exercise-id="' + exId + '"]');
+            var repsInput = form.querySelector('.js-reps-input[data-exercise-id="' + exId + '"]');
+            if (!intensitySel || !setsInput || !repsInput) return;
+            payload[exId] = {
+              intensity: intensitySel.value || "medium",
+              sets_count: parseInt(setsInput.value || "0", 10) || 0,
+              reps_text: (repsInput.value || "").trim()
+            };
+          });
+          hidden.value = JSON.stringify(payload);
+        }
+        form.querySelectorAll('input[name="selected_exercise_ids"]').forEach(function (cb) {
+          cb.addEventListener("change", function () {
+            updateExerciseBox(cb);
+            syncPresetField();
+          });
+          updateExerciseBox(cb);
+        });
+        form.querySelectorAll(".js-intensity-select").forEach(function (sel) {
+          sel.addEventListener("change", function () {
+            var exId = sel.getAttribute("data-exercise-id");
+            var setsInput = form.querySelector('.js-sets-input[data-exercise-id="' + exId + '"]');
+            var repsInput = form.querySelector('.js-reps-input[data-exercise-id="' + exId + '"]');
+            var preset = INTENSITY_PRESETS[sel.value] || INTENSITY_PRESETS.medium;
+            if (sel.value !== "custom") {
+              if (setsInput) setsInput.value = String(preset.sets);
+              if (repsInput) repsInput.value = preset.reps;
+            }
+            syncPresetField();
+          });
+          sel.dispatchEvent(new Event("change"));
+        });
+        form.querySelectorAll(".js-sets-input, .js-reps-input").forEach(function (input) {
+          input.addEventListener("input", syncPresetField);
+        });
+        form.addEventListener("submit", function () {
+          syncPresetField();
+        });
+        syncPresetField();
+      })();
+
+      const faqSearchInput = document.getElementById("faq-search-input");
+      const faqTbody = document.getElementById("faq-tbody");
+      const faqRows = faqTbody ? Array.from(faqTbody.querySelectorAll("tr.faq-draggable")) : [];
+      if (faqSearchInput && faqTbody) {
+        faqRows.forEach(function (row) {
+          row.dataset.searchText = row.textContent ? row.textContent.toLowerCase() : "";
+        });
+        let faqFilterRaf = null;
+        let pendingFaqQuery = "";
+        const applyFaqFilter = function () {
+          faqFilterRaf = null;
+          const q = pendingFaqQuery;
+          faqRows.forEach(function (row) {
+            const text = row.dataset.searchText || "";
+            const shouldShow = !q || text.includes(q);
+            if (shouldShow && row.style.display === "none") {
+              row.style.display = "";
+            } else if (!shouldShow && row.style.display !== "none") {
+              row.style.display = "none";
+            }
+          });
+        };
+        faqSearchInput.addEventListener("input", function () {
+          pendingFaqQuery = faqSearchInput.value.trim().toLowerCase();
+          if (faqFilterRaf !== null) {
+            cancelAnimationFrame(faqFilterRaf);
+          }
+          faqFilterRaf = requestAnimationFrame(applyFaqFilter);
+        });
+      }
+
+      const faqReorderForm = document.getElementById("faq-reorder-form");
+      const faqOrderedIds = document.getElementById("faq-ordered-ids");
+      if (faqTbody && faqReorderForm && faqOrderedIds) {
+        const getVisibleRows = function () {
+          return faqRows
+            .filter(function (r) { return r.style.display !== "none"; });
+        };
+        const refreshOrderedIds = function () {
+          const ids = getVisibleRows().map(function (r) { return r.dataset.faqId; }).filter(Boolean);
+          faqOrderedIds.value = ids.join(",");
+        };
+
+        let draggedRow = null;
+        faqRows.forEach(function (row) {
+          row.setAttribute("draggable", "true");
+        });
+        faqTbody.addEventListener("dragstart", function (e) {
+          const row = e.target && e.target.closest ? e.target.closest("tr.faq-draggable") : null;
+          if (!row) return;
+          draggedRow = row;
+          row.classList.add("dragging");
+        });
+        faqTbody.addEventListener("dragend", function (e) {
+          const row = e.target && e.target.closest ? e.target.closest("tr.faq-draggable") : null;
+          if (!row) return;
+          row.classList.remove("dragging");
+          draggedRow = null;
+          refreshOrderedIds();
+        });
+        faqTbody.addEventListener("dragover", function (e) {
+          if (!draggedRow) return;
+          const row = e.target && e.target.closest ? e.target.closest("tr.faq-draggable") : null;
+          if (!row || draggedRow === row) return;
+          e.preventDefault();
+          const rect = row.getBoundingClientRect();
+          const placeAfter = (e.clientY - rect.top) > (rect.height / 2);
+          if (placeAfter) {
+            row.parentNode.insertBefore(draggedRow, row.nextSibling);
+          } else {
+            row.parentNode.insertBefore(draggedRow, row);
+          }
+        });
+        refreshOrderedIds();
+        faqReorderForm.addEventListener("submit", function () {
+          refreshOrderedIds();
+        });
+      }
+
+      const accordions = Array.from(document.querySelectorAll(".accordion[id]"));
+      let currentOpenSection = accordions.find(function (d) { return d.classList.contains("open"); }) || null;
+      let focusTimer = null;
+      try {
+        const stored = sessionStorage.getItem(ACCORDION_KEY);
+        if (stored) {
+          const state = JSON.parse(stored);
+          accordions.forEach(function (el) {
+            if (Object.prototype.hasOwnProperty.call(state, el.id)) {
+              el.classList.toggle("open", !!state[el.id]);
+            }
+          });
+          currentOpenSection = accordions.find(function (d) { return d.classList.contains("open"); }) || currentOpenSection;
+        }
+      } catch (_) {}
+
+      function persistAccordionState() {
+        const state = {};
+        accordions.forEach(function (d) { state[d.id] = d.classList.contains("open"); });
+        sessionStorage.setItem(ACCORDION_KEY, JSON.stringify(state));
+      }
+
+      function openAccordion(section) {
+        if (!section) return;
+        const isAlreadyOnlyOpen = currentOpenSection === section && accordions.every(function (other) {
+          return other === section || !other.classList.contains("open");
+        });
+        if (isAlreadyOnlyOpen) {
+          sessionStorage.setItem(ACTIVE_SECTION_KEY, section.id);
+          return;
+        }
+        accordions.forEach(function (other) {
+          other.classList.toggle("open", other === section);
+        });
+        currentOpenSection = section;
+        persistAccordionState();
+        if (section && section.id) {
+          sessionStorage.setItem(ACTIVE_SECTION_KEY, section.id);
+        }
+      }
+      function highlightSection(section) {
+        if (!section) return;
+        if (focusTimer) {
+          clearTimeout(focusTimer);
+        }
+        accordions.forEach(function (other) { other.classList.remove("focused"); });
+        section.classList.add("focused");
+        focusTimer = setTimeout(function () { section.classList.remove("focused"); }, 1400);
+      }
+
+      const hashTargetId = (window.location.hash || "").replace(/^#/, "");
+      const storedActiveSectionId = sessionStorage.getItem(ACTIVE_SECTION_KEY) || "";
+      const preferredSectionId = hashTargetId || storedActiveSectionId;
+      if (preferredSectionId) {
+        const preferredSection = document.getElementById(preferredSectionId);
+        if (preferredSection && preferredSection.classList.contains("accordion")) {
+          openAccordion(preferredSection);
+          requestAnimationFrame(function () { highlightSection(preferredSection); });
+        }
+      }
+
+      // First visit fallback: open only first section.
+      if (!accordions.some(function (d) { return d.classList.contains("open"); }) && accordions.length > 0) {
+        accordions[0].classList.add("open");
+        persistAccordionState();
+        sessionStorage.setItem(ACTIVE_SECTION_KEY, accordions[0].id);
+      }
+
+      var scrollAnchorId = sessionStorage.getItem(SCROLL_ANCHOR_KEY);
+      if (scrollAnchorId) {
+        sessionStorage.removeItem(SCROLL_ANCHOR_KEY);
+        requestAnimationFrame(function () {
+          var el = document.getElementById(scrollAnchorId);
+          if (el) {
+            el.scrollIntoView({ behavior: prefersReducedMotion ? "auto" : "smooth", block: "start" });
+          }
+        });
+      }
+
+      const tabs = Array.from(document.querySelectorAll(".section-tab[data-target]"));
+      function closeAllTabClusters() {
+        document.querySelectorAll("[data-tab-cluster].is-open").forEach(function (c) {
+          c.classList.remove("is-open");
+          var b = c.querySelector(".section-tab--cluster-toggle");
+          if (b) b.setAttribute("aria-expanded", "false");
+        });
+      }
+      document.querySelectorAll("[data-tab-cluster]").forEach(function (cluster) {
+        var btn = cluster.querySelector(".section-tab--cluster-toggle");
+        var panel = cluster.querySelector(".section-tab-cluster__dropdown");
+        if (!btn || !panel) return;
+        btn.addEventListener("click", function (e) {
+          e.preventDefault();
+          e.stopPropagation();
+          var willOpen = !cluster.classList.contains("is-open");
+          closeAllTabClusters();
+          if (willOpen) {
+            cluster.classList.add("is-open");
+            btn.setAttribute("aria-expanded", "true");
+          }
+        });
+        cluster.addEventListener("click", function (e) { e.stopPropagation(); });
+      });
+      document.addEventListener("click", function () { closeAllTabClusters(); });
+      document.addEventListener("keydown", function (e) {
+        if (e.key === "Escape") closeAllTabClusters();
+      });
+
+      function refreshActiveTab() {
+        const openSection = currentOpenSection || accordions.find(function (d) { return d.classList.contains("open"); });
+        const securitySubToken = sessionStorage.getItem(SECURITY_SUB_KEY) || "";
+        document.querySelectorAll("[data-tab-cluster]").forEach(function (c) {
+          c.classList.remove("section-tab-cluster--active");
+        });
+        tabs.forEach(function (tab) {
+          const isActive = openSection && tab.dataset.target === openSection.id;
+          const isSecurityLink = tab.classList.contains("section-tab--security-link");
+          let showActive = false;
+          if (isActive) {
+            if (!isSecurityLink) {
+              showActive = true;
+            } else {
+              showActive = !!tab.dataset.securitySub && tab.dataset.securitySub === securitySubToken;
+            }
+          }
+          tab.classList.toggle("active", showActive);
+          if (isActive && !isSecurityLink) {
+            var cl = tab.closest("[data-tab-cluster]");
+            if (cl) cl.classList.add("section-tab-cluster--active");
+          }
+        });
+        if (openSection && openSection.id === "section-security") {
+          var secCluster = document.getElementById("admin-cluster-security-cluster");
+          if (secCluster) secCluster.classList.add("section-tab-cluster--active");
+        }
+        if (openSection && openSection.id) {
+          sessionStorage.setItem(ACTIVE_SECTION_KEY, openSection.id);
+        }
+        var navTabs = document.getElementById("section-tabs");
+        if (navTabs) {
+          navTabs.classList.toggle(
+            "section-tabs--has-active",
+            !!document.querySelector("#section-tabs .section-tab.active") ||
+              !!document.querySelector("#section-tabs .section-tab-cluster.section-tab-cluster--active") ||
+              !!document.querySelector("#admin-mazer-sidebar-menu .section-tab.active")
+          );
+        }
+      }
+
+      function activateAdminSection(targetId, options) {
+        options = options || {};
+        const fromHash = !!options.fromHash;
+        const focusTab = options.focusTab;
+        const section = document.getElementById(targetId);
+        if (!section || !section.classList.contains("accordion")) return false;
+        openAccordion(section);
+        highlightSection(section);
+        section.scrollIntoView({ behavior: prefersReducedMotion ? "auto" : "smooth", block: "start" });
+        refreshActiveTab();
+        if (!fromHash && focusTab) {
+          requestAnimationFrame(function () {
+            try {
+              focusTab.focus({ preventScroll: true });
+            } catch (err) {}
+          });
+        }
+        return true;
+      }
+
+      tabs.forEach(function (tab) {
+        tab.addEventListener("click", function (e) {
+          const targetId = tab.dataset.target;
+          if (!targetId) return;
+          const rawHref = tab.getAttribute("href") || "";
+          var crossPage = false;
+          try {
+            var parsed = new URL(rawHref, window.location.origin);
+            if (parsed.pathname !== window.location.pathname) {
+              crossPage = true;
+            }
+          } catch (err) {
+            crossPage = false;
+          }
+          if (crossPage) {
+            e.preventDefault();
+            sessionStorage.setItem(ACTIVE_SECTION_KEY, targetId);
+            if (tab.dataset.scrollAnchor) {
+              sessionStorage.setItem(SCROLL_ANCHOR_KEY, tab.dataset.scrollAnchor);
+            } else {
+              sessionStorage.removeItem(SCROLL_ANCHOR_KEY);
+            }
+            if (tab.dataset.securitySub) {
+              sessionStorage.setItem(SECURITY_SUB_KEY, tab.dataset.securitySub);
+            } else {
+              sessionStorage.removeItem(SECURITY_SUB_KEY);
+            }
+            window.location.assign(rawHref);
+            return;
+          }
+          e.preventDefault();
+          const section = document.getElementById(targetId);
+          if (!section || !section.classList.contains("accordion")) return;
+          sessionStorage.setItem(ACTIVE_SECTION_KEY, targetId);
+          if (tab.dataset.scrollAnchor) {
+            sessionStorage.setItem(SCROLL_ANCHOR_KEY, tab.dataset.scrollAnchor);
+          } else {
+            sessionStorage.removeItem(SCROLL_ANCHOR_KEY);
+          }
+          if (tab.dataset.securitySub) {
+            sessionStorage.setItem(SECURITY_SUB_KEY, tab.dataset.securitySub);
+          } else {
+            sessionStorage.removeItem(SECURITY_SUB_KEY);
+          }
+          if (window.history && window.history.replaceState) {
+            window.history.replaceState(null, "", window.location.pathname + window.location.search + "#" + targetId);
+          }
+          window.location.reload();
+        });
+      });
+      window.addEventListener("hashchange", function () {
+        var id = (window.location.hash || "").replace(/^#/, "");
+        if (!id) return;
+        activateAdminSection(id, { fromHash: true });
+      });
+      refreshActiveTab();
+
+      var copyPub = document.getElementById("admin-copy-public-url");
+      if (copyPub) {
+        copyPub.addEventListener("click", function () {
+          var u = copyPub.getAttribute("data-public-url") || "";
+          if (!u) return;
+          if (navigator.clipboard && navigator.clipboard.writeText) {
+            navigator.clipboard.writeText(u).then(function () {
+              copyPub.textContent = "تم النسخ!";
+              setTimeout(function () { copyPub.textContent = "نسخ رابط صفحة الحجز"; }, 2000);
+            });
+          } else {
+            var ta = document.createElement("textarea");
+            ta.value = u;
+            document.body.appendChild(ta);
+            ta.select();
+            try { document.execCommand("copy"); } catch (_) {}
+            document.body.removeChild(ta);
+            copyPub.textContent = "تم النسخ!";
+            setTimeout(function () { copyPub.textContent = "نسخ رابط صفحة الحجز"; }, 2000);
+          }
+        });
+      }
+      var btnRem = document.getElementById("admin-copy-reminder-btn");
+      if (btnRem) {
+        btnRem.addEventListener("click", function () {
+          var ta = document.getElementById("admin-reminder-template");
+          if (!ta) return;
+          var txt = ta.value || "";
+          if (navigator.clipboard && navigator.clipboard.writeText) {
+            navigator.clipboard.writeText(txt).then(function () {
+              btnRem.textContent = "تم النسخ!";
+              setTimeout(function () { btnRem.textContent = "نسخ القالب"; }, 2000);
+            });
+          } else {
+            ta.select();
+            try { document.execCommand("copy"); } catch (_) {}
+            btnRem.textContent = "تم النسخ!";
+            setTimeout(function () { btnRem.textContent = "نسخ القالب"; }, 2000);
+          }
+        });
+      }
+    })();
+  </script>
+  <script>
+    (function () {
+      function parseMoney(v) {
+        if (v == null) return NaN;
+        var s = String(v).trim().replace(",", ".");
+        if (!s) return NaN;
+        var n = parseFloat(s);
+        return Number.isFinite(n) ? n : NaN;
+      }
+      function fmt2(n) {
+        if (!Number.isFinite(n)) return "";
+        return (Math.round(n * 100) / 100).toFixed(2);
+      }
+      function syncSchedule(wrap) {
+        if (!wrap) return;
+        var modeEl = wrap.querySelector(".js-discount-mode");
+        var schedWrap = wrap.querySelector(".js-discount-schedule-wrap");
+        var schedType = wrap.querySelector(".js-schedule-type");
+        var datePanel = wrap.querySelector(".js-schedule-date-panel");
+        var hoursPanel = wrap.querySelector(".js-schedule-hours-panel");
+        var mode = modeEl ? modeEl.value : "none";
+        if (schedWrap) schedWrap.hidden = mode === "none";
+        var st = schedType ? schedType.value : "always";
+        if (datePanel) datePanel.hidden = mode === "none" || st !== "date_range";
+        if (hoursPanel) hoursPanel.hidden = mode === "none" || st !== "daily_hours";
+      }
+      function syncBlock(wrap) {
+        if (!wrap) return;
+        var modeEl = wrap.querySelector(".js-discount-mode");
+        var pctPanel = wrap.querySelector(".js-discount-panel-percent");
+        var fixPanel = wrap.querySelector(".js-discount-panel-fixed");
+        var form = wrap.closest("form");
+        var baseEl = form ? form.querySelector(".js-list-price-base") : null;
+        var pctIn = wrap.querySelector("[name='discount_percent']");
+        var out = wrap.querySelector(".js-discount-computed");
+        var mode = modeEl ? modeEl.value : "none";
+        var base = baseEl ? parseMoney(baseEl.value) : NaN;
+        if (pctPanel) pctPanel.hidden = mode !== "percent";
+        if (fixPanel) fixPanel.hidden = mode !== "fixed";
+        if (mode === "percent" && out && Number.isFinite(base)) {
+          var p = pctIn ? parseMoney(pctIn.value) : NaN;
+          if (Number.isFinite(p) && p >= 0 && p <= 100) {
+            out.value = fmt2(base * (1 - p / 100));
+          } else {
+            out.value = "";
+          }
+        } else if (out) {
+          out.value = "";
+        }
+        syncSchedule(wrap);
+      }
+      function bind(wrap) {
+        var modeEl = wrap.querySelector(".js-discount-mode");
+        var form = wrap.closest("form");
+        var baseEl = form ? form.querySelector(".js-list-price-base") : null;
+        var schedType = wrap.querySelector(".js-schedule-type");
+        if (modeEl) {
+          modeEl.addEventListener("change", function () { syncBlock(wrap); });
+          modeEl.addEventListener("input", function () { syncBlock(wrap); });
+        }
+        if (schedType) {
+          schedType.addEventListener("change", function () { syncBlock(wrap); });
+          schedType.addEventListener("input", function () { syncBlock(wrap); });
+        }
+        if (baseEl) {
+          baseEl.addEventListener("input", function () { syncBlock(wrap); });
+          baseEl.addEventListener("change", function () { syncBlock(wrap); });
+        }
+        var pctIn = wrap.querySelector("[name='discount_percent']");
+        if (pctIn) {
+          pctIn.addEventListener("input", function () { syncBlock(wrap); });
+          pctIn.addEventListener("change", function () { syncBlock(wrap); });
+        }
+        syncBlock(wrap);
+      }
+      document.querySelectorAll(".js-admin-discount-block").forEach(bind);
+    })();
+  </script>
+  <script>
+    (function () {
+      document.querySelectorAll(".js-discount-hint-toggle").forEach(function (btn) {
+        btn.addEventListener("click", function () {
+          var id = btn.getAttribute("aria-controls");
+          var panel = id ? document.getElementById(id) : null;
+          if (!panel) return;
+          panel.hidden = !panel.hidden;
+          btn.setAttribute("aria-expanded", panel.hidden ? "false" : "true");
+        });
+      });
+    })();
+  </script>
+  <script>
+    (function () {
+      function parseMoney(v) {
+        if (v == null) return NaN;
+        var s = String(v).trim().replace(",", ".");
+        if (!s) return NaN;
+        var n = parseFloat(s);
+        return Number.isFinite(n) ? n : NaN;
+      }
+      document.querySelectorAll(".admin-help-exclaim").forEach(function (btn) {
+        btn.addEventListener("click", function () {
+          var p = btn.closest(".plans-head--admin");
+          var sub = p ? p.querySelector(".plans-head__sub") : null;
+          if (!sub) return;
+          var open = sub.getAttribute("hidden") == null;
+          if (open) sub.setAttribute("hidden", "hidden");
+          else sub.removeAttribute("hidden");
+        });
+      });
+      document.querySelectorAll("form.plan-details-form--admin-stack").forEach(function (form) {
+        form.addEventListener("submit", function (ev) {
+          var modeEl = form.querySelector("[name='discount_mode']");
+          var mode = modeEl ? modeEl.value : "none";
+          if (mode !== "fixed") return;
+          var baseEl = form.querySelector(".js-list-price-base");
+          var redEl = form.querySelector("[name='reduced_price']");
+          var base = baseEl ? parseMoney(baseEl.value) : NaN;
+          var red = redEl ? parseMoney(redEl.value) : NaN;
+          if (!Number.isFinite(base) || !Number.isFinite(red)) return;
+          if (red > base + 1e-6) {
+            ev.preventDefault();
+            alert("السعر المخفض (" + red.toFixed(2) + " ر.س) لا يجوز أن يتجاوز السعر الأساسي (" + base.toFixed(2) + " ر.س).");
+          }
+        });
+      });
+    })();
+  </script>
+  {% include '_force_english_digits.html' %}
+  {% include '_mobile_landscape_hint.html' %}
+</body>
+</html>

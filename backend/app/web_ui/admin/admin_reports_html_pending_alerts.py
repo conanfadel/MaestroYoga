@@ -29,12 +29,12 @@ def register_admin_report_html_pending_alerts_routes(router: APIRouter) -> None:
         assert user is not None
         if (user.role or "") == "trainer":
             return None, RedirectResponse(
-                url=_url_with_params("/admin", msg=core.ADMIN_MSG_TRAINER_ADMIN_FORBIDDEN),
+                url=_url_with_params("/admin/dashboard", msg=core.ADMIN_MSG_TRAINER_ADMIN_FORBIDDEN),
                 status_code=303,
             )
         if not can_access_report_kind(user=user, kind="health", user_has_permission_fn=user_has_permission):
             return None, RedirectResponse(
-                url=_url_with_params("/admin", msg=core.ADMIN_MSG_REPORT_FORBIDDEN),
+                url=_url_with_params("/admin/dashboard", msg=core.ADMIN_MSG_REPORT_FORBIDDEN),
                 status_code=303,
             )
         return user, None

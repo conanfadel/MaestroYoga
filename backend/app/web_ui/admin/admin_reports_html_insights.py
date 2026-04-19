@@ -35,12 +35,12 @@ def register_admin_report_html_insights_routes(router: APIRouter) -> None:
         assert user is not None
         if (user.role or "") == "trainer":
             return RedirectResponse(
-                url=_url_with_params("/admin", msg=core.ADMIN_MSG_TRAINER_ADMIN_FORBIDDEN),
+                url=_url_with_params("/admin/dashboard", msg=core.ADMIN_MSG_TRAINER_ADMIN_FORBIDDEN),
                 status_code=303,
             )
         if not can_access_report_kind(user=user, kind="insights", user_has_permission_fn=user_has_permission):
             return RedirectResponse(
-                url=_url_with_params("/admin", msg=core.ADMIN_MSG_REPORT_FORBIDDEN),
+                url=_url_with_params("/admin/dashboard", msg=core.ADMIN_MSG_REPORT_FORBIDDEN),
                 status_code=303,
             )
         cid = require_user_center_id(user)

@@ -7,6 +7,7 @@ import json
 from fastapi import APIRouter
 
 from .. import impl_state as _s
+from .admin_paths import ADMIN_PATH_TRAINING
 
 
 def _normalize_muscle_key(raw: str) -> str:
@@ -99,7 +100,7 @@ def register_admin_org_training_routes(router: APIRouter) -> None:
         db.commit()
         return _s.RedirectResponse(
             url=_s._url_with_params(
-                "/admin",
+                ADMIN_PATH_TRAINING,
                 msg=_s.ADMIN_MSG_TRAINING_EXERCISE_ADDED,
                 scroll_y=scroll_y,
                 training_muscle=view_muscle,
@@ -134,7 +135,7 @@ def register_admin_org_training_routes(router: APIRouter) -> None:
         db.commit()
         return _s.RedirectResponse(
             url=_s._url_with_params(
-                "/admin",
+                ADMIN_PATH_TRAINING,
                 msg=_s.ADMIN_MSG_TRAINING_EXERCISE_DELETED,
                 scroll_y=scroll_y,
                 training_muscle=normalized_muscle,
@@ -195,7 +196,7 @@ def register_admin_org_training_routes(router: APIRouter) -> None:
         db.commit()
         return _s.RedirectResponse(
             url=_s._url_with_params(
-                "/admin",
+                ADMIN_PATH_TRAINING,
                 msg=_s.ADMIN_MSG_TRAINING_YOGA_SEEDED,
                 scroll_y=scroll_y,
                 training_muscle=_normalize_muscle_key(training_muscle),
@@ -244,7 +245,7 @@ def register_admin_org_training_routes(router: APIRouter) -> None:
         if client_id <= 0 or not selected_ids:
             return _s.RedirectResponse(
                 url=_s._url_with_params(
-                    "/admin",
+                    ADMIN_PATH_TRAINING,
                     msg=_s.ADMIN_MSG_TRAINING_ASSIGNMENT_INVALID,
                     scroll_y=scroll_y,
                     training_muscle=_normalize_muscle_key(training_muscle),
@@ -264,7 +265,7 @@ def register_admin_org_training_routes(router: APIRouter) -> None:
         if not client:
             return _s.RedirectResponse(
                 url=_s._url_with_params(
-                    "/admin",
+                    ADMIN_PATH_TRAINING,
                     msg=_s.ADMIN_MSG_TRAINING_ASSIGNMENT_INVALID,
                     scroll_y=scroll_y,
                     training_muscle=_normalize_muscle_key(training_muscle),
@@ -309,7 +310,7 @@ def register_admin_org_training_routes(router: APIRouter) -> None:
         if not exercise_rows:
             return _s.RedirectResponse(
                 url=_s._url_with_params(
-                    "/admin",
+                    ADMIN_PATH_TRAINING,
                     msg=_s.ADMIN_MSG_TRAINING_ASSIGNMENT_INVALID,
                     scroll_y=scroll_y,
                     training_muscle=_normalize_muscle_key(training_muscle),
@@ -326,7 +327,7 @@ def register_admin_org_training_routes(router: APIRouter) -> None:
         if start_dt and end_dt and end_dt < start_dt:
             return _s.RedirectResponse(
                 url=_s._url_with_params(
-                    "/admin",
+                    ADMIN_PATH_TRAINING,
                     msg=_s.ADMIN_MSG_TRAINING_ASSIGNMENT_INVALID,
                     scroll_y=scroll_y,
                     training_muscle=_normalize_muscle_key(training_muscle),
@@ -341,7 +342,7 @@ def register_admin_org_training_routes(router: APIRouter) -> None:
         if not start_dt or not end_dt:
             return _s.RedirectResponse(
                 url=_s._url_with_params(
-                    "/admin",
+                    ADMIN_PATH_TRAINING,
                     msg=_s.ADMIN_MSG_TRAINING_ASSIGNMENT_INVALID,
                     scroll_y=scroll_y,
                     training_muscle=_normalize_muscle_key(training_muscle),
@@ -409,7 +410,7 @@ def register_admin_org_training_routes(router: APIRouter) -> None:
         db.commit()
         return _s.RedirectResponse(
             url=_s._url_with_params(
-                "/admin",
+                ADMIN_PATH_TRAINING,
                 msg=_s.ADMIN_MSG_TRAINING_ASSIGNMENT_CREATED,
                 scroll_y=scroll_y,
                 training_muscle=_normalize_muscle_key(training_muscle),
@@ -451,7 +452,7 @@ def register_admin_org_training_routes(router: APIRouter) -> None:
         if not batch or batch.center_id != cid:
             return _s.RedirectResponse(
                 url=_s._url_with_params(
-                    "/admin",
+                    ADMIN_PATH_TRAINING,
                     msg=_s.ADMIN_MSG_TRAINING_ASSIGNMENT_NOT_FOUND,
                     scroll_y=scroll_y,
                     training_muscle=_normalize_muscle_key(training_muscle),
@@ -474,7 +475,7 @@ def register_admin_org_training_routes(router: APIRouter) -> None:
         if not client:
             return _s.RedirectResponse(
                 url=_s._url_with_params(
-                    "/admin",
+                    ADMIN_PATH_TRAINING,
                     msg=_s.ADMIN_MSG_TRAINING_ASSIGNMENT_INVALID,
                     scroll_y=scroll_y,
                     training_muscle=_normalize_muscle_key(training_muscle),
@@ -508,7 +509,7 @@ def register_admin_org_training_routes(router: APIRouter) -> None:
             if not linked_session:
                 return _s.RedirectResponse(
                     url=_s._url_with_params(
-                        "/admin",
+                        ADMIN_PATH_TRAINING,
                         msg=_s.ADMIN_MSG_TRAINING_ASSIGNMENT_INVALID,
                         scroll_y=scroll_y,
                         training_muscle=_normalize_muscle_key(training_muscle),
@@ -525,7 +526,7 @@ def register_admin_org_training_routes(router: APIRouter) -> None:
         if not start_dt or not end_dt:
             return _s.RedirectResponse(
                 url=_s._url_with_params(
-                    "/admin",
+                    ADMIN_PATH_TRAINING,
                     msg=_s.ADMIN_MSG_TRAINING_ASSIGNMENT_INVALID,
                     scroll_y=scroll_y,
                     training_muscle=_normalize_muscle_key(training_muscle),
@@ -540,7 +541,7 @@ def register_admin_org_training_routes(router: APIRouter) -> None:
         if start_dt and end_dt and end_dt < start_dt:
             return _s.RedirectResponse(
                 url=_s._url_with_params(
-                    "/admin",
+                    ADMIN_PATH_TRAINING,
                     msg=_s.ADMIN_MSG_TRAINING_ASSIGNMENT_INVALID,
                     scroll_y=scroll_y,
                     training_muscle=_normalize_muscle_key(training_muscle),
@@ -566,7 +567,7 @@ def register_admin_org_training_routes(router: APIRouter) -> None:
         db.commit()
         return _s.RedirectResponse(
             url=_s._url_with_params(
-                "/admin",
+                ADMIN_PATH_TRAINING,
                 msg=_s.ADMIN_MSG_TRAINING_ASSIGNMENT_UPDATED,
                 scroll_y=scroll_y,
                 training_muscle=_normalize_muscle_key(training_muscle),
@@ -602,7 +603,7 @@ def register_admin_org_training_routes(router: APIRouter) -> None:
         if not batch or batch.center_id != cid:
             return _s.RedirectResponse(
                 url=_s._url_with_params(
-                    "/admin",
+                    ADMIN_PATH_TRAINING,
                     msg=_s.ADMIN_MSG_TRAINING_ASSIGNMENT_NOT_FOUND,
                     scroll_y=scroll_y,
                     training_muscle=_normalize_muscle_key(training_muscle),
@@ -618,7 +619,7 @@ def register_admin_org_training_routes(router: APIRouter) -> None:
         db.commit()
         return _s.RedirectResponse(
             url=_s._url_with_params(
-                "/admin",
+                ADMIN_PATH_TRAINING,
                 msg=_s.ADMIN_MSG_TRAINING_ASSIGNMENT_CANCELLED,
                 scroll_y=scroll_y,
                 training_muscle=_normalize_muscle_key(training_muscle),
@@ -657,7 +658,7 @@ def register_admin_org_training_routes(router: APIRouter) -> None:
         if client_id <= 0:
             return _s.RedirectResponse(
                 url=_s._url_with_params(
-                    "/admin",
+                    ADMIN_PATH_TRAINING,
                     msg=_s.ADMIN_MSG_TRAINING_MEDICAL_HISTORY_INVALID,
                     scroll_y=scroll_y,
                     training_muscle=_normalize_muscle_key(training_muscle),
@@ -677,7 +678,7 @@ def register_admin_org_training_routes(router: APIRouter) -> None:
         if not client:
             return _s.RedirectResponse(
                 url=_s._url_with_params(
-                    "/admin",
+                    ADMIN_PATH_TRAINING,
                     msg=_s.ADMIN_MSG_TRAINING_MEDICAL_HISTORY_INVALID,
                     scroll_y=scroll_y,
                     training_muscle=_normalize_muscle_key(training_muscle),
@@ -718,7 +719,7 @@ def register_admin_org_training_routes(router: APIRouter) -> None:
         db.commit()
         return _s.RedirectResponse(
             url=_s._url_with_params(
-                "/admin",
+                ADMIN_PATH_TRAINING,
                 msg=_s.ADMIN_MSG_TRAINING_MEDICAL_PROFILE_SAVED,
                 scroll_y=scroll_y,
                 training_muscle=_normalize_muscle_key(training_muscle),
@@ -755,7 +756,7 @@ def register_admin_org_training_routes(router: APIRouter) -> None:
         if client_id <= 0 or not title_clean:
             return _s.RedirectResponse(
                 url=_s._url_with_params(
-                    "/admin",
+                    ADMIN_PATH_TRAINING,
                     msg=_s.ADMIN_MSG_TRAINING_MEDICAL_HISTORY_INVALID,
                     scroll_y=scroll_y,
                     training_muscle=_normalize_muscle_key(training_muscle),
@@ -775,7 +776,7 @@ def register_admin_org_training_routes(router: APIRouter) -> None:
         if not client:
             return _s.RedirectResponse(
                 url=_s._url_with_params(
-                    "/admin",
+                    ADMIN_PATH_TRAINING,
                     msg=_s.ADMIN_MSG_TRAINING_MEDICAL_HISTORY_INVALID,
                     scroll_y=scroll_y,
                     training_muscle=_normalize_muscle_key(training_muscle),
@@ -802,7 +803,7 @@ def register_admin_org_training_routes(router: APIRouter) -> None:
         db.commit()
         return _s.RedirectResponse(
             url=_s._url_with_params(
-                "/admin",
+                ADMIN_PATH_TRAINING,
                 msg=_s.ADMIN_MSG_TRAINING_MEDICAL_HISTORY_ADDED,
                 scroll_y=scroll_y,
                 training_muscle=_normalize_muscle_key(training_muscle),
@@ -834,7 +835,7 @@ def register_admin_org_training_routes(router: APIRouter) -> None:
         if not row or row.center_id != cid:
             return _s.RedirectResponse(
                 url=_s._url_with_params(
-                    "/admin",
+                    ADMIN_PATH_TRAINING,
                     msg=_s.ADMIN_MSG_TRAINING_MEDICAL_HISTORY_INVALID,
                     scroll_y=scroll_y,
                     training_muscle=_normalize_muscle_key(training_muscle),
@@ -851,7 +852,7 @@ def register_admin_org_training_routes(router: APIRouter) -> None:
         db.commit()
         return _s.RedirectResponse(
             url=_s._url_with_params(
-                "/admin",
+                ADMIN_PATH_TRAINING,
                 msg=_s.ADMIN_MSG_TRAINING_MEDICAL_HISTORY_DELETED,
                 scroll_y=scroll_y,
                 training_muscle=_normalize_muscle_key(training_muscle),

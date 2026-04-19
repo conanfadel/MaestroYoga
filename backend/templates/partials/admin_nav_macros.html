@@ -8,13 +8,13 @@
       الموقع والمحتوى
     </button>
     <div class="section-tab-cluster__dropdown" id="admin-cluster-site-panel" role="group" aria-label="الموقع والمحتوى">
-      <a class="section-tab section-tab--subitem" data-target="section-branding" href="#section-branding" id="tab-section-branding">هوية المركز والغلاف</a>
-      <a class="section-tab section-tab--subitem" data-target="section-index-page" href="#section-index-page" id="tab-section-index-page">محتوى صفحة الحجز</a>
-      <a class="section-tab section-tab--subitem" data-target="section-center-posts" href="#section-center-posts" id="tab-section-center-posts">أخبار ومنشورات</a>
-      <a class="section-tab section-tab--subitem" data-target="section-faq" href="#section-faq" id="tab-section-faq">الأسئلة الشائعة</a>
+      <a class="section-tab section-tab--subitem" data-target="section-branding" href="{{ admin_section_paths['section-branding'] }}#section-branding" id="tab-section-branding">هوية المركز والغلاف</a>
+      <a class="section-tab section-tab--subitem" data-target="section-index-page" href="{{ admin_section_paths['section-index-page'] }}#section-index-page" id="tab-section-index-page">محتوى صفحة الحجز</a>
+      <a class="section-tab section-tab--subitem" data-target="section-center-posts" href="{{ admin_section_paths['section-center-posts'] }}#section-center-posts" id="tab-section-center-posts">أخبار ومنشورات</a>
+      <a class="section-tab section-tab--subitem" data-target="section-faq" href="{{ admin_section_paths['section-faq'] }}#section-faq" id="tab-section-faq">الأسئلة الشائعة</a>
       {% if show_staff_roles_handbook %}
-      <a class="section-tab section-tab--subitem" data-target="section-staff-invite" href="#section-staff-invite" id="tab-section-staff-invite">إضافة عضو فريق</a>
-      <a class="section-tab section-tab--subitem" data-target="section-staff-roles" href="#section-staff-roles" id="tab-section-staff-roles">مرجع الأدوار والصلاحيات</a>
+      <a class="section-tab section-tab--subitem" data-target="section-staff-invite" href="{{ admin_section_paths['section-staff-invite'] }}#section-staff-invite" id="tab-section-staff-invite">إضافة عضو فريق</a>
+      <a class="section-tab section-tab--subitem" data-target="section-staff-roles" href="{{ admin_section_paths['section-staff-roles'] }}#section-staff-roles" id="tab-section-staff-roles">مرجع الأدوار والصلاحيات</a>
       {% endif %}
     </div>
   </div>
@@ -26,11 +26,11 @@
       التشغيل والمواعيد
     </button>
     <div class="section-tab-cluster__dropdown" id="admin-cluster-ops-panel" role="group" aria-label="التشغيل والمواعيد">
-      <a class="section-tab section-tab--subitem" data-target="section-rooms" href="#section-rooms" id="tab-section-rooms">الغرف والسعة</a>
-      <a class="section-tab section-tab--subitem" data-target="section-sessions" href="#section-sessions" id="tab-section-sessions">الجلسات والمدفوعات</a>
-      <a class="section-tab section-tab--subitem" data-target="section-plans" href="#section-plans" id="tab-section-plans">خطط الاشتراك</a>
+      <a class="section-tab section-tab--subitem" data-target="section-rooms" href="{{ admin_section_paths['section-rooms'] }}#section-rooms" id="tab-section-rooms">الغرف والسعة</a>
+      <a class="section-tab section-tab--subitem" data-target="section-sessions" href="{{ admin_section_paths['section-sessions'] }}#section-sessions" id="tab-section-sessions">الجلسات والمدفوعات</a>
+      <a class="section-tab section-tab--subitem" data-target="section-plans" href="{{ admin_section_paths['section-plans'] }}#section-plans" id="tab-section-plans">خطط الاشتراك</a>
       {% if perm_training_management %}
-      <a class="section-tab section-tab--subitem" data-target="section-training-management" href="#section-training-management" id="tab-section-training-management">
+      <a class="section-tab section-tab--subitem" data-target="section-training-management" href="{{ admin_section_paths['section-training-management'] }}#section-training-management" id="tab-section-training-management">
         <span class="section-tab__icon" aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M6 22V8"/><path d="M18 22V8"/><path d="M3 8h18"/><path d="M8 4h8"/><path d="M7 8V4h10v4"/></svg></span>
         إدارة التدريبات
       </a>
@@ -46,13 +46,13 @@
     </button>
     <div class="section-tab-cluster__dropdown" id="admin-cluster-clients-panel" role="group" aria-label="العملاء والولاء">
       {% if perm_public_users %}
-      <a class="section-tab section-tab--subitem" data-target="section-public-users" href="#section-public-users" id="tab-section-public-users" title="إدارة المستخدمين">إدارة المستخدمين</a>
+      <a class="section-tab section-tab--subitem" data-target="section-public-users" href="{{ admin_section_paths['section-public-users'] }}#section-public-users" id="tab-section-public-users" title="إدارة المستخدمين">إدارة المستخدمين</a>
       {% endif %}
       {% if perm_loyalty %}
-      <a class="section-tab section-tab--subitem" data-target="section-loyalty" href="#section-loyalty" id="tab-section-loyalty" title="برنامج الولاء">برنامج الولاء</a>
+      <a class="section-tab section-tab--subitem" data-target="section-loyalty" href="{{ admin_section_paths['section-loyalty'] }}#section-loyalty" id="tab-section-loyalty" title="برنامج الولاء">برنامج الولاء</a>
       {% endif %}
       {% if perm_public_users %}
-      <a class="section-tab section-tab--subitem" data-target="section-public-users-trash" href="#section-public-users-trash" id="tab-section-public-users-trash" title="سلة المحذوفات">سلة المحذوفات</a>
+      <a class="section-tab section-tab--subitem" data-target="section-public-users-trash" href="{{ admin_section_paths['section-public-users-trash'] }}#section-public-users-trash" id="tab-section-public-users-trash" title="سلة المحذوفات">سلة المحذوفات</a>
       {% endif %}
     </div>
   </div>
@@ -64,7 +64,7 @@
       التقارير
     </button>
     <div class="section-tab-cluster__dropdown" id="admin-cluster-reports-panel" role="group" aria-label="التقارير">
-      <a class="section-tab section-tab--subitem" data-target="section-reports" href="#section-reports" id="tab-section-reports">مركز التقارير والمقترحات</a>
+      <a class="section-tab section-tab--subitem" data-target="section-reports" href="{{ admin_section_paths['section-reports'] }}#section-reports" id="tab-section-reports">مركز التقارير والمقترحات</a>
     </div>
   </div>
   {% endif %}
@@ -75,8 +75,8 @@
       الجلسات والغرف
     </button>
     <div class="section-tab-cluster__dropdown" id="admin-cluster-trainer-panel" role="group" aria-label="الجلسات والغرف">
-      <a class="section-tab section-tab--subitem" data-target="section-rooms" href="#section-rooms" id="tab-section-rooms-trainer">الغرف ونشر الجلسات</a>
-      <a class="section-tab section-tab--subitem" data-target="section-sessions" href="#section-sessions" id="tab-section-sessions-trainer">الجلسات والمدفوعات</a>
+      <a class="section-tab section-tab--subitem" data-target="section-rooms" href="{{ admin_section_paths['section-rooms'] }}#section-rooms" id="tab-section-rooms-trainer">الغرف ونشر الجلسات</a>
+      <a class="section-tab section-tab--subitem" data-target="section-sessions" href="{{ admin_section_paths['section-sessions'] }}#section-sessions" id="tab-section-sessions-trainer">الجلسات والمدفوعات</a>
     </div>
   </div>
   {% endif %}
@@ -87,23 +87,23 @@
       الأمان والمخاطر
     </button>
     <div class="section-tab-cluster__dropdown" id="admin-cluster-security-panel" role="group" aria-label="الأمان والمخاطر">
-      <a class="section-tab section-tab--subitem section-tab--security-link" data-target="section-security" data-scroll-anchor="sec-security-overview" data-security-sub="overview" href="#section-security" id="tab-sec-overview">
+      <a class="section-tab section-tab--subitem section-tab--security-link" data-target="section-security" data-scroll-anchor="sec-security-overview" data-security-sub="overview" href="{{ admin_section_paths['section-security'] }}#section-security" id="tab-sec-overview">
         <span class="section-tab__icon" aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg></span>
         نظرة عامة والمخاطر
       </a>
-      <a class="section-tab section-tab--subitem section-tab--security-link" data-target="section-security" data-scroll-anchor="sec-security-admin" data-security-sub="admin" href="#section-security" id="tab-sec-admin">
+      <a class="section-tab section-tab--subitem section-tab--security-link" data-target="section-security" data-scroll-anchor="sec-security-admin" data-security-sub="admin" href="{{ admin_section_paths['section-security'] }}#section-security" id="tab-sec-admin">
         <span class="section-tab__icon" aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></span>
         دخول لوحة الإدارة
       </a>
-      <a class="section-tab section-tab--subitem section-tab--security-link" data-target="section-security" data-scroll-anchor="sec-security-audit" data-security-sub="audit" href="#section-security" id="tab-sec-audit">
+      <a class="section-tab section-tab--subitem section-tab--security-link" data-target="section-security" data-scroll-anchor="sec-security-audit" data-security-sub="audit" href="{{ admin_section_paths['section-security'] }}#section-security" id="tab-sec-audit">
         <span class="section-tab__icon" aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><line x1="10" y1="9" x2="8" y2="9"/></svg></span>
         سجل التدقيق والفلترة
       </a>
-      <a class="section-tab section-tab--subitem section-tab--security-link" data-target="section-security" data-scroll-anchor="sec-security-blocked" data-security-sub="blocked" href="#section-security" id="tab-sec-blocked">
+      <a class="section-tab section-tab--subitem section-tab--security-link" data-target="section-security" data-scroll-anchor="sec-security-blocked" data-security-sub="blocked" href="{{ admin_section_paths['section-security'] }}#section-security" id="tab-sec-blocked">
         <span class="section-tab__icon" aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 9.9-1"/></svg></span>
         العناوين المحظورة
       </a>
-      <a class="section-tab section-tab--subitem section-tab--security-link" data-target="section-security" data-scroll-anchor="sec-security-history" data-security-sub="history" href="#section-security" id="tab-sec-history">
+      <a class="section-tab section-tab--subitem section-tab--security-link" data-target="section-security" data-scroll-anchor="sec-security-history" data-security-sub="history" href="{{ admin_section_paths['section-security'] }}#section-security" id="tab-sec-history">
         <span class="section-tab__icon" aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></span>
         سجل الحظر والإلغاء
       </a>
@@ -116,40 +116,40 @@
   {% if not use_trainer_layout and perm_site_cluster %}
   <li class="nav-item maestro-nav-cluster-label"><span class="nav-link">الموقع والمحتوى</span></li>
   <li class="nav-item">
-    <a href="#section-branding" class="nav-link section-tab section-tab--subitem" data-target="section-branding"><span class="nav-link-icon"><i class="bi bi-globe2" aria-hidden="true"></i></span><span class="nav-link-title">هوية المركز والغلاف</span></a>
+    <a href="{{ admin_section_paths['section-branding'] }}#section-branding" class="nav-link section-tab section-tab--subitem" data-target="section-branding"><span class="nav-link-icon"><i class="bi bi-globe2" aria-hidden="true"></i></span><span class="nav-link-title">هوية المركز والغلاف</span></a>
   </li>
   <li class="nav-item">
-    <a href="#section-index-page" class="nav-link section-tab section-tab--subitem" data-target="section-index-page"><span class="nav-link-icon"><i class="bi bi-layout-text-window-reverse" aria-hidden="true"></i></span><span class="nav-link-title">محتوى صفحة الحجز</span></a>
+    <a href="{{ admin_section_paths['section-index-page'] }}#section-index-page" class="nav-link section-tab section-tab--subitem" data-target="section-index-page"><span class="nav-link-icon"><i class="bi bi-layout-text-window-reverse" aria-hidden="true"></i></span><span class="nav-link-title">محتوى صفحة الحجز</span></a>
   </li>
   <li class="nav-item">
-    <a href="#section-center-posts" class="nav-link section-tab section-tab--subitem" data-target="section-center-posts"><span class="nav-link-icon"><i class="bi bi-newspaper" aria-hidden="true"></i></span><span class="nav-link-title">أخبار ومنشورات</span></a>
+    <a href="{{ admin_section_paths['section-center-posts'] }}#section-center-posts" class="nav-link section-tab section-tab--subitem" data-target="section-center-posts"><span class="nav-link-icon"><i class="bi bi-newspaper" aria-hidden="true"></i></span><span class="nav-link-title">أخبار ومنشورات</span></a>
   </li>
   <li class="nav-item">
-    <a href="#section-faq" class="nav-link section-tab section-tab--subitem" data-target="section-faq"><span class="nav-link-icon"><i class="bi bi-question-circle" aria-hidden="true"></i></span><span class="nav-link-title">الأسئلة الشائعة</span></a>
+    <a href="{{ admin_section_paths['section-faq'] }}#section-faq" class="nav-link section-tab section-tab--subitem" data-target="section-faq"><span class="nav-link-icon"><i class="bi bi-question-circle" aria-hidden="true"></i></span><span class="nav-link-title">الأسئلة الشائعة</span></a>
   </li>
   {% if show_staff_roles_handbook %}
   <li class="nav-item">
-    <a href="#section-staff-invite" class="nav-link section-tab section-tab--subitem" data-target="section-staff-invite"><span class="nav-link-icon"><i class="bi bi-person-plus" aria-hidden="true"></i></span><span class="nav-link-title">إضافة عضو فريق</span></a>
+    <a href="{{ admin_section_paths['section-staff-invite'] }}#section-staff-invite" class="nav-link section-tab section-tab--subitem" data-target="section-staff-invite"><span class="nav-link-icon"><i class="bi bi-person-plus" aria-hidden="true"></i></span><span class="nav-link-title">إضافة عضو فريق</span></a>
   </li>
   <li class="nav-item">
-    <a href="#section-staff-roles" class="nav-link section-tab section-tab--subitem" data-target="section-staff-roles"><span class="nav-link-icon"><i class="bi bi-journal-text" aria-hidden="true"></i></span><span class="nav-link-title">مرجع الأدوار والصلاحيات</span></a>
+    <a href="{{ admin_section_paths['section-staff-roles'] }}#section-staff-roles" class="nav-link section-tab section-tab--subitem" data-target="section-staff-roles"><span class="nav-link-icon"><i class="bi bi-journal-text" aria-hidden="true"></i></span><span class="nav-link-title">مرجع الأدوار والصلاحيات</span></a>
   </li>
   {% endif %}
   {% endif %}
   {% if not use_trainer_layout and perm_ops_cluster %}
   <li class="nav-item maestro-nav-cluster-label"><span class="nav-link">التشغيل والمواعيد</span></li>
   <li class="nav-item">
-    <a href="#section-rooms" class="nav-link section-tab section-tab--subitem" data-target="section-rooms"><span class="nav-link-icon"><i class="bi bi-door-open" aria-hidden="true"></i></span><span class="nav-link-title">الغرف والسعة</span></a>
+    <a href="{{ admin_section_paths['section-rooms'] }}#section-rooms" class="nav-link section-tab section-tab--subitem" data-target="section-rooms"><span class="nav-link-icon"><i class="bi bi-door-open" aria-hidden="true"></i></span><span class="nav-link-title">الغرف والسعة</span></a>
   </li>
   <li class="nav-item">
-    <a href="#section-sessions" class="nav-link section-tab section-tab--subitem" data-target="section-sessions"><span class="nav-link-icon"><i class="bi bi-calendar2-check" aria-hidden="true"></i></span><span class="nav-link-title">الجلسات والمدفوعات</span></a>
+    <a href="{{ admin_section_paths['section-sessions'] }}#section-sessions" class="nav-link section-tab section-tab--subitem" data-target="section-sessions"><span class="nav-link-icon"><i class="bi bi-calendar2-check" aria-hidden="true"></i></span><span class="nav-link-title">الجلسات والمدفوعات</span></a>
   </li>
   <li class="nav-item">
-    <a href="#section-plans" class="nav-link section-tab section-tab--subitem" data-target="section-plans"><span class="nav-link-icon"><i class="bi bi-credit-card-2-front" aria-hidden="true"></i></span><span class="nav-link-title">خطط الاشتراك</span></a>
+    <a href="{{ admin_section_paths['section-plans'] }}#section-plans" class="nav-link section-tab section-tab--subitem" data-target="section-plans"><span class="nav-link-icon"><i class="bi bi-credit-card-2-front" aria-hidden="true"></i></span><span class="nav-link-title">خطط الاشتراك</span></a>
   </li>
   {% if perm_training_management %}
   <li class="nav-item">
-    <a href="#section-training-management" class="nav-link section-tab section-tab--subitem" data-target="section-training-management"><span class="nav-link-icon"><i class="bi bi-diagram-3" aria-hidden="true"></i></span><span class="nav-link-title">إدارة التدريبات</span></a>
+    <a href="{{ admin_section_paths['section-training-management'] }}#section-training-management" class="nav-link section-tab section-tab--subitem" data-target="section-training-management"><span class="nav-link-icon"><i class="bi bi-diagram-3" aria-hidden="true"></i></span><span class="nav-link-title">إدارة التدريبات</span></a>
   </li>
   {% endif %}
   {% endif %}
@@ -157,51 +157,51 @@
   <li class="nav-item maestro-nav-cluster-label"><span class="nav-link">العملاء والولاء</span></li>
   {% if perm_public_users %}
   <li class="nav-item">
-    <a href="#section-public-users" class="nav-link section-tab section-tab--subitem" data-target="section-public-users" title="إدارة المستخدمين"><span class="nav-link-icon"><i class="bi bi-people-fill" aria-hidden="true"></i></span><span class="nav-link-title">إدارة المستخدمين</span></a>
+    <a href="{{ admin_section_paths['section-public-users'] }}#section-public-users" class="nav-link section-tab section-tab--subitem" data-target="section-public-users" title="إدارة المستخدمين"><span class="nav-link-icon"><i class="bi bi-people-fill" aria-hidden="true"></i></span><span class="nav-link-title">إدارة المستخدمين</span></a>
   </li>
   {% endif %}
   {% if perm_loyalty %}
   <li class="nav-item">
-    <a href="#section-loyalty" class="nav-link section-tab section-tab--subitem" data-target="section-loyalty" title="برنامج الولاء"><span class="nav-link-icon"><i class="bi bi-award" aria-hidden="true"></i></span><span class="nav-link-title">برنامج الولاء</span></a>
+    <a href="{{ admin_section_paths['section-loyalty'] }}#section-loyalty" class="nav-link section-tab section-tab--subitem" data-target="section-loyalty" title="برنامج الولاء"><span class="nav-link-icon"><i class="bi bi-award" aria-hidden="true"></i></span><span class="nav-link-title">برنامج الولاء</span></a>
   </li>
   {% endif %}
   {% if perm_public_users %}
   <li class="nav-item">
-    <a href="#section-public-users-trash" class="nav-link section-tab section-tab--subitem" data-target="section-public-users-trash" title="سلة المحذوفات"><span class="nav-link-icon"><i class="bi bi-trash3" aria-hidden="true"></i></span><span class="nav-link-title">سلة المحذوفات</span></a>
+    <a href="{{ admin_section_paths['section-public-users-trash'] }}#section-public-users-trash" class="nav-link section-tab section-tab--subitem" data-target="section-public-users-trash" title="سلة المحذوفات"><span class="nav-link-icon"><i class="bi bi-trash3" aria-hidden="true"></i></span><span class="nav-link-title">سلة المحذوفات</span></a>
   </li>
   {% endif %}
   {% endif %}
   {% if not use_trainer_layout and perm_reports_hub %}
   <li class="nav-item maestro-nav-cluster-label"><span class="nav-link">التقارير</span></li>
   <li class="nav-item">
-    <a href="#section-reports" class="nav-link section-tab section-tab--subitem" data-target="section-reports"><span class="nav-link-icon"><i class="bi bi-graph-up-arrow" aria-hidden="true"></i></span><span class="nav-link-title">مركز التقارير والمقترحات</span></a>
+    <a href="{{ admin_section_paths['section-reports'] }}#section-reports" class="nav-link section-tab section-tab--subitem" data-target="section-reports"><span class="nav-link-icon"><i class="bi bi-graph-up-arrow" aria-hidden="true"></i></span><span class="nav-link-title">مركز التقارير والمقترحات</span></a>
   </li>
   {% endif %}
   {% if use_trainer_layout %}
   <li class="nav-item maestro-nav-cluster-label"><span class="nav-link">الجلسات والغرف</span></li>
   <li class="nav-item">
-    <a href="#section-rooms" class="nav-link section-tab section-tab--subitem" data-target="section-rooms"><span class="nav-link-icon"><i class="bi bi-door-open" aria-hidden="true"></i></span><span class="nav-link-title">الغرف ونشر الجلسات</span></a>
+    <a href="{{ admin_section_paths['section-rooms'] }}#section-rooms" class="nav-link section-tab section-tab--subitem" data-target="section-rooms"><span class="nav-link-icon"><i class="bi bi-door-open" aria-hidden="true"></i></span><span class="nav-link-title">الغرف ونشر الجلسات</span></a>
   </li>
   <li class="nav-item">
-    <a href="#section-sessions" class="nav-link section-tab section-tab--subitem" data-target="section-sessions"><span class="nav-link-icon"><i class="bi bi-calendar2-check" aria-hidden="true"></i></span><span class="nav-link-title">الجلسات والمدفوعات</span></a>
+    <a href="{{ admin_section_paths['section-sessions'] }}#section-sessions" class="nav-link section-tab section-tab--subitem" data-target="section-sessions"><span class="nav-link-icon"><i class="bi bi-calendar2-check" aria-hidden="true"></i></span><span class="nav-link-title">الجلسات والمدفوعات</span></a>
   </li>
   {% endif %}
   {% if show_security_section %}
   <li class="nav-item maestro-nav-cluster-label"><span class="nav-link">الأمان والمخاطر</span></li>
   <li class="nav-item">
-    <a href="#section-security" class="nav-link section-tab section-tab--subitem section-tab--security-link" data-target="section-security" data-scroll-anchor="sec-security-overview" data-security-sub="overview"><span class="nav-link-icon"><i class="bi bi-exclamation-triangle" aria-hidden="true"></i></span><span class="nav-link-title">نظرة عامة والمخاطر</span></a>
+    <a href="{{ admin_section_paths['section-security'] }}#section-security" class="nav-link section-tab section-tab--subitem section-tab--security-link" data-target="section-security" data-scroll-anchor="sec-security-overview" data-security-sub="overview"><span class="nav-link-icon"><i class="bi bi-exclamation-triangle" aria-hidden="true"></i></span><span class="nav-link-title">نظرة عامة والمخاطر</span></a>
   </li>
   <li class="nav-item">
-    <a href="#section-security" class="nav-link section-tab section-tab--subitem section-tab--security-link" data-target="section-security" data-scroll-anchor="sec-security-admin" data-security-sub="admin"><span class="nav-link-icon"><i class="bi bi-shield-lock" aria-hidden="true"></i></span><span class="nav-link-title">دخول لوحة الإدارة</span></a>
+    <a href="{{ admin_section_paths['section-security'] }}#section-security" class="nav-link section-tab section-tab--subitem section-tab--security-link" data-target="section-security" data-scroll-anchor="sec-security-admin" data-security-sub="admin"><span class="nav-link-icon"><i class="bi bi-shield-lock" aria-hidden="true"></i></span><span class="nav-link-title">دخول لوحة الإدارة</span></a>
   </li>
   <li class="nav-item">
-    <a href="#section-security" class="nav-link section-tab section-tab--subitem section-tab--security-link" data-target="section-security" data-scroll-anchor="sec-security-audit" data-security-sub="audit"><span class="nav-link-icon"><i class="bi bi-file-earmark-text" aria-hidden="true"></i></span><span class="nav-link-title">سجل التدقيق والفلترة</span></a>
+    <a href="{{ admin_section_paths['section-security'] }}#section-security" class="nav-link section-tab section-tab--subitem section-tab--security-link" data-target="section-security" data-scroll-anchor="sec-security-audit" data-security-sub="audit"><span class="nav-link-icon"><i class="bi bi-file-earmark-text" aria-hidden="true"></i></span><span class="nav-link-title">سجل التدقيق والفلترة</span></a>
   </li>
   <li class="nav-item">
-    <a href="#section-security" class="nav-link section-tab section-tab--subitem section-tab--security-link" data-target="section-security" data-scroll-anchor="sec-security-blocked" data-security-sub="blocked"><span class="nav-link-icon"><i class="bi bi-slash-circle" aria-hidden="true"></i></span><span class="nav-link-title">العناوين المحظورة</span></a>
+    <a href="{{ admin_section_paths['section-security'] }}#section-security" class="nav-link section-tab section-tab--subitem section-tab--security-link" data-target="section-security" data-scroll-anchor="sec-security-blocked" data-security-sub="blocked"><span class="nav-link-icon"><i class="bi bi-slash-circle" aria-hidden="true"></i></span><span class="nav-link-title">العناوين المحظورة</span></a>
   </li>
   <li class="nav-item">
-    <a href="#section-security" class="nav-link section-tab section-tab--subitem section-tab--security-link" data-target="section-security" data-scroll-anchor="sec-security-history" data-security-sub="history"><span class="nav-link-icon"><i class="bi bi-clock-history" aria-hidden="true"></i></span><span class="nav-link-title">سجل الحظر والإلغاء</span></a>
+    <a href="{{ admin_section_paths['section-security'] }}#section-security" class="nav-link section-tab section-tab--subitem section-tab--security-link" data-target="section-security" data-scroll-anchor="sec-security-history" data-security-sub="history"><span class="nav-link-icon"><i class="bi bi-clock-history" aria-hidden="true"></i></span><span class="nav-link-title">سجل الحظر والإلغاء</span></a>
   </li>
   {% endif %}
   {% endif %}

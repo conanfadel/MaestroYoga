@@ -23,7 +23,7 @@ def test_admin_login_create_delete_room(client):
         follow_redirects=False,
     )
     assert login.status_code == 303
-    assert login.headers["location"] == "/admin"
+    assert login.headers["location"] == "/admin/dashboard"
 
     room_name = f"Pytest Room {int(time.time())}"
     create_room = client.post(
@@ -32,7 +32,7 @@ def test_admin_login_create_delete_room(client):
         follow_redirects=False,
     )
     assert create_room.status_code == 303
-    assert create_room.headers["location"].startswith("/admin?msg=room_created")
+    assert create_room.headers["location"].startswith("/admin/dashboard?msg=room_created")
 
     db = SessionLocal()
     room = db.query(models.Room).filter(models.Room.name == room_name).order_by(models.Room.id.desc()).first()
@@ -46,7 +46,7 @@ def test_admin_login_create_delete_room(client):
         follow_redirects=False,
     )
     assert delete_room.status_code == 303
-    assert delete_room.headers["location"].startswith("/admin?msg=room_deleted")
+    assert delete_room.headers["location"].startswith("/admin/dashboard?msg=room_deleted")
 
 
 def test_admin_center_post_remote_cover_and_gallery_urls(client):
@@ -298,7 +298,7 @@ def test_admin_logout_via_get_or_post_clears_cookie(client):
         follow_redirects=False,
     )
     assert login.status_code == 303
-    assert login.headers["location"] == "/admin"
+    assert login.headers["location"] == "/admin/dashboard"
 
     get_logout = client.get("/admin/logout", follow_redirects=False)
     assert get_logout.status_code == 303
@@ -604,7 +604,7 @@ def test_admin_cannot_manage_public_user_of_another_center(client):
         follow_redirects=False,
     )
     assert login.status_code == 303
-    assert login.headers["location"] == "/admin"
+    assert login.headers["location"] == "/admin/dashboard"
 
     resp = client.post(
         "/admin/public-users/toggle-active",

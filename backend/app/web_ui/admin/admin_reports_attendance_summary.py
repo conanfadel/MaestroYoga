@@ -89,7 +89,7 @@ def register_admin_report_attendance_summary_routes(router: APIRouter) -> None:
         assert user is not None
         if not user_can_report_health(user=user, user_has_permission_fn=user_has_permission):
             return RedirectResponse(
-                url=_url_with_params("/admin", msg=core.ADMIN_MSG_REPORT_FORBIDDEN),
+                url=_url_with_params("/admin/dashboard", msg=core.ADMIN_MSG_REPORT_FORBIDDEN),
                 status_code=303,
             )
         cid = require_user_center_id(user)

@@ -49,7 +49,7 @@ def register_admin_auth_routes(router: APIRouter) -> None:
     
         _s.log_security_event("admin_login", request, "success", email=user.email)
         token = _s.create_access_token(user.id)
-        response = _s.RedirectResponse(url="/admin", status_code=303)
+        response = _s.RedirectResponse(url="/admin/dashboard", status_code=303)
         secure = _s._cookie_secure_flag(request)
         response.set_cookie(
             key="access_token",

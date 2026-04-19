@@ -13,6 +13,12 @@ from .admin_dashboard_blocks import (
     load_center_posts_admin_section,
 )
 from .admin_dashboard_context_load import AdminDashboardQueryState
+from .admin_paths import (
+    ADMIN_PATH_DASHBOARD,
+    ADMIN_PATH_SETTINGS,
+    ADMIN_PATH_USERS,
+    admin_section_paths_for_template,
+)
 
 
 def finalize_admin_dashboard_template_context(
@@ -21,6 +27,7 @@ def finalize_admin_dashboard_template_context(
     user: _s.models.User,
     msg: str | None,
     state: AdminDashboardQueryState,
+    admin_list_path: str = ADMIN_PATH_DASHBOARD,
 ) -> dict[str, Any]:
     admin_flash = None
     if msg:
@@ -54,61 +61,74 @@ def finalize_admin_dashboard_template_context(
         "training_plan_view": state.training_plan_view,
     }
 
-    def _admin_page_url(**overrides: str) -> str:
+    def _url_on(list_path: str, **overrides: str) -> str:
         params = dict(base_admin_params)
         for k, v in overrides.items():
             params[k] = v
-        return _s._url_with_params("/admin", **params)
+        return _s._url_with_params(list_path, **params)
 
-    public_users_page_prev_url = _admin_page_url(
-        **{_s.ADMIN_QP_PUBLIC_USER_PAGE: str(max(1, state.safe_public_user_page - 1))}
+    def _admin_page_url(**overrides: str) -> str:
+        return _url_on(admin_list_path, **overrides)
+
+    public_users_page_prev_url = _url_on(
+        ADMIN_PATH_USERS,
+        **{_s.ADMIN_QP_PUBLIC_USER_PAGE: str(max(1, state.safe_public_user_page - 1))},
     )
-    public_users_page_next_url = _admin_page_url(
+    public_users_page_next_url = _url_on(
+        ADMIN_PATH_USERS,
         **{
             _s.ADMIN_QP_PUBLIC_USER_PAGE: str(
                 min(state.public_users_total_pages, state.safe_public_user_page + 1)
             )
-        }
+        },
     )
-    security_page_prev_url = _admin_page_url(
-        **{_s.ADMIN_QP_AUDIT_PAGE: str(max(1, state.safe_audit_page - 1))}
+    security_page_prev_url = _url_on(
+        ADMIN_PATH_DASHBOARD,
+        **{_s.ADMIN_QP_AUDIT_PAGE: str(max(1, state.safe_audit_page - 1))},
     )
-    security_page_next_url = _admin_page_url(
+    security_page_next_url = _url_on(
+        ADMIN_PATH_DASHBOARD,
         **{
             _s.ADMIN_QP_AUDIT_PAGE: str(
                 min(state.security_events_total_pages, state.safe_audit_page + 1)
             )
-        }
+        },
     )
-    sessions_page_prev_url = _admin_page_url(
-        **{_s.ADMIN_QP_SESSIONS_PAGE: str(max(1, state.safe_sessions_page - 1))}
+    sessions_page_prev_url = _url_on(
+        ADMIN_PATH_DASHBOARD,
+        **{_s.ADMIN_QP_SESSIONS_PAGE: str(max(1, state.safe_sessions_page - 1))},
     )
-    sessions_page_next_url = _admin_page_url(
+    sessions_page_next_url = _url_on(
+        ADMIN_PATH_DASHBOARD,
         **{
             _s.ADMIN_QP_SESSIONS_PAGE: str(
                 min(state.sessions_total_pages, state.safe_sessions_page + 1)
             )
-        }
+        },
     )
-    payments_page_prev_url = _admin_page_url(
-        **{_s.ADMIN_QP_PAYMENTS_PAGE: str(max(1, state.safe_payments_page - 1))}
+    payments_page_prev_url = _url_on(
+        ADMIN_PATH_DASHBOARD,
+        **{_s.ADMIN_QP_PAYMENTS_PAGE: str(max(1, state.safe_payments_page - 1))},
     )
-    payments_page_next_url = _admin_page_url(
+    payments_page_next_url = _url_on(
+        ADMIN_PATH_DASHBOARD,
         **{
             _s.ADMIN_QP_PAYMENTS_PAGE: str(
                 min(state.payments_total_pages, state.safe_payments_page + 1)
             )
-        }
+        },
     )
-    trash_page_prev_url = _admin_page_url(
-        **{_s.ADMIN_QP_TRASH_PAGE: str(max(1, state.safe_trash_page - 1))}
+    trash_page_prev_url = _url_on(
+        ADMIN_PATH_USERS,
+        **{_s.ADMIN_QP_TRASH_PAGE: str(max(1, state.safe_trash_page - 1))},
     )
-    trash_page_next_url = _admin_page_url(
-        **{_s.ADMIN_QP_TRASH_PAGE: str(min(state.trash_total_pages, state.safe_trash_page + 1))}
+    trash_page_next_url = _url_on(
+        ADMIN_PATH_USERS,
+        **{_s.ADMIN_QP_TRASH_PAGE: str(min(state.trash_total_pages, state.safe_trash_page + 1))},
     )
 
     def _post_admin_edit_url(edit_id: int) -> str:
-        return _admin_page_url(**{_s.ADMIN_QP_POST_EDIT: str(edit_id)}) + "#section-center-posts"
+        return _url_on(ADMIN_PATH_SETTINGS, **{_s.ADMIN_QP_POST_EDIT: str(edit_id)}) + "#section-center-posts"
 
     cp_b = load_center_posts_admin_section(
         db, state.cid, state.center_posts_page, state.post_edit, _post_admin_edit_url
@@ -122,14 +142,16 @@ def finalize_admin_dashboard_template_context(
     center_posts_total_pages = cp_b.center_posts_total_pages
     center_posts_page_size = cp_b.center_posts_page_size
 
-    center_posts_page_prev_url = _admin_page_url(
-        **{"center_posts_page": str(max(1, safe_center_posts_page - 1))}
+    center_posts_page_prev_url = _url_on(
+        ADMIN_PATH_SETTINGS,
+        **{"center_posts_page": str(max(1, safe_center_posts_page - 1))},
     )
-    center_posts_page_next_url = _admin_page_url(
-        **{"center_posts_page": str(min(center_posts_total_pages, safe_center_posts_page + 1))}
+    center_posts_page_next_url = _url_on(
+        ADMIN_PATH_SETTINGS,
+        **{"center_posts_page": str(min(center_posts_total_pages, safe_center_posts_page + 1))},
     )
 
-    dash_home = _admin_page_url()
+    dash_home = _url_on(ADMIN_PATH_DASHBOARD)
     admin_insights = build_admin_insight_cards(dash_home, state.kpi, state.schedule_conflicts)
     morning_brief = build_morning_brief_dict(state.kpi, state.paid_revenue_today)
     data_export_urls, pf, pt = build_data_export_urls(state.payment_date_from, state.payment_date_to)
@@ -288,4 +310,6 @@ def finalize_admin_dashboard_template_context(
             or _s.user_has_permission(user, "reports.financial")
             or _s.user_has_permission(user, "dashboard.financial")
         ),
+        "admin_list_path": admin_list_path,
+        "admin_section_paths": admin_section_paths_for_template(),
     }

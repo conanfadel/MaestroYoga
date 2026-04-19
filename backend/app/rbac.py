@@ -35,7 +35,7 @@ def user_has_any_permission(user: models.User, permission_ids: tuple[str, ...]) 
 
 
 def admin_ui_flags(user: models.User) -> dict[str, bool | str]:
-    """مفاتيح جاهزة لقالب admin.html."""
+    """مفاتيح جاهزة لقوالب لوحة الإدارة (admin_base وما يمتد منه)."""
     p = permissions_for_user(user)
     role = user.role or ""
     use_trainer_layout = role == "trainer"

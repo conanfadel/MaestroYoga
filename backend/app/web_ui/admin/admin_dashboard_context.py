@@ -7,6 +7,7 @@ from typing import Any
 from .. import impl_state as _s
 from .admin_dashboard_context_compose import finalize_admin_dashboard_template_context
 from .admin_dashboard_context_load import load_admin_dashboard_query_state
+from .admin_paths import ADMIN_PATH_DASHBOARD
 
 
 def build_admin_dashboard_template_context(
@@ -37,8 +38,9 @@ def build_admin_dashboard_template_context(
     training_client_id: int,
     training_tab: str,
     training_plan_view: str,
+    admin_list_path: str | None = None,
 ) -> dict[str, Any]:
-    """Load rooms, users, payments, security, posts, and aggregate KPIs for admin.html."""
+    """Load rooms, users, payments, security, posts, and aggregate KPIs for admin templates."""
     state = load_admin_dashboard_query_state(
         db=db,
         user=user,
@@ -66,4 +68,10 @@ def build_admin_dashboard_template_context(
         training_tab=training_tab,
         training_plan_view=training_plan_view,
     )
-    return finalize_admin_dashboard_template_context(db=db, user=user, msg=msg, state=state)
+    return finalize_admin_dashboard_template_context(
+        db=db,
+        user=user,
+        msg=msg,
+        state=state,
+        admin_list_path=admin_list_path or ADMIN_PATH_DASHBOARD,
+    )

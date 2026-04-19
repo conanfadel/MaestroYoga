@@ -16,6 +16,7 @@ from ...role_definitions import CENTER_ADMIN_LOGIN_ROLES
 from ...security import get_public_user_from_token_string, get_user_from_token_string
 from ...time_utils import utcnow_naive
 from ...web_shared import PUBLIC_INDEX_DEFAULT_PATH, _sanitize_next_url, _url_with_params
+from ..admin.admin_paths import admin_base_path_for_return_section
 from ._constants import (
     ADMIN_MSG_PUBLIC_USER_NOT_FOUND,
     ADMIN_MSG_SECURITY_OWNER_ONLY,
@@ -80,10 +81,11 @@ def _admin_redirect(
                 params["scroll_y"] = str(parsed)
         except (TypeError, ValueError):
             pass
-    url = "/admin"
-    if params:
-        url = f"{url}?{urlencode(params)}"
     sec = _sanitize_admin_return_section(return_section)
+    base = admin_base_path_for_return_section(sec)
+    url = base
+    if params:
+        url = f"{base}?{urlencode(params)}"
     if sec:
         url = f"{url}#{sec}"
     return RedirectResponse(url=url, status_code=303)

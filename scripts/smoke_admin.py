@@ -25,6 +25,8 @@ def main() -> None:
         follow_redirects=False,
     )
     print("admin_login_post", login.status_code, login.headers.get("location"))
+    dash = client.get("/admin/dashboard")
+    print("admin_dashboard_get", dash.status_code)
 
     room_name = f"QA Smoke Room {int(time.time())}"
     create_room = client.post(
