@@ -2,16 +2,23 @@
  * الأصول من فرع docs المذكور في README الرسمي: https://github.com/zuramai/mazer */
 
 body.maestro-mazer {
+  --maestro-mazer-sidebar-width: 320px;
   padding: 0 !important;
   margin: 0;
   font-family: "Tajawal", system-ui, sans-serif !important;
   background: transparent !important;
 }
 
+/* عرض الشريط أوسع قليلاً من 300px الافتراضية لـMazer (نصوص عربية + أيقونات) */
+body.maestro-mazer .maestro-mazer-sidebar.sidebar-wrapper,
+body.maestro-mazer #sidebar .sidebar-wrapper {
+  width: var(--maestro-mazer-sidebar-width) !important;
+}
+
 /* Mazer يضبط الشريط بـ left — نعكسه في RTL */
 html[dir="rtl"] #sidebar .sidebar-wrapper {
   left: auto !important;
-  right: -300px !important;
+  right: calc(-1 * var(--maestro-mazer-sidebar-width)) !important;
   transition: right 0.7s cubic-bezier(0.22, 1, 0.36, 1) !important;
 }
 
@@ -28,7 +35,7 @@ html[dir="rtl"] #sidebar ~ #main {
 
   html[dir="rtl"] #sidebar ~ #main {
     margin-left: 0 !important;
-    margin-right: 300px !important;
+    margin-right: var(--maestro-mazer-sidebar-width) !important;
   }
 }
 
@@ -39,11 +46,11 @@ html[dir="rtl"] #sidebar.active .sidebar-wrapper {
 
 html[dir="rtl"] #sidebar.active ~ #main {
   margin-left: 0 !important;
-  margin-right: 300px !important;
+  margin-right: var(--maestro-mazer-sidebar-width) !important;
 }
 
 html[dir="rtl"] #sidebar.inactive .sidebar-wrapper {
-  right: -300px !important;
+  right: calc(-1 * var(--maestro-mazer-sidebar-width)) !important;
   left: auto !important;
 }
 
@@ -81,7 +88,9 @@ body.maestro-mazer .maestro-mazer-sidebar .logo a {
 
 body.maestro-mazer .maestro-mazer-sidebar .sidebar-menu {
   padding-top: 0.25rem;
+  padding-inline: 0.35rem !important;
   overflow-x: visible;
+  overflow-y: auto;
 }
 
 body.maestro-mazer .maestro-mazer-sidebar.sidebar-wrapper {
@@ -90,23 +99,27 @@ body.maestro-mazer .maestro-mazer-sidebar.sidebar-wrapper {
 
 body.maestro-mazer #admin-mazer-sidebar-menu .sidebar-item {
   margin-bottom: 0.35rem;
+  overflow: visible;
 }
 
-/* عنوان المجموعة (سطر واحد) */
+body.maestro-mazer #admin-mazer-sidebar-menu .submenu.submenu-open {
+  overflow: visible !important;
+}
+
+/* عنوان المجموعة: نص كامل (تفاف طبيعي) + أيقونة غير مقصوصة */
 body.maestro-mazer #admin-mazer-sidebar-menu .sidebar-item.has-sub > .sidebar-link {
   display: flex !important;
   flex-direction: row;
-  align-items: center;
-  gap: 0.5rem;
+  align-items: flex-start;
+  gap: 0.45rem;
   margin-bottom: 0.15rem;
-  padding-block: 0.55rem !important;
-  /* في RTL الأيقونة أولاً في DOM فتقع عند inline-start — نزيد الحشوة لتجنب القص */
-  padding-inline-start: 0.85rem !important;
-  padding-inline-end: 0.65rem !important;
+  padding-block: 0.6rem !important;
+  padding-inline-start: 1rem !important;
+  padding-inline-end: 0.75rem !important;
   font-size: 0.8rem !important;
   font-weight: 700 !important;
-  line-height: 1.2 !important;
-  white-space: nowrap !important;
+  line-height: 1.35 !important;
+  white-space: normal !important;
   min-height: 0 !important;
   overflow: visible;
   border-radius: 10px;
@@ -138,22 +151,26 @@ html[data-bs-theme="dark"] body.maestro-mazer #admin-mazer-sidebar-menu .sidebar
 body.maestro-mazer #admin-mazer-sidebar-menu .sidebar-item.has-sub > .sidebar-link span {
   flex: 1 1 auto;
   min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap !important;
+  overflow: visible;
+  text-overflow: clip;
+  white-space: normal !important;
+  word-break: normal;
+  overflow-wrap: anywhere;
 }
 
 body.maestro-mazer #admin-mazer-sidebar-menu .sidebar-item.has-sub > .sidebar-link i {
   flex-shrink: 0;
   box-sizing: content-box;
-  min-width: 1.35rem;
-  min-height: 1.35rem;
-  width: 1.35rem;
-  height: 1.35rem;
+  min-width: 1.65rem;
+  min-height: 1.65rem;
+  width: auto;
+  height: auto;
+  padding: 0.2rem;
+  margin-top: 0.08rem;
   display: inline-flex !important;
   align-items: center;
   justify-content: center;
-  font-size: 1.2rem !important;
+  font-size: 1.25rem !important;
   line-height: 1 !important;
   overflow: visible;
   opacity: 0.95;
@@ -185,19 +202,20 @@ body.maestro-mazer #admin-mazer-sidebar-menu .submenu-link.section-tab {
   max-width: 100%;
   box-sizing: border-box;
   margin: 0.12rem 0 !important;
-  padding: 0.48rem 0.55rem !important;
+  padding: 0.52rem 0.65rem !important;
   font-weight: 600 !important;
   font-size: 0.78rem !important;
-  line-height: 1.2 !important;
-  white-space: nowrap !important;
-  min-height: 0 !important;
+  line-height: 1.35 !important;
+  white-space: normal !important;
+  min-height: 2.4rem !important;
   border-radius: 8px !important;
   border: 1px solid rgba(170, 240, 209, 0.55) !important;
   background: rgba(255, 255, 255, 0.65) !important;
   color: #1e293b !important;
   box-shadow: none !important;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  overflow: visible;
+  text-overflow: clip;
+  text-align: start;
   transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
 }
 
