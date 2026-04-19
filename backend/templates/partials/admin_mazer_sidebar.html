@@ -1,17 +1,17 @@
-{# شريط جانبي Mazer — نفس منطق الصلاحيات مثل partials/admin_section_tabs.html #}
+{# شريط جانبي Mazer — محسّن للمظهر الأنيق والسريع #}
 <div class="sidebar-wrapper active maestro-mazer-sidebar">
   <div class="sidebar-header position-relative maestro-mazer-sidebar__header">
-    <div class="d-flex justify-content-between align-items-center">
+    <div class="d-flex justify-content-between align-items-center w-100">
       <div class="logo">
-        <a href="/admin" class="text-decoration-none text-body d-inline-flex align-items-center gap-2">
+        <a href="/admin" class="text-decoration-none d-inline-flex align-items-center gap-3">
           {% if center and center.logo_url %}
-          <img src="{{ center.logo_url }}" alt="" width="36" height="36" decoding="async" style="max-height:2rem;border-radius:8px;" />
+          <img src="{{ center.logo_url }}" alt="شعار المركز" width="42" height="42" decoding="async" style="max-height:2.5rem;border-radius:10px; box-shadow: 0 4px 10px rgba(0,0,0,0.05);" />
           {% endif %}
-          <span class="fw-bold text-truncate" style="max-width:11rem;">{{ center.name if center else 'Maestro Yoga' }}</span>
+          <span class="text-truncate" style="max-width:11rem;">{{ center.name if center else 'Maestro Yoga' }}</span>
         </a>
       </div>
       <div class="sidebar-toggler x">
-        <a href="#" class="sidebar-hide d-xl-none d-block"><i class="bi bi-x bi-middle"></i></a>
+        <a href="#" class="sidebar-hide d-xl-none d-block"><i class="bi bi-x fs-4"></i></a>
       </div>
     </div>
   </div>
@@ -32,9 +32,10 @@
         </ul>
       </li>
       {% endif %}
+      
       {% if not use_trainer_layout and perm_ops_cluster %}
       <li class="sidebar-item has-sub">
-        <a href="#" class="sidebar-link"><i class="bi bi-calendar3"></i><span>التشغيل والمواعيد</span></a>
+        <a href="#" class="sidebar-link"><i class="bi bi-calendar-event"></i><span>التشغيل والمواعيد</span></a>
         <ul class="submenu">
           <li class="submenu-item"><a href="#section-rooms" class="submenu-link section-tab section-tab--subitem" data-target="section-rooms" id="mazer-tab-section-rooms">الغرف والسعة</a></li>
           <li class="submenu-item"><a href="#section-sessions" class="submenu-link section-tab section-tab--subitem" data-target="section-sessions" id="mazer-tab-section-sessions">الجلسات والمدفوعات</a></li>
@@ -45,6 +46,7 @@
         </ul>
       </li>
       {% endif %}
+      
       {% if not use_trainer_layout and perm_clients_cluster %}
       <li class="sidebar-item has-sub">
         <a href="#" class="sidebar-link"><i class="bi bi-people"></i><span>العملاء والولاء</span></a>
@@ -61,26 +63,29 @@
         </ul>
       </li>
       {% endif %}
+      
       {% if not use_trainer_layout and perm_reports_hub %}
       <li class="sidebar-item has-sub">
-        <a href="#" class="sidebar-link"><i class="bi bi-graph-up-arrow"></i><span>التقارير</span></a>
+        <a href="#" class="sidebar-link"><i class="bi bi-graph-up"></i><span>التقارير والإحصائيات</span></a>
         <ul class="submenu">
           <li class="submenu-item"><a href="#section-reports" class="submenu-link section-tab section-tab--subitem" data-target="section-reports" id="mazer-tab-section-reports">مركز التقارير والمقترحات</a></li>
         </ul>
       </li>
       {% endif %}
+      
       {% if use_trainer_layout %}
       <li class="sidebar-item has-sub">
-        <a href="#" class="sidebar-link"><i class="bi bi-lightning-charge"></i><span>الجلسات والغرف</span></a>
+        <a href="#" class="sidebar-link"><i class="bi bi-lightning-charge"></i><span>الجلسات الغرف</span></a>
         <ul class="submenu">
           <li class="submenu-item"><a href="#section-rooms" class="submenu-link section-tab section-tab--subitem" data-target="section-rooms" id="mazer-tab-section-rooms-trainer">الغرف ونشر الجلسات</a></li>
           <li class="submenu-item"><a href="#section-sessions" class="submenu-link section-tab section-tab--subitem" data-target="section-sessions" id="mazer-tab-section-sessions-trainer">الجلسات والمدفوعات</a></li>
         </ul>
       </li>
       {% endif %}
+      
       {% if show_security_section %}
       <li class="sidebar-item has-sub">
-        <a href="#" class="sidebar-link"><i class="bi bi-shield-lock"></i><span>الأمان والمخاطر</span></a>
+        <a href="#" class="sidebar-link"><i class="bi bi-shield-check"></i><span>الأمان والمخاطر</span></a>
         <ul class="submenu">
           <li class="submenu-item"><a href="#section-security" class="submenu-link section-tab section-tab--subitem section-tab--security-link" data-target="section-security" data-scroll-anchor="sec-security-overview" data-security-sub="overview" id="mazer-tab-sec-overview">نظرة عامة والمخاطر</a></li>
           <li class="submenu-item"><a href="#section-security" class="submenu-link section-tab section-tab--subitem section-tab--security-link" data-target="section-security" data-scroll-anchor="sec-security-admin" data-security-sub="admin" id="mazer-tab-sec-admin">دخول لوحة الإدارة</a></li>
