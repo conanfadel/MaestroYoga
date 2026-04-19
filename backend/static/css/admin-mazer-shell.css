@@ -81,6 +81,11 @@ body.maestro-mazer .maestro-mazer-sidebar .logo a {
 
 body.maestro-mazer .maestro-mazer-sidebar .sidebar-menu {
   padding-top: 0.25rem;
+  overflow-x: visible;
+}
+
+body.maestro-mazer .maestro-mazer-sidebar.sidebar-wrapper {
+  overflow-x: visible;
 }
 
 body.maestro-mazer #admin-mazer-sidebar-menu .sidebar-item {
@@ -90,15 +95,20 @@ body.maestro-mazer #admin-mazer-sidebar-menu .sidebar-item {
 /* عنوان المجموعة (سطر واحد) */
 body.maestro-mazer #admin-mazer-sidebar-menu .sidebar-item.has-sub > .sidebar-link {
   display: flex !important;
+  flex-direction: row;
   align-items: center;
   gap: 0.5rem;
   margin-bottom: 0.15rem;
-  padding: 0.55rem 0.65rem !important;
+  padding-block: 0.55rem !important;
+  /* في RTL الأيقونة أولاً في DOM فتقع عند inline-start — نزيد الحشوة لتجنب القص */
+  padding-inline-start: 0.85rem !important;
+  padding-inline-end: 0.65rem !important;
   font-size: 0.8rem !important;
   font-weight: 700 !important;
   line-height: 1.2 !important;
   white-space: nowrap !important;
   min-height: 0 !important;
+  overflow: visible;
   border-radius: 10px;
   border: 1px solid rgba(197, 160, 89, 0.22);
   background: rgba(170, 240, 209, 0.2);
@@ -135,8 +145,18 @@ body.maestro-mazer #admin-mazer-sidebar-menu .sidebar-item.has-sub > .sidebar-li
 
 body.maestro-mazer #admin-mazer-sidebar-menu .sidebar-item.has-sub > .sidebar-link i {
   flex-shrink: 0;
-  opacity: 0.88;
-  font-size: 1.05rem;
+  box-sizing: content-box;
+  min-width: 1.35rem;
+  min-height: 1.35rem;
+  width: 1.35rem;
+  height: 1.35rem;
+  display: inline-flex !important;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.2rem !important;
+  line-height: 1 !important;
+  overflow: visible;
+  opacity: 0.95;
 }
 
 /* قائمة فرعية: تباعد وهوية بصرية */

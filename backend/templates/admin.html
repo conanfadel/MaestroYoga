@@ -2504,6 +2504,31 @@
   <script src="https://cdn.jsdelivr.net/gh/zuramai/mazer@docs/demo/assets/compiled/js/app.js" crossorigin="anonymous"></script>
   <script>
     (function () {
+      var menu = document.getElementById("admin-mazer-sidebar-menu");
+      if (!menu) return;
+      menu.addEventListener("click", function (e) {
+        if (e.target.closest(".submenu a, .submenu .submenu-link, .submenu .section-tab")) return;
+        var link = e.target.closest(".sidebar-item.has-sub > a.sidebar-link");
+        if (!link) return;
+        var item = link.closest(".sidebar-item.has-sub");
+        if (!item) return;
+        window.setTimeout(function () {
+          var sub = item.querySelector(".submenu");
+          if (!sub || !sub.classList.contains("submenu-open")) return;
+          menu.querySelectorAll(".sidebar-item.has-sub").forEach(function (other) {
+            if (other === item) return;
+            var sm = other.querySelector(".submenu");
+            if (!sm) return;
+            sm.classList.remove("submenu-open");
+            sm.classList.add("submenu-closed");
+            other.classList.remove("active");
+          });
+        }, 0);
+      });
+    })();
+  </script>
+  <script>
+    (function () {
       const STORAGE_KEY = "maestro_admin_scroll_y";
       const ACCORDION_KEY = "maestro_admin_accordion_state";
       const ACTIVE_SECTION_KEY = "maestro_admin_active_section";
