@@ -7,7 +7,7 @@ from typing import Any
 from .. import impl_state as _s
 from .admin_dashboard_context_compose import finalize_admin_dashboard_template_context
 from .admin_dashboard_context_load import load_admin_dashboard_query_state
-from .admin_paths import ADMIN_PATH_DASHBOARD, ADMIN_PATH_TRAINING
+from .admin_paths import ADMIN_PATH_DASHBOARD, ADMIN_PATH_TRAINING, ADMIN_PATH_USERS
 
 
 def build_admin_dashboard_template_context(
@@ -69,6 +69,7 @@ def build_admin_dashboard_template_context(
         training_tab=training_tab,
         training_plan_view=training_plan_view,
         include_training_management_state=(list_path == ADMIN_PATH_TRAINING),
+        defer_trash_users_panel=(list_path == ADMIN_PATH_USERS),
     )
     return finalize_admin_dashboard_template_context(
         db=db,

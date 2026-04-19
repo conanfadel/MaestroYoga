@@ -40,7 +40,7 @@
   {% from "partials/admin_discount_fields.html" import admin_discount_fields %}
   <a class="admin-skip-link" href="#main-content">تخطي إلى المحتوى الرئيسي</a>
   <div id="app">
-    <div id="sidebar">
+    <div id="sidebar" x-ignore>
       {% include "partials/admin_mazer_sidebar.html" %}
     </div>
     <div id="main">
@@ -86,6 +86,9 @@
 
   <script src="https://cdn.jsdelivr.net/gh/zuramai/mazer@docs/demo/assets/extensions/perfect-scrollbar/perfect-scrollbar.min.js" crossorigin="anonymous"></script>
   <script src="https://cdn.jsdelivr.net/gh/zuramai/mazer@docs/demo/assets/compiled/js/app.js" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/htmx.org@2.0.4" crossorigin="anonymous"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.14.3/dist/cdn.min.js" crossorigin="anonymous"></script>
+  <script src="/static/dist/admin.js"></script>
   <script>
     (function () {
       var menu = document.getElementById("admin-mazer-sidebar-menu");
@@ -334,21 +337,20 @@
         });
       }
 
-      const usersSelectAll = document.getElementById("public-users-select-all");
-      if (usersSelectAll) {
-        const userCheckboxes = Array.from(document.querySelectorAll(".public-user-select-checkbox"));
-        usersSelectAll.addEventListener("change", function () {
-          userCheckboxes.forEach(function (cb) { cb.checked = usersSelectAll.checked; });
-        });
-      }
-
-      const trashSelectAll = document.getElementById("trash-users-select-all");
-      if (trashSelectAll) {
-        const trashBoxes = Array.from(document.querySelectorAll(".trash-user-select-checkbox"));
-        trashSelectAll.addEventListener("change", function () {
-          trashBoxes.forEach(function (cb) { cb.checked = trashSelectAll.checked; });
-        });
-      }
+      document.addEventListener("change", function (e) {
+        var t = e.target;
+        if (!t) return;
+        if (t.id === "public-users-select-all") {
+          document.querySelectorAll(".public-user-select-checkbox").forEach(function (cb) {
+            cb.checked = t.checked;
+          });
+        }
+        if (t.id === "trash-users-select-all") {
+          document.querySelectorAll(".trash-user-select-checkbox").forEach(function (cb) {
+            cb.checked = t.checked;
+          });
+        }
+      });
 
       const trashBulkForm = document.getElementById("trash-users-bulk-form");
       if (trashBulkForm) {

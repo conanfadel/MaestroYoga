@@ -239,73 +239,8 @@
             </div>
           </form>
 
-          <form
-            method="post"
-            action="/admin/plans/update-details"
-            id="plan-update-details-{{ p.id }}"
-            class="plan-details-form plan-details-form--admin-stack plan-details-form--horizontal plan-details-form--split-layout"
-            data-preserve-scroll="1"
-          >
-            <input type="hidden" name="plan_id" value="{{ p.id }}" />
-            <div class="plan-details-form__split plan-details-form__split--admin-unified">
-              <div class="plan-details-form__cell plan-details-form__cell--admin plan-details-form__cell--admin-type">
-                <label class="plan-details-form__lbl plan-details-form__lbl--admin-tight" for="plan-type-{{ p.id }}">نوع الخطة</label>
-                <select id="plan-type-{{ p.id }}" name="plan_type" class="plan-admin-control">
-                  <option value="weekly" {{ 'selected' if p.plan_type == 'weekly' else '' }}>أسبوعي</option>
-                  <option value="monthly" {{ 'selected' if p.plan_type == 'monthly' else '' }}>شهري</option>
-                  <option value="yearly" {{ 'selected' if p.plan_type == 'yearly' else '' }}>سنوي</option>
-                </select>
-              </div>
-              <div class="plan-details-form__cell plan-details-form__cell--admin plan-details-form__cell--admin-price">
-                <label class="plan-details-form__lbl plan-details-form__lbl--admin-tight plan-details-form__lbl--admin-price-line" for="plan-list-price-{{ p.id }}">السعر الأساسي (SAR)</label>
-                <input
-                  id="plan-list-price-{{ p.id }}"
-                  class="js-list-price-base plan-admin-control"
-                  name="list_price"
-                  type="text"
-                  inputmode="decimal"
-                  autocomplete="off"
-                  lang="en"
-                  dir="ltr"
-                  pattern="[0-9]+(\.[0-9]{1,2})?"
-                  maxlength="12"
-                  value="{{ p.list_price }}"
-                  required
-                />
-              </div>
-              <div class="plan-details-form__cell plan-details-form__cell--admin plan-details-form__cell--admin-sessions">
-                <label class="plan-details-form__lbl plan-details-form__lbl--admin-tight" for="plan-session-limit-{{ p.id }}">عدد الجلسات</label>
-                <input
-                  id="plan-session-limit-{{ p.id }}"
-                  class="plan-admin-control"
-                  name="session_limit"
-                  type="text"
-                  inputmode="numeric"
-                  autocomplete="off"
-                  lang="en"
-                  dir="ltr"
-                  pattern="^(|[1-9][0-9]*)$"
-                  maxlength="6"
-                  value="{{ p.session_limit if p.session_limit else '' }}"
-                  placeholder="فارغ = غير محدود"
-                />
-              </div>
-              <div class="plan-details-form__col plan-details-form__col--discount">
-                {% set pct_val = '' if p.discount_percent is none else (p.discount_percent|string) %}
-                {% set red_val = (p.price|string) if p.discount_mode == 'fixed' else '' %}
-                {% set vf = p.discount_valid_from.strftime('%Y-%m-%dT%H:%M') if p.discount_valid_from else '' %}
-                {% set vu = p.discount_valid_until.strftime('%Y-%m-%dT%H:%M') if p.discount_valid_until else '' %}
-                {% set hs = '' if p.discount_hour_start is none else (p.discount_hour_start|string) %}
-                {% set he = '' if p.discount_hour_end is none else (p.discount_hour_end|string) %}
-                {% set dh = '' if p.discount_duration_hours is none else (p.discount_duration_hours|string) %}
-                {% set stype = p.discount_schedule_type if p.discount_schedule_type else 'always' %}
-                {{ admin_discount_fields('plan-' ~ p.id, discount_mode_value=p.discount_mode, discount_percent_value=pct_val, reduced_price_value=red_val, schedule_type_value=stype, valid_from_value=vf, valid_until_value=vu, hour_start_value=hs, hour_end_value=he, duration_hours_value=dh) }}
-              </div>
-            </div>
-          </form>
-
           <div class="plan-admin-actions-bar">
-            <button type="submit" form="plan-update-details-{{ p.id }}" class="plan-admin-btn plan-admin-btn--primary">تعديل التفاصيل</button>
+            <button type="button" class="plan-admin-btn plan-admin-btn--primary js-plan-drawer-open" data-plan-id="{{ p.id }}">تعديل التفاصيل</button>
             <form method="post" action="/admin/plans/delete" class="plan-delete-form plan-delete-form--admin plan-delete-form--admin-inline" data-preserve-scroll="1" onsubmit="return confirm('حذف خطة الاشتراك؟');">
               <input type="hidden" name="plan_id" value="{{ p.id }}" />
               <button type="submit" class="plan-admin-btn plan-admin-btn--danger">حذف الخطة</button>
@@ -316,6 +251,7 @@
         <div class="plan-empty">لا توجد خطط اشتراك بعد.<span class="admin-empty-cta"><a href="#section-plans">انتقل لقسم الخطط</a></span></div>
         {% endfor %}
       </div>
+      {% include "partials/admin_plan_details_drawer.html" %}
       </div>
     </div>
       </div>

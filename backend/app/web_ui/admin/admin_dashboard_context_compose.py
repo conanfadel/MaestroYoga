@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import json
 from typing import Any
 
 from .. import impl_state as _s
@@ -162,6 +163,15 @@ def finalize_admin_dashboard_template_context(
         _s.merge_index_page_config(state.center) if state.center else _s._default_index_page_config()
     )
 
+    trash_users_lazy_fragment_url = ""
+    if admin_list_path == ADMIN_PATH_USERS:
+        frag_params = dict(base_admin_params)
+        frag_params[_s.ADMIN_QP_TRASH_PAGE] = str(state.safe_trash_page)
+        frag_params[_s.ADMIN_QP_TRASH_Q] = (state.trash_q or "").strip()
+        trash_users_lazy_fragment_url = _s._url_with_params("/admin/fragments/trash-users", **frag_params)
+
+    admin_plans_for_editor_json = json.dumps(state.plan_rows, ensure_ascii=False, default=str)
+
     return {
         "user": user,
         "center": state.center,
@@ -314,4 +324,6 @@ def finalize_admin_dashboard_template_context(
         "admin_list_path": admin_list_path,
         "admin_page_is_training": admin_list_path == ADMIN_PATH_TRAINING,
         "admin_section_paths": admin_section_paths_for_template(),
+        "trash_users_lazy_fragment_url": trash_users_lazy_fragment_url,
+        "admin_plans_for_editor_json": admin_plans_for_editor_json,
     }

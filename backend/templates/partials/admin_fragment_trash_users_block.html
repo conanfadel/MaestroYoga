@@ -1,0 +1,64 @@
+<div class="table-fluid">
+  <table class="table-card-rwd admin-users-datagrid">
+    <thead>
+      <tr>
+        <th><input type="checkbox" id="trash-users-select-all" title="تحديد الكل" /></th>
+        <th>#</th>
+        <th>رقم الاشتراك</th>
+        <th>الاسم</th>
+        <th>البريد الحالي</th>
+        <th>رقم الجوال</th>
+        <th>تاريخ الحذف</th>
+        <th>الولاء</th>
+        <th>إجراءات</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for tu in trash_users %}
+      <tr>
+        <td>
+          <input
+            type="checkbox"
+            name="public_user_ids"
+            value="{{ tu.id }}"
+            form="trash-users-bulk-form"
+            class="trash-user-select-checkbox"
+          />
+        </td>
+        <td>{{ tu.id }}</td>
+        <td><span class="mono">{{ tu.subscription_number_display }}</span></td>
+        <td>{{ tu.full_name }}</td>
+        <td><span class="mono">{{ tu.email }}</span></td>
+        <td>{{ tu.phone }}</td>
+        <td>{{ tu.deleted_at_display }}</td>
+        <td>
+          <span class="loyalty-tier loyalty-tier--{{ tu.loyalty_tier }}" title="جلسات مؤكدة في مركزك">{{ tu.loyalty_tier_label }} ({{ tu.loyalty_confirmed_count }})</span>
+        </td>
+        <td>
+          <div class="controls-wrap">
+            <form method="post" action="/admin/public-users/restore" data-preserve-scroll="1">
+              <input type="hidden" name="public_user_id" value="{{ tu.id }}" />
+              <button type="submit" class="soft">استعادة</button>
+            </form>
+            <form method="post" action="/admin/public-users/permanent-delete" data-preserve-scroll="1" onsubmit="return confirm('حذف هذا المستخدم نهائياً؟ لا يمكن التراجع.');">
+              <input type="hidden" name="public_user_id" value="{{ tu.id }}" />
+              <button type="submit" class="danger">حذف نهائي</button>
+            </form>
+          </div>
+        </td>
+      </tr>
+      {% else %}
+      <tr><td colspan="9">سلة المحذوفات فارغة.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+<div class="small" style="margin-top:8px;display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
+  <span>الصفحة {{ trash_pagination.page }} من {{ trash_pagination.total_pages }} (إجمالي: {{ trash_pagination.total }})</span>
+  {% if trash_pagination.has_prev and trash_pagination.prev_url %}
+    <a class="soft-link" href="{{ trash_pagination.prev_url }}" hx-get="{{ trash_pagination.prev_url }}" hx-target="#trash-users-deferred" hx-swap="innerHTML">السابق</a>
+  {% endif %}
+  {% if trash_pagination.has_next and trash_pagination.next_url %}
+    <a class="soft-link" href="{{ trash_pagination.next_url }}" hx-get="{{ trash_pagination.next_url }}" hx-target="#trash-users-deferred" hx-swap="innerHTML">التالي</a>
+  {% endif %}
+</div>

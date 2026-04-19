@@ -1,0 +1,20 @@
+/* Paint containment: skip rendering off-screen admin sections until needed */
+section.accordion.open .accordion-body {
+  content-visibility: auto;
+  contain-intrinsic-size: 480px 1200px;
+}
+
+.plans-cards--admin-stack .plan-card.plan-card--admin {
+  content-visibility: auto;
+  contain-intrinsic-size: 320px 520px;
+}
+
+.table-fluid .table-card-rwd tbody tr {
+  content-visibility: auto;
+  contain-intrinsic-size: auto 52px;
+}
+
+#training-muscle-map {
+  content-visibility: auto;
+  contain-intrinsic-size: 280px 70vh;
+}

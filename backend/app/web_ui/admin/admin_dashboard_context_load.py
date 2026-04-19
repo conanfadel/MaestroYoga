@@ -125,6 +125,7 @@ def load_admin_dashboard_query_state(
     training_tab: str,
     training_plan_view: str,
     include_training_management_state: bool = True,
+    defer_trash_users_panel: bool = False,
 ) -> AdminDashboardQueryState:
     cid = _s.require_user_center_id(user)
     center = db.get(_s.models.Center, cid)
@@ -163,11 +164,17 @@ def load_admin_dashboard_query_state(
     status_key = pub.status_key
     verified_key = pub.verified_key
 
-    trash_b = load_trash_users_page(db, cid, trash_q, trash_page, public_users_page_size)
-    trash_users_list = trash_b.trash_users_list
-    trash_total = trash_b.trash_total
-    safe_trash_page = trash_b.safe_trash_page
-    trash_total_pages = trash_b.trash_total_pages
+    if defer_trash_users_panel:
+        trash_users_list: list[Any] = []
+        trash_total = 0
+        safe_trash_page = max(1, int(trash_page or 1))
+        trash_total_pages = 1
+    else:
+        trash_b = load_trash_users_page(db, cid, trash_q, trash_page, public_users_page_size)
+        trash_users_list = trash_b.trash_users_list
+        trash_total = trash_b.trash_total
+        safe_trash_page = trash_b.safe_trash_page
+        trash_total_pages = trash_b.trash_total_pages
 
     plan_rows = plan_rows_from_plans(plans)
     faq_rows = faq_rows_from_faqs(faqs)

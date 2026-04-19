@@ -1,0 +1,68 @@
+{% from "partials/admin_discount_fields.html" import admin_discount_fields %}
+<div id="plan-details-offcanvas-backdrop" class="admin-offcanvas-backdrop" aria-hidden="true"></div>
+<div id="plan-details-offcanvas" class="admin-offcanvas-panel" role="dialog" aria-modal="true" aria-labelledby="plan-drawer-title" aria-hidden="true">
+  <div class="admin-offcanvas-panel__head">
+    <h2 id="plan-drawer-title" class="admin-offcanvas-panel__title">تعديل تفاصيل الخطة</h2>
+    <button type="button" class="admin-offcanvas-close" id="plan-drawer-close" aria-label="إغلاق">إغلاق</button>
+  </div>
+  <form
+    method="post"
+    action="/admin/plans/update-details"
+    id="plan-drawer-details-form"
+    class="plan-details-form plan-details-form--admin-stack plan-details-form--horizontal plan-details-form--split-layout"
+    data-preserve-scroll="1"
+  >
+    <input type="hidden" name="plan_id" id="plan-drawer-plan-id" value="" />
+    <div class="plan-details-form__split plan-details-form__split--admin-unified">
+      <div class="plan-details-form__cell plan-details-form__cell--admin plan-details-form__cell--admin-type">
+        <label class="plan-details-form__lbl plan-details-form__lbl--admin-tight" for="plan-drawer-type">نوع الخطة</label>
+        <select id="plan-drawer-type" name="plan_type" class="plan-admin-control">
+          <option value="weekly">أسبوعي</option>
+          <option value="monthly">شهري</option>
+          <option value="yearly">سنوي</option>
+        </select>
+      </div>
+      <div class="plan-details-form__cell plan-details-form__cell--admin plan-details-form__cell--admin-price">
+        <label class="plan-details-form__lbl plan-details-form__lbl--admin-tight plan-details-form__lbl--admin-price-line" for="plan-drawer-list-price">السعر الأساسي (SAR)</label>
+        <input
+          id="plan-drawer-list-price"
+          class="js-list-price-base plan-admin-control"
+          name="list_price"
+          type="text"
+          inputmode="decimal"
+          autocomplete="off"
+          lang="en"
+          dir="ltr"
+          pattern="[0-9]+(\.[0-9]{1,2})?"
+          maxlength="12"
+          value=""
+          required
+        />
+      </div>
+      <div class="plan-details-form__cell plan-details-form__cell--admin plan-details-form__cell--admin-sessions">
+        <label class="plan-details-form__lbl plan-details-form__lbl--admin-tight" for="plan-drawer-session-limit">عدد الجلسات</label>
+        <input
+          id="plan-drawer-session-limit"
+          class="plan-admin-control"
+          name="session_limit"
+          type="text"
+          inputmode="numeric"
+          autocomplete="off"
+          lang="en"
+          dir="ltr"
+          pattern="^(|[1-9][0-9]*)$"
+          maxlength="6"
+          value=""
+          placeholder="فارغ = غير محدود"
+        />
+      </div>
+      <div class="plan-details-form__col plan-details-form__col--discount">
+        {{ admin_discount_fields('plan-drawer', discount_mode_value='none', discount_percent_value='', reduced_price_value='', schedule_type_value='always', valid_from_value='', valid_until_value='', hour_start_value='', hour_end_value='', duration_hours_value='') }}
+      </div>
+    </div>
+    <div style="margin-top:14px;display:flex;gap:10px;flex-wrap:wrap;">
+      <button type="submit" class="plan-admin-btn plan-admin-btn--primary">حفظ التفاصيل</button>
+    </div>
+  </form>
+</div>
+<script type="application/json" id="maestro-admin-plans-json">{{ admin_plans_for_editor_json | safe }}</script>

@@ -1,0 +1,68 @@
+.admin-offcanvas-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.45);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s ease;
+  z-index: 1040;
+}
+
+.admin-offcanvas-backdrop.is-open {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.admin-offcanvas-panel {
+  position: fixed;
+  top: 0;
+  bottom: 0;
+  inset-inline-end: 0;
+  width: min(520px, 100vw);
+  max-width: 100%;
+  background: #fff;
+  box-shadow: -12px 0 40px rgba(15, 23, 42, 0.18);
+  z-index: 1050;
+  overflow: auto;
+  padding: 16px 18px 24px;
+  direction: rtl;
+  transform: translate3d(110%, 0, 0);
+  transition: transform 0.22s ease;
+}
+
+.admin-offcanvas-panel.is-open {
+  transform: translate3d(0, 0, 0);
+}
+
+.admin-offcanvas-panel__head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.admin-offcanvas-panel__title {
+  margin: 0;
+  font-size: 1.1rem;
+  font-weight: 800;
+  color: #0f172a;
+}
+
+.admin-offcanvas-close {
+  border: 1px solid rgba(148, 163, 184, 0.45);
+  background: #f8fafc;
+  border-radius: 10px;
+  padding: 6px 12px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+html[data-theme="dark"] .admin-offcanvas-panel {
+  background: #1e293b;
+  color: #e2e8f0;
+}
+
+html[data-theme="dark"] .admin-offcanvas-panel__title {
+  color: #f8fafc;
+}
