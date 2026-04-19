@@ -58,7 +58,57 @@ html[dir="rtl"] #sidebar.inactive ~ #main {
   }
 }
 
-/* قائمة فرعية في الشريط: روابط الأقسام بنفس سلوك التبويبات */
+/* عناوين المجموعات + عناصر القائمة: سطر واحد (أحجام أصغر عند الحاجة) */
+body.maestro-mazer #admin-mazer-sidebar-menu .sidebar-item.has-sub > .sidebar-link {
+  display: flex !important;
+  align-items: center;
+  gap: 0.45rem;
+  font-size: 0.78rem !important;
+  font-weight: 700 !important;
+  line-height: 1.15 !important;
+  white-space: nowrap !important;
+  min-height: 0 !important;
+  padding-block: 0.45rem !important;
+}
+
+body.maestro-mazer #admin-mazer-sidebar-menu .sidebar-item.has-sub > .sidebar-link span {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap !important;
+}
+
+body.maestro-mazer #admin-mazer-sidebar-menu .sidebar-item.has-sub > .sidebar-link i {
+  flex-shrink: 0;
+}
+
+/* روابط الأقسام (تُطبَّق عليها أصناف section-tab من لوحة التحكم) */
+body.maestro-mazer #admin-mazer-sidebar-menu a.section-tab.section-tab--subitem,
 body.maestro-mazer #admin-mazer-sidebar-menu .submenu-link.section-tab {
-  font-weight: 600;
+  display: flex !important;
+  align-items: center;
+  justify-content: flex-start !important;
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+  font-weight: 600 !important;
+  font-size: 0.7rem !important;
+  line-height: 1.15 !important;
+  white-space: nowrap !important;
+  min-height: 0 !important;
+  padding: 0.4rem 0.55rem !important;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+@media (min-width: 1200px) {
+  body.maestro-mazer #admin-mazer-sidebar-menu a.section-tab.section-tab--subitem,
+  body.maestro-mazer #admin-mazer-sidebar-menu .submenu-link.section-tab {
+    font-size: 0.74rem !important;
+  }
+
+  body.maestro-mazer #admin-mazer-sidebar-menu .sidebar-item.has-sub > .sidebar-link {
+    font-size: 0.82rem !important;
+  }
 }
