@@ -30,34 +30,39 @@ html[data-bs-theme="dark"] body.maestro-mazer {
   --sidebar-border: rgba(255, 255, 255, 0.05);
 }
 
-/* إعدادات العرض والانزلاق للشريط الجانبي (منطقي حسب dir) */
+/*
+ * الشريط الجانبي في RTL: ملتصق بيمين الشاشة.
+ * ملاحظة: inset-inline-end في RTL = الحافة اليسرى؛ استخدامه مع 0 كان يضع الشريط يسارًا.
+ * هنا نستخدم right/left + margin-right صراحةً لتطابق سلوك Mazer الثابت مع position:fixed.
+ */
 body.maestro-mazer .maestro-mazer-sidebar.sidebar-wrapper,
 body.maestro-mazer #sidebar .sidebar-wrapper {
   width: var(--maestro-mazer-sidebar-width) !important;
   background: var(--sidebar-bg) !important;
-  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.04) !important;
-  border-inline-start: 1px solid var(--sidebar-border);
+  box-shadow: -4px 0 24px rgba(0, 0, 0, 0.03) !important;
+  border-left: 1px solid var(--sidebar-border);
 }
 
 html[dir="rtl"] #sidebar .sidebar-wrapper {
-  inset-inline-start: auto !important;
-  inset-inline-end: calc(-1 * var(--maestro-mazer-sidebar-width)) !important;
-  transition: inset-inline-end 0.4s cubic-bezier(0.25, 0.8, 0.25, 1) !important;
+  left: auto !important;
+  right: calc(-1 * var(--maestro-mazer-sidebar-width)) !important;
+  transition: right 0.4s cubic-bezier(0.25, 0.8, 0.25, 1) !important;
 }
 
 html[dir="rtl"] #sidebar ~ #main {
-  margin-inline: 0 !important;
+  margin-left: 0 !important;
+  margin-right: 0 !important;
 }
 
 @media screen and (min-width: 1200px) {
   html[dir="rtl"] #sidebar .sidebar-wrapper {
-    inset-inline-end: 0 !important;
-    inset-inline-start: auto !important;
+    right: 0 !important;
+    left: auto !important;
   }
   html[dir="rtl"] #sidebar ~ #main {
-    margin-inline-end: var(--maestro-mazer-sidebar-width) !important;
-    margin-inline-start: 0 !important;
-    transition: margin-inline-end 0.4s ease;
+    margin-right: var(--maestro-mazer-sidebar-width) !important;
+    margin-left: 0 !important;
+    transition: margin-right 0.4s ease;
   }
   body.maestro-mazer #section-tabs-sticky {
     display: none !important;
@@ -65,19 +70,19 @@ html[dir="rtl"] #sidebar ~ #main {
 }
 
 html[dir="rtl"] #sidebar.active .sidebar-wrapper {
-  inset-inline-end: 0 !important;
-  inset-inline-start: auto !important;
+  right: 0 !important;
+  left: auto !important;
 }
 html[dir="rtl"] #sidebar.active ~ #main {
-  margin-inline-end: var(--maestro-mazer-sidebar-width) !important;
-  margin-inline-start: 0 !important;
+  margin-right: var(--maestro-mazer-sidebar-width) !important;
+  margin-left: 0 !important;
 }
 html[dir="rtl"] #sidebar.inactive .sidebar-wrapper {
-  inset-inline-end: calc(-1 * var(--maestro-mazer-sidebar-width)) !important;
-  inset-inline-start: auto !important;
+  right: calc(-1 * var(--maestro-mazer-sidebar-width)) !important;
+  left: auto !important;
 }
 html[dir="rtl"] #sidebar.inactive ~ #main {
-  margin-inline-end: 0 !important;
+  margin-right: 0 !important;
 }
 
 /* رأس الشريط الجانبي (اللوجو) */
