@@ -18,42 +18,26 @@ html {
   overflow-x: clip;
 }
 
-/* =========================================================
-   إصلاح جذري ونهائي لانفجار الأيقونات (Global SVG Anti-Stretch)
-   يمنع تمدد أي أيقونة داخل Flexbox أو Grid بشكل قاطع
-   ========================================================= */
-svg:not([data-bh-svg]) {
-  max-width: 26px !important;
-  max-height: 26px !important;
-  flex-shrink: 0 !important;
+/* Keep dashboard icons constrained without breaking unrelated SVGs. */
+.section-tab__icon svg,
+.security-block__icon svg,
+.public-users-trash-icon-wrap svg,
+.index-spotlight-heading__badge svg {
+  display: block;
+  flex: 0 0 auto;
+  max-inline-size: 100%;
+  max-block-size: 100%;
 }
 
 .plan-type-icon {
-  max-width: 15px !important;
-  max-height: 15px !important;
-}
-
-.section-tab__icon svg {
-  max-width: 18px !important;
-  max-height: 18px !important;
-}
-
-.security-block__icon svg, 
-.public-users-trash-icon-wrap svg {
-  max-width: 20px !important;
-  max-height: 20px !important;
-}
-
-.index-spotlight-heading__badge svg {
-  max-width: 26px !important;
-  max-height: 26px !important;
+  max-width: 15px;
+  max-height: 15px;
 }
 
 .offcanvas {
-  box-shadow: -10px 0 40px rgba(0, 0, 0, 0.1) !important;
-  border-left: 1px solid rgba(197, 160, 89, 0.3) !important;
+  box-shadow: -10px 0 40px rgba(0, 0, 0, 0.1);
+  border-left: 1px solid rgba(197, 160, 89, 0.3);
 }
-/* ========================================================= */
 
 body {
   font-family: "Tajawal", system-ui, sans-serif;
@@ -179,12 +163,6 @@ a.btn.secondary:hover { border-color: var(--gold); }
   min-height: var(--tab-icon-px);
   display: block;
   flex-shrink: 0;
-  stroke: currentColor;
-  fill: none;
-  stroke-width: 1.5;
-  stroke-linecap: round;
-  stroke-linejoin: round;
-  vector-effect: non-scaling-stroke;
   transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.3s ease;
 }
 

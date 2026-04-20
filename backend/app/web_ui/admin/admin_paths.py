@@ -17,7 +17,8 @@ ADMIN_SECTION_BASE_PATHS: dict[str, str] = {
     "section-faq": ADMIN_PATH_SETTINGS,
     "section-staff-invite": ADMIN_PATH_SETTINGS,
     "section-staff-roles": ADMIN_PATH_SETTINGS,
-    "section-loyalty": ADMIN_PATH_SETTINGS,
+    # Backward-compatible alias: loyalty lives under users section UI.
+    "section-loyalty": ADMIN_PATH_USERS,
     "section-rooms": ADMIN_PATH_DASHBOARD,
     "section-plans": ADMIN_PATH_DASHBOARD,
     "section-sessions": ADMIN_PATH_DASHBOARD,
