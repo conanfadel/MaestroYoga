@@ -99,9 +99,9 @@ a.btn, button {
   transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
 }
 
-a.btn:hover, button:hover { 
-  transform: translateY(-2px); 
-  box-shadow: 0 8px 20px rgba(197, 160, 89, 0.4); 
+a.btn:hover, button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(197, 160, 89, 0.4);
 }
 
 a.btn.secondary, button.secondary {
@@ -111,15 +111,15 @@ a.btn.secondary, button.secondary {
   box-shadow: none;
 }
 
-a.btn.secondary:hover, button.secondary:hover { 
-  border-color: var(--gold); 
+a.btn.secondary:hover, button.secondary:hover {
+  border-color: var(--gold);
   background: var(--gold-soft);
   color: var(--gold-dark);
 }
 
-button.danger { 
-  background: linear-gradient(135deg, #ef4444, #b91c1c); 
-  color: #fff; 
+button.danger {
+  background: linear-gradient(135deg, #ef4444, #b91c1c);
+  color: #fff;
   box-shadow: 0 4px 14px rgba(239, 68, 68, 0.25);
 }
 button.danger:hover { box-shadow: 0 8px 20px rgba(239, 68, 68, 0.4); }
@@ -197,17 +197,17 @@ input:focus, select:focus, textarea:focus {
   box-shadow: 0 0 0 1px rgba(226, 232, 240, 1);
 }
 
-table { 
-  width: 100%; 
-  border-collapse: collapse; 
-  font-size: 0.9rem; 
-  background: var(--white); 
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.9rem;
+  background: var(--white);
 }
 
-th, td { 
-  border-bottom: 1px solid #f1f5f9; 
-  padding: 12px 14px; 
-  text-align: right; 
+th, td {
+  border-bottom: 1px solid #f1f5f9;
+  padding: 12px 14px;
+  text-align: right;
 }
 
 th {
@@ -224,14 +224,14 @@ tbody tr:hover { background: #fbfcfd; }
 tr:last-child td { border-bottom: 0; }
 
 /* البادجات (Badges) */
-.badge { 
-  display: inline-flex; 
+.badge {
+  display: inline-flex;
   align-items: center;
   justify-content: center;
-  padding: 4px 12px; 
-  border-radius: 999px; 
-  font-size: 0.75rem; 
-  font-weight: 800; 
+  padding: 4px 12px;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 800;
 }
 
 .badge.completed, .badge.paid, .badge.low { background: #dcfce7; color: #166534; }
@@ -280,4 +280,78 @@ tr:last-child td { border-bottom: 0; }
   background: linear-gradient(135deg, var(--gold) 0%, #d4b56e 100%);
   color: #1a1a1a;
   box-shadow: 0 4px 12px rgba(197, 160, 89, 0.3);
+}
+
+/* =========================================================
+   Bootstrap Offcanvas - User Actions Drawer
+   ========================================================= */
+
+/* Guard against SVG/flex stretching inside drawers. */
+.maestro-user-actions-drawer svg,
+.maestro-user-actions-drawer i {
+  inline-size: 1.25rem;
+  block-size: 1.25rem;
+  max-inline-size: 1.25rem;
+  max-block-size: 1.25rem;
+  flex: 0 0 auto;
+}
+
+.maestro-user-actions-drawer {
+  --bs-offcanvas-width: min(360px, 92vw);
+  background: var(--page-bg);
+  border-inline-start: 1px solid rgba(197, 160, 89, 0.3);
+  box-shadow: -10px 0 40px rgba(15, 23, 42, 0.14);
+}
+
+.maestro-user-actions-drawer .offcanvas-header {
+  background: #fff;
+  border-bottom: 1px solid rgba(197, 160, 89, 0.2);
+  padding: 1rem 1.2rem;
+}
+
+.maestro-user-actions-drawer .offcanvas-title {
+  margin: 0;
+  font-family: "Amiri", "Tajawal", serif;
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: var(--charcoal);
+}
+
+.maestro-user-actions-drawer .offcanvas-body {
+  padding: 1rem 1.2rem 1.25rem;
+}
+
+.drawer-meta-text {
+  margin: 0 0 14px;
+  line-height: 1.55;
+  color: #475569;
+}
+
+.btn-close-custom {
+  margin-inline-start: 0.6rem;
+  border: 1px solid rgba(148, 163, 184, 0.42);
+  border-radius: 10px;
+  padding: 0.82rem;
+  opacity: 0.9;
+}
+
+.btn-close-custom:hover {
+  opacity: 1;
+  background-color: #f8fafc;
+}
+
+.admin-offcanvas-actions {
+  display: grid;
+  gap: 10px;
+}
+
+.admin-offcanvas-actions form {
+  margin: 0;
+}
+
+.drawer-action-btn {
+  width: 100%;
+  border-radius: 12px;
+  font-weight: 800;
+  font-size: 0.95rem;
 }

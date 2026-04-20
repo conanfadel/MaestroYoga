@@ -1,26 +1,33 @@
-<div id="pub-user-drawer-backdrop" class="admin-offcanvas-backdrop" aria-hidden="true"></div>
-<div id="pub-user-drawer-panel" class="admin-offcanvas-panel" role="dialog" aria-modal="true" aria-labelledby="pub-user-drawer-title" aria-hidden="true">
-  <div class="admin-offcanvas-panel__head">
-    <h2 id="pub-user-drawer-title" class="admin-offcanvas-panel__title">إجراءات المستخدم</h2>
-    <button type="button" class="admin-offcanvas-close" id="pub-user-drawer-close" aria-label="إغلاق">إغلاق</button>
+<div
+  id="pub-user-drawer-panel"
+  class="offcanvas offcanvas-end maestro-user-actions-drawer"
+  tabindex="-1"
+  aria-labelledby="pub-user-drawer-title"
+  data-bs-scroll="true"
+>
+  <div class="offcanvas-header">
+    <h2 id="pub-user-drawer-title" class="offcanvas-title">إجراءات المستخدم</h2>
+    <button type="button" class="btn-close btn-close-custom" data-bs-dismiss="offcanvas" aria-label="إغلاق"></button>
   </div>
-  <p id="pub-user-drawer-meta" class="small" style="margin:0 0 14px;line-height:1.55;color:#475569;"></p>
-  <div class="admin-offcanvas-actions">
+  <div class="offcanvas-body">
+    <p id="pub-user-drawer-meta" class="small drawer-meta-text"></p>
+    <div class="admin-offcanvas-actions">
     <form method="post" action="/admin/public-users/toggle-active" data-preserve-scroll="1">
       <input type="hidden" name="public_user_id" class="js-pub-drawer-user-id" value="" />
-      <button type="submit" id="pub-drawer-btn-toggle-active" class="plan-admin-btn plan-admin-btn--secondary" style="width:100%;">تفعيل / تعطيل</button>
+      <button type="submit" id="pub-drawer-btn-toggle-active" class="plan-admin-btn plan-admin-btn--secondary drawer-action-btn">تفعيل / تعطيل</button>
     </form>
     <form method="post" action="/admin/public-users/toggle-verified" data-preserve-scroll="1">
       <input type="hidden" name="public_user_id" class="js-pub-drawer-user-id" value="" />
-      <button type="submit" id="pub-drawer-btn-toggle-verified" class="plan-admin-btn plan-admin-btn--secondary" style="width:100%;">توثيق البريد</button>
+      <button type="submit" id="pub-drawer-btn-toggle-verified" class="plan-admin-btn plan-admin-btn--secondary drawer-action-btn">توثيق البريد</button>
     </form>
     <form id="pub-drawer-form-resend" method="post" action="/admin/public-users/resend-verification" data-preserve-scroll="1" style="display:none;">
       <input type="hidden" name="public_user_id" class="js-pub-drawer-user-id" value="" />
-      <button type="submit" class="plan-admin-btn plan-admin-btn--secondary warn" style="width:100%;">إعادة إرسال التحقق</button>
+      <button type="submit" class="plan-admin-btn plan-admin-btn--secondary warn drawer-action-btn">إعادة إرسال التحقق</button>
     </form>
     <form method="post" action="/admin/public-users/delete" data-preserve-scroll="1" onsubmit="return confirm('تحويل المستخدم إلى حذف Soft؟');">
       <input type="hidden" name="public_user_id" class="js-pub-drawer-user-id" value="" />
-      <button type="submit" class="plan-admin-btn plan-admin-btn--danger" style="width:100%;">حذف Soft</button>
+      <button type="submit" class="plan-admin-btn plan-admin-btn--danger drawer-action-btn">حذف Soft</button>
     </form>
+  </div>
   </div>
 </div>

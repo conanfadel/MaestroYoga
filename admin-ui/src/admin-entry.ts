@@ -7,6 +7,14 @@ function qs<T extends HTMLElement>(sel: string): T | null {
   return document.querySelector(sel) as T | null;
 }
 
+type BsOffcanvasLike = { show: () => void; hide: () => void };
+
+function getBsOffcanvas(panel: HTMLElement): BsOffcanvasLike | null {
+  const bs = (window as unknown as { bootstrap?: { Offcanvas?: { getOrCreateInstance?: (el: HTMLElement) => BsOffcanvasLike } } }).bootstrap;
+  if (!bs?.Offcanvas?.getOrCreateInstance) return null;
+  return bs.Offcanvas.getOrCreateInstance(panel);
+}
+
 function initPlanDrawer(): void {
   const raw = document.getElementById("maestro-admin-plans-json");
   if (!raw || !raw.textContent?.trim()) return;
@@ -86,19 +94,11 @@ function initPlanDrawer(): void {
 initPlanDrawer();
 
 function initPublicUserDrawer(): void {
-  const backdrop = qs<HTMLElement>("#pub-user-drawer-backdrop");
   const panel = qs<HTMLElement>("#pub-user-drawer-panel");
-  const closeBtn = qs<HTMLButtonElement>("#pub-user-drawer-close");
   const meta = qs<HTMLElement>("#pub-user-drawer-meta");
   const title = qs<HTMLElement>("#pub-user-drawer-title");
-  if (!backdrop || !panel) return;
-
-  function setOpen(open: boolean): void {
-    backdrop.classList.toggle("is-open", open);
-    panel.classList.toggle("is-open", open);
-    backdrop.setAttribute("aria-hidden", open ? "false" : "true");
-    panel.setAttribute("aria-hidden", open ? "false" : "true");
-  }
+  if (!panel) return;
+  const drawer = getBsOffcanvas(panel);
 
   function fill(uid: string, active: string, verified: string, name: string, email: string): void {
     panel.querySelectorAll<HTMLInputElement>(".js-pub-drawer-user-id").forEach((inp) => {
@@ -126,30 +126,16 @@ function initPublicUserDrawer(): void {
       btn.getAttribute("data-user-name") || "",
       btn.getAttribute("data-user-email") || "",
     );
-    setOpen(true);
+    drawer?.show();
   });
-
-  function close(): void {
-    setOpen(false);
-  }
-  closeBtn?.addEventListener("click", close);
-  backdrop.addEventListener("click", close);
 }
 
 function initTrashUserDrawer(): void {
-  const backdrop = qs<HTMLElement>("#trash-user-drawer-backdrop");
   const panel = qs<HTMLElement>("#trash-user-drawer-panel");
-  const closeBtn = qs<HTMLButtonElement>("#trash-user-drawer-close");
   const meta = qs<HTMLElement>("#trash-user-drawer-meta");
   const title = qs<HTMLElement>("#trash-user-drawer-title");
-  if (!backdrop || !panel) return;
-
-  function setOpen(open: boolean): void {
-    backdrop.classList.toggle("is-open", open);
-    panel.classList.toggle("is-open", open);
-    backdrop.setAttribute("aria-hidden", open ? "false" : "true");
-    panel.setAttribute("aria-hidden", open ? "false" : "true");
-  }
+  if (!panel) return;
+  const drawer = getBsOffcanvas(panel);
 
   document.body.addEventListener("click", (e) => {
     const btn = (e.target as HTMLElement | null)?.closest?.(".js-trash-user-drawer-open");
@@ -162,14 +148,8 @@ function initTrashUserDrawer(): void {
     });
     if (title) title.textContent = name ? `سلة المحذوفات: ${name}` : "إجراءات سلة المحذوفات";
     if (meta) meta.textContent = email ? `#${uid} · ${email}` : `المعرف #${uid}`;
-    setOpen(true);
+    drawer?.show();
   });
-
-  function close(): void {
-    setOpen(false);
-  }
-  closeBtn?.addEventListener("click", close);
-  backdrop.addEventListener("click", close);
 }
 
 initPublicUserDrawer();

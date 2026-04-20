@@ -6,6 +6,12 @@ function qs(sel) {
   return document.querySelector(sel);
 }
 
+function getBsOffcanvas(panel) {
+  var bs = window.bootstrap;
+  if (!bs || !bs.Offcanvas || !bs.Offcanvas.getOrCreateInstance) return null;
+  return bs.Offcanvas.getOrCreateInstance(panel);
+}
+
 function initPlanDrawer() {
   var raw = document.getElementById("maestro-admin-plans-json");
   if (!raw || !raw.textContent || !raw.textContent.trim()) return;
@@ -88,19 +94,11 @@ function initPlanDrawer() {
 initPlanDrawer();
 
 function initPublicUserDrawer() {
-  var backdrop = qs("#pub-user-drawer-backdrop");
   var panel = qs("#pub-user-drawer-panel");
-  var closeBtn = qs("#pub-user-drawer-close");
   var meta = qs("#pub-user-drawer-meta");
   var title = qs("#pub-user-drawer-title");
-  if (!backdrop || !panel) return;
-
-  function setOpen(open) {
-    backdrop.classList.toggle("is-open", open);
-    panel.classList.toggle("is-open", open);
-    backdrop.setAttribute("aria-hidden", open ? "false" : "true");
-    panel.setAttribute("aria-hidden", open ? "false" : "true");
-  }
+  if (!panel) return;
+  var drawer = getBsOffcanvas(panel);
 
   function fill(uid, active, verified, name, email) {
     panel.querySelectorAll(".js-pub-drawer-user-id").forEach(function (inp) {
@@ -128,30 +126,16 @@ function initPublicUserDrawer() {
       btn.getAttribute("data-user-name") || "",
       btn.getAttribute("data-user-email") || "",
     );
-    setOpen(true);
+    if (drawer) drawer.show();
   });
-
-  function close() {
-    setOpen(false);
-  }
-  if (closeBtn) closeBtn.addEventListener("click", close);
-  backdrop.addEventListener("click", close);
 }
 
 function initTrashUserDrawer() {
-  var backdrop = qs("#trash-user-drawer-backdrop");
   var panel = qs("#trash-user-drawer-panel");
-  var closeBtn = qs("#trash-user-drawer-close");
   var meta = qs("#trash-user-drawer-meta");
   var title = qs("#trash-user-drawer-title");
-  if (!backdrop || !panel) return;
-
-  function setOpen(open) {
-    backdrop.classList.toggle("is-open", open);
-    panel.classList.toggle("is-open", open);
-    backdrop.setAttribute("aria-hidden", open ? "false" : "true");
-    panel.setAttribute("aria-hidden", open ? "false" : "true");
-  }
+  if (!panel) return;
+  var drawer = getBsOffcanvas(panel);
 
   document.body.addEventListener("click", function (e) {
     var btn = e.target && e.target.closest && e.target.closest(".js-trash-user-drawer-open");
@@ -164,14 +148,8 @@ function initTrashUserDrawer() {
     });
     if (title) title.textContent = name ? "سلة المحذوفات: " + name : "إجراءات سلة المحذوفات";
     if (meta) meta.textContent = email ? "#" + uid + " · " + email : "المعرف #" + uid;
-    setOpen(true);
+    if (drawer) drawer.show();
   });
-
-  function close() {
-    setOpen(false);
-  }
-  if (closeBtn) closeBtn.addEventListener("click", close);
-  backdrop.addEventListener("click", close);
 }
 
 initPublicUserDrawer();
