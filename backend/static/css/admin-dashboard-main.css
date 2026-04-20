@@ -1,20 +1,11 @@
 /* =========================================================
-   إصلاح جذري لانفجار الأيقونات (Anti-Stretch & Anti-Explosion)
+   Bootstrap Offcanvas - icon stretch guard (scoped)
    ========================================================= */
-   svg:not([data-bh-svg]), 
-   .section-tab svg,
-   .section-tab i,
-   .section-tab__icon svg,
-   .btn svg,
-   a svg:not([data-bh-svg]),
-   button svg {
-     max-width: 26px !important;
-     max-height: 26px !important;
-     flex-shrink: 0 !important; /* يمنع الأيقونة من مزاحمة النص أو التمدد */
-   }
-   
-   .section-tab {
-     max-height: 50px !important; /* ضمان عدم تمدد زر التبويب نفسه بشكل طولي */
+   .maestro-user-actions-drawer svg,
+   .maestro-user-actions-drawer i {
+     max-width: 24px;
+     max-height: 24px;
+     flex-shrink: 0;
    }
    
    /* =========================================================
