@@ -4518,6 +4518,11 @@
   <a class="skip-link" href="#main-content">تخطي إلى المحتوى</a>
   <div id="index-a11y-announcer" class="sr-only" role="status" aria-live="polite" aria-atomic="true"></div>
   <div id="index-offline-banner" role="status" aria-live="polite" hidden>لا يوجد اتصال بالإنترنت — تحقق من الشبكة ثم أعد المحاولة.</div>
+  <template id="maestro-rf-embed-aspect-16x9">
+    <div class="maestro-rf-aspect-video">
+      <iframe title="فيديو" loading="lazy" referrerpolicy="strict-origin-when-cross-origin"></iframe>
+    </div>
+  </template>
   <div class="container">
     <header class="hero" aria-label="واجهة البداية">
       <div
@@ -4528,6 +4533,7 @@
         <img
           class="hero__cover-img"
           src="{{ center.hero_image_url }}"
+          srcset="{{ center.hero_image_url }} 720w, {{ center.hero_image_url }} 1280w, {{ center.hero_image_url }} 1600w"
           alt=""
           width="1600"
           height="900"
@@ -4541,6 +4547,7 @@
         <img
           class="hero__cover-img"
           src="{{ hero_stock_src }}"
+          srcset="{{ hero_stock_src }} 480w, {{ hero_stock_src }} 768w, {{ hero_stock_src }} 1024w"
           alt=""
           width="1024"
           height="434"
@@ -4557,7 +4564,7 @@
       <div class="hero__inner">
         <div class="hero-brand">
           {% if center.logo_url %}
-          <img class="hero-logo" src="{{ center.logo_url }}" width="72" height="72" alt="شعار {{ center.name }}" decoding="async" onerror="this.remove();" />
+          <img class="hero-logo" src="{{ center.logo_url }}" srcset="{{ center.logo_url }} 72w, {{ center.logo_url }} 144w, {{ center.logo_url }} 216w" sizes="72px" width="72" height="72" alt="شعار {{ center.name }}" decoding="async" onerror="this.remove();" />
           {% endif %}
           <div>
             {% if center.index_hero_heading_override %}

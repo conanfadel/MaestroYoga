@@ -75,6 +75,11 @@
   </style>
 </head>
 <body data-refresh-pending="{{ 1 if refresh_pending else 0 }}" data-poll-max="8">
+  <template id="maestro-rf-embed-aspect-16x9">
+    <div class="maestro-rf-aspect-video">
+      <iframe title="فيديو" loading="lazy" referrerpolicy="strict-origin-when-cross-origin"></iframe>
+    </div>
+  </template>
   <div class="card{% if status_kind in ('declined_redirect', 'failed') %} card--declined{% endif %}">
     <p id="checkout-poll-stop" class="poll-stop" role="status">توقّف التحديث التلقائي بعد عدة محاولات. إذا بقي الوضع «قيد التأكيد» فجرّب «تحديث الآن» أو انتظر قليلاً ثم حدّث يدوياً.</p>
     {% if valid_link %}

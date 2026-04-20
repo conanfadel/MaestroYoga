@@ -3,13 +3,23 @@
           <h2 class="booking-block-heading booking-block-heading--flush-top">ما الجديد في المركز</h2>
           <a class="btn ghost index-news-showcase__all" href="{{ public_news_list_url }}">جميع الأخبار</a>
         </div>
-        <p class="index-news-showcase__lead">آخر المنشورات والإعلانات بعد الجلسات — اختر بطاقة للتفاصيل والصور.</p>
+        <p class="index-news-showcase__lead">
+          آخر المنشورات والإعلانات بعد الجلسات — اختر بطاقة للتفاصيل والصور.
+          <span class="maestro-rf-desktop-only--inline" aria-hidden="true"> · عرض كامل على الشاشات الواسعة</span>
+        </p>
         <div class="index-news-showcase__grid">
           {% if pinned_public_post %}
           <a class="index-news-card index-news-card--featured reveal-on-scroll" href="{{ pinned_public_post.detail_url }}">
             <div class="index-news-card__media">
               {% if pinned_public_post.cover_image_url %}
-              <img src="{{ pinned_public_post.cover_image_url }}" alt="" decoding="async" loading="lazy" />
+              <img
+                src="{{ pinned_public_post.cover_image_url }}"
+                srcset="{{ pinned_public_post.cover_image_url }} 360w, {{ pinned_public_post.cover_image_url }} 720w, {{ pinned_public_post.cover_image_url }} 1080w"
+                sizes="(max-width: 720px) 92vw, (max-width: 1200px) 45vw, 560px"
+                alt=""
+                decoding="async"
+                loading="lazy"
+              />
               {% endif %}
             </div>
             <div class="index-news-card__body">
@@ -25,7 +35,14 @@
           <a class="index-news-card reveal-on-scroll" href="{{ t.detail_url }}">
             <div class="index-news-card__media">
               {% if t.cover_image_url %}
-              <img src="{{ t.cover_image_url }}" alt="" decoding="async" loading="lazy" />
+              <img
+                src="{{ t.cover_image_url }}"
+                srcset="{{ t.cover_image_url }} 320w, {{ t.cover_image_url }} 640w, {{ t.cover_image_url }} 960w"
+                sizes="(max-width: 720px) 88vw, (max-width: 1200px) 40vw, 400px"
+                alt=""
+                decoding="async"
+                loading="lazy"
+              />
               {% endif %}
             </div>
             <div class="index-news-card__body">

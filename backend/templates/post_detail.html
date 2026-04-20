@@ -210,7 +210,7 @@
   <div class="wrap">
     <a class="back" href="{{ index_url }}">← العودة إلى حجز الجلسات</a>
     <article class="card">
-      <div class="meta-row">
+      <div class="meta-row maestro-rf-header-row">
         <span class="chip chip--type">{{ post.type_label }}</span>
         {% if post.published_at_display %}
         <span class="date-line">{{ post.published_at_display }}</span>
@@ -222,7 +222,14 @@
       {% endif %}
       {% if post.cover_image_url %}
       <div class="cover">
-        <img src="{{ post.cover_image_url }}" alt="" decoding="async" loading="lazy" />
+        <img
+          src="{{ post.cover_image_url }}"
+          srcset="{{ post.cover_image_url }} 640w, {{ post.cover_image_url }} 960w, {{ post.cover_image_url }} 1280w"
+          sizes="(max-width: 720px) 100vw, min(56rem, 92vw)"
+          alt=""
+          decoding="async"
+          loading="lazy"
+        />
       </div>
       {% endif %}
       {% if post.body %}
@@ -231,10 +238,17 @@
       {% if gallery %}
       <section class="gallery" aria-label="معرض الصور">
         <h2>معرض الصور</h2>
-        <div class="gallery-grid">
+        <div class="gallery-grid maestro-rf-gap-lg">
           {% for g in gallery %}
           <a href="{{ g.url }}" target="_blank" rel="noopener noreferrer">
-            <img src="{{ g.url }}" alt="" loading="lazy" decoding="async" />
+            <img
+              src="{{ g.url }}"
+              srcset="{{ g.url }} 280w, {{ g.url }} 560w, {{ g.url }} 840w"
+              sizes="(max-width: 480px) 50vw, (max-width: 900px) 33vw, 280px"
+              alt=""
+              loading="lazy"
+              decoding="async"
+            />
           </a>
           {% endfor %}
         </div>

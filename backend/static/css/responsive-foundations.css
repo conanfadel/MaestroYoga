@@ -1,0 +1,163 @@
+/**
+ * Maestro Yoga — أساسيات التصميم المتجاوب (مجمّع)
+ *
+ * يغطي أنماطًا شائعة: Grid مرن، وحدات rem، نقاط توقف (mobile-first)،
+ * Flexbox، نسبة عرض/ارتفاع للوسائط، نظام مسافات 8px، خطوط clamp،
+ * وفئات إظهار/إخفاء حسب العرض.
+ *
+ * يُستورد من mobile-enhancements.css و admin-dashboard.css
+ */
+
+/* —— 2 + 8: جذر rem + مقياس مسافات (مضاعفات 8px عند 16px للجذر) —— */
+html {
+  font-size: 100%;
+}
+
+:root {
+  --maestro-rf-space-xs: 0.5rem; /* 8px */
+  --maestro-rf-space-sm: 1rem; /* 16px */
+  --maestro-rf-space-md: 1.5rem; /* 24px */
+  --maestro-rf-space-lg: 2rem; /* 32px */
+  --maestro-rf-space-xl: 3rem; /* 48px */
+}
+
+/* —— 8: فئات مسافات (هامش) —— */
+.maestro-rf-spacing-xs {
+  margin: var(--maestro-rf-space-xs);
+}
+.maestro-rf-spacing-sm {
+  margin: var(--maestro-rf-space-sm);
+}
+.maestro-rf-spacing-md {
+  margin: var(--maestro-rf-space-md);
+}
+.maestro-rf-spacing-lg {
+  margin: var(--maestro-rf-space-lg);
+}
+.maestro-rf-spacing-xl {
+  margin: var(--maestro-rf-space-xl);
+}
+
+/* فجوة شبكة/فليكس باستخدام مقياس المسافات */
+.maestro-rf-gap-lg {
+  gap: var(--maestro-rf-space-lg);
+}
+
+/* —— 1 + 10: شبكة مرنة (حاوية عامة + معرض) —— */
+.maestro-rf-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 300px), 1fr));
+  gap: var(--maestro-rf-space-lg);
+}
+
+.maestro-rf-gallery {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 250px), 1fr));
+  gap: var(--maestro-rf-space-lg);
+}
+
+/* —— 5: صف رأس مرن —— */
+.maestro-rf-header-row {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: center;
+  gap: var(--maestro-rf-space-sm);
+}
+
+/* —— 3: شريط جانبي mobile-first —— */
+.maestro-rf-sidebar {
+  width: 100%;
+}
+
+@media (min-width: 768px) {
+  .maestro-rf-sidebar {
+    width: 30%;
+    max-width: 22rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  .maestro-rf-sidebar {
+    width: 25%;
+    max-width: 20rem;
+  }
+}
+
+/* —— 6: حاوية فيديو/iframe بنسبة 16:9 (مع دعم قديم) —— */
+.maestro-rf-aspect-video {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  overflow: hidden;
+  border-radius: 0.75rem;
+}
+
+.maestro-rf-aspect-video > iframe,
+.maestro-rf-aspect-video > video {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  border: 0;
+}
+
+@supports not (aspect-ratio: 16 / 9) {
+  .maestro-rf-aspect-video {
+    height: 0;
+    padding-bottom: 56.25%;
+    aspect-ratio: auto;
+  }
+}
+
+/* —— 9: عناوين ديناميكية (أدوات اختيارية) —— */
+.maestro-rf-h1-fluid {
+  font-size: clamp(1.5rem, 5vw, 3rem);
+  line-height: 1.2;
+}
+
+.maestro-rf-lead-fluid {
+  font-size: clamp(1rem, 2.5vw, 1.25rem);
+  line-height: 1.55;
+}
+
+/* —— 11: إظهار ذكي حسب العرض —— */
+.maestro-rf-desktop-only {
+  display: none;
+}
+
+@media (min-width: 1024px) {
+  .maestro-rf-desktop-only {
+    display: block;
+  }
+}
+
+.maestro-rf-desktop-only--inline {
+  display: none;
+}
+
+@media (min-width: 1024px) {
+  .maestro-rf-desktop-only--inline {
+    display: inline;
+  }
+}
+
+.maestro-rf-mobile-only {
+  display: block;
+}
+
+@media (min-width: 1024px) {
+  .maestro-rf-mobile-only {
+    display: none;
+  }
+}
+
+.maestro-rf-mobile-only--flex {
+  display: flex;
+}
+
+@media (min-width: 1024px) {
+  .maestro-rf-mobile-only--flex {
+    display: none;
+  }
+}
