@@ -31,19 +31,26 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/core@1.4.0/dist/css/tabler-vendors.rtl.min.css" crossorigin="anonymous" />
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/core@1.4.0/dist/css/tabler.rtl.min.css" crossorigin="anonymous" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@coreui/coreui@5.4.3/dist/css/themes/bootstrap/bootstrap.rtl.min.css" crossorigin="anonymous" />
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" crossorigin="anonymous" />
   <link rel="stylesheet" href="/static/css/admin-dashboard.css" />
 </head>
-<body class="maestro-tabler" lang="ar" dir="rtl">
+<body class="maestro-coreui" lang="ar" dir="rtl">
   {% from "partials/report_hub_icons.html" import svg_calendar, svg_chart, svg_users, svg_package, svg_pulse, svg_cash, svg_download, svg_shield %}
   {% from "partials/admin_discount_fields.html" import admin_discount_fields %}
   <a class="admin-skip-link" href="#main-content">تخطي إلى المحتوى الرئيسي</a>
-  <div class="page" id="app" dir="rtl" lang="ar">
-    {% include "partials/admin_sidebar_nav.html" %}
-    <div class="page-wrapper" id="main" dir="rtl" lang="ar">
-      <main id="main-content" class="page-body admin-main" lang="ar" dir="rtl" tabindex="-1">
+  {% include "partials/admin_sidebar_nav.html" %}
+  <div class="wrapper d-flex flex-column min-vh-100" id="app" dir="rtl" lang="ar">
+    <header class="header border-bottom bg-body mb-0 d-lg-none">
+      <div class="container-fluid d-flex align-items-center py-2">
+        <button type="button" class="btn btn-link text-body p-1 me-2" id="maestro-sidebar-open" aria-label="فتح القائمة الجانبية">
+          <i class="bi bi-list fs-3" aria-hidden="true"></i>
+        </button>
+        <span class="small text-body-secondary">لوحة الإدارة</span>
+      </div>
+    </header>
+    <div class="body flex-grow-1 px-3 py-2" id="main" dir="rtl" lang="ar">
+      <main id="main-content" class="admin-main" lang="ar" dir="rtl" tabindex="-1">
         <div class="container-xl">
     {% include "partials/admin_top_bar.html" %}
 
@@ -55,17 +62,17 @@
   </div>
   <p class="admin-footer-note" role="note">لأسباب أمنية قد تنتهي جلستك بعد فترة من عدم النشاط؛ أعد تسجيل الدخول عند الحاجة. لا تشارك رابط لوحة التحكم أو كلمة المرور. قد يحدّ الخادم تلقائياً من تكرار الطلبات الحساسة (مثل تسجيل الدخول) من نفس العنوان.</p>
       </main>
-      <footer class="footer mt-3 py-2 border-top d-print-none maestro-admin-footer">
-        <div class="container-fluid d-flex flex-wrap align-items-center justify-content-between gap-2 small">
-          <span class="text-muted">Maestro Yoga — لوحة الإدارة</span>
-          <span class="text-muted">
-            واجهة الإدارة تستخدم
-            <a href="https://tabler.io" class="text-decoration-none" rel="noopener noreferrer" target="_blank">Tabler</a>
-            (رخصة MIT).
-          </span>
-        </div>
-      </footer>
     </div>
+    <footer class="footer mt-3 py-2 border-top d-print-none maestro-admin-footer px-3">
+      <div class="container-fluid d-flex flex-wrap align-items-center justify-content-between gap-2 small">
+        <span class="text-muted">Maestro Yoga — لوحة الإدارة</span>
+        <span class="text-muted">
+          واجهة الإدارة تستخدم
+          <a href="https://coreui.io/bootstrap/" class="text-decoration-none" rel="noopener noreferrer" target="_blank">CoreUI for Bootstrap</a>
+          (رخصة MIT).
+        </span>
+      </div>
+    </footer>
   </div>
 
   <dialog class="admin-help-dialog" id="admin-help-dialog" aria-labelledby="admin-help-dialog-title">
@@ -74,13 +81,37 @@
       <ul>
         <li><kbd>؟</kbd> (أو <kbd>Shift</kbd> + <kbd>/</kbd> على لوحة إنجليزية) — فتح/إغلاق نافذة الاختصارات عندما لا يكون التركيز في حقل نص.</li>
         <li><kbd>Esc</kbd> — إغلاق القوائم المنسدلة للتبويبات.</li>
-        <li>على الشاشات العريضة: التنقل من <strong>القائمة الجانبية</strong> (Tabler)؛ على الجوال: زر القائمة ثم الشريط الجانبي أو <strong>شريط التبويبات</strong> أسفل الملخص. الرابط يُحدّث التجزئة <code>#section-…</code> للمشاركة.</li>
+        <li>على الشاشات العريضة: التنقل من <strong>القائمة الجانبية</strong> (CoreUI)؛ على الجوال: زر القائمة ثم الشريط الجانبي أو <strong>شريط التبويبات</strong> أسفل الملخص. الرابط يُحدّث التجزئة <code>#section-…</code> للمشاركة.</li>
       </ul>
       <button type="button" class="admin-help-dialog__close" id="admin-help-close">إغلاق</button>
     </div>
   </dialog>
 
-  <script src="https://cdn.jsdelivr.net/npm/@tabler/core@1.4.0/dist/js/tabler.min.js" crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@coreui/coreui@5.4.3/dist/js/bootstrap.bundle.min.js" crossorigin="anonymous"></script>
+  <script>
+    (function () {
+      var sb = document.getElementById("sidebar");
+      var openBtn = document.getElementById("maestro-sidebar-open");
+      if (!sb) return;
+      function closeMobile() {
+        if (window.matchMedia && window.matchMedia("(min-width: 992px)").matches) return;
+        sb.classList.remove("show");
+      }
+      function toggle() {
+        sb.classList.toggle("show");
+      }
+      if (openBtn) openBtn.addEventListener("click", toggle);
+      sb.addEventListener("click", function (e) {
+        if (e.target.closest("a.nav-link, a.sidebar-brand")) closeMobile();
+      });
+      document.addEventListener("click", function (e) {
+        if (!sb.classList.contains("show")) return;
+        if (window.matchMedia && window.matchMedia("(min-width: 992px)").matches) return;
+        if (sb.contains(e.target) || (openBtn && openBtn.contains(e.target))) return;
+        sb.classList.remove("show");
+      });
+    })();
+  </script>
   <script src="https://unpkg.com/htmx.org@2.0.4" crossorigin="anonymous"></script>
   <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.14.3/dist/cdn.min.js" crossorigin="anonymous"></script>
   <script src="/static/dist/admin.js"></script>
@@ -787,7 +818,7 @@
             "section-tabs--has-active",
             !!document.querySelector("#section-tabs .section-tab.active") ||
               !!document.querySelector("#section-tabs .section-tab-cluster.section-tab-cluster--active") ||
-              !!document.querySelector("#maestro-sidebar-menu .section-tab.active")
+              !!document.querySelector("#maestro-sidebar-nav .section-tab.active")
           );
         }
       }

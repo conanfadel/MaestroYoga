@@ -1,35 +1,21 @@
 {% import "partials/admin_nav_macros.html" as admin_nav with context %}
-<aside
-  class="navbar navbar-vertical navbar-expand-lg navbar-dark maestro-sidebar d-flex flex-column"
+<div
+  class="sidebar sidebar-fixed sidebar-lg sidebar-dark sidebar-end border-start maestro-admin-sidebar"
   id="sidebar"
   x-ignore
+  lang="ar"
+  dir="rtl"
   aria-label="التنقل بين أقسام لوحة الإدارة"
 >
-  {# flex-column دائماً: تجنب صف أفقي يضع brand بعرض 100% فيدفع القائمة لمنطقة بارتفاع صفر #}
-  <div class="container-fluid d-flex flex-column align-items-stretch px-lg-0 flex-grow-1">
-    <div class="d-flex align-items-center justify-content-between gap-2 w-100 px-2 px-lg-0 flex-shrink-0">
-      <a href="/admin" class="navbar-brand navbar-brand-autodark m-0 px-lg-3 py-lg-2 text-center text-lg-start d-inline-flex align-items-center justify-content-center justify-content-lg-start gap-2 flex-grow-1 min-w-0">
-        {% if center and center.logo_url %}
-        <img src="{{ center.logo_url }}" alt="" class="maestro-sidebar-logo" width="36" height="36" decoding="async" />
-        {% endif %}
-        <span class="text-truncate">{{ center.name if center else 'Maestro Yoga' }}</span>
-      </a>
-      <button
-        class="navbar-toggler d-lg-none flex-shrink-0"
-        type="button"
-        data-bs-toggle="collapse"
-        data-bs-target="#maestro-sidebar-menu"
-        aria-controls="maestro-sidebar-menu"
-        aria-expanded="false"
-        aria-label="فتح وإغلاق القائمة الجانبية"
-      >
-        <span class="navbar-toggler-icon"></span>
-      </button>
-    </div>
-    <div class="collapse navbar-collapse flex-column align-items-stretch w-100 flex-grow-1 maestro-sidebar-scroll" id="maestro-sidebar-menu">
-      <ul class="navbar-nav flex-column w-100 px-lg-2 pb-lg-3" id="maestro-sidebar-nav" role="navigation" aria-label="أقسام لوحة الإدارة">
-        {{ admin_nav.admin_nav_clusters('sidebar') }}
-      </ul>
-    </div>
+  <div class="sidebar-header border-bottom">
+    <a href="/admin" class="sidebar-brand text-decoration-none d-flex align-items-center gap-2 px-3 py-2">
+      {% if center and center.logo_url %}
+      <img src="{{ center.logo_url }}" alt="" width="32" height="32" decoding="async" class="rounded" />
+      {% endif %}
+      <span class="text-truncate fw-semibold">{{ center.name if center else 'Maestro Yoga' }}</span>
+    </a>
   </div>
-</aside>
+  <ul class="sidebar-nav" id="maestro-sidebar-nav" role="navigation" aria-label="أقسام لوحة الإدارة">
+    {{ admin_nav.admin_nav_clusters('sidebar') }}
+  </ul>
+</div>

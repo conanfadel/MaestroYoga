@@ -1,0 +1,38 @@
+/**
+ * Maestro — جسور RTL منطقية فوق CoreUI/Bootstrap (لوحة الإدارة)
+ * متغيرات مسافات — تعويضات خفيفة — عزل LTR للبريد/الأرقام
+ */
+
+html[dir="rtl"] body.maestro-coreui #app,
+html[dir="rtl"] body.maestro-coreui #main,
+html[dir="rtl"] body.maestro-coreui main.admin-main,
+html[dir="rtl"] body.maestro-coreui .maestro-admin-footer {
+  direction: rtl;
+}
+
+html[dir="rtl"] body.report-run-sheet {
+  direction: rtl;
+}
+
+:root {
+  --maestro-admin-space-inline-xs: 0.5rem;
+  --maestro-admin-space-inline-sm: 0.75rem;
+  --maestro-admin-space-inline-md: 1rem;
+  --maestro-admin-space-inline-lg: 1.25rem;
+  --maestro-admin-space-block-xs: 0.5rem;
+  --maestro-admin-space-block-sm: 0.75rem;
+  --maestro-admin-space-block-md: 1rem;
+}
+
+.admin-ltr-embed {
+  direction: ltr;
+  unicode-bidi: isolate;
+  display: inline-block;
+  max-width: 100%;
+  vertical-align: baseline;
+}
+
+body.maestro-coreui #app .btn-toolbar .btn + .btn,
+body.maestro-coreui #app .btn-group .btn + .btn {
+  margin-inline-start: 0.25rem;
+}
