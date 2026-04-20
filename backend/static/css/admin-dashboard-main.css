@@ -1095,3 +1095,31 @@ input[type="number"]::-webkit-inner-spin-button:hover,
 input[type="number"]::-webkit-outer-spin-button:hover {
   background-color: rgba(197, 160, 89, 0.1); /* تأثير لوني خفيف عند تمرير الماوس */
 }
+/* =========================================================
+   إظهار وتحسين أسهم الزيادة والنقصان (Spin Buttons) لحقول الأرقام
+   ========================================================= */
+
+/* 1. إجبار المتصفحات (مثل فايرفوكس) على إظهار الحقل كحقل رقمي */
+input[type="number"] {
+  -moz-appearance: number-input !important;
+  appearance: auto !important;
+  padding-inline-end: 4px !important; /* مساحة صغيرة لتجنب التصاق الرقم بالسهم */
+}
+
+/* 2. إظهار الأسهم وتكبيرها في المتصفحات المبنية على WebKit (كروم، إيدج، سفاري) */
+input[type="number"]::-webkit-inner-spin-button,
+input[type="number"]::-webkit-outer-spin-button {
+  -webkit-appearance: inner-spin-button !important;
+  appearance: inner-spin-button !important;
+  display: block !important;      /* إجبار المتصفح على رسم السهم */
+  opacity: 1 !important;          /* جعلها مرئية دائماً وليس فقط عند مرور الماوس */
+  height: 100% !important;        /* لتمتد على كامل ارتفاع الحقل */
+  cursor: pointer !important;     /* تغيير شكل الماوس ليدل على أنها قابلة للنقر */
+  margin-inline-start: 8px;       /* إبعاد السهم قليلاً عن حافة الحقل في الاتجاه العربي */
+}
+
+/* 3. تحسين تفاعل الأسهم عند النقر أو التمرير (بألوان الهوية الذهبية) */
+input[type="number"]::-webkit-inner-spin-button:hover,
+input[type="number"]::-webkit-outer-spin-button:hover {
+  background-color: rgba(197, 160, 89, 0.1); 
+}
