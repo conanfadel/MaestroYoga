@@ -78,8 +78,8 @@
               <td>{{ pu.id }}</td>
               <td><span class="mono">{{ pu.subscription_number_display }}</span></td>
               <td>{{ pu.full_name }}</td>
-              <td>{{ pu.email }}</td>
-              <td>{{ pu.phone }}</td>
+              <td><span class="admin-ltr-embed" dir="ltr">{{ pu.email }}</span></td>
+              <td><span class="admin-ltr-embed" dir="ltr">{{ pu.phone }}</span></td>
               <td>{{ pu.created_at_display }}</td>
               <td>
                 <span class="badge {{ 'completed' if pu.is_active else 'pending' }}">
@@ -206,8 +206,8 @@
                   <td>{{ tu.id }}</td>
                   <td><span class="mono">{{ tu.subscription_number_display }}</span></td>
                   <td>{{ tu.full_name }}</td>
-                  <td><span class="mono">{{ tu.email }}</span></td>
-                  <td>{{ tu.phone }}</td>
+                  <td><span class="mono admin-ltr-embed" dir="ltr">{{ tu.email }}</span></td>
+                  <td><span class="admin-ltr-embed" dir="ltr">{{ tu.phone }}</span></td>
                   <td>{{ tu.deleted_at_display }}</td>
                   <td>
                     <span class="loyalty-tier loyalty-tier--{{ tu.loyalty_tier }}" title="جلسات مؤكدة في مركزك">{{ tu.loyalty_tier_label }} ({{ tu.loyalty_confirmed_count }})</span>

@@ -62,7 +62,7 @@
             <td>{{ ev.created_at }}</td>
             <td>{{ ev.event_type }}</td>
             <td>{{ ev.status }}</td>
-            <td>{{ ev.email or '—' }}</td>
+            <td>{% if ev.email %}<span class="admin-ltr-embed" dir="ltr">{{ ev.email }}</span>{% else %}—{% endif %}</td>
             <td>{{ ev.ip or '—' }}</td>
             <td class="small">{{ ev.path or '—' }}</td>
           </tr>

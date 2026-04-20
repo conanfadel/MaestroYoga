@@ -614,7 +614,7 @@
                     <tr>
                       <td>{{ al.created_at_display }}</td>
                       <td><span class="badge">{{ al.status }}</span></td>
-                      <td>{{ al.email }}</td>
+                      <td><span class="admin-ltr-embed" dir="ltr">{{ al.email }}</span></td>
                       <td>{{ al.ip }}</td>
                     </tr>
                     {% else %}
@@ -685,7 +685,7 @@
                       <td>{{ ev.created_at_display }}</td>
                       <td>{{ ev.event_type }}</td>
                       <td><span class="badge">{{ ev.status }}</span></td>
-                      <td>{{ ev.email }}</td>
+                      <td><span class="admin-ltr-embed" dir="ltr">{{ ev.email }}</span></td>
                       <td>{{ ev.ip }}</td>
                       <td>{{ ev.path }}</td>
                       <td><span class="mono">{{ ev.details }}</span></td>
@@ -769,7 +769,7 @@
                       <td>{{ h.created_at_display }}</td>
                       <td>{{ h.event_type }}</td>
                       <td><span class="badge">{{ h.status }}</span></td>
-                      <td>{{ h.admin_email }}</td>
+                      <td><span class="admin-ltr-embed" dir="ltr">{{ h.admin_email }}</span></td>
                       <td>{{ h.target_ip }}</td>
                       <td>{{ h.minutes }}</td>
                       <td>{{ h.reason }}</td>

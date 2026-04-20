@@ -17,8 +17,8 @@
   position: fixed;
   top: 0;
   bottom: 0;
-  right: 0;
-  left: auto;
+  inset-inline-end: 0;
+  inset-inline-start: auto;
   width: min(860px, 96vw);
   max-width: 100vw;
   min-width: min(420px, 100vw);

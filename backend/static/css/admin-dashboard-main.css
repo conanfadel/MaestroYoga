@@ -1,4 +1,12 @@
 :root {
+  /* مسافات منطقية مشتركة (تكمّل admin-rtl-mazer-bridge.css) */
+  --maestro-admin-space-inline-xs: 0.5rem;
+  --maestro-admin-space-inline-sm: 0.75rem;
+  --maestro-admin-space-inline-md: 1rem;
+  --maestro-admin-space-inline-lg: 1.25rem;
+  --maestro-admin-space-block-xs: 0.5rem;
+  --maestro-admin-space-block-sm: 0.75rem;
+  --maestro-admin-space-block-md: 1rem;
   --gold: #c5a059;
   --gold-dark: #9a7b3c;
   --gold-soft: rgba(197, 160, 89, 0.15);
@@ -36,7 +44,7 @@ html {
 
 .offcanvas {
   box-shadow: -10px 0 40px rgba(0, 0, 0, 0.1);
-  border-left: 1px solid rgba(197, 160, 89, 0.3);
+  border-inline-start: 1px solid rgba(197, 160, 89, 0.3);
 }
 
 body {
@@ -503,7 +511,7 @@ button.danger:hover { box-shadow: 0 4px 14px rgba(220, 38, 38, 0.35); }
 }
 
 table { width: 100%; max-width: 100%; border-collapse: collapse; font-size: 0.9rem; background: var(--white); border-radius: 12px; overflow: hidden; }
-th, td { border-bottom: 1px solid #e8ecf0; padding: 9px 8px; text-align: right; overflow-wrap: anywhere; word-wrap: break-word; }
+th, td { border-bottom: 1px solid #e8ecf0; padding: 9px 8px; text-align: start; overflow-wrap: anywhere; word-wrap: break-word; }
 th { background: var(--charcoal); color: #f8fafc; font-weight: 800; font-size: 0.88rem; }
 tr:last-child td { border-bottom: 0; }
 
@@ -895,7 +903,9 @@ a.section-tab, button.section-tab { -webkit-appearance: none; appearance: none; 
 .plan-card::before {
   content: "";
   position: absolute;
-  top: 0; right: 0; left: 0; height: 4px;
+  inset-inline: 0;
+  top: 0;
+  height: 4px;
   background: linear-gradient(90deg, var(--gold), var(--mint-mid));
 }
 
@@ -1091,12 +1101,12 @@ input[type="number"]::-webkit-outer-spin-button:hover {
 
 .admin-number-stepper > input[type="number"] {
   width: 100%;
-  padding-right: 2.4rem !important;
+  padding-inline-end: 2.4rem !important;
 }
 
 .admin-number-stepper__buttons {
   position: absolute;
-  right: 6px;
+  inset-inline-end: 6px;
   top: 50%;
   transform: translateY(-50%);
   display: grid;
@@ -1106,11 +1116,6 @@ input[type="number"]::-webkit-outer-spin-button:hover {
   height: calc(100% - 10px);
   min-height: 32px;
   pointer-events: none;
-}
-
-[dir="rtl"] .admin-number-stepper__buttons {
-  left: auto;
-  right: 6px;
 }
 
 .admin-number-stepper__btn {

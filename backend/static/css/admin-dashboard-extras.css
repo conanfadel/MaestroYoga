@@ -12,8 +12,8 @@
 }
 .admin-skip-link:focus {
   position: fixed;
-  top: 12px;
-  right: 12px;
+  inset-block-start: 12px;
+  inset-inline-end: 12px;
   z-index: 10000;
   width: auto;
   height: auto;

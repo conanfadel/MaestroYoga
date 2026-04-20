@@ -45,9 +45,8 @@ body.maestro-tabler .admin-main .card {
 }
 
 body.maestro-tabler .admin-skip-link:focus {
-  right: auto;
-  left: auto;
   inset-inline-end: 12px;
+  inset-inline-start: auto;
 }
 
 body.maestro-tabler #maestro-top-navbar {
