@@ -88,6 +88,18 @@ body.maestro-tabler .maestro-sidebar .maestro-sidebar-logo {
   border-radius: 8px;
 }
 
+/* شريط جانبي قابل للتمرير: على الشاشات العريضة يكون القائمة مفتوحة دون فئة .show */
+@media (min-width: 992px) {
+  body.maestro-tabler .maestro-sidebar #maestro-sidebar-menu.navbar-collapse {
+    display: flex !important;
+    flex-direction: column !important;
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+  }
+}
+
 body.maestro-tabler .maestro-sidebar #maestro-sidebar-menu.navbar-collapse.show {
   display: flex !important;
   flex-direction: column !important;
