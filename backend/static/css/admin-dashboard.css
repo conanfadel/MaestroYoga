@@ -5,8 +5,8 @@
 @import url("/static/css/admin-dashboard-extras.css");
 @import url("/static/css/form-field-density.css");
 @import url("/static/css/admin-dashboard-modern.css");
-@import url("/static/css/admin-coreui-bridge.css");
-@import url("/static/css/admin-rtl-coreui-bridge.css");
+@import url("/static/css/admin-mazer-shell.css");
+@import url("/static/css/admin-rtl-mazer-bridge.css");
 @import url("/static/css/admin-perf.css");
 @import url("/static/css/admin-skeleton.css");
 @import url("/static/css/admin-drawer.css");

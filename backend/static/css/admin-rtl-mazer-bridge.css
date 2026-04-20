@@ -1,0 +1,54 @@
+/**
+ * Maestro — جسور RTL منطقية فوق Bootstrap/Mazer (لوحة الإدارة)
+ * (10) متغيرات مسافات — (11) تعويضات خفيفة — (8) أداة عزل LTR للبريد/الأرقام
+ *
+ * اتجاه الصفحة: العربية RTL افتراضيًا. قد يفرض قالب Mazer (CDN) اتجاهًا مخالفًا؛
+ * القواعد أدناه تعيد RTL على الهيكل بالكامل. تبقى حقول `input[dir="ltr"]` و`.admin-ltr-embed`
+ * جزرًا معزولة للأرقام/الإيميل فقط (Unicode bidi) دون عكس باقي الواجهة.
+ */
+
+/* —— لوحة الإدارة + Mazer: RTL على الحاوية الجذرية —— */
+html[dir="rtl"] body.maestro-mazer #app,
+html[dir="rtl"] body.maestro-mazer #main,
+html[dir="rtl"] body.maestro-mazer main.admin-main,
+html[dir="rtl"] body.maestro-mazer .maestro-admin-footer {
+  direction: rtl;
+}
+
+/* صفحات التقارير/الطباعة المستقلة (تستخدم admin-dashboard.css بدون body.maestro-mazer) */
+html[dir="rtl"] body.report-run-sheet {
+  direction: rtl;
+}
+
+:root {
+  --maestro-admin-space-inline-xs: 0.5rem;
+  --maestro-admin-space-inline-sm: 0.75rem;
+  --maestro-admin-space-inline-md: 1rem;
+  --maestro-admin-space-inline-lg: 1.25rem;
+  --maestro-admin-space-block-xs: 0.5rem;
+  --maestro-admin-space-block-sm: 0.75rem;
+  --maestro-admin-space-block-md: 1rem;
+}
+
+/* عزل نصوص LTR داخل جمل عربية (بريد، أرقام، أكواد) */
+.admin-ltr-embed {
+  direction: ltr;
+  unicode-bidi: isolate;
+  display: inline-block;
+  max-width: 100%;
+  vertical-align: baseline;
+}
+
+/* شريط علوي Bootstrap/Mazer إن ظهر داخل #app */
+body.maestro-mazer #app .navbar .navbar-brand {
+  margin-inline-end: auto;
+}
+
+body.maestro-mazer #app .navbar .nav-link {
+  margin-inline: 0.35rem;
+}
+
+body.maestro-mazer #app .btn-toolbar .btn + .btn,
+body.maestro-mazer #app .btn-group .btn + .btn {
+  margin-inline-start: 0.25rem;
+}
