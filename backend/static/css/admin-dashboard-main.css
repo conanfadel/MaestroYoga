@@ -1101,12 +1101,12 @@ input[type="number"]::-webkit-outer-spin-button:hover {
 
 .admin-number-stepper > input[type="number"] {
   width: 100%;
-  padding-inline-end: 2.4rem !important;
+  padding-right: 2.4rem !important;
 }
 
 .admin-number-stepper__buttons {
   position: absolute;
-  inset-inline-end: 6px;
+  right: 6px;
   top: 50%;
   transform: translateY(-50%);
   display: grid;
@@ -1116,6 +1116,11 @@ input[type="number"]::-webkit-outer-spin-button:hover {
   height: calc(100% - 10px);
   min-height: 32px;
   pointer-events: none;
+}
+
+[dir="rtl"] .admin-number-stepper__buttons {
+  left: auto;
+  right: 6px;
 }
 
 .admin-number-stepper__btn {
