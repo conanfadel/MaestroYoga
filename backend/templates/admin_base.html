@@ -31,24 +31,19 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/zuramai/mazer@docs/demo/assets/compiled/css/app.css" crossorigin="anonymous" />
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/zuramai/mazer@docs/demo/assets/compiled/css/app-dark.css" crossorigin="anonymous" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/core@1.4.0/dist/css/tabler-vendors.rtl.min.css" crossorigin="anonymous" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/core@1.4.0/dist/css/tabler.rtl.min.css" crossorigin="anonymous" />
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" crossorigin="anonymous" />
   <link rel="stylesheet" href="/static/css/admin-dashboard.css" />
 </head>
-<body class="maestro-mazer" lang="ar" dir="rtl">
+<body class="maestro-tabler" lang="ar" dir="rtl">
   {% from "partials/report_hub_icons.html" import svg_calendar, svg_chart, svg_users, svg_package, svg_pulse, svg_cash, svg_download, svg_shield %}
   {% from "partials/admin_discount_fields.html" import admin_discount_fields %}
   <a class="admin-skip-link" href="#main-content">تخطي إلى المحتوى الرئيسي</a>
-  <div id="app" dir="rtl" lang="ar">
-    <div id="sidebar" x-ignore>
-      {% include "partials/admin_mazer_sidebar.html" %}
-    </div>
-    <div id="main" dir="rtl" lang="ar">
-      <header class="mb-3">
-        <a href="#" class="burger-btn d-block d-xl-none"><i class="bi bi-justify fs-3"></i></a>
-      </header>
-      <main id="main-content" class="admin-main" lang="ar" dir="rtl" tabindex="-1">
+  <div class="page" id="app" dir="rtl" lang="ar">
+    {% include "partials/admin_sidebar_nav.html" %}
+    <div class="page-wrapper" id="main" dir="rtl" lang="ar">
+      <main id="main-content" class="page-body admin-main" lang="ar" dir="rtl" tabindex="-1">
         <div class="container-xl">
     {% include "partials/admin_top_bar.html" %}
 
@@ -65,7 +60,7 @@
           <span class="text-muted">Maestro Yoga — لوحة الإدارة</span>
           <span class="text-muted">
             واجهة الإدارة تستخدم
-            <a href="https://github.com/zuramai/mazer" class="text-decoration-none" rel="noopener noreferrer" target="_blank">Mazer</a>
+            <a href="https://tabler.io" class="text-decoration-none" rel="noopener noreferrer" target="_blank">Tabler</a>
             (رخصة MIT).
           </span>
         </div>
@@ -79,42 +74,16 @@
       <ul>
         <li><kbd>؟</kbd> (أو <kbd>Shift</kbd> + <kbd>/</kbd> على لوحة إنجليزية) — فتح/إغلاق نافذة الاختصارات عندما لا يكون التركيز في حقل نص.</li>
         <li><kbd>Esc</kbd> — إغلاق القوائم المنسدلة للتبويبات.</li>
-        <li>على الشاشات العريضة: التنقل من <strong>القائمة الجانبية</strong> (Mazer)؛ على الجوال: زر القائمة ثم الشريط الجانبي أو <strong>شريط التبويبات</strong> أسفل الملخص. الرابط يُحدّث التجزئة <code>#section-…</code> للمشاركة.</li>
+        <li>على الشاشات العريضة: التنقل من <strong>القائمة الجانبية</strong> (Tabler)؛ على الجوال: زر القائمة ثم الشريط الجانبي أو <strong>شريط التبويبات</strong> أسفل الملخص. الرابط يُحدّث التجزئة <code>#section-…</code> للمشاركة.</li>
       </ul>
       <button type="button" class="admin-help-dialog__close" id="admin-help-close">إغلاق</button>
     </div>
   </dialog>
 
-  <script src="https://cdn.jsdelivr.net/gh/zuramai/mazer@docs/demo/assets/extensions/perfect-scrollbar/perfect-scrollbar.min.js" crossorigin="anonymous"></script>
-  <script src="https://cdn.jsdelivr.net/gh/zuramai/mazer@docs/demo/assets/compiled/js/app.js" crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@tabler/core@1.4.0/dist/js/tabler.min.js" crossorigin="anonymous"></script>
   <script src="https://unpkg.com/htmx.org@2.0.4" crossorigin="anonymous"></script>
   <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.14.3/dist/cdn.min.js" crossorigin="anonymous"></script>
   <script src="/static/dist/admin.js"></script>
-  <script>
-    (function () {
-      var menu = document.getElementById("admin-mazer-sidebar-menu");
-      if (!menu) return;
-      menu.addEventListener("click", function (e) {
-        if (e.target.closest(".submenu a, .submenu .submenu-link, .submenu .section-tab")) return;
-        var link = e.target.closest(".sidebar-item.has-sub > a.sidebar-link");
-        if (!link) return;
-        var item = link.closest(".sidebar-item.has-sub");
-        if (!item) return;
-        window.setTimeout(function () {
-          var sub = item.querySelector(".submenu");
-          if (!sub || !sub.classList.contains("submenu-open")) return;
-          menu.querySelectorAll(".sidebar-item.has-sub").forEach(function (other) {
-            if (other === item) return;
-            var sm = other.querySelector(".submenu");
-            if (!sm) return;
-            sm.classList.remove("submenu-open");
-            sm.classList.add("submenu-closed");
-            other.classList.remove("active");
-          });
-        }, 0);
-      });
-    })();
-  </script>
   <script>
     (function () {
       const STORAGE_KEY = "maestro_admin_scroll_y";
@@ -818,7 +787,7 @@
             "section-tabs--has-active",
             !!document.querySelector("#section-tabs .section-tab.active") ||
               !!document.querySelector("#section-tabs .section-tab-cluster.section-tab-cluster--active") ||
-              !!document.querySelector("#admin-mazer-sidebar-menu .section-tab.active")
+              !!document.querySelector("#maestro-sidebar-menu .section-tab.active")
           );
         }
       }

@@ -34,19 +34,12 @@ def _extract_section_ids() -> set[str]:
 
 
 def _extract_data_targets() -> set[str]:
-    files = (
-        PARTIALS_DIR / "admin_nav_macros.html",
-        PARTIALS_DIR / "admin_mazer_sidebar.html",
-    )
-    targets: set[str] = set()
-    for path in files:
-        targets.update(DATA_TARGET_RE.findall(_read(path)))
-    return targets
+    # مصدر واحد: الماكرو يعرّف كل data-target لأنماط التبويب والشريط الجانبي.
+    return set(DATA_TARGET_RE.findall(_read(PARTIALS_DIR / "admin_nav_macros.html")))
 
 
 def _extract_security_scroll_anchors() -> set[str]:
-    nav_html = _read(PARTIALS_DIR / "admin_nav_macros.html") + "\n" + _read(PARTIALS_DIR / "admin_mazer_sidebar.html")
-    return set(SCROLL_ANCHOR_RE.findall(nav_html))
+    return set(SCROLL_ANCHOR_RE.findall(_read(PARTIALS_DIR / "admin_nav_macros.html")))
 
 
 def _extract_dashboard_div_ids() -> set[str]:
