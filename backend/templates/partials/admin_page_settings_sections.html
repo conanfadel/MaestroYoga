@@ -1,4 +1,4 @@
-{% if perm_branding %}
+﻿    {% if perm_branding %}
     <section id="section-branding" class="accordion">
       <div class="accordion-body">
         <div class="card">
@@ -102,38 +102,468 @@
     </section>
     {% endif %}
 
-    {% if perm_reports_hub %}
-    <section id="section-reports" class="accordion">
+    {% if perm_index %}
+    <section id="section-index-page" class="accordion">
       <div class="accordion-body">
-        <div class="card" style="margin-top:0;margin-bottom:14px;">
-          <h2 class="admin-booking-block-heading admin-booking-block-heading--flush-top">إعدادات التقارير والأهداف</h2>
-          <p class="small" style="margin:0 0 12px;">أهداف شهرية للمقارنة في تقارير الإيراد والرؤى، ونسبة ضريبة تقديرية للمركز، وبريد لإرسال الملخص اليومي.</p>
-          <form method="post" action="/admin/center/report-settings" class="form" data-preserve-scroll="1" style="display:grid;gap:10px;max-width:520px;">
-            <input type="hidden" name="return_section" value="section-reports" />
-            <label>هدف إيراد شهري (SAR، اختياري)
-              <input name="monthly_revenue_goal" type="number" min="0" step="0.01" autocomplete="off" lang="en" dir="ltr" placeholder="مثال: 50000" value="{% if center and center.monthly_revenue_goal is not none %}{{ center.monthly_revenue_goal }}{% endif %}" />
-            </label>
-            <label>هدف حجوزات نشطة شهرياً (عدد، اختياري)
-              <input name="monthly_bookings_goal" type="number" min="0" step="1" autocomplete="off" lang="en" dir="ltr" placeholder="مثال: 120" value="{% if center and center.monthly_bookings_goal is not none %}{{ center.monthly_bookings_goal }}{% endif %}" />
-            </label>
-            <label>ضريبة تقديرية للمركز % (فارغ = استخدام البيئة الافتراضية)
-              <input name="vat_rate_percent" type="number" min="0" max="100" step="0.01" autocomplete="off" lang="en" dir="ltr" placeholder="مثال: 15" value="{% if center and center.vat_rate_percent is not none %}{{ center.vat_rate_percent }}{% endif %}" />
-            </label>
-            <label>بريد ملخص يومي (فارغ = بريد حسابك عند الإرسال)
-              <input name="report_digest_email" type="email" maxlength="220" autocomplete="email" placeholder="ops@example.com" value="{{ center.report_digest_email if center and center.report_digest_email else '' }}" />
-            </label>
-            <button type="submit">حفظ الإعدادات</button>
+        <div class="card">
+          <h2>محتوى صفحة الحجز العامة</h2>
+          <p class="small" style="margin:0 0 14px;line-height:1.65;">
+            تحكّم باسم المدينة و<strong>اسم المركز</strong> كما يظهر للزائر، وبإظهار أو إخفاء أقسام الصفحة (شريط الثقة، شرح الجلسة/الاشتراك، شريط الفريق، الأخبار، الخطوات، الولاء، آراء العملاء، الاسترداد، إلخ). يمكنك استخدام <code>{name}</code> في فقرة الاسترداد الأولى لعرض اسم المركز داخل النص.
+          </p>
+          {% if center and index_page %}
+          <form method="post" action="/admin/center/index-page" data-preserve-scroll="1">
+            <input type="hidden" name="scroll_y" id="index-page-scroll-y" value="" />
+            <input type="hidden" name="return_section" value="section-index-page" />
+
+            <h3 class="admin-booking-block-heading admin-booking-block-heading--flush-top">الاسم والموقع</h3>
+            <label for="index_center_name">اسم المركز (يظهر في العنوان وSEO)</label>
+            <input id="index_center_name" name="center_name" type="text" required maxlength="200" value="{{ center.name }}" />
+            <label for="index_city">المدينة (اختياري — شريط الثقة)</label>
+            <input id="index_city" name="city" type="text" maxlength="120" placeholder="مثال: القطيف" value="{{ center.city or 'القطيف' }}" />
+            <button type="submit" class="soft" style="margin:10px 0 16px;">حفظ الاسم والموقع</button>
+
+            <h3 class="admin-booking-block-heading">شريط الثقة أسفل الغلاف</h3>
+            <label for="trust_show">القسم</label>
+            <select id="trust_show" name="trust_show" aria-label="إظهار شريط الثقة">
+              <option value="1" {% if index_page.trust_bar.show %}selected{% endif %}>إظهار</option>
+              <option value="0" {% if not index_page.trust_bar.show %}selected{% endif %}>إخفاء</option>
+            </select>
+            <label for="trust_payment_text">سطر الدفع</label>
+            <input id="trust_payment_text" name="trust_payment_text" type="text" maxlength="160" value="{{ index_page.trust_bar.payment_text }}" />
+            <label for="trust_trainers_text">سطر المدربين</label>
+            <input id="trust_trainers_text" name="trust_trainers_text" type="text" maxlength="160" value="{{ index_page.trust_bar.trainers_text }}" />
+            <label for="trust_show_session_count">عدد الجلسات المعروضة</label>
+            <select id="trust_show_session_count" name="trust_show_session_count">
+              <option value="1" {% if index_page.trust_bar.show_session_count %}selected{% endif %}>إظهار عند وجود جلسات</option>
+              <option value="0" {% if not index_page.trust_bar.show_session_count %}selected{% endif %}>إخفاء</option>
+            </select>
+            <label for="trust_show_city">سطر المدينة</label>
+            <select id="trust_show_city" name="trust_show_city">
+              <option value="1" {% if index_page.trust_bar.show_city %}selected{% endif %}>إظهار عند تعبئة المدينة</option>
+              <option value="0" {% if not index_page.trust_bar.show_city %}selected{% endif %}>إخفاء</option>
+            </select>
+            <label for="trust_refund_link_text">نص رابط الاسترداد</label>
+            <input id="trust_refund_link_text" name="trust_refund_link_text" type="text" maxlength="120" value="{{ index_page.trust_bar.refund_link_text }}" />
+            <button type="submit" class="soft" style="margin:10px 0 16px;">حفظ شريط الثقة أسفل الغلاف</button>
+
+            <h3 class="admin-booking-block-heading">شرائح الهيرو (بجانب أزرار الحجز)</h3>
+            <label for="hero_chips_show">الشرائح</label>
+            <select id="hero_chips_show" name="hero_chips_show">
+              <option value="1" {% if index_page.hero_chips.show %}selected{% endif %}>إظهار</option>
+              <option value="0" {% if not index_page.hero_chips.show %}selected{% endif %}>إخفاء</option>
+            </select>
+            <label for="hero_c1">شريحة 1</label>
+            <input id="hero_c1" name="hero_c1" type="text" maxlength="80" value="{{ index_page.hero_chips.c1 }}" />
+            <label for="hero_c2">شريحة 2</label>
+            <input id="hero_c2" name="hero_c2" type="text" maxlength="80" value="{{ index_page.hero_chips.c2 }}" />
+            <label for="hero_c3">شريحة 3</label>
+            <input id="hero_c3" name="hero_c3" type="text" maxlength="80" value="{{ index_page.hero_chips.c3 }}" />
+            <button type="submit" class="soft" style="margin:10px 0 16px;">حفظ شرائح الهيرو</button>
+
+            <h3 class="admin-booking-block-heading">شرح الجلسة مقابل الاشتراك</h3>
+            <label for="pc_show">القسم</label>
+            <select id="pc_show" name="pc_show">
+              <option value="1" {% if index_page.product_clarity.show %}selected{% endif %}>إظهار</option>
+              <option value="0" {% if not index_page.product_clarity.show %}selected{% endif %}>إخفاء</option>
+            </select>
+            <label for="pc_dropin_title">عنوان دروب إن</label>
+            <input id="pc_dropin_title" name="pc_dropin_title" type="text" maxlength="120" value="{{ index_page.product_clarity.dropin_title }}" />
+            <label for="pc_dropin_body">نص دروب إن</label>
+            <textarea id="pc_dropin_body" name="pc_dropin_body" rows="2" maxlength="600">{{ index_page.product_clarity.dropin_body }}</textarea>
+            <label for="pc_plan_title">عنوان الاشتراك</label>
+            <input id="pc_plan_title" name="pc_plan_title" type="text" maxlength="120" value="{{ index_page.product_clarity.plan_title }}" />
+            <label for="pc_plan_body">نص الاشتراك (يُسمح بوسوم HTML بسيطة مثل &lt;a&gt;)</label>
+            <textarea id="pc_plan_body" name="pc_plan_body" rows="3" maxlength="1200">{{ index_page.product_clarity.plan_body }}</textarea>
+            <label for="pc_note">ملاحظة أسفل البطاقتين (HTML مسموح)</label>
+            <textarea id="pc_note" name="pc_note" rows="2" maxlength="800">{{ index_page.product_clarity.note }}</textarea>
+            <button type="submit" class="soft" style="margin:10px 0 16px;">حفظ شرح الجلسة مقابل الاشتراك</button>
+
+            <h3 class="admin-booking-block-heading">شريط الفريق / المستويات</h3>
+            <label for="team_show">القسم</label>
+            <select id="team_show" name="team_show">
+              <option value="1" {% if index_page.team_strip.show %}selected{% endif %}>إظهار</option>
+              <option value="0" {% if not index_page.team_strip.show %}selected{% endif %}>إخفاء</option>
+            </select>
+            <label for="team_text">النص (HTML مسموح)</label>
+            <textarea id="team_text" name="team_text" rows="2" maxlength="600">{{ index_page.team_strip.text }}</textarea>
+            <button type="submit" class="soft" style="margin:10px 0 16px;">حفظ شريط الفريق / المستويات</button>
+
+            <h3 class="branding-subhead">شريط أخبار متحرك</h3>
+            <label for="news_ticker_show">الشريط</label>
+            <select id="news_ticker_show" name="news_ticker_show">
+              <option value="1" {% if index_page.news_ticker.show %}selected{% endif %}>إظهار عند وجود أخبار</option>
+              <option value="0" {% if not index_page.news_ticker.show %}selected{% endif %}>إخفاء</option>
+            </select>
+            <button type="submit" class="soft" style="margin:10px 0 16px;">حفظ شريط أخبار متحرك</button>
+
+            <h3 class="admin-booking-block-heading">خطوات الدفع (1–2–3)</h3>
+            <label for="steps_show">القسم</label>
+            <select id="steps_show" name="steps_show">
+              <option value="1" {% if index_page.steps.show %}selected{% endif %}>إظهار</option>
+              <option value="0" {% if not index_page.steps.show %}selected{% endif %}>إخفاء</option>
+            </select>
+            <label for="steps_s1">الخطوة 1 (بدون رقم، يُضاف تلقائياً)</label>
+            <input id="steps_s1" name="steps_s1" type="text" maxlength="220" value="{{ index_page.steps.s1 }}" />
+            <label for="steps_s2">الخطوة 2</label>
+            <input id="steps_s2" name="steps_s2" type="text" maxlength="220" value="{{ index_page.steps.s2 }}" />
+            <label for="steps_s3">الخطوة 3</label>
+            <input id="steps_s3" name="steps_s3" type="text" maxlength="220" value="{{ index_page.steps.s3 }}" />
+            <button type="submit" class="soft" style="margin:10px 0 16px;">حفظ خطوات الدفع</button>
+
+            <h3 class="admin-booking-block-heading">قسم الولاء في الصفحة</h3>
+            <label for="loyalty_block_show">القسم</label>
+            <select id="loyalty_block_show" name="loyalty_block_show">
+              <option value="1" {% if index_page.loyalty_block.show %}selected{% endif %}>إظهار</option>
+              <option value="0" {% if not index_page.loyalty_block.show %}selected{% endif %}>إخفاء</option>
+            </select>
+            <label for="loyalty_block_title">العنوان</label>
+            <input id="loyalty_block_title" name="loyalty_block_title" type="text" maxlength="120" value="{{ index_page.loyalty_block.title }}" />
+            <label for="loyalty_block_lead">المقدمة (HTML مسموح)</label>
+            <textarea id="loyalty_block_lead" name="loyalty_block_lead" rows="3" maxlength="1200">{{ index_page.loyalty_block.lead }}</textarea>
+            <button type="submit" class="soft" style="margin:10px 0 16px;">حفظ قسم الولاء في الصفحة</button>
+
+            <h3 class="admin-booking-block-heading">العمود الجانبي — مقارنة الخطط</h3>
+            <label for="plans_section_show">قسم الخطط</label>
+            <select id="plans_section_show" name="plans_section_show">
+              <option value="1" {% if index_page.plans_section.show %}selected{% endif %}>إظهار</option>
+              <option value="0" {% if not index_page.plans_section.show %}selected{% endif %}>إخفاء</option>
+            </select>
+            <label for="plans_section_heading">عنوان القسم</label>
+            <input id="plans_section_heading" name="plans_section_heading" type="text" maxlength="200" value="{{ index_page.plans_section.heading }}" />
+            <button type="submit" class="soft" style="margin:10px 0 16px;">حفظ العمود الجانبي — مقارنة الخطط</button>
+
+            <h3 class="branding-subhead">آراء العملاء</h3>
+            <label for="testimonials_show">القسم</label>
+            <select id="testimonials_show" name="testimonials_show">
+              <option value="1" {% if index_page.testimonials.show %}selected{% endif %}>إظهار</option>
+              <option value="0" {% if not index_page.testimonials.show %}selected{% endif %}>إخفاء</option>
+            </select>
+            <label for="tm1">رأي 1 (HTML مسموح)</label>
+            <textarea id="tm1" name="tm1" rows="2" maxlength="400">{{ index_page.testimonials.t1 }}</textarea>
+            <label for="tm2">رأي 2</label>
+            <textarea id="tm2" name="tm2" rows="2" maxlength="400">{{ index_page.testimonials.t2 }}</textarea>
+            <label for="tm3">رأي 3</label>
+            <textarea id="tm3" name="tm3" rows="2" maxlength="400">{{ index_page.testimonials.t3 }}</textarea>
+            <button type="submit" class="soft" style="margin:10px 0 16px;">حفظ آراء العملاء</button>
+
+            <h3 class="admin-booking-block-heading">الأسئلة الشائعة (العمود الجانبي)</h3>
+            <label for="faq_section_show">القسم</label>
+            <select id="faq_section_show" name="faq_section_show">
+              <option value="1" {% if index_page.faq_section.show %}selected{% endif %}>إظهار</option>
+              <option value="0" {% if not index_page.faq_section.show %}selected{% endif %}>إخفاء</option>
+            </select>
+            <label for="faq_section_heading">عنوان القسم</label>
+            <input id="faq_section_heading" name="faq_section_heading" type="text" maxlength="120" value="{{ index_page.faq_section.heading }}" />
+            <button type="submit" class="soft" style="margin:10px 0 16px;">حفظ الأسئلة الشائعة</button>
+
+            <h3 class="branding-subhead">الإلغاء والاسترداد (أسفل الصفحة)</h3>
+            <label for="refund_show">القسم</label>
+            <select id="refund_show" name="refund_show">
+              <option value="1" {% if index_page.refund.show %}selected{% endif %}>إظهار</option>
+              <option value="0" {% if not index_page.refund.show %}selected{% endif %}>إخفاء</option>
+            </select>
+            <label for="refund_title">عنوان القسم</label>
+            <input id="refund_title" name="refund_title" type="text" maxlength="120" value="{{ index_page.refund.title }}" />
+            <label for="refund_p1">الفقرة الأولى (استخدم <code>{name}</code> لاسم المركز؛ HTML مسموح)</label>
+            <textarea id="refund_p1" name="refund_p1" rows="4" maxlength="2000">{{ index_page.refund.p1 }}</textarea>
+            <label for="refund_p2">الفقرة الثانية</label>
+            <textarea id="refund_p2" name="refund_p2" rows="3" maxlength="2000">{{ index_page.refund.p2 }}</textarea>
+            <button type="submit" class="soft" style="margin:10px 0 16px;">حفظ الإلغاء والاسترداد</button>
+
+            <div class="branding-remove-zone" role="group" aria-labelledby="reset-index-label" style="margin-top:18px;">
+              <div class="branding-remove-zone__head">
+                <input type="checkbox" id="reset_index_defaults_chk" class="branding-remove-zone__checkbox" name="reset_index_defaults" value="1" />
+                <label id="reset-index-label" class="branding-remove-zone__title" for="reset_index_defaults_chk">إعادة نصوص الأقسام إلى الافتراضي (لا يمس الاسم أعلاه)</label>
+              </div>
+              <p class="branding-remove-zone__help">يُصفّر التخصيصات المخزّنة ويعيد النصوص الافتراضية للواجهة العامة. حقوق الاسم والمدينة أعلاه تُحفظ كما أدخلتها مع نفس الإرسال.</p>
+            </div>
+
+            <button type="submit" style="margin-top:14px;">حفظ محتوى صفحة الحجز</button>
           </form>
+          {% else %}
+          <p class="small">تعذر تحميل إعدادات المحتوى.</p>
+          {% endif %}
         </div>
       </div>
     </section>
     {% endif %}
 
+    {% if perm_loyalty %}
+    <section id="section-loyalty" class="accordion">
+      <div class="accordion-body">
+        <div class="card">
+          <h2 class="admin-booking-block-heading admin-booking-block-heading--flush-top">برنامج المكافآت والولاء</h2>
+          <p class="small" style="margin:0 0 12px;line-height:1.65;">
+            تُحسب الأوسمة من عدد الحجوزات بحالة <strong>مؤكد</strong> لكل بريد عميل في مركزك.
+            <strong>التسلسل:</strong> عتبة الفضي تكون دائماً على الأقل <strong>برونزي + 1</strong> جلسة، والذهبي على الأقل <strong>فضي + 1</strong> (يُطبّق تلقائياً عند الحفظ والعرض).
+            اترك حقل العتبة <strong>فارغاً</strong> لاستخدام <strong>افتراضي الخادم</strong> (<code>LOYALTY_*_MIN_CONFIRMED</code>).
+          </p>
+          {% if loyalty_admin %}
+          <p class="small" style="margin:0 0 14px;padding:10px 12px;background:var(--mint-bg);border-radius:10px;border:1px solid rgba(125,211,174,0.5);line-height:1.55;">
+            <strong>القيم الفعّالة الآن (بعد التسلسل):</strong> برونزي من {{ loyalty_admin.effective.bronze }} جلسة، فضي من {{ loyalty_admin.effective.silver }}، ذهبي من {{ loyalty_admin.effective.gold }}.
+            <span style="display:block;margin-top:6px;color:var(--charcoal-muted);font-size:0.88em;">مرجع افتراضي الخادم: {{ loyalty_admin.env.bronze }} / {{ loyalty_admin.env.silver }} / {{ loyalty_admin.env.gold }}</span>
+          </p>
+          {% endif %}
+          {% if center %}
+          <form id="admin-loyalty-form" method="post" action="/admin/center/loyalty" data-preserve-scroll="1">
+            <input type="hidden" name="return_section" value="section-loyalty" />
+            <h3 class="admin-booking-block-heading admin-booking-block-heading--flush-top">عتبات الجلسات المؤكدة</h3>
+            <label for="loyalty_bronze_min">أقل عدد جلسات للوسام البرونزي</label>
+            <input id="loyalty_bronze_min" name="loyalty_bronze_min" type="number" min="1" max="99999" step="1" autocomplete="off" lang="en" dir="ltr" placeholder="فارغ = خادم"
+              value="{{ center.loyalty_bronze_min if center.loyalty_bronze_min is not none else '' }}" />
+            <label for="loyalty_silver_min">أقل عدد جلسات للوسام الفضي (لا يقل عن برونزي + 1)</label>
+            <input id="loyalty_silver_min" name="loyalty_silver_min" type="number" min="1" max="99999" step="1" autocomplete="off" lang="en" dir="ltr" placeholder="فارغ = خادم"
+              value="{{ center.loyalty_silver_min if center.loyalty_silver_min is not none else '' }}" />
+            <label for="loyalty_gold_min">أقل عدد جلسات للوسام الذهبي (لا يقل عن فضي + 1)</label>
+            <input id="loyalty_gold_min" name="loyalty_gold_min" type="number" min="1" max="99999" step="1" autocomplete="off" lang="en" dir="ltr" placeholder="فارغ = خادم"
+              value="{{ center.loyalty_gold_min if center.loyalty_gold_min is not none else '' }}" />
+            <p id="loyalty-cascade-hint" class="small" style="margin:10px 0 0;padding:8px 10px;background:#f8fafc;border-radius:8px;color:var(--charcoal-muted);line-height:1.5;"></p>
+            <h3 class="admin-booking-block-heading">أسماء العرض (اختياري)</h3>
+            <p class="small" style="margin:0 0 10px;">تظهر للزائر بدل «برونزي / فضي / ذهبي» عند التعبئة.</p>
+            <label for="loyalty_label_bronze">اسم الوسام البرونزي</label>
+            <input id="loyalty_label_bronze" name="loyalty_label_bronze" type="text" maxlength="64" placeholder="برونزي"
+              value="{{ center.loyalty_label_bronze or '' }}" />
+            <label for="loyalty_label_silver">اسم الوسام الفضي</label>
+            <input id="loyalty_label_silver" name="loyalty_label_silver" type="text" maxlength="64" placeholder="فضي"
+              value="{{ center.loyalty_label_silver or '' }}" />
+            <label for="loyalty_label_gold">اسم الوسام الذهبي</label>
+            <input id="loyalty_label_gold" name="loyalty_label_gold" type="text" maxlength="64" placeholder="ذهبي"
+              value="{{ center.loyalty_label_gold or '' }}" />
+            <h3 class="admin-booking-block-heading">مكافآت ومزايا كل مستوى (اختياري)</h3>
+            <p class="small" style="margin:0 0 10px;line-height:1.55;">
+              تُعرض في <strong>صفحة الجمهور</strong> و<strong>إعدادات الحساب</strong> ضمن جدول برنامج الولاء. اترك الحقل فارغاً لاستخدام النصوص الافتراضية المقترحة (حد أقصى 800 حرف لكل مستوى).
+            </p>
+            <label for="loyalty_reward_bronze">نص مكافآت الوسام البرونزي</label>
+            <textarea id="loyalty_reward_bronze" name="loyalty_reward_bronze" rows="3" maxlength="800" placeholder="مثال: شارة ولاء في الحساب، إشعار بالعروض…">{{ center.loyalty_reward_bronze or '' }}</textarea>
+            <label for="loyalty_reward_silver">نص مكافآت الوسام الفضي</label>
+            <textarea id="loyalty_reward_silver" name="loyalty_reward_silver" rows="3" maxlength="800" placeholder="مثال: أولوية في الحجز المبكر، خصومات الحملات…">{{ center.loyalty_reward_silver or '' }}</textarea>
+            <label for="loyalty_reward_gold">نص مكافآت الوسام الذهبي</label>
+            <textarea id="loyalty_reward_gold" name="loyalty_reward_gold" rows="3" maxlength="800" placeholder="مثال: جلسات أو خصومات استثنائية، دعوات للفعاليات الحصرية…">{{ center.loyalty_reward_gold or '' }}</textarea>
+            <button type="submit" style="margin-top:14px;">حفظ إعدادات الولاء</button>
+          </form>
+          <script>
+            (function () {
+              var bEl = document.getElementById("loyalty_bronze_min");
+              var sEl = document.getElementById("loyalty_silver_min");
+              var gEl = document.getElementById("loyalty_gold_min");
+              var hint = document.getElementById("loyalty-cascade-hint");
+              function num(el) {
+                if (!el) return null;
+                var t = String(el.value || "").trim();
+                if (!t) return null;
+                var n = parseInt(t, 10);
+                return isNaN(n) ? null : n;
+              }
+              function sync() {
+                var bv = num(bEl);
+                var sv = num(sEl);
+                var gv = num(gEl);
+                var smin = bv != null ? bv + 1 : 2;
+                var effS = sv != null ? Math.max(sv, smin) : null;
+                var gmin = effS != null ? effS + 1 : 3;
+                var effG = gv != null ? Math.max(gv, gmin) : null;
+                if (sEl) {
+                  sEl.min = String(Math.max(2, smin));
+                  if (bv != null && sv != null && sv < bv + 1) {
+                    sEl.value = String(bv + 1);
+                    effS = bv + 1;
+                    gmin = effS + 1;
+                  }
+                }
+                if (gEl) {
+                  var gMinVal = effS != null ? effS + 1 : bv != null ? bv + 2 : 3;
+                  gEl.min = String(Math.max(3, gMinVal));
+                  if (gv != null && gv < gMinVal) {
+                    gEl.value = String(gMinVal);
+                  }
+                }
+                if (hint) {
+                  var parts = [];
+                  if (bv != null) {
+                    parts.push("مثال التسلسل: برونزي من " + bv + " → فضي يبدأ من " + (bv + 1) + " على الأقل");
+                    if (effS != null) parts.push("→ ذهبي من " + (effS + 1) + " على الأقل");
+                  } else {
+                    parts.push("عند تعيين البرونزي، يُضبط الحد الأدنى للفضي تلقائياً إلى (برونزي + 1).");
+                  }
+                  hint.textContent = parts.join(" ");
+                }
+              }
+              if (bEl) {
+                bEl.addEventListener("input", sync);
+                bEl.addEventListener("change", sync);
+              }
+              if (sEl) {
+                sEl.addEventListener("input", sync);
+                sEl.addEventListener("change", sync);
+              }
+              if (gEl) {
+                gEl.addEventListener("input", sync);
+                gEl.addEventListener("change", sync);
+              }
+              sync();
+            })();
+          </script>
+          {% endif %}
+        </div>
+      </div>
+    </section>
+    {% endif %}
+    {% if perm_posts %}
+    <section id="section-center-posts" class="accordion">
+      <div class="accordion-body">
+        <div class="card" style="margin-top:0;">
+          <h2 class="admin-booking-block-heading admin-booking-block-heading--flush-top">أخبار ومنشورات المركز</h2>
+          <p class="small" style="margin:0 0 14px;line-height:1.55;">
+            يظهر المحتوى المنشور في صفحة الحجز العامة ضمن قسم «ما الجديد في المركز» مع صورة غلاف ومعرض. يمكنك رفع الصور أو إرفاقها بروابط مباشرة (https). الأنواع: أخبار، إعلانات، رحلات، مسابقات، تقارير. حد النص حوالي 24 ألف حرف، والمعرض حتى 15 صورة إجمالًا (ملفات أو روابط)، حتى 2 ميجابايت لكل ملف مرفوع.
+          </p>
+          <p style="margin:0 0 14px;">
+            <a class="soft-link" href="{{ admin_section_paths['section-center-posts'] }}#section-center-posts">منشور جديد</a>
+            {% if editing_post %}
+            <span class="small" style="margin-inline-start:10px;">تعديل المنشور #{{ editing_post.id }}</span>
+            {% endif %}
+          </p>
+
+          <form
+            id="center-post-save-form"
+            method="post"
+            action="/admin/center/posts/save"
+            enctype="multipart/form-data"
+            data-preserve-scroll="1"
+            class="form"
+            style="margin-bottom:20px;"
+          >
+            <input type="hidden" name="post_id" value="{{ editing_post.id if editing_post else '' }}" />
+            <input type="hidden" name="remove_image_ids" id="center-post-remove-ids" value="" />
+            <label for="cp_title">عنوان المنشور</label>
+            <input id="cp_title" name="title" required maxlength="220" value="{{ editing_post.title if editing_post else '' }}" placeholder="مثال: رحلة يوغا إلى الجبال" />
+            <label for="cp_type">نوع المنشور</label>
+            <select id="cp_type" name="post_type" required>
+              {% for c in center_post_type_choices %}
+              <option value="{{ c.value }}" {{ 'selected' if editing_post and editing_post.post_type == c.value else '' }}>{{ c.label }}</option>
+              {% endfor %}
+            </select>
+            <label for="cp_summary">ملخص قصير (يظهر في البطاقات)</label>
+            <textarea id="cp_summary" name="summary" rows="2" maxlength="600" placeholder="سطر أو سطران للمعاينة في الصفحة العامة">{{ editing_post.summary if editing_post else '' }}</textarea>
+            <label for="cp_body">نص تفصيلي (اختياري)</label>
+            <textarea id="cp_body" name="body" rows="10" placeholder="النص الكامل في صفحة التفاصيل">{{ editing_post.body if editing_post else '' }}</textarea>
+            <label style="display:flex;align-items:center;gap:8px;">
+              <input type="checkbox" name="is_published" value="1" style="width:auto;" {{ 'checked' if not editing_post or editing_post.is_published else '' }} />
+              منشور للجمهور
+            </label>
+            <label style="display:flex;align-items:center;gap:8px;">
+              <input type="checkbox" name="is_pinned" value="1" style="width:auto;" {{ 'checked' if editing_post and editing_post.is_pinned else '' }} />
+              تثبيت في أعلى قسم الأخبار (منشور واحد فقط)
+            </label>
+            <label for="cp_cover">صورة الغلاف — رفع ملف (اختياري)</label>
+            <input id="cp_cover" name="cover" type="file" accept="image/png,image/jpeg,image/webp,image/gif,.png,.jpg,.jpeg,.webp,.gif" />
+            <label for="cp_cover_remote">أو رابط صورة الغلاف من الإنترنت (http/https)</label>
+            <input
+              id="cp_cover_remote"
+              name="cover_remote_url"
+              type="url"
+              inputmode="url"
+              placeholder="https://example.com/cover.jpg"
+              value="{% if editing_post and editing_post.cover_image_url and (editing_post.cover_image_url.startswith('http://') or editing_post.cover_image_url.startswith('https://')) %}{{ editing_post.cover_image_url }}{% endif %}"
+            />
+            <p class="small" style="margin:6px 0 10px;line-height:1.5;">
+              إذا رفعت ملفًا أعلاه يُستخدم الملف ويُتجاهل الرابط في نفس الطلب. اترك حقل الرابط فارغًا دون تغيير لإبقاء غلاف مرفوع سابقًا من السيرفر.
+            </p>
+            {% if editing_post and editing_post.cover_image_url %}
+            <div style="margin:10px 0;border-radius:12px;overflow:hidden;border:1px solid rgba(197,160,89,0.28);max-width:320px;">
+              <img src="{{ editing_post.cover_image_url }}" alt="غلاف حالي" style="width:100%;max-height:140px;object-fit:cover;display:block;" />
+            </div>
+            <label style="display:flex;align-items:center;gap:8px;">
+              <input type="checkbox" name="remove_cover" value="1" style="width:auto;" />
+              إزالة صورة الغلاف
+            </label>
+            {% endif %}
+            <label for="cp_gallery_remote">روابط صور المعرض من الإنترنت (سطر لكل رابط، أو مفصولة بفواصل)</label>
+            <textarea id="cp_gallery_remote" name="gallery_remote_urls" rows="3" placeholder="https://example.com/a.jpg&#10;https://example.com/b.jpg"></textarea>
+            <p class="small" style="margin:6px 0 10px;">تُضاف بعد الملفات المرفوعة في نفس الطلب؛ الروابط غير الصالحة تُتخطّى. الحد الأقصى 15 صورة للمعرض إجمالًا.</p>
+            <label for="cp_gallery">صور المعرض — رفع ملفات (يمكن اختيار عدة ملفات)</label>
+            <input id="cp_gallery" name="gallery" type="file" accept="image/png,image/jpeg,image/webp,image/gif,.png,.jpg,.jpeg,.webp,.gif" multiple />
+            {% if editing_post and editing_post.gallery %}
+            <p class="small" style="margin:12px 0 8px;">صور المعرض الحالية — حدد «حذف» لإزالتها عند الحفظ:</p>
+            <div style="display:flex;flex-wrap:wrap;gap:12px;margin-bottom:12px;">
+              {% for g in editing_post.gallery %}
+              <div style="border:1px solid rgba(197,160,89,0.25);border-radius:10px;padding:8px;background:var(--page-bg);max-width:140px;">
+                <img src="{{ g.url }}" alt="" style="width:120px;height:80px;object-fit:cover;border-radius:6px;display:block;margin-bottom:6px;" />
+                <label class="small" style="display:flex;align-items:center;gap:6px;">
+                  <input type="checkbox" class="js-rm-gallery" value="{{ g.id }}" style="width:auto;" />
+                  حذف
+                </label>
+              </div>
+              {% endfor %}
+            </div>
+            {% endif %}
+            <button type="submit">{{ 'حفظ التعديلات' if editing_post else 'إنشاء المنشور' }}</button>
+          </form>
+
+          <h3 class="admin-booking-block-heading" style="margin-bottom:10px;">كل المنشورات</h3>
+          <div class="table-fluid">
+            <table class="table-card-rwd">
+              <thead>
+                <tr>
+                  <th>#</th>
+                  <th>العنوان</th>
+                  <th>النوع</th>
+                  <th>جمهور</th>
+                  <th>تثبيت</th>
+                  <th>معرض</th>
+                  <th>آخر تحديث</th>
+                  <th>إجراءات</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for row in center_post_admin_rows %}
+                <tr>
+                  <td>{{ row.id }}</td>
+                  <td>{{ row.title }}</td>
+                  <td>{{ row.type_label }}</td>
+                  <td><span class="badge {{ 'completed' if row.is_published else 'pending' }}">{{ 'منشور' if row.is_published else 'مسودة' }}</span></td>
+                  <td>{% if row.is_pinned %}نعم{% else %}—{% endif %}</td>
+                  <td>{{ row.gallery_count }}</td>
+                  <td>{{ row.updated_display }}</td>
+                  <td>
+                    <div class="controls-wrap">
+                      {% if row.public_url %}
+                      <a class="soft-link" href="{{ row.public_url }}" target="_blank" rel="noopener">معاينة</a>
+                      {% endif %}
+                      <a class="soft-link" data-preserve-scroll-link="1" href="{{ row.edit_url }}">تعديل</a>
+                      <form method="post" action="/admin/center/posts/delete" data-preserve-scroll="1" onsubmit="return confirm('حذف هذا المنشور نهائياً؟');" style="display:inline;">
+                        <input type="hidden" name="post_id" value="{{ row.id }}" />
+                        <button type="submit" class="danger">حذف</button>
+                      </form>
+                    </div>
+                  </td>
+                </tr>
+                {% else %}
+                <tr><td colspan="8">لا توجد منشورات بعد. أنشئ منشوراً من النموذج أعلاه.<span class="admin-empty-cta"><a href="#section-center-posts">قسم المنشورات</a></span></td></tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+          <div class="small" style="margin-top:8px;display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
+            <span>الصفحة {{ center_posts_pagination.page }} من {{ center_posts_pagination.total_pages }} (إجمالي: {{ center_posts_pagination.total }})</span>
+            {% if center_posts_pagination.has_prev %}
+              <a class="soft-link" data-preserve-scroll-link="1" href="{{ center_posts_pagination.prev_url }}">السابق</a>
+            {% endif %}
+            {% if center_posts_pagination.has_next %}
+              <a class="soft-link" data-preserve-scroll-link="1" href="{{ center_posts_pagination.next_url }}">التالي</a>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+    </section>
+    {% endif %}
     {% if perm_faq %}
     <section id="section-faq" class="accordion">
       <div class="accordion-body">
     <div class="card" style="margin-top:0;">
       <h2 class="admin-booking-block-heading admin-booking-block-heading--flush-top">إدارة الأسئلة الشائعة</h2>
+      <div class="filters" style="margin-bottom:10px;">
+        <input id="faq-search-input" placeholder="بحث داخل السؤال أو الإجابة..." />
+      </div>
       <form method="post" action="/admin/faqs" data-preserve-scroll="1" class="form" style="margin-bottom:12px;">
         <label>السؤال</label>
         <input name="question" required placeholder="مثال: هل يمكن الإلغاء؟" />
@@ -147,7 +577,199 @@
         </label>
         <button type="submit">إضافة سؤال</button>
       </form>
+      <form id="faq-reorder-form" method="post" action="/admin/faqs/reorder" data-preserve-scroll="1" style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:10px;">
+        <input type="hidden" id="faq-ordered-ids" name="ordered_ids_csv" value="" />
+        <button type="submit">حفظ ترتيب السحب</button>
+        <span class="small">اسحب الصفوف من عمود السحب ثم احفظ الترتيب.</span>
+      </form>
+      <div class="table-fluid">
+        <table class="table-card-rwd">
+          <thead>
+            <tr>
+              <th>سحب</th>
+              <th>#</th>
+              <th>السؤال</th>
+              <th>الإجابة</th>
+              <th>الترتيب</th>
+              <th>الحالة</th>
+              <th>تعديل</th>
+              <th>حذف</th>
+            </tr>
+          </thead>
+          <tbody id="faq-tbody">
+            {% for f in faq_items %}
+            <tr class="faq-draggable" data-faq-id="{{ f.id }}">
+              <td><span class="drag-handle" title="اسحب للتغيير">⋮⋮</span></td>
+              <td>{{ f.id }}</td>
+              <td>{{ f.question }}</td>
+              <td>{{ f.answer }}</td>
+              <td>{{ f.sort_order }}</td>
+              <td><span class="badge">{{ 'نشط' if f.is_active else 'مخفي' }}</span></td>
+              <td>
+                <form method="post" action="/admin/faqs/update" class="inline-form" data-preserve-scroll="1">
+                  <input type="hidden" name="faq_id" value="{{ f.id }}" />
+                  <input name="question" value="{{ f.question }}" required style="min-width:170px;" />
+                  <input name="answer" value="{{ f.answer }}" required style="min-width:220px;" />
+                  <input name="sort_order" type="number" min="0" step="1" autocomplete="off" lang="en" dir="ltr" value="{{ f.sort_order }}" style="min-width:80px;" />
+                  <select name="is_active" style="min-width:90px;">
+                    <option value="1" {{ 'selected' if f.is_active else '' }}>نشط</option>
+                    <option value="0" {{ '' if f.is_active else 'selected' }}>مخفي</option>
+                  </select>
+                  <button type="submit">تحديث</button>
+                </form>
+              </td>
+              <td>
+                <form method="post" action="/admin/faqs/delete" data-preserve-scroll="1" onsubmit="return confirm('حذف هذا السؤال؟');">
+                  <input type="hidden" name="faq_id" value="{{ f.id }}" />
+                  <button type="submit" class="danger">حذف</button>
+                </form>
+              </td>
+            </tr>
+            {% else %}
+            <tr><td colspan="8">لا توجد أسئلة شائعة بعد.<span class="admin-empty-cta"><a href="#section-faq">قسم الأسئلة الشائعة</a></span></td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
     </div>
+      </div>
+    </section>
+    {% endif %}
+    {% if show_staff_roles_handbook %}
+    <section id="section-staff-invite" class="accordion" style="margin-top:20px;">
+      <div class="accordion-body">
+        <div class="card" style="margin-top:0;">
+          <h2 class="admin-booking-block-heading admin-booking-block-heading--flush-top">إضافة عضو فريق</h2>
+          <p class="small" style="margin:0 0 14px;line-height:1.65;">
+            أنشئ حساباً لموظف أو مدرب في نفس مركزك. يستلم العضو بيانات الدخول منك خارج النظام. اختر الدور المناسب؛ للتفاصيل راجع <a class="soft-link" href="#section-staff-roles">جدول الصلاحيات</a> أدناه.
+          </p>
+          <form method="post" action="/admin/staff/create" data-preserve-scroll="1" class="form staff-invite-form">
+            <input type="hidden" name="return_section" value="section-staff-invite" />
+            <label for="staff_full_name">الاسم الكامل</label>
+            <input id="staff_full_name" name="full_name" type="text" required autocomplete="name" maxlength="200" placeholder="مثال: سارة المنسقة" />
+            <label for="staff_email">البريد الإلكتروني (اسم المستخدم)</label>
+            <input id="staff_email" name="email" type="email" required autocomplete="email" inputmode="email" placeholder="name@example.com" />
+            <label for="staff_password">كلمة المرور</label>
+            <input id="staff_password" name="password" type="password" required autocomplete="new-password" minlength="8" placeholder="8 أحرف على الأقل" />
+            <label for="staff_role">الدور</label>
+            <select id="staff_role" name="role" required aria-label="دور عضو الفريق">
+              {% for r in assignable_staff_roles %}
+              <option value="{{ r.id }}">{{ r.label }}{% if r.optional %} (اختياري){% endif %}{% if r.id != 'custom_staff' %} — {{ r.id }}{% endif %}</option>
+              {% endfor %}
+            </select>
+            <div id="staff-role-hint-panel" class="staff-role-hint-panel" role="region" aria-live="polite">
+              <p class="small staff-role-hint-panel__text" id="staff-role-hint-text"></p>
+            </div>
+            <div id="staff-custom-staff-panel" class="staff-custom-staff-panel" hidden>
+              <label for="staff_custom_role_label">اسم الدور الجديد (يظهر لك وللعضو)</label>
+              <input id="staff_custom_role_label" name="custom_role_label" type="text" maxlength="120" autocomplete="off" placeholder="مثال: مسؤول فرع" />
+              <div class="staff-perm-shell" aria-labelledby="staff-perm-shell-title">
+                <div class="staff-perm-shell__head">
+                  <span id="staff-perm-shell-title" class="staff-perm-shell__title">صلاحيات الدور</span>
+                  <span class="staff-perm-shell__subtitle">مجموعات مرتّبة — لا يُمنَح «تعيين أدوار الفريق» من هذه الشاشة</span>
+                </div>
+                <div class="staff-perm-groups">
+                  {% for grp in staff_permission_groups %}
+                  <fieldset class="staff-perm-group">
+                    <legend class="staff-perm-group__legend">{{ grp.group }}</legend>
+                    <div class="staff-perm-group__grid">
+                      {% for it in grp.perms %}
+                      <label class="staff-perm-item">
+                        <input class="staff-perm-cb" type="checkbox" name="permissions" value="{{ it.id }}" />
+                        <span class="staff-perm-item__body">
+                          <span class="staff-perm-item__label">{{ it.label }}</span>
+                          <code class="staff-perm-item__id">{{ it.id }}</code>
+                        </span>
+                      </label>
+                      {% endfor %}
+                    </div>
+                  </fieldset>
+                  {% endfor %}
+                </div>
+              </div>
+            </div>
+            <p class="small" style="margin:10px 0 0;line-height:1.5;color:var(--charcoal-muted);">للأدوار الجاهزة يظهر المعرف الإنجليزي بجانب الاسم للتمييز التقني. خيار «جديد» يتيح اسمًا عربيًا وصلاحيات يختارها المالك.</p>
+            <button type="submit" id="staff-invite-submit" style="margin-top:14px;">حفظ وإنشاء الحساب</button>
+            <script type="application/json" id="staff-role-hints-json">{{ staff_role_sections_hints_json | safe }}</script>
+            <script>
+              (function () {
+                var sel = document.getElementById("staff_role");
+                var hintPanel = document.getElementById("staff-role-hint-panel");
+                var hintText = document.getElementById("staff-role-hint-text");
+                var customPanel = document.getElementById("staff-custom-staff-panel");
+                var customName = document.getElementById("staff_custom_role_label");
+                var raw = document.getElementById("staff-role-hints-json");
+                var hints = {};
+                try {
+                  hints = JSON.parse(raw.textContent || "{}");
+                } catch (e) {}
+                function setCustomEnabled(on) {
+                  customPanel.hidden = !on;
+                  customName.disabled = !on;
+                  customName.required = !!on;
+                  var cbs = customPanel.querySelectorAll(".staff-perm-cb");
+                  for (var i = 0; i < cbs.length; i++) {
+                    cbs[i].disabled = !on;
+                    if (!on) cbs[i].checked = false;
+                  }
+                  if (!on) customName.value = "";
+                }
+                function sync() {
+                  var v = sel.value;
+                  if (v === "custom_staff") {
+                    hintPanel.style.display = "none";
+                    setCustomEnabled(true);
+                    return;
+                  }
+                  setCustomEnabled(false);
+                  hintPanel.style.display = "block";
+                  hintText.textContent = hints[v] || "";
+                }
+                sel.addEventListener("change", sync);
+                sync();
+              })();
+            </script>
+          </form>
+        </div>
+      </div>
+    </section>
+
+    <section id="section-staff-roles" class="accordion" style="margin-top:20px;">
+      <div class="accordion-body">
+        <div class="card" style="margin-top:0;">
+          <h2 class="admin-booking-block-heading admin-booking-block-heading--flush-top">مرجع أدوار الفريق والصلاحيات</h2>
+          <p class="small" style="margin:0 0 14px;line-height:1.65;">
+            يوضح الجدول أدناه الصلاحيات المرتبطة بكل نوع مستخدم في لوحة الإدارة. يمكن للمالك إنشاء الحسابات من القسم «إضافة عضو فريق» أعلاه أو عبر واجهة البرمجة (<code>/auth/users</code>). الأدوار المعلّمة بـ «اختياري» في القائمة أعلاه هي أدوار مساعدة (دعم مالي أو دعم فني محدود) حسب حاجة المركز.
+          </p>
+          <div class="table-fluid" style="overflow:auto;max-height:70vh;border-radius:12px;border:1px solid rgba(197,160,89,0.25);">
+            <table class="plans-table table-card-rwd" style="font-size:0.82rem;min-width:720px;">
+              <thead>
+                <tr>
+                  <th scope="col" style="position:sticky;right:0;background:var(--page-bg);z-index:1;min-width:160px;">الدور</th>
+                  {% for p in permission_catalog %}
+                  <th scope="col" title="{{ p.label }} — {{ p.group }}" style="white-space:nowrap;max-width:7.5rem;overflow:hidden;text-overflow:ellipsis;">{{ p.id }}</th>
+                  {% endfor %}
+                </tr>
+              </thead>
+              <tbody>
+                {% for row in role_permission_matrix %}
+                <tr>
+                  <th scope="row" style="position:sticky;right:0;background:var(--page-bg);z-index:1;text-align:right;font-weight:700;">
+                    {{ row.role_label }}
+                    {% if row.optional %}<span class="small" style="display:block;color:var(--charcoal-muted);font-weight:600;">(اختياري)</span>{% endif %}
+                  </th>
+                  {% for ok in row.cells %}
+                  <td style="text-align:center;">{% if ok %}✓{% else %}—{% endif %}</td>
+                  {% endfor %}
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+          <p class="small" style="margin:12px 0 0;line-height:1.55;color:var(--charcoal-muted);">
+            تفسير الأعمدة: معرفات الصلاحيات بالإنجليزية للاتساق مع الكود؛ مرر المؤشر على رأس العمود لقراءة الوصف الكامل بالعربية. المالك (<strong>center_owner</strong>) يمتلك جميع الصلاحيات دائماً.
+          </p>
+        </div>
       </div>
     </section>
     {% endif %}

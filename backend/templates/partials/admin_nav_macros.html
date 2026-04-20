@@ -49,7 +49,7 @@
       <a class="section-tab section-tab--subitem" data-target="section-public-users" href="{{ admin_section_paths['section-public-users'] }}#section-public-users" id="tab-section-public-users" title="إدارة المستخدمين">إدارة المستخدمين</a>
       {% endif %}
       {% if perm_loyalty %}
-      <a class="section-tab section-tab--subitem" data-target="section-public-users" href="{{ admin_section_paths['section-public-users'] }}#section-public-users" id="tab-section-loyalty" title="برنامج الولاء">برنامج الولاء</a>
+      <a class="section-tab section-tab--subitem" data-target="section-loyalty" href="{{ admin_section_paths['section-loyalty'] }}#section-loyalty" id="tab-section-loyalty" title="برنامج الولاء">برنامج الولاء</a>
       {% endif %}
       {% if perm_public_users %}
       <a class="section-tab section-tab--subitem" data-target="section-public-users-trash" href="{{ admin_section_paths['section-public-users-trash'] }}#section-public-users-trash" id="tab-section-public-users-trash" title="سلة المحذوفات">سلة المحذوفات</a>
@@ -162,7 +162,7 @@
   {% endif %}
   {% if perm_loyalty %}
   <li class="nav-item">
-    <a href="{{ admin_section_paths['section-public-users'] }}#section-public-users" class="nav-link section-tab section-tab--subitem" data-target="section-public-users" title="برنامج الولاء"><span class="nav-link-icon"><i class="bi bi-award" aria-hidden="true"></i></span><span class="nav-link-title">برنامج الولاء</span></a>
+    <a href="{{ admin_section_paths['section-loyalty'] }}#section-loyalty" class="nav-link section-tab section-tab--subitem" data-target="section-loyalty" title="برنامج الولاء"><span class="nav-link-icon"><i class="bi bi-award" aria-hidden="true"></i></span><span class="nav-link-title">برنامج الولاء</span></a>
   </li>
   {% endif %}
   {% if perm_public_users %}

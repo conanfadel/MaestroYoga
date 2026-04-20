@@ -723,9 +723,9 @@
         focusTimer = setTimeout(function () { section.classList.remove("focused"); }, 1400);
       }
 
-      const hashTargetId = normalizeAdminSectionId((window.location.hash || "").replace(/^#/, ""));
+      const hashTargetId = (window.location.hash || "").replace(/^#/, "");
       const storedActiveSectionId = sessionStorage.getItem(ACTIVE_SECTION_KEY) || "";
-      const preferredSectionId = hashTargetId || normalizeAdminSectionId(storedActiveSectionId);
+      const preferredSectionId = hashTargetId || storedActiveSectionId;
       if (preferredSectionId) {
         const preferredSection = document.getElementById(preferredSectionId);
         if (preferredSection && preferredSection.classList.contains("accordion")) {
@@ -753,10 +753,6 @@
       }
 
       const tabs = Array.from(document.querySelectorAll(".section-tab[data-target]"));
-      function normalizeAdminSectionId(sectionId) {
-        if (sectionId === "section-loyalty") return "section-public-users";
-        return sectionId;
-      }
       function closeAllTabClusters() {
         document.querySelectorAll("[data-tab-cluster].is-open").forEach(function (c) {
           c.classList.remove("is-open");
@@ -848,7 +844,7 @@
 
       tabs.forEach(function (tab) {
         tab.addEventListener("click", function (e) {
-          const targetId = normalizeAdminSectionId(tab.dataset.target);
+          const targetId = tab.dataset.target;
           if (!targetId) return;
           const rawHref = tab.getAttribute("href") || "";
           var crossPage = false;
@@ -897,7 +893,7 @@
         });
       });
       window.addEventListener("hashchange", function () {
-        var id = normalizeAdminSectionId((window.location.hash || "").replace(/^#/, ""));
+        var id = (window.location.hash || "").replace(/^#/, "");
         if (!id) return;
         activateAdminSection(id, { fromHash: true });
       });
