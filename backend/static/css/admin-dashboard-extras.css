@@ -391,6 +391,30 @@ h4.admin-booking-block-heading--compact {
 }
 
 /* داخل رأس كتلة الأمان: يُبقى أيقونة القسم، بدون صندوق ترويسة مكرر */
+.security-block__head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+.security-block__icon {
+  flex: 0 0 34px;
+  width: 34px;
+  height: 34px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 10px;
+  color: var(--gold-dark);
+  background: rgba(197, 160, 89, 0.12);
+  border: 1px solid rgba(197, 160, 89, 0.32);
+}
+.security-block__icon svg {
+  width: 18px;
+  height: 18px;
+  display: block;
+  flex-shrink: 0;
+}
 .security-block__head .admin-booking-block-heading--in-security-head {
   margin: 0;
   padding: 0;
@@ -412,6 +436,11 @@ h4.admin-booking-block-heading--compact {
 }
 html[data-theme="dark"] .security-block__head .admin-booking-block-heading--in-security-head {
   color: #f1f5f9;
+}
+html[data-theme="dark"] .security-block__icon {
+  color: #e8d4a8;
+  background: rgba(197, 160, 89, 0.2);
+  border-color: rgba(197, 160, 89, 0.35);
 }
 
 .public-users-heading-row h2.admin-booking-block-heading {
