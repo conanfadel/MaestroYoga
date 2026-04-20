@@ -36,13 +36,13 @@
   </div>
   <div class="js-discount-panel-percent" hidden>
     <label for="discount-pct-{{ suffix }}">نسبة الخصم %</label>
-    <input id="discount-pct-{{ suffix }}" name="discount_percent" type="text" inputmode="decimal" autocomplete="off" lang="en" dir="ltr" pattern="^(|[0-9]+(\.[0-9]+)?)$" maxlength="8" value="{{ discount_percent_value }}" />
+    <input id="discount-pct-{{ suffix }}" name="discount_percent" type="number" min="0" max="100" step="0.01" autocomplete="off" lang="en" dir="ltr" value="{{ discount_percent_value }}" />
     <label for="discount-computed-{{ suffix }}">السعر بعد الخصم (تلقائي)</label>
     <input id="discount-computed-{{ suffix }}" type="text" readonly class="js-discount-computed" lang="en" dir="ltr" tabindex="-1" aria-live="polite" />
   </div>
   <div class="js-discount-panel-fixed" hidden>
     <label for="reduced-price-{{ suffix }}">السعر المخفض (ر.س)</label>
-    <input id="reduced-price-{{ suffix }}" name="reduced_price" type="text" inputmode="decimal" autocomplete="off" lang="en" dir="ltr" pattern="^(|[0-9]+(\.[0-9]{1,2})?)$" maxlength="12" value="{{ reduced_price_value }}" />
+    <input id="reduced-price-{{ suffix }}" name="reduced_price" type="number" min="0" step="0.01" autocomplete="off" lang="en" dir="ltr" value="{{ reduced_price_value }}" />
   </div>
 
   <div class="js-discount-schedule-wrap admin-discount-schedule" hidden>
@@ -61,7 +61,7 @@
     </div>
     <div class="js-schedule-hours-panel" hidden>
       <label for="duration-hours-{{ suffix }}">عدد الساعات من منتصف ليل السعودية (1–168)</label>
-      <input id="duration-hours-{{ suffix }}" name="discount_duration_hours" type="text" inputmode="numeric" autocomplete="off" lang="en" dir="ltr" pattern="^(|[1-9][0-9]*)$" maxlength="3" value="{{ duration_hours_value }}" placeholder="مثال: 2 أو 24" />
+      <input id="duration-hours-{{ suffix }}" name="discount_duration_hours" type="number" min="1" max="168" step="1" autocomplete="off" lang="en" dir="ltr" value="{{ duration_hours_value }}" placeholder="مثال: 2 أو 24" />
       <input type="hidden" name="discount_hour_start" value="{{ hour_start_value }}" />
       <input type="hidden" name="discount_hour_end" value="{{ hour_end_value }}" />
     </div>

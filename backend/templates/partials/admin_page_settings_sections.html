@@ -309,13 +309,13 @@
             <input type="hidden" name="return_section" value="section-loyalty" />
             <h3 class="admin-booking-block-heading admin-booking-block-heading--flush-top">عتبات الجلسات المؤكدة</h3>
             <label for="loyalty_bronze_min">أقل عدد جلسات للوسام البرونزي</label>
-            <input id="loyalty_bronze_min" name="loyalty_bronze_min" type="text" inputmode="numeric" autocomplete="off" lang="en" dir="ltr" pattern="^(|[1-9][0-9]{0,4})$" maxlength="5" placeholder="فارغ = خادم"
+            <input id="loyalty_bronze_min" name="loyalty_bronze_min" type="number" min="1" max="99999" step="1" autocomplete="off" lang="en" dir="ltr" placeholder="فارغ = خادم"
               value="{{ center.loyalty_bronze_min if center.loyalty_bronze_min is not none else '' }}" />
             <label for="loyalty_silver_min">أقل عدد جلسات للوسام الفضي (لا يقل عن برونزي + 1)</label>
-            <input id="loyalty_silver_min" name="loyalty_silver_min" type="text" inputmode="numeric" autocomplete="off" lang="en" dir="ltr" pattern="^(|[1-9][0-9]{0,4})$" maxlength="5" placeholder="فارغ = خادم"
+            <input id="loyalty_silver_min" name="loyalty_silver_min" type="number" min="1" max="99999" step="1" autocomplete="off" lang="en" dir="ltr" placeholder="فارغ = خادم"
               value="{{ center.loyalty_silver_min if center.loyalty_silver_min is not none else '' }}" />
             <label for="loyalty_gold_min">أقل عدد جلسات للوسام الذهبي (لا يقل عن فضي + 1)</label>
-            <input id="loyalty_gold_min" name="loyalty_gold_min" type="text" inputmode="numeric" autocomplete="off" lang="en" dir="ltr" pattern="^(|[1-9][0-9]{0,4})$" maxlength="5" placeholder="فارغ = خادم"
+            <input id="loyalty_gold_min" name="loyalty_gold_min" type="number" min="1" max="99999" step="1" autocomplete="off" lang="en" dir="ltr" placeholder="فارغ = خادم"
               value="{{ center.loyalty_gold_min if center.loyalty_gold_min is not none else '' }}" />
             <p id="loyalty-cascade-hint" class="small" style="margin:10px 0 0;padding:8px 10px;background:#f8fafc;border-radius:8px;color:var(--charcoal-muted);line-height:1.5;"></p>
             <h3 class="admin-booking-block-heading">أسماء العرض (اختياري)</h3>
@@ -570,7 +570,7 @@
         <label>الإجابة</label>
         <input name="answer" required placeholder="اكتب الإجابة المختصرة والواضحة" />
         <label>الترتيب</label>
-        <input name="sort_order" type="text" inputmode="numeric" autocomplete="off" lang="en" dir="ltr" pattern="^(0|[1-9][0-9]*)$" maxlength="5" value="0" />
+        <input name="sort_order" type="number" min="0" step="1" autocomplete="off" lang="en" dir="ltr" value="0" />
         <label style="display:flex;align-items:center;gap:8px;">
           <input type="checkbox" name="is_active" value="1" checked style="width:auto;" />
           نشط للعرض في الصفحة العامة
@@ -610,7 +610,7 @@
                   <input type="hidden" name="faq_id" value="{{ f.id }}" />
                   <input name="question" value="{{ f.question }}" required style="min-width:170px;" />
                   <input name="answer" value="{{ f.answer }}" required style="min-width:220px;" />
-                  <input name="sort_order" type="text" inputmode="numeric" autocomplete="off" lang="en" dir="ltr" pattern="^(0|[1-9][0-9]*)$" maxlength="5" value="{{ f.sort_order }}" style="min-width:80px;" />
+                  <input name="sort_order" type="number" min="0" step="1" autocomplete="off" lang="en" dir="ltr" value="{{ f.sort_order }}" style="min-width:80px;" />
                   <select name="is_active" style="min-width:90px;">
                     <option value="1" {{ 'selected' if f.is_active else '' }}>نشط</option>
                     <option value="0" {{ '' if f.is_active else 'selected' }}>مخفي</option>

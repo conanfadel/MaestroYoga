@@ -134,7 +134,7 @@
                           <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px;max-width:360px;">
                             <div>
                               <label style="margin:0 0 4px;">المجموعات</label>
-                              <input class="js-sets-input" data-exercise-id="{{ ex.id }}" type="text" inputmode="numeric" autocomplete="off" lang="en" dir="ltr" pattern="^(?:[1-9]|1[0-9]|20)$" maxlength="2" value="3" />
+                              <input class="js-sets-input" data-exercise-id="{{ ex.id }}" type="number" min="1" max="20" step="1" autocomplete="off" lang="en" dir="ltr" value="3" />
                             </div>
                             <div>
                               <label style="margin:0 0 4px;">التكرارات</label>
@@ -163,7 +163,7 @@
                           <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px;max-width:360px;">
                             <div>
                               <label style="margin:0 0 4px;">المجموعات</label>
-                              <input class="js-sets-input" data-exercise-id="{{ ex.id }}" type="text" inputmode="numeric" autocomplete="off" lang="en" dir="ltr" pattern="^(?:[1-9]|1[0-9]|20)$" maxlength="2" value="3" />
+                              <input class="js-sets-input" data-exercise-id="{{ ex.id }}" type="number" min="1" max="20" step="1" autocomplete="off" lang="en" dir="ltr" value="3" />
                             </div>
                             <div>
                               <label style="margin:0 0 4px;">التكرارات</label>
@@ -200,15 +200,15 @@
                   </div>
                   <div>
                     <label for="assign-duration">مدة التمرين (دقائق)</label>
-                    <input id="assign-duration" name="duration_minutes" type="text" inputmode="numeric" autocomplete="off" lang="en" dir="ltr" pattern="^(0|[1-9][0-9]{0,2})$" maxlength="3" value="0" />
+                    <input id="assign-duration" name="duration_minutes" type="number" min="0" max="999" step="1" autocomplete="off" lang="en" dir="ltr" value="0" />
                   </div>
                   <div>
                     <label for="assign-rest">الراحة (ثانية)</label>
-                    <input id="assign-rest" name="rest_seconds" type="text" inputmode="numeric" autocomplete="off" lang="en" dir="ltr" pattern="^(0|[1-9][0-9]{0,3})$" maxlength="4" value="60" />
+                    <input id="assign-rest" name="rest_seconds" type="number" min="0" max="9999" step="1" autocomplete="off" lang="en" dir="ltr" value="60" />
                   </div>
                   <div>
                     <label for="assign-default-sets">مجموعات افتراضية</label>
-                    <input id="assign-default-sets" name="default_sets_count" type="text" inputmode="numeric" autocomplete="off" lang="en" dir="ltr" pattern="^(?:[1-9]|1[0-9]|20)$" maxlength="2" value="3" />
+                    <input id="assign-default-sets" name="default_sets_count" type="number" min="1" max="20" step="1" autocomplete="off" lang="en" dir="ltr" value="3" />
                   </div>
                   <div>
                     <label for="assign-default-reps">تكرارات افتراضية</label>

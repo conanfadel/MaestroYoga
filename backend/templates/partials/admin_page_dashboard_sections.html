@@ -9,7 +9,7 @@
           <label>اسم الغرفة</label>
           <input name="name" required placeholder="مثال: قاعة التأمل" />
           <label>السعة (العدد)</label>
-          <input name="capacity" type="text" inputmode="numeric" autocomplete="off" lang="en" dir="ltr" pattern="[1-9][0-9]*" maxlength="6" value="10" required />
+          <input name="capacity" type="number" min="1" step="1" autocomplete="off" lang="en" dir="ltr" value="10" required />
           <button type="submit">حفظ الغرفة</button>
         </form>
       </div>
@@ -39,9 +39,9 @@
           <label>التاريخ والوقت</label>
           <input name="starts_at" type="datetime-local" required />
           <label>المدة (دقيقة)</label>
-          <input name="duration_minutes" type="text" inputmode="numeric" autocomplete="off" lang="en" dir="ltr" pattern="[1-9][0-9]*" maxlength="4" value="60" required />
+          <input name="duration_minutes" type="number" min="1" step="1" autocomplete="off" lang="en" dir="ltr" value="60" required />
           <label>السعر الأساسي (دخول لمرة واحدة)</label>
-          <input class="js-list-price-base" name="list_price" type="text" inputmode="decimal" autocomplete="off" lang="en" dir="ltr" pattern="[0-9]+(\.[0-9]{1,2})?" maxlength="12" value="60" required />
+          <input class="js-list-price-base" name="list_price" type="number" min="0" step="0.01" autocomplete="off" lang="en" dir="ltr" value="60" required />
           {{ admin_discount_fields('sess-new') }}
           <button type="submit">نشر الجلسة</button>
         </form>
@@ -66,13 +66,13 @@
             </div>
             <div class="plan-details-form__cell">
               <label class="plan-details-form__lbl">السعر الأساسي (SAR)</label>
-              <input class="js-list-price-base" name="list_price" type="text" inputmode="decimal" autocomplete="off" lang="en" dir="ltr" pattern="[0-9]+(\.[0-9]{1,2})?" maxlength="12" required />
+              <input class="js-list-price-base" name="list_price" type="number" min="0" step="0.01" autocomplete="off" lang="en" dir="ltr" required />
             </div>
           </div>
           {{ admin_discount_fields('plan-new') }}
           <div class="plan-details-form__cell plan-details-form__cell--full">
             <label class="plan-details-form__lbl" for="plan-new-session-limit">عدد الجلسات</label>
-            <input id="plan-new-session-limit" name="session_limit" type="text" inputmode="numeric" autocomplete="off" lang="en" dir="ltr" pattern="^(|[1-9][0-9]*)$" maxlength="6" placeholder="اتركه فارغًا لغير محدود" />
+            <input id="plan-new-session-limit" name="session_limit" type="number" min="1" step="1" autocomplete="off" lang="en" dir="ltr" placeholder="اتركه فارغًا لغير محدود" />
           </div>
           <button type="submit" class="plan-details-form__submit-full">حفظ الخطة</button>
         </form>
@@ -137,7 +137,7 @@
                 <form method="post" action="/admin/rooms/update" class="inline-form" data-preserve-scroll="1">
                   <input type="hidden" name="room_id" value="{{ r.id }}" />
                   <input name="name" value="{{ r.name }}" required />
-                  <input name="capacity" type="text" inputmode="numeric" autocomplete="off" lang="en" dir="ltr" pattern="[1-9][0-9]*" maxlength="6" value="{{ r.capacity }}" required />
+                  <input name="capacity" type="number" min="1" step="1" autocomplete="off" lang="en" dir="ltr" value="{{ r.capacity }}" required />
                   <button type="submit">تحديث</button>
                 </form>
               </td>
@@ -452,13 +452,13 @@
           <form method="post" action="/admin/center/report-settings" class="form" data-preserve-scroll="1" style="display:grid;gap:10px;max-width:520px;">
             <input type="hidden" name="return_section" value="section-reports" />
             <label>هدف إيراد شهري (SAR، اختياري)
-              <input name="monthly_revenue_goal" type="text" inputmode="decimal" autocomplete="off" lang="en" dir="ltr" pattern="^(|[0-9]+(\.[0-9]{1,2})?)$" maxlength="14" placeholder="مثال: 50000" value="{% if center and center.monthly_revenue_goal is not none %}{{ center.monthly_revenue_goal }}{% endif %}" />
+              <input name="monthly_revenue_goal" type="number" min="0" step="0.01" autocomplete="off" lang="en" dir="ltr" placeholder="مثال: 50000" value="{% if center and center.monthly_revenue_goal is not none %}{{ center.monthly_revenue_goal }}{% endif %}" />
             </label>
             <label>هدف حجوزات نشطة شهرياً (عدد، اختياري)
-              <input name="monthly_bookings_goal" type="text" inputmode="numeric" autocomplete="off" lang="en" dir="ltr" pattern="^(|[0-9]+)$" maxlength="9" placeholder="مثال: 120" value="{% if center and center.monthly_bookings_goal is not none %}{{ center.monthly_bookings_goal }}{% endif %}" />
+              <input name="monthly_bookings_goal" type="number" min="0" step="1" autocomplete="off" lang="en" dir="ltr" placeholder="مثال: 120" value="{% if center and center.monthly_bookings_goal is not none %}{{ center.monthly_bookings_goal }}{% endif %}" />
             </label>
             <label>ضريبة تقديرية للمركز % (فارغ = استخدام البيئة الافتراضية)
-              <input name="vat_rate_percent" type="text" inputmode="decimal" autocomplete="off" lang="en" dir="ltr" pattern="^(|[0-9]{1,2}(\.[0-9]{1,2})?|100(\.00?)?)$" maxlength="6" placeholder="مثال: 15" value="{% if center and center.vat_rate_percent is not none %}{{ center.vat_rate_percent }}{% endif %}" />
+              <input name="vat_rate_percent" type="number" min="0" max="100" step="0.01" autocomplete="off" lang="en" dir="ltr" placeholder="مثال: 15" value="{% if center and center.vat_rate_percent is not none %}{{ center.vat_rate_percent }}{% endif %}" />
             </label>
             <label>بريد ملخص يومي (فارغ = بريد حسابك عند الإرسال)
               <input name="report_digest_email" type="email" maxlength="220" autocomplete="email" placeholder="ops@example.com" value="{{ center.report_digest_email if center and center.report_digest_email else '' }}" />
