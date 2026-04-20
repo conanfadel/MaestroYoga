@@ -18,12 +18,13 @@
   top: 0;
   bottom: 0;
   inset-inline-end: 0;
-  width: min(520px, 100vw);
+  width: min(720px, 100vw);
   max-width: 100%;
   background: #fff;
   box-shadow: -12px 0 40px rgba(15, 23, 42, 0.18);
   z-index: 1050;
-  overflow: auto;
+  overflow-y: auto;
+  overflow-x: hidden;
   padding: 16px 18px 24px;
   direction: rtl;
   transform: translate3d(110%, 0, 0);
@@ -75,4 +76,19 @@ html[data-theme="dark"] .admin-offcanvas-panel__title {
 
 .admin-offcanvas-actions form {
   margin: 0;
+}
+
+#plan-details-offcanvas .plan-details-form__split--admin-unified {
+  grid-template-columns: 1fr;
+  row-gap: 12px;
+}
+
+#plan-details-offcanvas .plan-details-form__cell--admin,
+#plan-details-offcanvas .plan-details-form__col--discount {
+  min-width: 0;
+  width: 100%;
+}
+
+#plan-details-offcanvas .plan-admin-control {
+  width: 100%;
 }

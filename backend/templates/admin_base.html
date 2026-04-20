@@ -1070,6 +1070,84 @@
       });
     })();
   </script>
+  <script>
+    (function () {
+      function dispatchNumberEvents(input) {
+        input.dispatchEvent(new Event("input", { bubbles: true }));
+        input.dispatchEvent(new Event("change", { bubbles: true }));
+      }
+      function createStepper(input) {
+        if (!input || input.dataset.stepperEnhanced === "1") return;
+        if (input.disabled || input.readOnly) return;
+        if ((input.type || "").toLowerCase() !== "number") return;
+        if (input.closest(".admin-number-stepper")) {
+          input.dataset.stepperEnhanced = "1";
+          return;
+        }
+        var wrapper = document.createElement("span");
+        wrapper.className = "admin-number-stepper";
+        var parent = input.parentNode;
+        if (!parent) return;
+        parent.insertBefore(wrapper, input);
+        wrapper.appendChild(input);
+
+        var controls = document.createElement("span");
+        controls.className = "admin-number-stepper__buttons";
+
+        var up = document.createElement("button");
+        up.type = "button";
+        up.className = "admin-number-stepper__btn admin-number-stepper__btn--up";
+        up.setAttribute("aria-label", "زيادة الرقم");
+        up.textContent = "+";
+
+        var down = document.createElement("button");
+        down.type = "button";
+        down.className = "admin-number-stepper__btn admin-number-stepper__btn--down";
+        down.setAttribute("aria-label", "إنقاص الرقم");
+        down.textContent = "-";
+
+        function safeStep(fnName) {
+          try {
+            input[fnName]();
+          } catch (_) {
+            var value = parseFloat(input.value || "0");
+            var step = parseFloat(input.step || "1");
+            if (!Number.isFinite(step) || step <= 0) step = 1;
+            if (!Number.isFinite(value)) value = 0;
+            input.value = String(fnName === "stepUp" ? value + step : value - step);
+          }
+          dispatchNumberEvents(input);
+          input.focus({ preventScroll: true });
+        }
+
+        up.addEventListener("click", function () { safeStep("stepUp"); });
+        down.addEventListener("click", function () { safeStep("stepDown"); });
+
+        controls.appendChild(up);
+        controls.appendChild(down);
+        wrapper.appendChild(controls);
+        input.dataset.stepperEnhanced = "1";
+      }
+      function init(root) {
+        (root || document).querySelectorAll('input[type="number"]').forEach(createStepper);
+      }
+      if (document.readyState === "loading") {
+        document.addEventListener("DOMContentLoaded", function () { init(document); });
+      } else {
+        init(document);
+      }
+      var observer = new MutationObserver(function (mutations) {
+        mutations.forEach(function (m) {
+          m.addedNodes.forEach(function (node) {
+            if (!(node instanceof Element)) return;
+            if (node.matches && node.matches('input[type="number"]')) createStepper(node);
+            init(node);
+          });
+        });
+      });
+      observer.observe(document.body, { childList: true, subtree: true });
+    })();
+  </script>
   {% include '_force_english_digits.html' %}
   {% include '_mobile_landscape_hint.html' %}
 </body>
