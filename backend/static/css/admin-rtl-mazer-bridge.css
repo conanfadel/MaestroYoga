@@ -1,7 +1,24 @@
 /**
  * Maestro — جسور RTL منطقية فوق Bootstrap/Mazer (لوحة الإدارة)
  * (10) متغيرات مسافات — (11) تعويضات خفيفة — (8) أداة عزل LTR للبريد/الأرقام
+ *
+ * اتجاه الصفحة: العربية RTL افتراضيًا. قد يفرض قالب Mazer (CDN) اتجاهًا مخالفًا؛
+ * القواعد أدناه تعيد RTL على الهيكل بالكامل. تبقى حقول `input[dir="ltr"]` و`.admin-ltr-embed`
+ * جزرًا معزولة للأرقام/الإيميل فقط (Unicode bidi) دون عكس باقي الواجهة.
  */
+
+/* —— لوحة الإدارة + Mazer: RTL على الحاوية الجذرية —— */
+html[dir="rtl"] body.maestro-mazer #app,
+html[dir="rtl"] body.maestro-mazer #main,
+html[dir="rtl"] body.maestro-mazer main.admin-main,
+html[dir="rtl"] body.maestro-mazer .maestro-admin-footer {
+  direction: rtl;
+}
+
+/* صفحات التقارير/الطباعة المستقلة (تستخدم admin-dashboard.css بدون body.maestro-mazer) */
+html[dir="rtl"] body.report-run-sheet {
+  direction: rtl;
+}
 
 :root {
   --maestro-admin-space-inline-xs: 0.5rem;
