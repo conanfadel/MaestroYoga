@@ -23,31 +23,33 @@
     >!</button>
   </legend>
   <div id="discount-hint-{{ suffix }}" class="admin-discount-hint-panel" hidden>
-    <p class="small" style="margin:0 0 8px;line-height:1.55;">اختر «بدون» لعرض السعر الأساسي فقط، أو «خصم» لنسبة من الأساس، أو «تخفيض» لتحديد سعر نهائي أقل من الأساس.</p>
-    <p class="small" style="margin:0;line-height:1.55;">يحدد «وقت العرض» متى يُطبَّق السعر المخفّض على الصفحة العامة والدفع. النافذة اليومية = أول N ساعة من منتصف ليل السعودية (UTC+3).</p>
+    <p class="small" style="margin:0;line-height:1.5;">
+      <strong>بدون:</strong> يُعرض السعر الأساسي فقط.<br>
+      <strong>خصم %:</strong> أدخل النسبة (مثلاً 10) ليُحسب السعر المخفّض تلقائياً.<br>
+      <strong>تخفيض (سعر ثابت):</strong> أدخل السعر النهائي الذي سيدفعه العميل (يجب أن يكون أقل من السعر الأساسي).
+    </p>
   </div>
-  <div class="admin-discount-mode-field">
-    <label for="discount-mode-{{ suffix }}">نوع العرض</label>
-    <select id="discount-mode-{{ suffix }}" name="discount_mode" class="js-discount-mode" autocomplete="off">
-      <option value="none" {{ 'selected' if discount_mode_value == 'none' else '' }}>بدون</option>
-      <option value="percent" {{ 'selected' if discount_mode_value == 'percent' else '' }}>خصم (نسبة مئوية)</option>
-      <option value="fixed" {{ 'selected' if discount_mode_value == 'fixed' else '' }}>تخفيض (سعر نهائي)</option>
-    </select>
-  </div>
-  <div class="js-discount-panel-percent" hidden>
+  <label for="discount-mode-{{ suffix }}">طريقة التخفيض</label>
+  <select id="discount-mode-{{ suffix }}" name="discount_mode" class="js-discount-mode">
+    <option value="none" {{ 'selected' if discount_mode_value == 'none' else '' }}>بدون (السعر الأساسي)</option>
+    <option value="percent" {{ 'selected' if discount_mode_value == 'percent' else '' }}>خصم نسبة مئوية %</option>
+    <option value="fixed" {{ 'selected' if discount_mode_value == 'fixed' else '' }}>تخفيض لسعر ثابت (SAR)</option>
+  </select>
+
+  <div class="js-discount-panel-percent" {{ 'hidden' if discount_mode_value != 'percent' else '' }}>
     <label for="discount-pct-{{ suffix }}">نسبة الخصم %</label>
-    <input id="discount-pct-{{ suffix }}" name="discount_percent" type="number" min="0" max="100" step="0.01" autocomplete="off" lang="en" dir="ltr" value="{{ discount_percent_value }}" />
-    <label for="discount-computed-{{ suffix }}">السعر بعد الخصم (تلقائي)</label>
-    <input id="discount-computed-{{ suffix }}" type="text" readonly class="js-discount-computed" lang="en" dir="ltr" tabindex="-1" aria-live="polite" />
-  </div>
-  <div class="js-discount-panel-fixed" hidden>
-    <label for="reduced-price-{{ suffix }}">السعر المخفض (ر.س)</label>
-    <input id="reduced-price-{{ suffix }}" name="reduced_price" type="number" min="0" step="0.01" autocomplete="off" lang="en" dir="ltr" value="{{ reduced_price_value }}" />
+    <input id="discount-pct-{{ suffix }}" name="discount_percent" type="number" min="0" max="100" step="0.01" autocomplete="off" lang="en" dir="ltr" value="{{ discount_percent_value }}" placeholder="مثال: 15" />
+    <label>السعر بعد الخصم (معاينة)</label>
+    <input class="js-discount-computed" readonly disabled placeholder="يُحسب تلقائياً" />
   </div>
 
-  <div class="js-discount-schedule-wrap admin-discount-schedule" hidden>
-    <p class="admin-discount-schedule__title">وقت العرض (للجمهور)</p>
-    <label for="schedule-type-{{ suffix }}">أسلوب تحديد الفترة</label>
+  <div class="js-discount-panel-fixed" {{ 'hidden' if discount_mode_value != 'fixed' else '' }}>
+    <label for="reduced-price-{{ suffix }}">السعر الجديد الثابت (SAR)</label>
+    <input id="reduced-price-{{ suffix }}" name="reduced_price" type="number" min="0" step="0.01" autocomplete="off" lang="en" dir="ltr" value="{{ reduced_price_value }}" placeholder="مثال: 50.00" />
+  </div>
+
+  <div class="js-discount-schedule-wrap" {{ 'hidden' if discount_mode_value == 'none' else '' }}>
+    <label for="schedule-type-{{ suffix }}">وقت تطبيق العرض</label>
     <select id="schedule-type-{{ suffix }}" name="discount_schedule_type" class="js-schedule-type">
       <option value="always" {{ 'selected' if schedule_type_value == 'always' else '' }}>دائمًا طالما الجلسة/الخطة منشورة</option>
       <option value="date_range" {{ 'selected' if schedule_type_value == 'date_range' else '' }}>من تاريخ إلى تاريخ</option>
@@ -61,9 +63,8 @@
     </div>
     <div class="js-schedule-hours-panel" hidden>
       <label for="duration-hours-{{ suffix }}">عدد الساعات من منتصف ليل السعودية (1–168)</label>
-      <input id="duration-hours-{{ suffix }}" name="discount_duration_hours" type="number" min="1" max="168" step="1" autocomplete="off" lang="en" dir="ltr" value="{{ duration_hours_value }}" placeholder="مثال: 2 أو 24" />
-      <input type="hidden" name="discount_hour_start" value="{{ hour_start_value }}" />
-      <input type="hidden" name="discount_hour_end" value="{{ hour_end_value }}" />
+      <input id="duration-hours-{{ suffix }}" name="discount_duration_hours" type="number" min="1" max="168" step="1" autocomplete="off" lang="en" dir="ltr" value="{{ duration_hours_value }}" placeholder="مثال: 24" />
+      <p class="small" style="margin-top:4px;color:var(--charcoal-muted);">يُفعل العرض لأول N ساعة من بداية اليوم بتوقيت السعودية. (24 = طوال اليوم، 48 = يومين، وهكذا).</p>
     </div>
   </div>
 </fieldset>

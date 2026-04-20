@@ -1056,6 +1056,7 @@ table.plans-table th { background: var(--charcoal); color: #f8fafc; }
 .index-spotlight-heading__text { flex: 1; min-width: 0; font-family: "Amiri", "Tajawal", serif; font-size: clamp(1.12rem, 3.9vw, 1.48rem); font-weight: 700; color: var(--charcoal); line-height: 1.35; letter-spacing: -0.02em; }
 .index-spotlight-heading--compact { margin-bottom: 12px; padding: 10px 14px; gap: 10px; border-radius: 14px; }
 .index-spotlight-heading--compact .index-spotlight-heading__badge { width: 40px; height: 40px; border-radius: 11px; }
+.index-spotlight-heading--compact .index-spotlight-heading__badge svg { width: 22px; height: 22px; }
 .index-spotlight-heading--compact .index-spotlight-heading__text { font-family: "Tajawal", system-ui, sans-serif; font-size: clamp(0.95rem, 3.4vw, 1.12rem); font-weight: 800; color: var(--gold-dark); }
 
 h3.sessions-filters-title.index-spotlight-heading--ribbon.section-heading.section-heading--sub {
@@ -1067,6 +1068,7 @@ h3.sessions-filters-title.index-spotlight-heading--ribbon .section-heading__labe
 h3.sessions-filters-title.index-spotlight-heading--ribbon::before { display: none; }
 #section-loyalty .card > .index-spotlight-heading:first-of-type { margin-bottom: 12px; }
 .admin-upcoming-spotlight { margin-bottom: 14px; }
+
 /* =========================================================
    إظهار وتحسين أسهم الزيادة والنقصان (Spin Buttons) لحقول الأرقام
    ========================================================= */
@@ -1075,7 +1077,7 @@ h3.sessions-filters-title.index-spotlight-heading--ribbon::before { display: non
 input[type="number"] {
   -moz-appearance: number-input !important;
   appearance: auto !important;
-  padding-inline-end: 4px !important; /* مساحة صغيرة لتجنب التصاق الرقم بالسهم */
+  padding-inline-end: 4px !important;
 }
 
 /* 2. إظهار الأسهم وتكبيرها في المتصفحات المبنية على WebKit (كروم، إيدج، سفاري) */
@@ -1083,42 +1085,14 @@ input[type="number"]::-webkit-inner-spin-button,
 input[type="number"]::-webkit-outer-spin-button {
   -webkit-appearance: inner-spin-button !important;
   appearance: inner-spin-button !important;
-  display: block !important;      /* إجبار المتصفح على رسم السهم */
-  opacity: 1 !important;          /* جعلها مرئية دائماً وليس فقط عند مرور الماوس */
-  height: 100% !important;        /* لتمتد على كامل ارتفاع الحقل */
-  cursor: pointer !important;     /* تغيير شكل الماوس ليدل على أنها قابلة للنقر */
-  margin-inline-start: 8px;       /* إبعاد السهم قليلاً عن حافة الحقل في الاتجاه العربي */
+  display: block !important;
+  opacity: 1 !important;
+  height: 100% !important;
+  cursor: pointer !important;
+  margin-inline-start: 8px;
 }
 
 /* 3. تحسين تفاعل الأسهم عند النقر أو التمرير */
-input[type="number"]::-webkit-inner-spin-button:hover,
-input[type="number"]::-webkit-outer-spin-button:hover {
-  background-color: rgba(197, 160, 89, 0.1); /* تأثير لوني خفيف عند تمرير الماوس */
-}
-/* =========================================================
-   إظهار وتحسين أسهم الزيادة والنقصان (Spin Buttons) لحقول الأرقام
-   ========================================================= */
-
-/* 1. إجبار المتصفحات (مثل فايرفوكس) على إظهار الحقل كحقل رقمي */
-input[type="number"] {
-  -moz-appearance: number-input !important;
-  appearance: auto !important;
-  padding-inline-end: 4px !important; /* مساحة صغيرة لتجنب التصاق الرقم بالسهم */
-}
-
-/* 2. إظهار الأسهم وتكبيرها في المتصفحات المبنية على WebKit (كروم، إيدج، سفاري) */
-input[type="number"]::-webkit-inner-spin-button,
-input[type="number"]::-webkit-outer-spin-button {
-  -webkit-appearance: inner-spin-button !important;
-  appearance: inner-spin-button !important;
-  display: block !important;      /* إجبار المتصفح على رسم السهم */
-  opacity: 1 !important;          /* جعلها مرئية دائماً وليس فقط عند مرور الماوس */
-  height: 100% !important;        /* لتمتد على كامل ارتفاع الحقل */
-  cursor: pointer !important;     /* تغيير شكل الماوس ليدل على أنها قابلة للنقر */
-  margin-inline-start: 8px;       /* إبعاد السهم قليلاً عن حافة الحقل في الاتجاه العربي */
-}
-
-/* 3. تحسين تفاعل الأسهم عند النقر أو التمرير (بألوان الهوية الذهبية) */
 input[type="number"]::-webkit-inner-spin-button:hover,
 input[type="number"]::-webkit-outer-spin-button:hover {
   background-color: rgba(197, 160, 89, 0.1); 
