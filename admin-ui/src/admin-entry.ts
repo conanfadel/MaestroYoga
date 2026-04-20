@@ -34,6 +34,7 @@ function initPlanDrawer(): void {
     panel.classList.toggle("is-open", open);
     backdrop.setAttribute("aria-hidden", open ? "false" : "true");
     panel.setAttribute("aria-hidden", open ? "false" : "true");
+    document.body.style.overflow = open ? "hidden" : "";
   }
 
   function setVal(id: string, v: string | number | null | undefined): void {
@@ -89,6 +90,10 @@ function initPlanDrawer(): void {
   }
   closeBtn?.addEventListener("click", close);
   backdrop.addEventListener("click", close);
+  document.addEventListener("keydown", (e) => {
+    if (e.key !== "Escape") return;
+    if (panel.classList.contains("is-open")) close();
+  });
 }
 
 initPlanDrawer();
