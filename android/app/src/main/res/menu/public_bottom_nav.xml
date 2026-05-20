@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+    <item
+        android:id="@+id/nav_home"
+        android:icon="@android:drawable/ic_menu_compass"
+        android:title="@string/nav_home" />
+    <item
+        android:id="@+id/nav_login"
+        android:icon="@android:drawable/ic_lock_lock"
+        android:title="@string/nav_login" />
+    <item
+        android:id="@+id/nav_register"
+        android:icon="@android:drawable/ic_menu_add"
+        android:title="@string/nav_register" />
+    <item
+        android:id="@+id/nav_account"
+        android:icon="@android:drawable/ic_menu_myplaces"
+        android:title="@string/nav_account" />
+</menu>

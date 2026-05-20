@@ -1,30 +1,53 @@
-# خطوات أولى — تطبيق أندرويد وربطه بـ Maestro Yoga
+# خطوات أولى — تطبيق أندرويد (واجهة المستخدمين)
 
-ما يمكن تجهيزه **داخل المستودع** مقابل ما يبقى عندك في الحسابات الخارجية.
+## الهدف
 
-## داخل المستودع (جاهز أو قابل للتوسيع)
+تطبيق المتجر = **تجربة العملاء** (حجز، اشتراك، حساب). **لوحة الإدارة** تبقى على الويب.
+
+## جاهز في المستودع
 
 | العنصر | الوصف |
 |--------|--------|
-| **REST تحت `/api/v1`** | نفس المسارات السابقة مع بادئة موحّدة للعميل. |
-| **`GET /api/v1/meta`** | نقطة انطلاق: إصدار API وروابط التوثيق. |
-| **رؤوس** `X-Request-ID`، `X-API-Version`، `X-App-Version` | للتتبع ومطابقة إصدارات التطبيق. |
-| **`android/`** | مشروع **Kotlin** أصلي (Retrofit) يستدعي `/api/v1/meta` — راجع [`android/README.md`](../android/README.md). |
-| **`scripts/verify_production_readiness.py`** | بعد نشر الخادم، شغّله مع `BASE_URL` للتحقق من الصحة و`/api/v1`. |
-| **`scripts/healthcheck_prod.sh`** | فحوصات سريعة من سطر الأوامر (Linux/macOS/Git Bash). |
-| **واجهة ويب متجاوبة + manifest** | تجربة «مثل التطبيق» من المتصفح قبل بناء APK. |
+| **`android/`** | هجين: WebView + شريط **حجز · دخول · تسجيل · حسابي** — [`android-launch-checklist.md`](android-launch-checklist.md) |
+| **واجهة ويب عامة** | `/index`, `/public/register`, `/public/login` — داخل التطبيق |
+| **`scripts/send_session_reminders.py`** | تذكير بريد ~24 ساعة قبل الجلسة (cron) |
+| **`scripts/verify_production_readiness.py`** | تحقق من الخادم بعد النشر |
 
-## خارج المستودع (لا يُنشَأ تلقائياً من الكود)
+## البدء في Android Studio
 
-- حساب **Google Play Console**، سياسة خصوصية، أيقونات ولقطات، **توقيع التطبيق** (keystore).
-- **استضافة** الخادم (مثلاً Render) مع `DATABASE_URL` و`PUBLIC_BASE_URL` وأسرار الدفع/البريد.
-- **Gradle Wrapper** (`gradlew` / `gradlew.bat`): يُولَّد تلقائياً عند أول فتح لمشروع **`android/`** في Android Studio (أو عند تشغيل `gradle wrapper` إن وُجد Gradle محلياً).
+1. انشر الخادم أو شغّله محلياً على المنفذ 8000.
+2. افتح مجلد **`android/`** في Android Studio.
+3. أنشئ `local.properties` كما في [`android/README.md`](../android/README.md).
+4. Run على محاكي — العنوان `10.0.2.2` = `localhost` على جهازك.
 
-## ترتيب عملي مقترح
+## محاكي + خادم محلي
 
-1. انشر الخادم واحصل على **`https://your-domain`** ثابتاً.
-2. شغّل: `BASE_URL=https://your-domain py scripts/verify_production_readiness.py`
-3. قرّر: **تطبيق أصلي** (يوصى به للمتجر) أو **WebView** للسرعة.
-4. أنشئ مشروعاً في Android Studio يستدعي `GET /api/v1/meta` ثم تدفق تسجيل الدخول عبر `/api/v1/auth/login`.
+```
+MAESTRO_API_BASE_URL=http://10.0.2.2:8000/
+MAESTRO_PUBLIC_HOME_PATH=index?center_id=1
+```
 
-تفاصيل المتغيرات والصيانة: [`operations.md`](operations.md).
+تأكد أن بيانات العرض التوضيحية موجودة (`ensure_demo_data`) وأن `center_id=1` صالح.
+
+## إنتاج
+
+```
+MAESTRO_API_BASE_URL=https://your-domain.com/
+MAESTRO_PUBLIC_HOME_PATH=index?center_id=YOUR_CENTER_ID
+```
+
+ثم:
+
+```bash
+BASE_URL=https://your-domain.com python scripts/verify_production_readiness.py
+```
+
+## خارطة طريق
+
+| المرحلة | المحتوى |
+|---------|---------|
+| **الآن** | WebView = نفس الموقع، أسرع إطلاق |
+| **لاحقاً** | API JSON للعملاء + شاشات Compose أصلية |
+| **خارج Git** | Play Console، keystore، سياسة خصوصية |
+
+تفاصيل التشغيل: [`operations.md`](operations.md).

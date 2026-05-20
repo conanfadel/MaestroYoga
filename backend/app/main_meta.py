@@ -11,10 +11,13 @@ def build_api_v1_meta_router(*, server_version: str) -> APIRouter:
     @router.get("/meta")
     def api_v1_meta():
         """نقطة دخول موحّدة لتطبيق أندرويد: إصدار الـ API وروابط التوثيق."""
+        from .web_shared import PUBLIC_INDEX_DEFAULT_PATH
+
         return {
             "api_version": "1",
             "app": "Maestro Yoga",
             "server_version": server_version,
+            "public_home_path": PUBLIC_INDEX_DEFAULT_PATH,
             "openapi_json": "/openapi.json",
             "docs": "/docs",
             "client_hint": "أرسل الرأس X-App-Version (مثل 1.0.0) ليُعاد في X-App-Version-Accepted.",

@@ -1,6 +1,13 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">Maestro Yoga</string>
+    <string name="public_web_title">حجز وجلسات</string>
+    <string name="nav_home">الحجز</string>
+    <string name="nav_login">دخول</string>
+    <string name="nav_register">تسجيل</string>
+    <string name="nav_account">حسابي</string>
+    <string name="public_web_load_error">تعذر تحميل الموقع. تحقق من الاتصال وعنوان الخادم في local.properties ثم أعد المحاولة.</string>
+    <string name="dev_api_title">Maestro API (تطوير)</string>
     <string name="status_loading">جاري الاتصال بالخادم...</string>
     <string name="btn_retry">إعادة المحاولة</string>
     <string name="hint_api">تأكد من MAESTRO_API_BASE_URL في local.properties (مثال: https://api.example.com بدون شرطة أخيرة)</string>

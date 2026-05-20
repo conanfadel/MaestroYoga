@@ -15,6 +15,13 @@ val apiBaseUrl: String =
         .trim()
         .trimEnd('/') + "/"
 
+// مسار واجهة العملاء (بدون شرطة أولى) — يطابق PUBLIC_INDEX_DEFAULT_PATH على الخادم
+val publicHomePath: String =
+    (localProps.getProperty("MAESTRO_PUBLIC_HOME_PATH") ?: "index?center_id=1")
+        .trim()
+        .trimStart('/')
+val publicHomeUrl: String = apiBaseUrl + publicHomePath
+
 android {
     namespace = "com.maestroyoga.app"
     compileSdk = 34
@@ -26,6 +33,7 @@ android {
         versionCode = 1
         versionName = "1.0.0"
         buildConfigField("String", "API_BASE_URL", "\"$apiBaseUrl\"")
+        buildConfigField("String", "PUBLIC_HOME_URL", "\"$publicHomeUrl\"")
     }
 
     buildTypes {
@@ -61,6 +69,7 @@ dependencies {
     implementation("androidx.appcompat:appcompat:1.7.0")
     implementation("com.google.android.material:material:1.12.0")
     implementation("androidx.constraintlayout:constraintlayout:2.1.4")
+    implementation("androidx.swiperefreshlayout:swiperefreshlayout:1.2.0")
     implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.8.4")
 
     implementation("com.squareup.retrofit2:retrofit:2.11.0")

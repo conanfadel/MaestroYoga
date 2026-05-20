@@ -24,6 +24,7 @@ def test_api_v1_meta(client: TestClient) -> None:
     data = r.json()
     assert data.get("api_version") == "1"
     assert data.get("app") == "Maestro Yoga"
+    assert data.get("public_home_path") == "/index?center_id=1"
     assert "openapi_json" in data
 
 

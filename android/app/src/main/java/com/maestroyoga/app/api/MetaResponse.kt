@@ -9,6 +9,7 @@ data class MetaResponse(
     @SerializedName("api_version") val apiVersion: String,
     val app: String,
     @SerializedName("server_version") val serverVersion: String,
+    @SerializedName("public_home_path") val publicHomePath: String? = null,
     @SerializedName("openapi_json") val openapiJson: String,
     val docs: String,
     @SerializedName("client_hint") val clientHint: String? = null,

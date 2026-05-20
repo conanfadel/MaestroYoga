@@ -4,8 +4,8 @@ import android.content.Intent
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
-import com.maestroyoga.app.api.LoginRequest
 import com.maestroyoga.app.api.AuthSessionManager
+import com.maestroyoga.app.api.LoginRequest
 import com.maestroyoga.app.api.NetworkModule
 import com.maestroyoga.app.api.TokenStore
 import com.maestroyoga.app.api.UserDto
@@ -16,7 +16,11 @@ import kotlinx.coroutines.withContext
 import retrofit2.HttpException
 import java.io.IOException
 
-class MainActivity : AppCompatActivity() {
+/**
+ * شاشة تطوير: اختبار REST لوحة الإدارة (ليس واجهة العملاء).
+ * افتحها من الإعدادات أو adb — ليست نقطة الدخول للمستخدمين.
+ */
+class DevApiActivity : AppCompatActivity() {
     private lateinit var binding: ActivityMainBinding
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -26,6 +30,7 @@ class MainActivity : AppCompatActivity() {
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
+        binding.title.text = getString(R.string.dev_api_title)
         binding.baseUrlLabel.text = getString(R.string.hint_api) + "\n\nBase: " + BuildConfig.API_BASE_URL
         binding.btnRetry.setOnClickListener { loadMeta() }
         binding.btnLogin.setOnClickListener { login() }
@@ -54,6 +59,7 @@ class MainActivity : AppCompatActivity() {
                         appendLine("api_version: ${meta.apiVersion}")
                         appendLine("app: ${meta.app}")
                         appendLine("server_version: ${meta.serverVersion}")
+                        meta.publicHomePath?.let { appendLine("public_home_path: $it") }
                         appendLine("openapi_json: ${meta.openapiJson}")
                         appendLine("docs: ${meta.docs}")
                         meta.clientHint?.let { appendLine("client_hint: $it") }
@@ -94,7 +100,7 @@ class MainActivity : AppCompatActivity() {
             }
             binding.output.text = text
             if (TokenStore.getAccessToken().isNullOrBlank().not()) {
-                startActivity(Intent(this@MainActivity, DashboardActivity::class.java))
+                startActivity(Intent(this@DevApiActivity, DashboardActivity::class.java))
             }
         }
     }

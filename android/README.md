@@ -1,39 +1,49 @@
-# تطبيق أندرويد أصلي — Maestro Yoga
+# تطبيق أندرويد — واجهة المستخدمين (Maestro Yoga)
 
-مشروع **Kotlin** يتصل بـ **`GET /api/v1/meta`** عبر Retrofit/OkHttp مع رؤوس **`X-App-Version`** و **`X-Request-ID`**.
+تطبيق **Kotlin هجين** للعملاء: **WebView** لصفحات الموقع (حجز، دفع، تسجيل) + **شريط تنقل أصلي** (حجز · دخول · تسجيل · حسابي). لوحة الإدارة ليست جزءاً من هذا التطبيق.
 
 ## المتطلبات
 
-- [Android Studio](https://developer.android.com/studio) Hedgehog | 2023.1.1 أو أحدث (يدعم Gradle 8 و JDK 17).
+- [Android Studio](https://developer.android.com/studio) Hedgehog (2023.1.1) أو أحدث
+- JDK 17
 
-## الإعداد
+## فتح المشروع
 
-1. افتح المجلد **`android/`** في Android Studio (File → Open).
-2. أنشئ **`local.properties`** في مجلد `android/` (أو انسخ من `local.properties.example`):
+1. **File → Open** واختر المجلد **`android/`** (وليس جذر MaestroYoga بالكامل).
+2. انتظر **Sync Gradle** (يُنشئ `gradlew` تلقائياً عند الحاجة).
+3. أنشئ **`android/local.properties`** (انسخ من `local.properties.example`):
 
-   ```properties
-   MAESTRO_API_BASE_URL=https://your-production-host.com
-   ```
+```properties
+sdk.dir=C\:\\Users\\YOUR_USER\\AppData\\Local\\Android\\Sdk
+MAESTRO_API_BASE_URL=http://10.0.2.2:8000
+MAESTRO_PUBLIC_HOME_PATH=index?center_id=1
+```
 
-   للمحاكي مع خادم يعمل على جهازك على المنفذ 8000:
+| المتغير | المعنى |
+|---------|--------|
+| `MAESTRO_API_BASE_URL` | عنوان الخادم مع `/` في النهاية (مثال محاكي: `http://10.0.2.2:8000/`) |
+| `MAESTRO_PUBLIC_HOME_PATH` | مسار الواجهة العامة بدون `/` أولى (افتراضي: `index?center_id=1`) |
 
-   ```properties
-   MAESTRO_API_BASE_URL=http://10.0.2.2:8000
-   ```
+4. شغّل الخادم محلياً (مثال): `uvicorn backend.app.main:app --reload --host 0.0.0.0 --port 8000`
+5. **Run** على محاكي — أيقونة **«Maestro Yoga»** → واجهة الحجز مع شريط سفلي للتنقل السريع.
 
-3. **Sync Gradle** ثم شغّل على محاكي أو جهاز.
+قائمة إطلاق: [`docs/android-launch-checklist.md`](../docs/android-launch-checklist.md)
 
-## البناء
+## بناء Debug / Release
 
-- **Debug APK:** Build → Build Bundle(s) / APK(s) → Build APK(s).
-- **توقيع الإصدار (Play):** Build → Generate Signed Bundle / APK واتبع معالج المتجر.
+- **APK:** Build → Build Bundle(s) / APK(s) → Build APK(s)
+- **توقيع Play:** Build → Generate Signed Bundle / APK
 
-## الخطوات التالية للتطوير
+`applicationId`: `com.maestroyoga.app` (وفي debug: `com.maestroyoga.app.debug`)
 
-- شاشة تسجيل دخول تستدعي `POST /api/v1/auth/login`.
-- تخزين الرمز المميز بأمان (مثل EncryptedSharedPreferences).
-- استبدال أيقونة `res/drawable/ic_launcher.xml` بأصول متجر حقيقية.
+## شاشة التطوير (REST إدارة)
 
-## ملاحظة
+في بناء **debug** تظهر أيقونة ثانية **«Maestro API (تطوير)»** لاختبار `GET /api/v1/meta` وتسجيل دخول **موظفي** لوحة الإدارة — لا تستخدمها للعملاء.
 
-`applicationId` الحالي: `com.maestroyoga.app` (و`com.maestroyoga.app.debug` في debug). غيّره قبل النشر النهائي إن لزم.
+## الخطوات التالية
+
+1. تجربة كاملة: تسجيل عميل، حجز جلسة، دفع (من WebView).
+2. لاحقاً: REST JSON للعملاء (`/api/v1/public/...`) وشاشات أصلية بدل WebView.
+3. أيقونة ولقطات متجر، سياسة خصوصية، keystore للنشر.
+
+راجع أيضاً: [`docs/android-first-steps.md`](../docs/android-first-steps.md)
