@@ -11,6 +11,8 @@
         return map[ch] || ch;
       });
     }
+    var EASTERN_DIGIT_RE = /[\u0660-\u0669\u06F0-\u06F9]/;
+    var ENABLE_TEXT_NORMALIZATION = /^\/admin(?:\/|$)/.test(window.location.pathname || "");
     var NUMERIC_INPUT_SELECTOR = [
       'input[type="number"]',
       'input[type="tel"]',
@@ -69,6 +71,48 @@
         }
       }
     }
+    function shouldSkipTextParent(parent) {
+      if (!parent || !parent.tagName) return true;
+      var tag = String(parent.tagName).toUpperCase();
+      if (
+        tag === "SCRIPT" ||
+        tag === "STYLE" ||
+        tag === "NOSCRIPT" ||
+        tag === "TEXTAREA" ||
+        tag === "INPUT" ||
+        tag === "OPTION" ||
+        tag === "SELECT"
+      ) {
+        return true;
+      }
+      if (parent.closest && parent.closest("[data-keep-native-digits], .no-digit-normalize")) return true;
+      return false;
+    }
+    function normalizeTextNodesUnder(root) {
+      if (!ENABLE_TEXT_NORMALIZATION) return;
+      if (!root || !document.createTreeWalker || !window.NodeFilter) return;
+      var nt = root.nodeType;
+      if (nt !== 1 && nt !== 9 && nt !== 11) return;
+      var nodes = [];
+      var walker = document.createTreeWalker(
+        root,
+        NodeFilter.SHOW_TEXT,
+        {
+          acceptNode: function (node) {
+            if (!node || !node.nodeValue || !EASTERN_DIGIT_RE.test(node.nodeValue)) return NodeFilter.FILTER_REJECT;
+            if (shouldSkipTextParent(node.parentElement)) return NodeFilter.FILTER_REJECT;
+            return NodeFilter.FILTER_ACCEPT;
+          },
+        }
+      );
+      var current;
+      while ((current = walker.nextNode())) nodes.push(current);
+      for (var i = 0; i < nodes.length; i += 1) {
+        var n = nodes[i];
+        var normalized = normalizeDigits(n.nodeValue);
+        if (normalized !== n.nodeValue) n.nodeValue = normalized;
+      }
+    }
     function isNumericishInput(el) {
       if (!el || (el.tagName || "").toLowerCase() !== "input") return false;
       var t = (el.type || "").toLowerCase();
@@ -81,6 +125,7 @@
     function applyUnder(root) {
       normalizeInputsUnder(root);
       stampNumericInputLang(root);
+      normalizeTextNodesUnder(root);
     }
     function applyAll() {
       if (!document.body) return;
@@ -102,22 +147,23 @@
 
     if (window.MutationObserver && document.body) {
       var t = 0;
-      function flush() {
-        t = 0;
-        applyAll();
-      }
       var obs = new MutationObserver(function (mutations) {
-        var need = false;
+        var pending = [];
         for (var i = 0; i < mutations.length; i += 1) {
           var m = mutations[i];
           if (m.addedNodes && m.addedNodes.length) {
-            need = true;
-            break;
+            for (var j = 0; j < m.addedNodes.length; j += 1) {
+              var added = m.addedNodes[j];
+              if (added && (added.nodeType === 1 || added.nodeType === 11)) pending.push(added);
+            }
           }
         }
-        if (!need) return;
+        if (!pending.length) return;
         if (t) clearTimeout(t);
-        t = setTimeout(flush, 50);
+        t = setTimeout(function () {
+          t = 0;
+          for (var k = 0; k < pending.length; k += 1) applyUnder(pending[k]);
+        }, 50);
       });
       obs.observe(document.body, { childList: true, subtree: true });
     }
