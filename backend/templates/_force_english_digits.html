@@ -33,9 +33,14 @@
       var s = normalizeNumberLikeText(text);
       var out = "";
       var dotSeen = false;
+      var fracCount = 0;
       for (var i = 0; i < s.length; i += 1) {
         var ch = s.charAt(i);
         if (ch >= "0" && ch <= "9") {
+          if (allowDecimal && dotSeen) {
+            if (fracCount >= 2) continue;
+            fracCount += 1;
+          }
           out += ch;
           continue;
         }
@@ -46,6 +51,13 @@
       }
       if (allowDecimal && out.indexOf(".") === 0) out = "0" + out;
       return out;
+    }
+    function formatTwoDecimalString(text) {
+      var clean = sanitizeNumericValue(text, true);
+      if (!clean || clean === ".") return "";
+      var n = parseFloat(clean);
+      if (!Number.isFinite(n)) return "";
+      return n.toFixed(2);
     }
     var EASTERN_DIGIT_RE = /[\u0660-\u0669\u06F0-\u06F9]/;
     var ENABLE_TEXT_NORMALIZATION = /^\/admin(?:\/|$)/.test(window.location.pathname || "");
@@ -104,7 +116,9 @@
           var numericish = isNumericishInput(node);
           if (typeof node.value === "string") {
             if (strictNumeric) {
-              node.value = sanitizeNumericValue(node.value, allowsDecimalForInput(node));
+              node.value = allowsDecimalForInput(node)
+                ? formatTwoDecimalString(node.value)
+                : sanitizeNumericValue(node.value, false);
             } else if (numericish) {
               node.value = normalizeNumberLikeText(node.value);
             } else {
@@ -118,7 +132,11 @@
             node.setAttribute(
               "value",
               strictNumeric
-                ? sanitizeNumericValue(node.getAttribute("value"), allowsDecimalForInput(node))
+                ? (
+                  allowsDecimalForInput(node)
+                    ? formatTwoDecimalString(node.getAttribute("value"))
+                    : sanitizeNumericValue(node.getAttribute("value"), false)
+                )
                 : numericish
                   ? normalizeNumberLikeText(node.getAttribute("value"))
                   : normalizeDigits(node.getAttribute("value"))
@@ -157,9 +175,16 @@
       }
       input.dataset.numericAllowDecimal = allowDecimal ? "1" : "0";
       input.dataset.numericTextForced = "1";
-      input.value = sanitizeNumericValue(input.value || "", allowDecimal);
+      input.value = allowDecimal
+        ? formatTwoDecimalString(input.value || "")
+        : sanitizeNumericValue(input.value || "", false);
       if (input.hasAttribute("value")) {
-        input.setAttribute("value", sanitizeNumericValue(input.getAttribute("value"), allowDecimal));
+        input.setAttribute(
+          "value",
+          allowDecimal
+            ? formatTwoDecimalString(input.getAttribute("value"))
+            : sanitizeNumericValue(input.getAttribute("value"), false)
+        );
       }
     }
     function forceEnglishNumberFieldsUnder(root) {
@@ -267,7 +292,11 @@
         var el = ev.target;
         if (!isNumericishInput(el)) return;
         var nv = isStrictNumericInput(el)
-          ? sanitizeNumericValue(el.value, allowsDecimalForInput(el))
+          ? (
+            allowsDecimalForInput(el)
+              ? formatTwoDecimalString(el.value)
+              : sanitizeNumericValue(el.value, false)
+          )
           : normalizeNumberLikeText(el.value);
         if (nv !== el.value) el.value = nv;
       },

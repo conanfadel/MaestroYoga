@@ -1109,15 +1109,36 @@
         down.setAttribute("aria-label", "إنقاص الرقم");
         down.textContent = "▼";
 
+        function parseNumeric(v) {
+          var s = String(v == null ? "" : v).trim().replace(",", ".");
+          if (!s || s === "." || s === "-") return NaN;
+          var n = parseFloat(s);
+          return Number.isFinite(n) ? n : NaN;
+        }
+        function parseBound(name) {
+          var raw = input.getAttribute(name);
+          return raw == null ? NaN : parseNumeric(raw);
+        }
+        function allowsDecimal() {
+          if (input.dataset && input.dataset.numericAllowDecimal === "1") return true;
+          var im = (input.getAttribute("inputmode") || "").toLowerCase();
+          if (im === "decimal") return true;
+          var st = (input.getAttribute("step") || "").trim().toLowerCase();
+          return st === "any" || st.indexOf(".") >= 0;
+        }
         function safeStep(fnName) {
-          try {
-            input[fnName]();
-          } catch (_) {
-            var value = parseFloat(input.value || "0");
-            var step = parseFloat(input.step || "1");
-            if (!Number.isFinite(step) || step <= 0) step = 1;
-            if (!Number.isFinite(value)) value = 0;
-            input.value = String(fnName === "stepUp" ? value + step : value - step);
+          var value = parseNumeric(input.value);
+          if (!Number.isFinite(value)) value = 0;
+          var next = value + (fnName === "stepUp" ? 1 : -1);
+          var min = parseBound("min");
+          var max = parseBound("max");
+          if (Number.isFinite(min) && next < min) next = min;
+          if (Number.isFinite(max) && next > max) next = max;
+          if (allowsDecimal()) {
+            next = Math.round(next * 100) / 100;
+            input.value = next.toFixed(2);
+          } else {
+            input.value = String(Math.round(next));
           }
           dispatchNumberEvents(input);
           input.focus({ preventScroll: true });
