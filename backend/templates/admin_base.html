@@ -94,15 +94,36 @@
     (function () {
       var menu = document.getElementById("admin-mazer-sidebar-menu");
       if (!menu) return;
+      function setPinnedItem(item) {
+        menu.querySelectorAll(".sidebar-item.has-sub").forEach(function (other) {
+          other.classList.toggle("sidebar-item--pinned", !!item && other === item);
+        });
+      }
+      function syncPinnedFromActiveLink() {
+        var activeLink = menu.querySelector(".submenu .section-tab.active, .submenu .submenu-link.active");
+        if (!activeLink) return;
+        var parentItem = activeLink.closest(".sidebar-item.has-sub");
+        if (parentItem) setPinnedItem(parentItem);
+      }
       menu.addEventListener("click", function (e) {
-        if (e.target.closest(".submenu a, .submenu .submenu-link, .submenu .section-tab")) return;
+        var subLink = e.target.closest(".submenu a, .submenu .submenu-link, .submenu .section-tab");
+        if (subLink) {
+          var subParent = subLink.closest(".sidebar-item.has-sub");
+          if (subParent) setPinnedItem(subParent);
+          return;
+        }
         var link = e.target.closest(".sidebar-item.has-sub > a.sidebar-link");
         if (!link) return;
         var item = link.closest(".sidebar-item.has-sub");
         if (!item) return;
         window.setTimeout(function () {
           var sub = item.querySelector(".submenu");
-          if (!sub || !sub.classList.contains("submenu-open")) return;
+          if (!sub) return;
+          if (!sub.classList.contains("submenu-open")) {
+            if (item.classList.contains("sidebar-item--pinned")) setPinnedItem(null);
+            return;
+          }
+          setPinnedItem(item);
           menu.querySelectorAll(".sidebar-item.has-sub").forEach(function (other) {
             if (other === item) return;
             var sm = other.querySelector(".submenu");
@@ -112,6 +133,10 @@
             other.classList.remove("active");
           });
         }, 0);
+      });
+      window.setTimeout(syncPinnedFromActiveLink, 0);
+      window.addEventListener("hashchange", function () {
+        window.setTimeout(syncPinnedFromActiveLink, 0);
       });
     })();
   </script>
