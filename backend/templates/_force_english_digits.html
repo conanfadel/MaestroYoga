@@ -11,8 +11,16 @@
         return map[ch] || ch;
       });
     }
+    function normalizeNumberLikeText(text) {
+      var s = normalizeDigits(text);
+      s = s.replace(/[\u066B]/g, "."); // Arabic decimal separator
+      s = s.replace(/[\u066C]/g, ""); // Arabic thousands separator
+      s = s.replace(/,/g, "."); // tolerate comma decimals
+      return s;
+    }
     var EASTERN_DIGIT_RE = /[\u0660-\u0669\u06F0-\u06F9]/;
     var ENABLE_TEXT_NORMALIZATION = /^\/admin(?:\/|$)/.test(window.location.pathname || "");
+    var ENABLE_STRONG_NUMERIC_INPUT_FIX = ENABLE_TEXT_NORMALIZATION;
     var NUMERIC_INPUT_SELECTOR = [
       'input[type="number"]',
       'input[type="tel"]',
@@ -71,6 +79,53 @@
         }
       }
     }
+    function forceEnglishNumberField(input) {
+      if (!ENABLE_STRONG_NUMERIC_INPUT_FIX) return;
+      if (!input || (input.tagName || "").toLowerCase() !== "input") return;
+      if ((input.type || "").toLowerCase() !== "number") return;
+      if (input.dataset.numericTextForced === "1") return;
+      if (input.hasAttribute("data-keep-native-digits")) return;
+
+      var step = (input.getAttribute("step") || "").trim();
+      var integerLikeStep = !step || step === "1";
+
+      input.setAttribute("lang", "en");
+      input.setAttribute("dir", "ltr");
+      input.setAttribute("inputmode", integerLikeStep ? "numeric" : "decimal");
+      input.style.fontFamily = 'Arial, "Segoe UI", Tahoma, sans-serif';
+      input.style.unicodeBidi = "isolate";
+      input.style.direction = "ltr";
+
+      // Chromium may still localize glyphs for type=number in Arabic locale;
+      // forcing text input keeps Latin digits visually stable.
+      try {
+        input.type = "text";
+      } catch (e0) {}
+      if ((input.type || "").toLowerCase() !== "text") return;
+
+      if (!input.getAttribute("pattern")) {
+        input.setAttribute("pattern", integerLikeStep ? "[0-9]*" : "[0-9]*([.][0-9]*)?");
+      }
+      input.dataset.numericTextForced = "1";
+      input.value = normalizeNumberLikeText(input.value || "");
+      if (input.hasAttribute("value")) {
+        input.setAttribute("value", normalizeNumberLikeText(input.getAttribute("value")));
+      }
+    }
+    function forceEnglishNumberFieldsUnder(root) {
+      if (!ENABLE_STRONG_NUMERIC_INPUT_FIX || !root) return;
+      var nt = root.nodeType;
+      if (nt !== 1 && nt !== 11) return;
+      try {
+        if (nt === 1 && root.matches && root.matches('input[type="number"]')) {
+          forceEnglishNumberField(root);
+        }
+        if (root.querySelectorAll) {
+          var nums = root.querySelectorAll('input[type="number"]');
+          for (var i = 0; i < nums.length; i += 1) forceEnglishNumberField(nums[i]);
+        }
+      } catch (e1) {}
+    }
     function shouldSkipTextParent(parent) {
       if (!parent || !parent.tagName) return true;
       var tag = String(parent.tagName).toUpperCase();
@@ -115,6 +170,7 @@
     }
     function isNumericishInput(el) {
       if (!el || (el.tagName || "").toLowerCase() !== "input") return false;
+      if (el.dataset && el.dataset.numericTextForced === "1") return true;
       var t = (el.type || "").toLowerCase();
       if (t === "number" || t === "tel" || t === "date" || t === "time" || t === "datetime-local" || t === "week" || t === "month" || t === "range") {
         return true;
@@ -123,6 +179,7 @@
       return im === "numeric" || im === "decimal" || im === "tel";
     }
     function applyUnder(root) {
+      forceEnglishNumberFieldsUnder(root);
       normalizeInputsUnder(root);
       stampNumericInputLang(root);
       normalizeTextNodesUnder(root);
@@ -138,9 +195,19 @@
       function (ev) {
         var el = ev.target;
         if (!isNumericishInput(el)) return;
-        var nv = normalizeDigits(el.value);
+        var nv = normalizeNumberLikeText(el.value);
         if (nv === el.value) return;
         el.value = nv;
+      },
+      true
+    );
+    document.addEventListener(
+      "blur",
+      function (ev) {
+        var el = ev.target;
+        if (!isNumericishInput(el)) return;
+        var nv = normalizeNumberLikeText(el.value);
+        if (nv !== el.value) el.value = nv;
       },
       true
     );
