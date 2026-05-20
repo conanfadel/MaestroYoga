@@ -398,6 +398,8 @@
         var sideToggles = mapRoot.querySelectorAll("[data-map-side-toggle]");
         var svgEl = mapRoot.querySelector("[data-bh-svg]");
         var musclesGrid = mapRoot.querySelector("[data-bh-muscles-grid]");
+        var musclesToggle = mapRoot.querySelector("[data-bh-muscles-toggle]");
+        var musclesPanel = mapRoot.querySelector("[data-bh-muscles-list-panel]");
         var stateLabel = mapRoot.querySelector("[data-map-state-label]");
         var currentGender = "female";
         var currentSide = "front";
@@ -409,6 +411,18 @@
           female_front: "-50 -40 734 1538",
           female_back: "756 0 774 1448"
         };
+        function setMusclesListVisible(visible) {
+          if (!musclesPanel || !musclesToggle) return;
+          musclesPanel.hidden = !visible;
+          musclesToggle.setAttribute("aria-expanded", visible ? "true" : "false");
+          musclesToggle.textContent = visible ? "إخفاء قائمة العضلات" : "إظهار قائمة العضلات";
+        }
+        if (musclesToggle && musclesPanel) {
+          setMusclesListVisible(false);
+          musclesToggle.addEventListener("click", function () {
+            setMusclesListVisible(!!musclesPanel.hidden);
+          });
+        }
         function canonicalMuscle(slug) {
           var s = (slug || "").toLowerCase();
           if (s.indexOf("neck") !== -1 || s.indexOf("head") !== -1) return "neck";
