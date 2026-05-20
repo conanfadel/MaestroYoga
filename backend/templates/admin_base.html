@@ -1080,7 +1080,9 @@
       function createStepper(input) {
         if (!input || input.dataset.stepperEnhanced === "1") return;
         if (input.disabled || input.readOnly) return;
-        if ((input.type || "").toLowerCase() !== "number") return;
+        var inputType = (input.type || "").toLowerCase();
+        var isNumericType = inputType === "number" || (input.dataset && input.dataset.numericTextForced === "1");
+        if (!isNumericType) return;
         if (input.closest(".admin-number-stepper")) {
           input.dataset.stepperEnhanced = "1";
           return;
@@ -1130,7 +1132,7 @@
         input.dataset.stepperEnhanced = "1";
       }
       function init(root) {
-        (root || document).querySelectorAll('input[type="number"]').forEach(createStepper);
+        (root || document).querySelectorAll('input[type="number"], input[data-numeric-text-forced="1"]').forEach(createStepper);
       }
       if (document.readyState === "loading") {
         document.addEventListener("DOMContentLoaded", function () { init(document); });
@@ -1141,7 +1143,7 @@
         mutations.forEach(function (m) {
           m.addedNodes.forEach(function (node) {
             if (!(node instanceof Element)) return;
-            if (node.matches && node.matches('input[type="number"]')) createStepper(node);
+            if (node.matches && node.matches('input[type="number"], input[data-numeric-text-forced="1"]')) createStepper(node);
             init(node);
           });
         });
