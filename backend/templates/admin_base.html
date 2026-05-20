@@ -28,6 +28,23 @@
       } catch (e) {}
     })();
   </script>
+  <script>
+    (function () {
+      try {
+        var id = (location.hash || "").replace(/^#/, "");
+        if (!id) id = sessionStorage.getItem("maestro_admin_active_section") || "";
+        if (!id) return;
+        document.documentElement.setAttribute("data-admin-initial-section", id);
+        var esc = typeof CSS !== "undefined" && CSS.escape ? CSS.escape(id) : id.replace(/[^a-zA-Z0-9_-]/g, "");
+        var style = document.createElement("style");
+        style.id = "admin-initial-section-boot";
+        style.textContent =
+          "#" + esc + ".accordion .accordion-body{display:block!important}" +
+          "#" + esc + ".accordion{border:1px solid rgba(197,160,89,0.3);border-radius:16px;margin:8px 0;overflow:hidden;min-width:0}";
+        document.head.appendChild(style);
+      } catch (e) {}
+    })();
+  </script>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet" />
@@ -46,7 +63,7 @@
     </div>
     <div id="main" dir="rtl" lang="ar">
       <header class="mb-3">
-        <a href="#" class="burger-btn d-block d-xl-none"><i class="bi bi-justify fs-3"></i></a>
+        <a href="#" class="burger-btn d-block d-xl-none" id="admin-burger-btn" aria-controls="sidebar" aria-expanded="false" aria-label="فتح القائمة الجانبية"><i class="bi bi-justify fs-3" aria-hidden="true"></i></a>
       </header>
       <main id="main-content" class="admin-main" lang="ar" dir="rtl" tabindex="-1">
         <div class="container-xl">
@@ -90,6 +107,22 @@
   <script src="https://unpkg.com/htmx.org@2.0.4" crossorigin="anonymous"></script>
   <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.14.3/dist/cdn.min.js" crossorigin="anonymous"></script>
   <script src="/static/dist/admin.js"></script>
+  <script>
+    (function () {
+      var burger = document.getElementById("admin-burger-btn");
+      var appRoot = document.getElementById("app");
+      if (!burger || !appRoot) return;
+      function syncBurgerAria() {
+        var open = appRoot.classList.contains("sidebar-toggled");
+        burger.setAttribute("aria-expanded", open ? "true" : "false");
+        burger.setAttribute("aria-label", open ? "إغلاق القائمة الجانبية" : "فتح القائمة الجانبية");
+      }
+      syncBurgerAria();
+      burger.addEventListener("click", function () { window.setTimeout(syncBurgerAria, 0); });
+      var obs = new MutationObserver(syncBurgerAria);
+      obs.observe(appRoot, { attributes: true, attributeFilter: ["class"] });
+    })();
+  </script>
   <script>
     (function () {
       var menu = document.getElementById("admin-mazer-sidebar-menu");
@@ -404,6 +437,7 @@
         var currentGender = "female";
         var currentSide = "front";
         var selectedMuscle = "{{ training_selected_muscle }}";
+        var muscleLabels = {{ training_muscle_labels|tojson }};
         var dataStore = {};
         var viewBoxes = {
           male_front: "0 0 724 1448",
@@ -437,6 +471,13 @@
           if (s.indexOf("calves") !== -1 || s.indexOf("tibialis") !== -1 || s.indexOf("ankle") !== -1 || s.indexOf("feet") !== -1) return "calves";
           return s || "core";
         }
+        function muscleDisplayLabel(slug) {
+          var key = canonicalMuscle(slug);
+          if (muscleLabels && Object.prototype.hasOwnProperty.call(muscleLabels, key)) {
+            return muscleLabels[key];
+          }
+          return key || slug;
+        }
         function parseAssetText(raw) {
           var src = raw.replace(/^import[^\n]*\n/gm, "");
           src = src.replace(/export const\s+\w+\s*:\s*BodyPart\[\]\s*=\s*/m, "");
@@ -466,10 +507,14 @@
         function renderButtons(parts) {
           if (!musclesGrid) return;
           musclesGrid.innerHTML = "";
+          var seen = {};
           parts.forEach(function (part) {
+            var muscleKey = canonicalMuscle(part.slug);
+            if (seen[muscleKey]) return;
+            seen[muscleKey] = true;
             var b = document.createElement("button");
             b.type = "button";
-            b.textContent = part.slug;
+            b.textContent = muscleDisplayLabel(part.slug);
             b.style.border = "1px solid rgba(59,130,246,0.35)";
             b.style.background = canonicalMuscle(part.slug) === selectedMuscle ? "#ecfdf5" : "#eff6ff";
             b.style.color = canonicalMuscle(part.slug) === selectedMuscle ? "#065f46" : "#1d4ed8";
@@ -773,6 +818,9 @@
           requestAnimationFrame(function () { highlightSection(preferredSection); });
         }
       }
+      document.documentElement.removeAttribute("data-admin-initial-section");
+      var bootStyle = document.getElementById("admin-initial-section-boot");
+      if (bootStyle) bootStyle.remove();
 
       // First visit fallback: open only first section.
       if (!accordions.some(function (d) { return d.classList.contains("open"); }) && accordions.length > 0) {
@@ -913,8 +961,6 @@
             return;
           }
           e.preventDefault();
-          const section = document.getElementById(targetId);
-          if (!section || !section.classList.contains("accordion")) return;
           sessionStorage.setItem(ACTIVE_SECTION_KEY, targetId);
           if (tab.dataset.scrollAnchor) {
             sessionStorage.setItem(SCROLL_ANCHOR_KEY, tab.dataset.scrollAnchor);
@@ -929,7 +975,17 @@
           if (window.history && window.history.replaceState) {
             window.history.replaceState(null, "", window.location.pathname + window.location.search + "#" + targetId);
           }
-          window.location.reload();
+          closeAllTabClusters();
+          if (!activateAdminSection(targetId, { focusTab: tab })) return;
+          var anchorId = tab.dataset.scrollAnchor || "";
+          if (anchorId) {
+            requestAnimationFrame(function () {
+              var el = document.getElementById(anchorId);
+              if (el) {
+                el.scrollIntoView({ behavior: prefersReducedMotion ? "auto" : "smooth", block: "start" });
+              }
+            });
+          }
         });
       });
       window.addEventListener("hashchange", function () {

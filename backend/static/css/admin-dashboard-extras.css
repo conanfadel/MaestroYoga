@@ -1104,3 +1104,25 @@ html[data-theme="dark"] .admin-discount-block {
     display: block !important;
   }
 }
+
+/* خريطة العضلات — ارتفاع متجاوب على الشاشات الصغيرة */
+.admin-training-bh-svg {
+  display: block;
+  max-width: 100%;
+  width: 100%;
+  height: min(78vh, 520px);
+  margin: 0 auto;
+  background: #fff;
+  border: 1px solid rgba(148, 163, 184, 0.25);
+  border-radius: 12px;
+}
+
+@media (max-width: 900px) {
+  .admin-training-bh-svg {
+    height: min(56vh, 380px);
+  }
+}
+
+#section-training-management [data-bh-muscles-list-panel]:not([hidden]) {
+  margin-top: 8px;
+}

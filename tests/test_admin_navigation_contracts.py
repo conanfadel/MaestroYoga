@@ -13,6 +13,7 @@ PARTIALS_DIR = TEMPLATES_DIR / "partials"
 SECTION_ID_RE = re.compile(r'<section[^>]*\bid="([^"]+)"', re.IGNORECASE)
 DATA_TARGET_RE = re.compile(r'\bdata-target="([^"]+)"')
 SCROLL_ANCHOR_RE = re.compile(r'\bdata-scroll-anchor="([^"]+)"')
+NAV_ANCHOR_OPEN_RE = re.compile(r"<a\s([^>]+)>([^<]+)</a>", re.IGNORECASE)
 DIV_ID_RE = re.compile(r'<div[^>]*\bid="([^"]+)"', re.IGNORECASE)
 
 
@@ -44,6 +45,27 @@ def _extract_data_targets() -> set[str]:
     return targets
 
 
+def _extract_nav_link_labels(path: Path) -> dict[str, str]:
+    labels: dict[str, str] = {}
+    for attrs, label in NAV_ANCHOR_OPEN_RE.findall(_read(path)):
+        target_m = re.search(r'\bdata-target="([^"]+)"', attrs, re.IGNORECASE)
+        if not target_m:
+            continue
+        id_m = re.search(r'\bid="([^"]+)"', attrs, re.IGNORECASE)
+        anchor_m = re.search(r'\bdata-scroll-anchor="([^"]+)"', attrs, re.IGNORECASE)
+        if id_m:
+            key = id_m.group(1)
+        elif anchor_m:
+            key = f"{target_m.group(1)}|{anchor_m.group(1)}"
+        else:
+            key = target_m.group(1)
+        clean = re.sub(r"\s+", " ", label.strip())
+        if key in labels and labels[key] != clean:
+            raise AssertionError(f"conflicting labels for {key!r} in {path.name}: {labels[key]!r} vs {clean!r}")
+        labels[key] = clean
+    return labels
+
+
 def _extract_security_scroll_anchors() -> set[str]:
     nav_html = _read(PARTIALS_DIR / "admin_nav_macros.html") + "\n" + _read(PARTIALS_DIR / "admin_mazer_sidebar.html")
     return set(SCROLL_ANCHOR_RE.findall(nav_html))
@@ -73,6 +95,41 @@ def test_admin_section_paths_do_not_reference_deleted_sections():
     mapping_keys = set(ADMIN_SECTION_BASE_PATHS.keys())
     stale = sorted(section_id for section_id in mapping_keys if section_id not in section_ids)
     assert not stale, f"ADMIN_SECTION_BASE_PATHS has ids without matching <section>: {stale}"
+
+
+def test_sidebar_and_tab_nav_labels_match():
+    sidebar_labels = _extract_nav_link_labels(PARTIALS_DIR / "admin_mazer_sidebar.html")
+    tabs_labels = _extract_nav_link_labels(PARTIALS_DIR / "admin_nav_macros.html")
+
+    def _paired_id(link_id: str) -> str | None:
+        if link_id.startswith("mazer-tab-"):
+            return "tab-" + link_id[len("mazer-tab-") :]
+        if link_id.startswith("tab-"):
+            return "mazer-tab-" + link_id[len("tab-") :]
+        return None
+
+    shared = sorted(
+        sid
+        for sid in sidebar_labels
+        if sid in tabs_labels or (_paired_id(sid) and _paired_id(sid) in tabs_labels)
+    )
+    mismatched: list[str] = []
+    for sid in shared:
+        tid = sid if sid in tabs_labels else _paired_id(sid)
+        assert tid is not None
+        if sidebar_labels[sid] != tabs_labels[tid]:
+            mismatched.append(f"{sid}/{tid}")
+    assert not mismatched, "label mismatch for: " + ", ".join(
+        f"{pair} (sidebar={sidebar_labels[pair.split('/')[0]]!r}, tabs={tabs_labels[pair.split('/')[1]]!r})"
+        for pair in mismatched
+    )
+
+
+def test_admin_same_page_section_tabs_do_not_reload():
+    html = _read(TEMPLATES_DIR / "admin_base.html")
+    assert "window.location.reload()" not in html, (
+        "section tab navigation should use activateAdminSection without full page reload"
+    )
 
 
 def test_security_anchor_links_match_dashboard_blocks():
