@@ -18,6 +18,35 @@
       s = s.replace(/,/g, "."); // tolerate comma decimals
       return s;
     }
+    function allowsDecimalForInput(input) {
+      if (!input) return false;
+      if (input.dataset && input.dataset.numericAllowDecimal != null) {
+        return input.dataset.numericAllowDecimal === "1";
+      }
+      var im = (input.getAttribute("inputmode") || "").toLowerCase();
+      if (im === "decimal") return true;
+      var step = (input.getAttribute("step") || "").trim().toLowerCase();
+      if (!step) return false;
+      return step === "any" || step.indexOf(".") >= 0;
+    }
+    function sanitizeNumericValue(text, allowDecimal) {
+      var s = normalizeNumberLikeText(text);
+      var out = "";
+      var dotSeen = false;
+      for (var i = 0; i < s.length; i += 1) {
+        var ch = s.charAt(i);
+        if (ch >= "0" && ch <= "9") {
+          out += ch;
+          continue;
+        }
+        if (allowDecimal && ch === "." && !dotSeen) {
+          out += ".";
+          dotSeen = true;
+        }
+      }
+      if (allowDecimal && out.indexOf(".") === 0) out = "0" + out;
+      return out;
+    }
     var EASTERN_DIGIT_RE = /[\u0660-\u0669\u06F0-\u06F9]/;
     var ENABLE_TEXT_NORMALIZATION = /^\/admin(?:\/|$)/.test(window.location.pathname || "");
     var ENABLE_STRONG_NUMERIC_INPUT_FIX = ENABLE_TEXT_NORMALIZATION;
@@ -71,10 +100,29 @@
         var node = list[i];
         var tag = (node.tagName || "").toLowerCase();
         if (tag === "input" || tag === "textarea") {
-          if (typeof node.value === "string") node.value = normalizeDigits(node.value);
-          if (typeof node.placeholder === "string") node.placeholder = normalizeDigits(node.placeholder);
+          var strictNumeric = isStrictNumericInput(node);
+          var numericish = isNumericishInput(node);
+          if (typeof node.value === "string") {
+            if (strictNumeric) {
+              node.value = sanitizeNumericValue(node.value, allowsDecimalForInput(node));
+            } else if (numericish) {
+              node.value = normalizeNumberLikeText(node.value);
+            } else {
+              node.value = normalizeDigits(node.value);
+            }
+          }
+          if (typeof node.placeholder === "string") {
+            node.placeholder = normalizeDigits(node.placeholder);
+          }
           if (node.hasAttribute("value")) {
-            node.setAttribute("value", normalizeDigits(node.getAttribute("value")));
+            node.setAttribute(
+              "value",
+              strictNumeric
+                ? sanitizeNumericValue(node.getAttribute("value"), allowsDecimalForInput(node))
+                : numericish
+                  ? normalizeNumberLikeText(node.getAttribute("value"))
+                  : normalizeDigits(node.getAttribute("value"))
+            );
           }
         }
       }
@@ -88,6 +136,7 @@
 
       var step = (input.getAttribute("step") || "").trim();
       var integerLikeStep = !step || step === "1";
+      var allowDecimal = !integerLikeStep || step.toLowerCase() === "any";
 
       input.setAttribute("lang", "en");
       input.setAttribute("dir", "ltr");
@@ -106,10 +155,11 @@
       if (!input.getAttribute("pattern")) {
         input.setAttribute("pattern", integerLikeStep ? "[0-9]*" : "[0-9]*([.][0-9]*)?");
       }
+      input.dataset.numericAllowDecimal = allowDecimal ? "1" : "0";
       input.dataset.numericTextForced = "1";
-      input.value = normalizeNumberLikeText(input.value || "");
+      input.value = sanitizeNumericValue(input.value || "", allowDecimal);
       if (input.hasAttribute("value")) {
-        input.setAttribute("value", normalizeNumberLikeText(input.getAttribute("value")));
+        input.setAttribute("value", sanitizeNumericValue(input.getAttribute("value"), allowDecimal));
       }
     }
     function forceEnglishNumberFieldsUnder(root) {
@@ -178,6 +228,14 @@
       var im = (el.getAttribute("inputmode") || "").toLowerCase();
       return im === "numeric" || im === "decimal" || im === "tel";
     }
+    function isStrictNumericInput(el) {
+      if (!el || (el.tagName || "").toLowerCase() !== "input") return false;
+      if (el.dataset && el.dataset.numericTextForced === "1") return true;
+      var t = (el.type || "").toLowerCase();
+      if (t === "number" || t === "tel" || t === "range") return true;
+      var im = (el.getAttribute("inputmode") || "").toLowerCase();
+      return im === "numeric" || im === "decimal" || im === "tel";
+    }
     function applyUnder(root) {
       forceEnglishNumberFieldsUnder(root);
       normalizeInputsUnder(root);
@@ -195,7 +253,9 @@
       function (ev) {
         var el = ev.target;
         if (!isNumericishInput(el)) return;
-        var nv = normalizeNumberLikeText(el.value);
+        var nv = isStrictNumericInput(el)
+          ? sanitizeNumericValue(el.value, allowsDecimalForInput(el))
+          : normalizeNumberLikeText(el.value);
         if (nv === el.value) return;
         el.value = nv;
       },
@@ -206,7 +266,9 @@
       function (ev) {
         var el = ev.target;
         if (!isNumericishInput(el)) return;
-        var nv = normalizeNumberLikeText(el.value);
+        var nv = isStrictNumericInput(el)
+          ? sanitizeNumericValue(el.value, allowsDecimalForInput(el))
+          : normalizeNumberLikeText(el.value);
         if (nv !== el.value) el.value = nv;
       },
       true
