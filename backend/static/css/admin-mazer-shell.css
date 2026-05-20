@@ -1,7 +1,7 @@
 /* Maestro — تكامل قالب Mazer (Bootstrap 5) + RTL — محاذاة ومسافات منطقية (logical properties) */
 
 body.maestro-mazer {
-  --maestro-mazer-sidebar-width: 336px;
+  --maestro-mazer-sidebar-width: 320px;
   --maestro-admin-space-inline-xs: 0.5rem;
   --maestro-admin-space-inline-sm: 0.75rem;
   --maestro-admin-space-inline-md: 1rem;
@@ -189,6 +189,23 @@ body.maestro-mazer #sidebar .sidebar-menu .submenu {
   background: transparent;
 }
 
+/* تأكيد عدم قص النصوص متعددة الأسطر عند فتح القوائم الفرعية */
+body.maestro-mazer #sidebar .sidebar-menu .sidebar-item.active > .submenu,
+body.maestro-mazer #sidebar .sidebar-menu .sidebar-item.sidebar-item--pinned > .submenu,
+body.maestro-mazer #sidebar .sidebar-menu .submenu.submenu-open {
+  display: block !important;
+  height: auto !important;
+  max-height: none !important;
+  overflow: visible !important;
+}
+
+body.maestro-mazer #sidebar .sidebar-menu .submenu.submenu-closed {
+  display: none !important;
+  height: 0 !important;
+  max-height: 0 !important;
+  overflow: hidden !important;
+}
+
 body.maestro-mazer #sidebar .sidebar-menu .submenu-item,
 body.maestro-mazer #sidebar .sidebar-menu .submenu-item > a {
   overflow: visible !important;
@@ -237,18 +254,13 @@ body.maestro-mazer #sidebar .sidebar-menu .submenu-link.section-tab::before {
   transition: background-color 0.25s ease, transform 0.25s ease;
 }
 
-/* تثبيت مجموعة القسم المفتوحة لتسهيل التنقل داخل نفس الكتلة */
-@media screen and (min-width: 1200px) {
-  body.maestro-mazer #sidebar .sidebar-menu .sidebar-item.sidebar-item--pinned > .submenu {
-    position: sticky;
-    top: 0.75rem;
-    z-index: 3;
-    border-radius: 12px;
-    border: 1px solid var(--sidebar-border);
-    background: color-mix(in srgb, var(--sidebar-bg) 96%, #ffffff 4%);
-    padding-block: 0.45rem !important;
-    padding-inline-end: 0.25rem !important;
-  }
+/* إبقاء القسم المثبّت واضحًا بدون تأثيرات sticky التي قد تسبب قصًا */
+body.maestro-mazer #sidebar .sidebar-menu .sidebar-item.sidebar-item--pinned > .submenu {
+  border-radius: 10px;
+  border: 1px solid var(--sidebar-border);
+  background: color-mix(in srgb, var(--sidebar-bg) 97%, #ffffff 3%);
+  padding-block: 0.35rem !important;
+  padding-inline-end: 0.2rem !important;
 }
 
 body.maestro-mazer #sidebar .sidebar-menu a.section-tab.section-tab--subitem:hover,
